@@ -1,0 +1,52 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`assembleAbridgedAccountsData > snapshot: sections structure is stable 1`] = `
+[
+  "Company Information",
+  "Directors' Responsibility Statement",
+  "Accounting Policies",
+  "Abridged Balance Sheet",
+  "Capital and Reserves",
+  "Notes to the Financial Statements",
+  "Audit Exemption Statement",
+]
+`;
+
+exports[`assembleBalanceSheetData > snapshot: sections structure is stable 1`] = `
+[
+  "Fixed Assets",
+  "Current Assets",
+  "Current Liabilities",
+  "Net Current Assets",
+  "Long-term Liabilities",
+  "Net Assets",
+  "Capital & Reserves",
+]
+`;
+
+exports[`assembleForm11ReportData > snapshot: sections + tables structure is stable 1`] = `
+{
+  "sections": [
+    "Personal Details",
+    "Schedule E — Employment Income",
+    "Schedule D — Business Income",
+    "Total Income",
+    "Net Income Tax",
+    "PRSI (Class S)",
+    "Capital Gains Tax",
+    "Tax Computation Summary",
+  ],
+  "tables": [
+    "Income Tax Calculation",
+    "Tax Credits",
+    "Universal Social Charge",
+  ],
+}
+`;
+
+exports[`assembleVATReportData > snapshot: sections structure is stable 1`] = `
+[
+  "Registration Information",
+  "VAT Return Computation",
+]
+`;

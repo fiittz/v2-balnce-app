@@ -1,0 +1,251 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Premium neutral palette - warm off-whites and deep charcoals */
+    --background: 40 20% 98%;
+    --foreground: 220 15% 12%;
+
+    /* Cards use pure white for contrast against warm background */
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 12%;
+
+    /* Primary - refined gold/amber, sophisticated not bright */
+    --primary: 43 96% 56%;
+    --primary-foreground: 220 15% 8%;
+
+    /* Secondary - subtle warm gray */
+    --secondary: 40 10% 95%;
+    --secondary-foreground: 220 15% 12%;
+
+    /* Muted - for subtle backgrounds and disabled states */
+    --muted: 40 10% 94%;
+    --muted-foreground: 220 10% 46%;
+
+    /* Accent - deep charcoal for emphasis */
+    --accent: 220 15% 12%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Semantic colors */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Borders - subtle and refined */
+    --border: 40 10% 90%;
+    --input: 40 10% 90%;
+    --ring: 43 96% 56%;
+
+    /* Generous radius for premium feel */
+    --radius: 0.75rem;
+
+    /* Sidebar */
+    --sidebar-background: 220 15% 8%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 220 15% 8%;
+    --sidebar-accent: 220 12% 16%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 12% 18%;
+    --sidebar-ring: 43 96% 56%;
+
+    /* Brand colors */
+    --balnce-gold: 43 96% 56%;
+    --balnce-charcoal: 220 15% 12%;
+    --balnce-cream: 40 20% 98%;
+    --balnce-white: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 220 15% 6%;
+    --foreground: 40 10% 95%;
+
+    --card: 220 15% 9%;
+    --card-foreground: 40 10% 95%;
+
+    --popover: 220 15% 9%;
+    --popover-foreground: 40 10% 95%;
+
+    --primary: 43 96% 56%;
+    --primary-foreground: 220 15% 8%;
+
+    --secondary: 220 12% 14%;
+    --secondary-foreground: 40 10% 95%;
+
+    --muted: 220 12% 14%;
+    --muted-foreground: 220 10% 55%;
+
+    --accent: 43 96% 56%;
+    --accent-foreground: 220 15% 8%;
+
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 12% 18%;
+    --input: 220 12% 18%;
+    --ring: 43 96% 56%;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 43 96% 56%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 43 96% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: 'cv11', 'ss01';
+    letter-spacing: -0.011em;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+  }
+}
+
+@layer components {
+  /* Premium card styles */
+  .card-premium {
+    @apply bg-card rounded-2xl border border-border;
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.5),
+      0 1px 2px hsl(var(--foreground) / 0.02),
+      0 4px 8px hsl(var(--foreground) / 0.02);
+  }
+
+  .card-premium:hover {
+    box-shadow:
+      0 0 0 1px hsl(var(--border) / 0.8),
+      0 2px 4px hsl(var(--foreground) / 0.03),
+      0 8px 16px hsl(var(--foreground) / 0.04);
+  }
+
+  /* Hero card - dark prominent card */
+  .card-hero {
+    @apply bg-accent text-accent-foreground rounded-2xl;
+    box-shadow:
+      0 0 0 1px hsl(var(--accent) / 0.1),
+      0 4px 12px hsl(var(--accent) / 0.15),
+      0 16px 32px hsl(var(--accent) / 0.1);
+  }
+
+  /* Subtle interactive states */
+  .interactive-subtle {
+    @apply transition-all duration-200;
+  }
+
+  .interactive-subtle:hover {
+    @apply bg-secondary/80;
+  }
+
+  .interactive-subtle:active {
+    @apply scale-[0.98];
+  }
+
+  /* Premium button base */
+  .btn-premium {
+    @apply font-medium transition-all duration-200;
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.05);
+  }
+
+  .btn-premium:hover {
+    box-shadow: 0 2px 4px hsl(var(--foreground) / 0.08);
+    transform: translateY(-1px);
+  }
+
+  .btn-premium:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.05);
+  }
+
+  /* Stat value - large prominent numbers */
+  .stat-value {
+    @apply text-4xl sm:text-5xl font-semibold tracking-tight tabular-nums;
+    line-height: 1.1;
+  }
+
+  /* Stat label - subtle descriptive text */
+  .stat-label {
+    @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
+  }
+
+  /* Subtle dividers */
+  .divider {
+    @apply border-t border-border/60;
+  }
+
+  /* Glass effect for overlays */
+  .glass {
+    @apply bg-background/80 backdrop-blur-xl;
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Safe area for mobile devices */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .card-shadow {
+    box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.08);
+  }
+  .card-shadow-hover {
+    box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.12);
+  }
+}
+
+/* Custom scrollbar for desktop */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.3);
+  }
+}

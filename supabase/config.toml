@@ -1,0 +1,25 @@
+project_id = "nenmzjxbroaedwrcpfwv"
+
+[functions.lookup-vendor]
+verify_jwt = true
+
+[functions.auto-match-transactions]
+verify_jwt = true
+
+[functions.categorize-transaction]
+verify_jwt = true
+
+[functions.process-vat-return]
+verify_jwt = true
+
+[functions.process-rct]
+verify_jwt = true
+
+[functions.process-receipt]
+verify_jwt = true
+
+[functions.generate-invoice-pdf]
+verify_jwt = true
+
+[functions.chat-assistant]
+verify_jwt = true
