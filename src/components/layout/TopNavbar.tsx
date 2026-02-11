@@ -35,7 +35,7 @@ const TopNavbar = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -50,35 +50,33 @@ const TopNavbar = () => {
             </button>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center">
-              <div className="flex items-center bg-secondary/50 rounded-full p-1">
-                {navItems
-                  .map((item) => {
-                    const active = isActive(item.path);
-                    return (
-                      <button
-                        key={item.path}
-                        type="button"
-                        onClick={() => handleNavigate(item.path)}
-                        className={cn(
-                          "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200",
-                          active
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-              </div>
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems
+                .map((item) => {
+                  const active = isActive(item.path);
+                  return (
+                    <button
+                      key={item.path}
+                      type="button"
+                      onClick={() => handleNavigate(item.path)}
+                      className={cn(
+                        "px-4 py-2 rounded-full text-sm font-medium transition-colors",
+                        active
+                          ? "text-foreground"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
             </nav>
 
             {/* Right side actions */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate("/settings")}
-                className="hidden sm:flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-all duration-200"
+                className="hidden sm:flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 Settings
               </button>
@@ -115,7 +113,7 @@ const TopNavbar = () => {
         {/* Menu Panel */}
         <div
           className={cn(
-            "absolute top-16 left-0 right-0 bg-card border-b border-border shadow-premium-xl transition-all duration-300 ease-premium",
+            "absolute top-16 left-0 right-0 bg-card border-b border-border shadow-lg transition-all duration-300 ease-premium",
             mobileMenuOpen ? "translate-y-0 opacity-100" : "-translate-y-4 opacity-0"
           )}
         >

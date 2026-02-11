@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,99 +6,95 @@
 
 @layer base {
   :root {
-    /* Premium neutral palette - warm off-whites and deep charcoals */
-    --background: 40 20% 98%;
-    --foreground: 220 15% 12%;
+    /* Light grey theme — clean monochrome with gold accent */
+    --background: 0 0% 96%;
+    --foreground: 0 0% 9%;
 
-    /* Cards use pure white for contrast against warm background */
     --card: 0 0% 100%;
-    --card-foreground: 220 15% 12%;
+    --card-foreground: 0 0% 9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 12%;
+    --popover-foreground: 0 0% 9%;
 
-    /* Primary - refined gold/amber, sophisticated not bright */
-    --primary: 43 96% 56%;
-    --primary-foreground: 220 15% 8%;
+    /* Primary — Balnce gold #FCCA46 */
+    --primary: 42 97% 64%;
+    --primary-foreground: 0 0% 5%;
 
-    /* Secondary - subtle warm gray */
-    --secondary: 40 10% 95%;
-    --secondary-foreground: 220 15% 12%;
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 9%;
 
-    /* Muted - for subtle backgrounds and disabled states */
-    --muted: 40 10% 94%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 0 0% 93%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Accent - deep charcoal for emphasis */
-    --accent: 220 15% 12%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 93%;
+    --accent-foreground: 0 0% 9%;
 
-    /* Semantic colors */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    /* Borders - subtle and refined */
-    --border: 40 10% 90%;
-    --input: 40 10% 90%;
-    --ring: 43 96% 56%;
+    --border: 0 0% 87%;
+    --input: 0 0% 87%;
+    --ring: 42 97% 64%;
 
-    /* Generous radius for premium feel */
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Sidebar */
-    --sidebar-background: 220 15% 8%;
+    /* Dark sidebar even in light mode */
+    --sidebar-background: 0 0% 8%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 43 96% 56%;
-    --sidebar-primary-foreground: 220 15% 8%;
-    --sidebar-accent: 220 12% 16%;
+    --sidebar-primary: 42 97% 64%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 220 12% 18%;
-    --sidebar-ring: 43 96% 56%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 42 97% 64%;
 
     /* Brand colors */
-    --balnce-gold: 43 96% 56%;
-    --balnce-charcoal: 220 15% 12%;
-    --balnce-cream: 40 20% 98%;
+    --balnce-gold: 42 97% 64%;
+    --balnce-charcoal: 0 0% 9%;
+    --balnce-cream: 0 0% 96%;
     --balnce-white: 0 0% 100%;
   }
 
   .dark {
-    --background: 220 15% 6%;
-    --foreground: 40 10% 95%;
+    /* Landing page dark theme — #0f1211 background with cool green tint */
+    --background: 210 11% 7%;
+    --foreground: 160 14% 93%;
 
-    --card: 220 15% 9%;
-    --card-foreground: 40 10% 95%;
+    --card: 210 11% 10%;
+    --card-foreground: 160 14% 93%;
 
-    --popover: 220 15% 9%;
-    --popover-foreground: 40 10% 95%;
+    --popover: 210 11% 10%;
+    --popover-foreground: 160 14% 93%;
 
-    --primary: 43 96% 56%;
-    --primary-foreground: 220 15% 8%;
+    /* Primary — Balnce gold #FCCA46 */
+    --primary: 42 97% 64%;
+    --primary-foreground: 0 0% 5%;
 
-    --secondary: 220 12% 14%;
-    --secondary-foreground: 40 10% 95%;
+    --secondary: 210 8% 14%;
+    --secondary-foreground: 160 14% 93%;
 
-    --muted: 220 12% 14%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 240 2% 16%;
+    --muted-foreground: 160 10% 60%;
 
-    --accent: 43 96% 56%;
-    --accent-foreground: 220 15% 8%;
+    --accent: 42 97% 64%;
+    --accent-foreground: 0 0% 5%;
 
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 12% 18%;
-    --input: 220 12% 18%;
-    --ring: 43 96% 56%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 42 97% 64%;
 
-    --sidebar-background: 0 0% 5%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 43 96% 56%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 43 96% 56%;
+    /* Sidebar matches background in dark */
+    --sidebar-background: 210 11% 5%;
+    --sidebar-foreground: 160 14% 93%;
+    --sidebar-primary: 42 97% 64%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 210 8% 14%;
+    --sidebar-accent-foreground: 160 14% 93%;
+    --sidebar-border: 0 0% 18%;
+    --sidebar-ring: 42 97% 64%;
   }
 }
 
@@ -134,13 +130,22 @@
 }
 
 @layer components {
-  /* Premium card styles */
+  /* Glassmorphic card — matches landing page bento cards */
   .card-premium {
-    @apply bg-card rounded-2xl border border-border;
+    @apply bg-card rounded-2xl;
+    border: 1px solid hsl(0 0% 100% / 0.08);
     box-shadow:
       0 0 0 1px hsl(var(--border) / 0.5),
       0 1px 2px hsl(var(--foreground) / 0.02),
       0 4px 8px hsl(var(--foreground) / 0.02);
+  }
+
+  .dark .card-premium {
+    background: hsl(160 14% 93% / 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(0 0% 100% / 0.1);
+    box-shadow: none;
   }
 
   .card-premium:hover {
@@ -150,13 +155,19 @@
       0 8px 16px hsl(var(--foreground) / 0.04);
   }
 
-  /* Hero card - dark prominent card */
+  .dark .card-premium:hover {
+    border-color: hsl(0 0% 100% / 0.15);
+    box-shadow: 0 8px 32px hsl(0 0% 0% / 0.3);
+  }
+
+  /* Hero card — gold accent card */
   .card-hero {
-    @apply bg-accent text-accent-foreground rounded-2xl;
+    @apply rounded-2xl;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
     box-shadow:
-      0 0 0 1px hsl(var(--accent) / 0.1),
-      0 4px 12px hsl(var(--accent) / 0.15),
-      0 16px 32px hsl(var(--accent) / 0.1);
+      0 4px 12px hsl(var(--primary) / 0.2),
+      0 16px 32px hsl(var(--primary) / 0.1);
   }
 
   /* Subtle interactive states */
@@ -188,13 +199,13 @@
     box-shadow: 0 1px 2px hsl(var(--foreground) / 0.05);
   }
 
-  /* Stat value - large prominent numbers */
+  /* Stat value — large prominent numbers */
   .stat-value {
     @apply text-4xl sm:text-5xl font-semibold tracking-tight tabular-nums;
     line-height: 1.1;
   }
 
-  /* Stat label - subtle descriptive text */
+  /* Stat label — subtle descriptive text */
   .stat-label {
     @apply text-xs font-medium uppercase tracking-wider text-muted-foreground;
   }
@@ -204,10 +215,16 @@
     @apply border-t border-border/60;
   }
 
-  /* Glass effect for overlays */
+  /* Glass effect for overlays — landing page style */
   .glass {
-    @apply bg-background/80 backdrop-blur-xl;
+    @apply backdrop-blur-xl;
+    background: hsl(var(--background) / 0.8);
     -webkit-backdrop-filter: blur(20px);
+  }
+
+  .dark .glass {
+    background: hsl(160 14% 93% / 0.06);
+    border: 1px solid hsl(0 0% 100% / 0.08);
   }
 
   /* Safe area for mobile devices */

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, RequireAuth } from "@/hooks/useAuth";
 import { BackgroundTasksProvider } from "@/contexts/BackgroundTasksContext";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import BackgroundTasksStatus from "@/components/layout/BackgroundTasksStatus";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Welcome from "./pages/Welcome";
@@ -38,6 +39,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <ThemeProvider>
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -83,6 +85,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
