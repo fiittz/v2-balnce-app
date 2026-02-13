@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Upload, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Upload, Sparkles, Loader2, Paperclip } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useExpenseCategories } from "@/hooks/useCategories";
 import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
@@ -53,6 +54,9 @@ const AddExpense = () => {
   const [expenseDate, setExpenseDate] = useState(prefillDate || new Date().toISOString().split("T")[0]);
   const [invoiceNumber, setInvoiceNumber] = useState(prefillInvoiceNumber || "");
   const [receiptUrl, setReceiptUrl] = useState(prefillReceiptUrl || "");
+  const [notes, setNotes] = useState("");
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [proofUploading, setProofUploading] = useState(false);
   const [isAiCategorizing, setIsAiCategorizing] = useState(false);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
@@ -126,6 +130,27 @@ const AddExpense = () => {
     }
   }, [selectedCategoryData]);
 
+  const handleProofUpload = async (file: File): Promise<string | null> => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return null;
+
+    const timestamp = Date.now();
+    const ext = file.name.split(".").pop() || "jpg";
+    const filename = `${session.user.id}/${timestamp}-proof.${ext}`;
+
+    const { data, error } = await supabase.storage
+      .from("receipts")
+      .upload(filename, file, { contentType: file.type, upsert: false });
+
+    if (error) {
+      console.error("Proof upload error:", error);
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(data.path);
+    return urlData.publicUrl;
+  };
+
   const handleSave = async () => {
     if (!amount || parseFloat(amount) <= 0) {
       toast.error("Please enter a valid amount");
@@ -133,6 +158,16 @@ const AddExpense = () => {
     }
 
     try {
+      let finalReceiptUrl = receiptUrl || null;
+
+      // Upload proof file if provided
+      if (proofFile) {
+        setProofUploading(true);
+        const url = await handleProofUpload(proofFile);
+        if (url) finalReceiptUrl = url;
+        setProofUploading(false);
+      }
+
       await createExpense.mutateAsync({
         amount: total,
         vat_amount: vatAmount,
@@ -141,9 +176,12 @@ const AddExpense = () => {
         supplier_id: supplierId,
         description: description || "Expense",
         expense_date: expenseDate,
+        notes: notes || null,
+        receipt_url: finalReceiptUrl,
       });
       navigate("/dashboard");
     } catch (error) {
+      setProofUploading(false);
       // Error handled in hook
     }
   };
@@ -290,7 +328,7 @@ const AddExpense = () => {
         {/* Receipt Upload */}
         <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.2s" }}>
           <Label className="font-medium mb-4 block">Receipt</Label>
-          <div 
+          <div
             className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-foreground/40 transition-colors"
             onClick={() => navigate("/scanner")}
           >
@@ -298,6 +336,57 @@ const AddExpense = () => {
             <p className="font-medium">Upload or scan receipt</p>
             <p className="text-sm text-muted-foreground">Tap to capture or select file</p>
           </div>
+        </div>
+
+        {/* Notes / Business Purpose */}
+        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.22s" }}>
+          <Label className="font-medium mb-2 block">Notes / Business Purpose</Label>
+          <p className="text-xs text-muted-foreground mb-3">Record who you met, the purpose, or any details for Revenue audit trail</p>
+          <Textarea
+            placeholder="e.g. Client meeting with John at Site A, discussed project scope..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="min-h-[100px] rounded-xl resize-none"
+          />
+        </div>
+
+        {/* Proof / Supporting Document */}
+        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.24s" }}>
+          <Label className="font-medium mb-2 block">Supporting Proof</Label>
+          <p className="text-xs text-muted-foreground mb-3">Attach meeting invite, calendar screenshot, or other evidence</p>
+          {proofFile ? (
+            <div className="flex items-center gap-3 p-3 bg-muted rounded-xl">
+              <Paperclip className="w-5 h-5 text-muted-foreground shrink-0" />
+              <span className="text-sm truncate flex-1">{proofFile.name}</span>
+              <button
+                onClick={() => setProofFile(null)}
+                className="text-destructive text-sm font-medium shrink-0"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-foreground/40 transition-colors">
+              <Paperclip className="w-8 h-8 text-muted-foreground mb-2" />
+              <p className="font-medium text-sm">Attach file</p>
+              <p className="text-xs text-muted-foreground">PDF, image, or screenshot</p>
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.error("File must be less than 5MB");
+                      return;
+                    }
+                    setProofFile(file);
+                  }
+                }}
+                className="hidden"
+              />
+            </label>
+          )}
         </div>
 
         {/* Summary */}
@@ -327,10 +416,10 @@ const AddExpense = () => {
         <div className="max-w-2xl mx-auto">
           <Button 
             onClick={handleSave}
-            disabled={createExpense.isPending || !amount}
+            disabled={createExpense.isPending || proofUploading || !amount}
             className="w-full h-14 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-lg font-semibold disabled:opacity-50"
           >
-            {createExpense.isPending ? "Saving..." : "Save Expense"}
+            {proofUploading ? "Uploading proof..." : createExpense.isPending ? "Saving..." : "Save Expense"}
           </Button>
         </div>
       </div>

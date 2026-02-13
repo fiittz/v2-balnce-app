@@ -17,6 +17,7 @@ const DEFAULT_EXPENSE_CATEGORIES = [
   { name: "Training & Certifications", account_code: "6000", vat_rate: 0 },
   { name: "Advertising & Marketing", account_code: "6100", vat_rate: 23 },
   { name: "Travel & Accommodation", account_code: "6200", vat_rate: 0 },
+  { name: "Subsistence", account_code: "6250", vat_rate: 0 },
   { name: "Meals & Entertainment", account_code: "6300", vat_rate: 0 },
   { name: "Repairs & Maintenance", account_code: "6400", vat_rate: 23 },
   { name: "Protective Clothing & PPE", account_code: "6500", vat_rate: 23 },
@@ -92,6 +93,7 @@ export async function ensureNewCategories(userId: string): Promise<void> {
   const needed = [
     { name: "Director's Drawings", account_code: "6700", vat_rate: 0, type: "expense" },
     { name: "Medical Expenses", account_code: "6800", vat_rate: 0, type: "expense" },
+    { name: "Subsistence", account_code: "6250", vat_rate: 0, type: "expense" },
   ];
 
   for (const cat of needed) {
