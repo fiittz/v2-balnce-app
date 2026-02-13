@@ -46,22 +46,6 @@ const AddInvoice = () => {
   const { data: onboarding } = useOnboardingSettings();
   const { user, profile } = useAuth();
 
-  const [invoiceType, setInvoiceType] = useState<"quote" | "invoice">("invoice");
-  const [rctEnabled, setRctEnabled] = useState(false);
-  const [rctRate, setRctRate] = useState<number>(20);
-  const [comment, setComment] = useState("");
-  const [logo, setLogo] = useState<string | null>(null);
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: 1, description: "", qty: 1, price: 0, vatRate: defaultVatRate }
-  ]);
-
-  // Supplier details state (your business) - pre-filled from onboarding
-  const [supplierName, setSupplierName] = useState("");
-  const [supplierAddress, setSupplierAddress] = useState("");
-  const [supplierVatNumber, setSupplierVatNumber] = useState("");
-
   // Set correct default VAT rate based on business settings
   const rctActive = !!(onboarding as any)?.rct_status && (onboarding as any).rct_status !== "not_applicable";
   const businessChargesVAT = (onboarding as any)?.vat_registered === true && !rctActive;
@@ -84,16 +68,29 @@ const AddInvoice = () => {
   // Filter VAT rates based on business type
   const availableVatRates = (() => {
     if (!businessChargesVAT) {
-      // Not VAT registered — no VAT rates shown, only zero/exempt
       return { zero_rated: "No VAT", exempt: "Exempt" } as Record<VatRate, string>;
     }
     if (!isConstructionTrade) {
-      // Non-construction VAT registered — only 23%
       return { standard_23: "23%", zero_rated: "0%", exempt: "Exempt" } as Record<VatRate, string>;
     }
-    // Construction — all rates available
     return vatRateLabels;
   })();
+
+  const [invoiceType, setInvoiceType] = useState<"quote" | "invoice">("invoice");
+  const [rctEnabled, setRctEnabled] = useState(false);
+  const [rctRate, setRctRate] = useState<number>(20);
+  const [comment, setComment] = useState("");
+  const [logo, setLogo] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [lineItems, setLineItems] = useState<LineItem[]>([
+    { id: 1, description: "", qty: 1, price: 0, vatRate: defaultVatRate }
+  ]);
+
+  // Supplier details state (your business) - pre-filled from onboarding
+  const [supplierName, setSupplierName] = useState("");
+  const [supplierAddress, setSupplierAddress] = useState("");
+  const [supplierVatNumber, setSupplierVatNumber] = useState("");
 
   // Pre-fill supplier details from onboarding/profile
   useEffect(() => {
