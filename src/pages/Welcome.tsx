@@ -5,10 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Play } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { enableDemoMode } from "@/lib/mockData";
 
 const ALLOWED_EMAILS = [
   "jamie@oakmont.ie",
@@ -216,18 +214,6 @@ const Welcome = () => {
               className="w-full h-14 border border-black/20 bg-transparent font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest text-foreground hover:bg-black/5 rounded-none shadow-none"
             >
               Log In
-            </Button>
-            <Button
-              onClick={() => {
-                enableDemoMode();
-                toast.success("Demo mode activated!");
-                navigate("/dashboard");
-              }}
-              variant="ghost"
-              className="w-full h-12 text-muted-foreground hover:text-foreground hover:bg-black/5 font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest rounded-none flex items-center justify-center gap-2"
-            >
-              <Play className="w-4 h-4" />
-              Try Demo
             </Button>
           </div>
         </div>
