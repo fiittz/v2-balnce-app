@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import PenguinIcon from "@/components/PenguinIcon";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -192,7 +191,7 @@ const Welcome = () => {
       {screen === "welcome" && (
         <div className="flex-1 flex flex-col items-center justify-center px-6 animate-fade-in relative z-10">
           <div className="mb-8">
-            <PenguinIcon className="w-24 h-24 text-foreground drop-shadow-lg" />
+            <img src="/enhance-penguin-transparent.png" alt="Balnce" className="w-24 h-24 object-contain drop-shadow-lg" />
           </div>
           <h1 className="text-5xl font-semibold text-foreground tracking-widest mb-2 font-['IBM_Plex_Mono']">
             BALNCE
@@ -230,7 +229,7 @@ const Welcome = () => {
 
           <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
             <div className="flex items-center gap-3 mb-8">
-              <PenguinIcon className="w-10 h-10 text-foreground" />
+              <img src="/enhance-penguin-transparent.png" alt="Balnce" className="w-10 h-10 object-contain" />
               <h1 className="text-3xl font-semibold text-foreground font-['IBM_Plex_Mono'] tracking-wide">
                 Welcome back
               </h1>
@@ -292,7 +291,7 @@ const Welcome = () => {
 
           <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
             <div className="flex items-center gap-3 mb-8">
-              <PenguinIcon className="w-10 h-10 text-foreground" />
+              <img src="/enhance-penguin-transparent.png" alt="Balnce" className="w-10 h-10 object-contain" />
               <h1 className="text-3xl font-semibold text-foreground font-['IBM_Plex_Mono'] tracking-wide">
                 Create account
               </h1>
@@ -362,7 +361,7 @@ const Welcome = () => {
 
           <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
             <div className="flex items-center gap-3 mb-8">
-              <PenguinIcon className="w-10 h-10 text-foreground" />
+              <img src="/enhance-penguin-transparent.png" alt="Balnce" className="w-10 h-10 object-contain" />
               <h1 className="text-3xl font-semibold text-foreground font-['IBM_Plex_Mono'] tracking-wide">
                 Your industry
               </h1>
