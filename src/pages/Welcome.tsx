@@ -10,6 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { enableDemoMode } from "@/lib/mockData";
 
+const ALLOWED_EMAILS = [
+  "jamie@oakmont.ie",
+  "thomasvonteichman@nomadai.ie",
+];
+
+const isEmailAllowed = (email: string) =>
+  ALLOWED_EMAILS.some((e) => e.toLowerCase() === email.trim().toLowerCase());
+
 type Screen = "welcome" | "login" | "signup" | "business-type";
 
 const Welcome = () => {
@@ -37,6 +45,11 @@ const Welcome = () => {
       return;
     }
 
+    if (!isEmailAllowed(email)) {
+      toast.error("Access is restricted. Contact jamie@oakmont.ie for access.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -47,7 +60,7 @@ const Welcome = () => {
       if (error) throw error;
 
       toast.success("Welcome back!");
-      
+
       // Navigate directly on successful login using window.location for reliability
       if (data.session) {
         window.location.href = "/dashboard";
@@ -75,6 +88,11 @@ const Welcome = () => {
       return;
     }
 
+    if (!isEmailAllowed(email)) {
+      toast.error("Access is restricted. Contact jamie@oakmont.ie for access.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -94,15 +112,15 @@ const Welcome = () => {
       // If user was created and auto-confirmed
       if (data.user && data.session) {
         toast.success("Account created successfully!");
-        
+
         // Update profile in background
         (async () => {
           try {
             await supabase
               .from("profiles")
-              .update({ 
+              .update({
                 business_name: businessName,
-                business_type: industryType.trim() 
+                business_type: industryType.trim()
               })
               .eq("id", data.user!.id);
             console.log("Profile updated");
@@ -110,7 +128,7 @@ const Welcome = () => {
             console.error("Profile update error:", e);
           }
         })();
-        
+
         // Auth state change will trigger the useEffect redirect
       } else if (data.user && !data.session) {
         // Email confirmation required
@@ -134,30 +152,42 @@ const Welcome = () => {
         toast.error("Please fill in all fields");
         return;
       }
+      if (!isEmailAllowed(email)) {
+        toast.error("Access is restricted. Contact jamie@oakmont.ie for access.");
+        return;
+      }
       setScreen("business-type");
     } else if (screen === "business-type" && industryType.trim()) {
       handleSignup();
     }
   };
 
+  // Shared style constants
+  const inputClass =
+    "h-14 bg-transparent border border-black/20 font-['IBM_Plex_Mono'] text-sm text-foreground placeholder:text-black/30 rounded-none";
+  const labelClass =
+    "text-foreground font-medium font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest";
+  const primaryBtnClass =
+    "w-full h-14 border border-[#E8930C] bg-[#E8930C]/10 font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest text-[#E8930C] hover:bg-[#E8930C] hover:text-white rounded-none mt-6 shadow-none";
+
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
-      {/* Grid background */}
+      {/* Grid background — 60px spacing */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px)",
-          backgroundSize: "80px 80px",
+            "linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
         }}
       />
-      {/* Golden glow */}
+      {/* Orange glow */}
       <div
         className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none"
         style={{
           width: "800px",
           height: "600px",
-          background: "radial-gradient(ellipse at center, rgba(252,202,70,0.08) 0%, transparent 70%)",
+          background: "radial-gradient(ellipse at center, rgba(232,147,12,0.06) 0%, transparent 70%)",
         }}
       />
 
@@ -166,20 +196,24 @@ const Welcome = () => {
           <div className="mb-8">
             <PenguinIcon className="w-24 h-24 text-foreground drop-shadow-lg" />
           </div>
-          <h1 className="text-5xl font-bold text-foreground tracking-tight mb-4">BALNCE</h1>
-          <p className="text-muted-foreground text-xl mb-12">Your Accounting</p>
+          <h1 className="text-5xl font-semibold text-foreground tracking-widest mb-2 font-['IBM_Plex_Mono']">
+            BALNCE
+          </h1>
+          <p className="text-muted-foreground text-base mb-12 font-['IBM_Plex_Sans']">
+            Your AI accountant
+          </p>
 
           <div className="w-full max-w-sm space-y-4">
             <Button
               onClick={() => setScreen("signup")}
-              className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 text-lg font-semibold rounded-full shadow-sm"
+              className="w-full h-14 border border-[#E8930C] bg-[#E8930C]/10 font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest text-[#E8930C] hover:bg-[#E8930C] hover:text-white rounded-none shadow-none"
             >
               Sign Up
             </Button>
             <Button
               onClick={() => setScreen("login")}
               variant="outline"
-              className="w-full h-14 bg-card border border-border text-foreground hover:bg-secondary text-lg font-semibold rounded-full"
+              className="w-full h-14 border border-black/20 bg-transparent font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest text-foreground hover:bg-black/5 rounded-none shadow-none"
             >
               Log In
             </Button>
@@ -190,7 +224,7 @@ const Welcome = () => {
                 navigate("/dashboard");
               }}
               variant="ghost"
-              className="w-full h-12 text-muted-foreground hover:text-foreground hover:bg-secondary text-base font-medium rounded-full flex items-center justify-center gap-2"
+              className="w-full h-12 text-muted-foreground hover:text-foreground hover:bg-black/5 font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest rounded-none flex items-center justify-center gap-2"
             >
               <Play className="w-4 h-4" />
               Try Demo
@@ -203,7 +237,7 @@ const Welcome = () => {
         <div className="flex-1 flex flex-col px-6 py-8 animate-fade-in relative z-10">
           <button
             onClick={() => setScreen("welcome")}
-            className="text-muted-foreground hover:text-foreground mb-8 self-start font-medium transition-colors"
+            className="text-muted-foreground hover:text-foreground mb-8 self-start font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest transition-colors"
           >
             ← Back
           </button>
@@ -211,31 +245,33 @@ const Welcome = () => {
           <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
             <div className="flex items-center gap-3 mb-8">
               <PenguinIcon className="w-10 h-10 text-foreground" />
-              <h1 className="text-3xl font-bold text-foreground">Welcome back</h1>
+              <h1 className="text-3xl font-semibold text-foreground font-['IBM_Plex_Mono'] tracking-wide">
+                Welcome back
+              </h1>
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground font-medium">Email</Label>
+                <Label htmlFor="email" className={labelClass}>Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 bg-card border-border text-foreground placeholder:text-muted-foreground rounded-lg text-lg"
+                  className={inputClass}
                   autoComplete="email"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
+                <Label htmlFor="password" className={labelClass}>Password</Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-14 bg-card border-border text-foreground placeholder:text-muted-foreground rounded-lg text-lg"
+                  className={inputClass}
                   autoComplete="current-password"
                 />
               </div>
@@ -243,12 +279,12 @@ const Welcome = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-14 bg-[#FCCA46] text-black hover:bg-[#FCCA46]/90 text-lg font-semibold rounded-full mt-6 shadow-sm"
+                className={primaryBtnClass}
               >
                 {isLoading ? "Signing in..." : "Log In"}
               </Button>
 
-              <p className="text-center text-muted-foreground">
+              <p className="text-center text-muted-foreground font-['IBM_Plex_Sans'] text-sm">
                 Don't have an account?{" "}
                 <button type="button" onClick={() => setScreen("signup")} className="font-semibold text-foreground underline">
                   Sign up
@@ -263,7 +299,7 @@ const Welcome = () => {
         <div className="flex-1 flex flex-col px-6 py-8 animate-fade-in relative z-10">
           <button
             onClick={() => setScreen("welcome")}
-            className="text-muted-foreground hover:text-foreground mb-8 self-start font-medium transition-colors"
+            className="text-muted-foreground hover:text-foreground mb-8 self-start font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest transition-colors"
           >
             ← Back
           </button>
@@ -271,52 +307,54 @@ const Welcome = () => {
           <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
             <div className="flex items-center gap-3 mb-8">
               <PenguinIcon className="w-10 h-10 text-foreground" />
-              <h1 className="text-3xl font-bold text-foreground">Create account</h1>
+              <h1 className="text-3xl font-semibold text-foreground font-['IBM_Plex_Mono'] tracking-wide">
+                Create account
+              </h1>
             </div>
 
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="business" className="text-foreground font-medium">Business Name</Label>
+                <Label htmlFor="business" className={labelClass}>Business Name</Label>
                 <Input
                   id="business"
                   type="text"
                   placeholder="Your business name"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  className="h-14 bg-card border-border text-foreground placeholder:text-muted-foreground rounded-lg text-lg"
+                  className={inputClass}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-email" className="text-foreground font-medium">Email</Label>
+                <Label htmlFor="signup-email" className={labelClass}>Email</Label>
                 <Input
                   id="signup-email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-14 bg-card border-border text-foreground placeholder:text-muted-foreground rounded-lg text-lg"
+                  className={inputClass}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password" className="text-foreground font-medium">Password</Label>
+                <Label htmlFor="signup-password" className={labelClass}>Password</Label>
                 <Input
                   id="signup-password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-14 bg-card border-border text-foreground placeholder:text-muted-foreground rounded-lg text-lg"
+                  className={inputClass}
                 />
               </div>
 
               <Button
                 onClick={handleContinue}
-                className="w-full h-14 bg-[#FCCA46] text-black hover:bg-[#FCCA46]/90 text-lg font-semibold rounded-full mt-6 shadow-sm"
+                className={primaryBtnClass}
               >
                 Continue
               </Button>
 
-              <p className="text-center text-muted-foreground">
+              <p className="text-center text-muted-foreground font-['IBM_Plex_Sans'] text-sm">
                 Already have an account?{" "}
                 <button onClick={() => setScreen("login")} className="font-semibold text-foreground underline">
                   Log in
@@ -331,7 +369,7 @@ const Welcome = () => {
         <div className="flex-1 flex flex-col px-6 py-8 animate-fade-in relative z-10">
           <button
             onClick={() => setScreen("signup")}
-            className="text-muted-foreground hover:text-foreground mb-6 self-start font-medium transition-colors"
+            className="text-muted-foreground hover:text-foreground mb-6 self-start font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest transition-colors"
           >
             ← Back
           </button>
@@ -339,28 +377,34 @@ const Welcome = () => {
           <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
             <div className="flex items-center gap-3 mb-8">
               <PenguinIcon className="w-10 h-10 text-foreground" />
-              <h1 className="text-3xl font-bold text-foreground">Your industry</h1>
+              <h1 className="text-3xl font-semibold text-foreground font-['IBM_Plex_Mono'] tracking-wide">
+                Your industry
+              </h1>
             </div>
 
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="industry" className="text-foreground font-medium">What type of business do you run?</Label>
+                <Label htmlFor="industry" className={labelClass}>
+                  What type of business do you run?
+                </Label>
                 <Input
                   id="industry"
                   type="text"
                   placeholder="e.g. Construction, Retail, Consulting..."
                   value={industryType}
                   onChange={(e) => setIndustryType(e.target.value)}
-                  className="h-14 bg-card border-border text-foreground placeholder:text-muted-foreground rounded-lg text-lg"
+                  className={inputClass}
                   autoFocus
                 />
-                <p className="text-muted-foreground text-sm">This helps us tailor your experience</p>
+                <p className="text-muted-foreground text-sm font-['IBM_Plex_Sans']">
+                  This helps us tailor your experience
+                </p>
               </div>
 
               <Button
                 onClick={handleContinue}
                 disabled={!industryType.trim() || isLoading}
-                className="w-full h-14 bg-[#FCCA46] text-black hover:bg-[#FCCA46]/90 text-lg font-semibold rounded-full disabled:opacity-50 mt-6 shadow-sm"
+                className={`${primaryBtnClass} disabled:opacity-50`}
               >
                 {isLoading ? "Creating account..." : "Get Started"}
               </Button>
