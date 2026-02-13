@@ -163,14 +163,17 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       if (!jobCounty) continue;
 
       // Determine trip type:
-      // - Same county as workshop AND estimated distance < radius → skip entirely (local work)
-      // - Same county as home but different from workshop → subsistence only (no overnight)
+      // - Same county as home/workshop → local work, no overnight stays (day subsistence only if beyond radius)
       // - Different county from home → full trip (overnight detection + subsistence + mileage)
       const estimatedDist = workshopCounty ? estimateDistanceKm(workshopCounty, jobCounty) : 999;
       const isLocalWork = workshopCounty && jobCounty === workshopCounty && estimatedDist < subsistenceRadiusKm;
       if (isLocalWork) continue;
 
-      const isOutsideHomeCounty = homeCounty ? jobCounty !== homeCounty : true;
+      // If homeCounty is known and matches jobCounty → NOT outside home county (no overnights)
+      // If homeCounty is unknown, also check baseLocation against the job county
+      const baseCounty = baseLocation ? extractCountyFromAddress(baseLocation) : null;
+      const effectiveHomeCounty = homeCounty || baseCounty;
+      const isOutsideHomeCounty = effectiveHomeCounty ? jobCounty !== effectiveHomeCounty : false;
 
       // Parse job start/end dates from notes JSON
       let jobStartDate: string | null = null;
