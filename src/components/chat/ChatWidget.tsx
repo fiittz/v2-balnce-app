@@ -506,15 +506,18 @@ export default function ChatWidget() {
         abortController.signal
       );
 
-      const finalContent = displayContent || fullContent || "Sorry, I couldn't generate a response.";
-      if (!displayContent && !fullContent) {
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: "assistant", content: finalContent };
-          return updated;
-        });
+      const finalContent = displayContent || fullContent;
+      if (!finalContent) {
+        // Only show fallback if no tool was used (tool calls produce their own response)
+        if (!lastToolUsed) {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "assistant", content: "Sorry, I couldn't generate a response. Please try again." };
+            return updated;
+          });
+        }
       }
-      if (user?.id) {
+      if (user?.id && finalContent) {
         supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: finalContent }).then();
       }
     } catch (err) {

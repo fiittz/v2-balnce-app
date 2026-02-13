@@ -67,6 +67,34 @@ const AddInvoice = () => {
   const businessChargesVAT = (onboarding as any)?.vat_registered === true && !rctActive;
   const defaultVatRate: VatRate = businessChargesVAT ? "standard_23" : "zero_rated";
 
+  // Determine if business is construction-related
+  const CONSTRUCTION_ACTIVITIES = [
+    "carpentry_joinery", "general_construction", "electrical_contracting",
+    "plumbing_heating", "bricklaying_masonry", "plastering_drylining",
+    "painting_decorating", "roofing", "groundworks_civil", "landscaping",
+    "tiling_stonework", "steel_fabrication_welding", "quantity_surveying",
+    "project_management", "site_supervision", "property_maintenance",
+    "property_development",
+  ];
+  const primaryActivity = (onboarding as any)?.primary_activity || "";
+  const secondaryActivities: string[] = (onboarding as any)?.secondary_activities || [];
+  const isConstructionTrade = CONSTRUCTION_ACTIVITIES.includes(primaryActivity) ||
+    secondaryActivities.some((a: string) => CONSTRUCTION_ACTIVITIES.includes(a));
+
+  // Filter VAT rates based on business type
+  const availableVatRates = (() => {
+    if (!businessChargesVAT) {
+      // Not VAT registered — no VAT rates shown, only zero/exempt
+      return { zero_rated: "No VAT", exempt: "Exempt" } as Record<VatRate, string>;
+    }
+    if (!isConstructionTrade) {
+      // Non-construction VAT registered — only 23%
+      return { standard_23: "23%", zero_rated: "0%", exempt: "Exempt" } as Record<VatRate, string>;
+    }
+    // Construction — all rates available
+    return vatRateLabels;
+  })();
+
   // Pre-fill supplier details from onboarding/profile
   useEffect(() => {
     if (onboarding || profile) {
@@ -612,7 +640,7 @@ const AddInvoice = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(Object.entries(vatRateLabels) as [VatRate, string][]).map(([rate, label]) => (
+                        {(Object.entries(availableVatRates) as [VatRate, string][]).map(([rate, label]) => (
                           <SelectItem key={rate} value={rate}>{label}</SelectItem>
                         ))}
                       </SelectContent>
@@ -624,8 +652,8 @@ const AddInvoice = () => {
           </div>
         </div>
 
-        {/* RCT Toggle */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
+        {/* RCT Toggle — only visible for construction trades */}
+        {isConstructionTrade && <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold">RCT Applies</h3>
@@ -659,7 +687,7 @@ const AddInvoice = () => {
               </p>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Comments */}
         <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.18s" }}>
