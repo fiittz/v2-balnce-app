@@ -380,6 +380,7 @@ export default function ChatWidget() {
     setIsLoading(true);
     setLoadingText("Balnce is thinking...");
     setLastToolUsed(null);
+    let toolWasUsed = false;
 
     if (user?.id) {
       supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: messageText }).then();
@@ -435,6 +436,7 @@ export default function ChatWidget() {
             const toolName = tc.name;
             setLoadingText(TOOL_STATUS_LABELS[toolName] || "Working on it...");
             setLastToolUsed(toolName);
+            toolWasUsed = true;
 
             let args: Record<string, any> = {};
             try { args = JSON.parse(tc.arguments || "{}"); } catch { /* empty */ }
@@ -499,6 +501,15 @@ export default function ChatWidget() {
                   () => {},
                   abortController.signal
                 );
+              } else {
+                // Tool response failed — show the tool result directly
+                fullContent = result;
+                displayContent = result;
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = { role: "assistant", content: displayContent };
+                  return updated;
+                });
               }
             }
           }
@@ -507,15 +518,12 @@ export default function ChatWidget() {
       );
 
       const finalContent = displayContent || fullContent;
-      if (!finalContent) {
-        // Only show fallback if no tool was used (tool calls produce their own response)
-        if (!lastToolUsed) {
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { role: "assistant", content: "Sorry, I couldn't generate a response. Please try again." };
-            return updated;
-          });
-        }
+      if (!finalContent && !toolWasUsed) {
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "assistant", content: "Sorry, I couldn't generate a response. Please try again." };
+          return updated;
+        });
       }
       if (user?.id && finalContent) {
         supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: finalContent }).then();
