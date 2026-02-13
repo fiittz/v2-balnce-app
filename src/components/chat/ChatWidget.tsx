@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { X, Send, Trash2, Sparkles, ChevronRight } from "lucide-react";
+import { X, Send, Trash2, Sparkles, ChevronRight, MessageSquarePlus, History, ChevronLeft } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import PenguinIcon from "@/components/PenguinIcon";
@@ -91,12 +91,62 @@ const ALL_TOOL_NAMES = new Set(Object.keys(TOOL_STATUS_LABELS));
 const JUNK_RE = /### Function<[^>]*>\w+\s*(?:json\s*)?\{[\s\S]*?\}\s*#?|<\|?tool_?call\|?>\s*\w+\s*\{[\s\S]*?\}|จัดอันดับ;/gi;
 function sanitize(text: string) { return text.replace(JUNK_RE, "").trim(); }
 
+// ── Conversation grouping ────────────────────────────────────
+interface StoredMessage {
+  id: string;
+  role: string;
+  content: string;
+  created_at: string;
+}
+
+interface Conversation {
+  id: string;
+  title: string;
+  date: string;
+  messages: ChatMessage[];
+}
+
+/** Group messages into conversations — a gap of 2+ hours = new conversation */
+function groupConversations(msgs: StoredMessage[]): Conversation[] {
+  if (msgs.length === 0) return [];
+  const convos: Conversation[] = [];
+  let current: StoredMessage[] = [msgs[0]];
+
+  for (let i = 1; i < msgs.length; i++) {
+    const gap = new Date(msgs[i].created_at).getTime() - new Date(msgs[i - 1].created_at).getTime();
+    if (gap > 2 * 60 * 60 * 1000) {
+      convos.push(buildConvo(current));
+      current = [msgs[i]];
+    } else {
+      current.push(msgs[i]);
+    }
+  }
+  convos.push(buildConvo(current));
+  return convos.reverse(); // newest first
+}
+
+function buildConvo(msgs: StoredMessage[]): Conversation {
+  const firstUser = msgs.find((m) => m.role === "user");
+  const title = firstUser
+    ? firstUser.content.slice(0, 50) + (firstUser.content.length > 50 ? "..." : "")
+    : "New conversation";
+  const date = msgs[0].created_at;
+  return {
+    id: msgs[0].id,
+    title,
+    date,
+    messages: msgs.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),
+  };
+}
+
 export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingText, setLoadingText] = useState("Balnce is thinking...");
   const [lastToolUsed, setLastToolUsed] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -106,18 +156,22 @@ export default function ChatWidget() {
   const { user, profile, directorCount } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  // Load chat history from Supabase on mount
+  // Load all chat history from Supabase on mount
   useEffect(() => {
     if (!user?.id) return;
     supabase
       .from("chat_messages")
-      .select("role, content")
+      .select("id, role, content, created_at")
       .eq("user_id", user.id)
       .order("created_at", { ascending: true })
-      .limit(50)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          setMessages(data.map((m: any) => ({ role: m.role, content: m.content })));
+          const grouped = groupConversations(data as StoredMessage[]);
+          setConversations(grouped);
+          // Load the most recent conversation
+          if (grouped.length > 0) {
+            setMessages(grouped[0].messages);
+          }
         }
       });
   }, [user?.id]);
@@ -405,7 +459,7 @@ export default function ChatWidget() {
         body: JSON.stringify({
           message: messageText,
           financialContext,
-          chatHistory: messages.slice(-10),
+          chatHistory: messages.slice(-30),
           currentPage,
         }),
         signal: abortController.signal,
@@ -463,7 +517,7 @@ export default function ChatWidget() {
             } else {
               setLoadingText("Balnce is thinking...");
               const historyForToolTurn = [
-                ...messages.slice(-10),
+                ...messages.slice(-30),
                 { role: "user", content: messageText },
                 { role: "assistant", content: "", tool_calls: [{ id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments } }] },
               ];
@@ -566,11 +620,63 @@ export default function ChatWidget() {
         </button>
       )}
 
-      {/* Chat panel */}
+      {/* Chat panel — larger with history sidebar */}
       {isOpen && (
-        <div className="fixed bottom-24 right-3 md:bottom-6 md:right-6 z-50 w-[380px] max-w-[calc(100vw-24px)] h-[560px] max-h-[calc(100vh-120px)] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed bottom-24 right-3 md:bottom-6 md:right-6 z-50 w-[420px] md:w-[700px] max-w-[calc(100vw-24px)] h-[680px] max-h-[calc(100vh-100px)] bg-background border border-border rounded-2xl shadow-2xl flex overflow-hidden">
+          {/* History sidebar */}
+          {showHistory && (
+            <div className="w-[220px] border-r border-border flex flex-col bg-muted/30 shrink-0">
+              <div className="px-3 py-3 border-b border-border flex items-center justify-between">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">History</p>
+                <button onClick={() => setShowHistory(false)} className="text-muted-foreground hover:text-foreground">
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <button
+                  onClick={() => {
+                    setMessages([]);
+                    setLastToolUsed(null);
+                    setShowHistory(false);
+                  }}
+                  className="w-full text-left px-3 py-2.5 text-xs border-b border-border/50 hover:bg-muted/50 transition-colors flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium"
+                >
+                  <MessageSquarePlus className="w-3.5 h-3.5" />
+                  New chat
+                </button>
+                {conversations.map((convo) => (
+                  <button
+                    key={convo.id}
+                    onClick={() => {
+                      setMessages(convo.messages);
+                      setShowHistory(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-xs border-b border-border/50 hover:bg-muted/50 transition-colors"
+                  >
+                    <p className="font-medium text-foreground truncate">{convo.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {new Date(convo.date).toLocaleDateString("en-IE", { day: "numeric", month: "short" })}
+                    </p>
+                  </button>
+                ))}
+                {conversations.length === 0 && (
+                  <p className="text-xs text-muted-foreground text-center py-6">No history yet</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Main chat area */}
+          <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-4 py-3 flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="text-white/70 hover:text-white transition-colors"
+              aria-label="Chat history"
+            >
+              <History className="w-5 h-5" />
+            </button>
             <div className="w-9 h-9 rounded-full bg-[#FFD700] flex items-center justify-center">
               <PenguinIcon className="w-7 h-7" />
             </div>
@@ -582,12 +688,23 @@ export default function ChatWidget() {
               onClick={() => {
                 setMessages([]);
                 setLastToolUsed(null);
+              }}
+              className="text-white/70 hover:text-white transition-colors"
+              aria-label="New chat"
+            >
+              <MessageSquarePlus className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setMessages([]);
+                setLastToolUsed(null);
                 if (user?.id) {
                   supabase.from("chat_messages").delete().eq("user_id", user.id).then();
+                  setConversations([]);
                 }
               }}
               className="text-white/70 hover:text-white transition-colors"
-              aria-label="Clear chat"
+              aria-label="Clear all history"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -738,6 +855,7 @@ export default function ChatWidget() {
             <p className="text-[10px] text-muted-foreground text-center mt-1">
               AI-generated — verify with a professional before filing
             </p>
+          </div>
           </div>
         </div>
       )}
