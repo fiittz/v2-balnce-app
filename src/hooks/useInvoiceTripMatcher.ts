@@ -269,7 +269,13 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       } else {
         // Within home county but beyond subsistence radius — day subsistence only
         nights = 0;
-        days = 1;
+        if (jobStartDate && jobEndDate) {
+          days = dayDiff(jobStartDate, jobEndDate) + 1;
+        } else if (matchedTrip) {
+          days = dayDiff(matchedTrip.startDate, matchedTrip.endDate) + 1;
+        } else {
+          days = 1;
+        }
       }
 
       // If hotel receipts exist in CSV, use vouched method:
