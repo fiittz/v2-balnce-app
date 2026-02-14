@@ -14,6 +14,7 @@ interface Transaction {
   vat_amount?: number | null;
   net_amount?: number | null;
   bank_reference?: string | null;
+  receipt_url?: string | null;
   category?: { name: string } | null;
   account?: { name: string } | null;
 }
@@ -434,7 +435,8 @@ export const exportToExcel = (
     "VAT Rate",
     "VAT Amount (€)",
     "Net Amount (€)",
-    "Reference"
+    "Reference",
+    "Receipt"
   ];
 
   const rows = transactions.map(tx => [
@@ -447,7 +449,8 @@ export const exportToExcel = (
     tx.vat_rate || "",
     tx.vat_amount?.toFixed(2) || "",
     tx.net_amount?.toFixed(2) || "",
-    tx.bank_reference || ""
+    tx.bank_reference || "",
+    tx.receipt_url ? "Yes" : ""
   ]);
 
   // Create CSV content (Excel compatible)
@@ -757,7 +760,7 @@ export const exportToPDF = (
 
     for (const [catName, catTxs] of sortedCats) {
       catHeaderIndices.push(bodyRows.length);
-      bodyRows.push([catName, "", "", "", "", "", ""]);
+      bodyRows.push([catName, "", "", "", "", "", "", ""]);
       for (const tx of catTxs.sort((a, b) => a.transaction_date.localeCompare(b.transaction_date))) {
         const absGross = Math.abs(tx.amount);
         const { tax, net } = calcVat(absGross, vatPct, tx.vat_amount);
@@ -765,13 +768,14 @@ export const exportToPDF = (
           format(new Date(tx.transaction_date), "d/MM/yyyy"),
           "", tx.bank_reference || "", tx.description,
           fmtEur(-absGross), fmtEur(-tax), fmtEur(-net),
+          tx.receipt_url ? "Yes" : "",
         ]);
         grpGross -= absGross; grpTax -= tax; grpNet -= net;
       }
     }
 
     const totalRowIdx = bodyRows.length;
-    bodyRows.push(["", `Total ${label}`, "", "", fmtEur(grpGross), fmtEur(grpTax), fmtEur(grpNet)]);
+    bodyRows.push(["", `Total ${label}`, "", "", fmtEur(grpGross), fmtEur(grpTax), fmtEur(grpNet), ""]);
     purchaseGross += grpGross; purchaseTax += grpTax; purchaseNet += grpNet;
     auditGroups.push({ label, sortKey: 100 - vatPct, bodyRows, catHeaderIndices, totalRowIdx, totalGross: grpGross, totalTax: grpTax, totalNet: grpNet });
   }
@@ -815,7 +819,7 @@ export const exportToPDF = (
 
     for (const [catName, catTxs] of sortedCats) {
       catHeaderIndices.push(bodyRows.length);
-      bodyRows.push([catName, "", "", "", "", "", ""]);
+      bodyRows.push([catName, "", "", "", "", "", "", ""]);
       for (const tx of catTxs.sort((a, b) => a.transaction_date.localeCompare(b.transaction_date))) {
         const absGross = Math.abs(tx.amount);
         const { tax, net } = calcVat(absGross, vatPct, tx.vat_amount);
@@ -823,13 +827,14 @@ export const exportToPDF = (
           format(new Date(tx.transaction_date), "d/MM/yyyy"),
           "", tx.bank_reference || "", tx.description,
           fmtEur(absGross), fmtEur(tax), fmtEur(net),
+          tx.receipt_url ? "Yes" : "",
         ]);
         grpGross += absGross; grpTax += tax; grpNet += net;
       }
     }
 
     const totalRowIdx = bodyRows.length;
-    bodyRows.push(["", `Total ${label}`, "", "", fmtEur(grpGross), fmtEur(grpTax), fmtEur(grpNet)]);
+    bodyRows.push(["", `Total ${label}`, "", "", fmtEur(grpGross), fmtEur(grpTax), fmtEur(grpNet), ""]);
     salesGross += grpGross; salesTax += grpTax; salesNet += grpNet;
     auditGroups.push({ label, sortKey: 1000 + (100 - vatPct), bodyRows, catHeaderIndices, totalRowIdx, totalGross: grpGross, totalTax: grpTax, totalNet: grpNet });
   }
@@ -844,17 +849,18 @@ export const exportToPDF = (
 
     autoTable(doc, {
       startY: y, margin: { left: 14, right: 14 }, theme: "plain",
-      head: [["Date", "Account", "Ref", "Details", "Gross", "Tax", "Net"]],
+      head: [["Date", "Account", "Ref", "Details", "Gross", "Tax", "Net", "Receipt"]],
       body: g.bodyRows,
       styles: { fontSize: 6.5, cellPadding: 1.2, overflow: "linebreak" },
       headStyles: { fillColor: [240, 240, 240], fontStyle: "bold", fontSize: 6.5 },
       columnStyles: {
         0: { cellWidth: 18 },
         2: { cellWidth: 18 },
-        3: { cellWidth: 52 },
+        3: { cellWidth: 44 },
         4: { halign: "right", cellWidth: 20 },
         5: { halign: "right", cellWidth: 16 },
         6: { halign: "right", cellWidth: 18 },
+        7: { cellWidth: 14, halign: "center" },
       },
       didParseCell: (data) => {
         // Category sub-header rows
@@ -993,7 +999,8 @@ export const exportDirectorToExcel = (
     "VAT Rate",
     "VAT Amount (€)",
     "Net Amount (€)",
-    "Reference"
+    "Reference",
+    "Receipt"
   ];
 
   const rows = transactions.map(tx => [
@@ -1006,11 +1013,12 @@ export const exportDirectorToExcel = (
     tx.vat_rate || "",
     tx.vat_amount?.toFixed(2) || "",
     tx.net_amount?.toFixed(2) || "",
-    tx.bank_reference || ""
+    tx.bank_reference || "",
+    tx.receipt_url ? "Yes" : ""
   ]);
 
   let csvContent = "";
-  
+
   if (questionnaire) {
     csvContent += formatDirectorQuestionnaireSection(questionnaire);
   }
@@ -1150,7 +1158,7 @@ export const exportDirectorToPDF = (
 
     for (const [catName, txs] of dirSortedCats) {
       dirCatHeaderIndices.push(bodyRows.length);
-      bodyRows.push([catName, "", "", "", "", ""]);
+      bodyRows.push([catName, "", "", "", "", "", ""]);
       for (const tx of txs.sort((a, b) => a.transaction_date.localeCompare(b.transaction_date))) {
         const vatPct = tx.vat_rate ? parseFloat(tx.vat_rate) : 0;
         const absGross = Math.abs(tx.amount);
@@ -1160,16 +1168,17 @@ export const exportDirectorToPDF = (
           "",
           tx.description,
           fmtEur(sign * absGross), fmtEur(sign * tax), fmtEur(sign * net),
+          tx.receipt_url ? "Yes" : "",
         ]);
       }
     }
 
     const dirTotalIdx = bodyRows.length;
-    bodyRows.push(["", `Total ${g.label}`, "", fmtEur(g.totalGross), fmtEur(g.totalTax), fmtEur(g.totalNet)]);
+    bodyRows.push(["", `Total ${g.label}`, "", fmtEur(g.totalGross), fmtEur(g.totalTax), fmtEur(g.totalNet), ""]);
 
     autoTable(doc, {
       startY: y, margin: { left: 14, right: 14 }, theme: "plain",
-      head: [["Date", "Account", "Details", "Gross", "Tax", "Net"]],
+      head: [["Date", "Account", "Details", "Gross", "Tax", "Net", "Receipt"]],
       body: bodyRows,
       styles: { fontSize: 6.5, cellPadding: 1.2, overflow: "linebreak" },
       headStyles: { fillColor: [240, 240, 240], fontStyle: "bold", fontSize: 6.5 },
@@ -1178,6 +1187,7 @@ export const exportDirectorToPDF = (
         3: { halign: "right", cellWidth: 20 },
         4: { halign: "right", cellWidth: 16 },
         5: { halign: "right", cellWidth: 18 },
+        6: { cellWidth: 14, halign: "center" },
       },
       didParseCell: (data) => {
         if (dirCatHeaderIndices.includes(data.row.index)) {
