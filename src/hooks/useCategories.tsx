@@ -32,7 +32,8 @@ export function useCategories(type?: "income" | "expense") {
         query = query.eq("type", type);
       }
 
-      let { data, error } = await query;
+      const { data: initialData, error } = await query;
+      let data = initialData;
       if (error) throw error;
 
       // If no categories exist, seed defaults and refetch

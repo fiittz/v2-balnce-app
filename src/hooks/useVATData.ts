@@ -105,7 +105,7 @@ export const useVATSummary = (periodStart: string, periodEnd: string) => {
 
       // Calculate VAT from expenses
       let expenseVatOnPurchases = 0;
-      for (const exp of (expenses ?? []) as any[]) {
+      for (const exp of (expenses ?? []) as Record<string, unknown>[]) {
         const vat = exp.vat_amount || 0;
         expenseVatOnPurchases += vat;
         if (vat > 0) {
@@ -122,12 +122,12 @@ export const useVATSummary = (periodStart: string, periodEnd: string) => {
       }
 
       // Process transactions with Section 59/60 rules
-      let transactionVatOnSales = 0;
+      const transactionVatOnSales = 0;
       let transactionVatOnPurchases = 0;
       let transactionSalesCount = 0;
       let transactionPurchasesCount = 0;
 
-      for (const txn of (transactions || []) as any[]) {
+      for (const txn of (transactions || []) as Record<string, unknown>[]) {
         const categoryName = txn.category?.name || null;
         const accountName = txn.account?.name || null;
 
@@ -293,7 +293,7 @@ export const useUpdateVATReturn = () => {
       status?: "draft" | "ready" | "submitted" | "paid";
       notes?: string;
     }) => {
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (status) {
         updateData.status = status;
         if (status === "submitted") {

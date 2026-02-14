@@ -1,9 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const AI_MODEL = Deno.env.get("AI_MODEL") || "google/gemini-2.5-flash";
 
 interface VendorLookupRequest {
   vendor_name: string;
@@ -48,6 +53,26 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify authentication
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: "No authorization header" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   // Always keep a vendor name around for safe fallbacks in error paths.
   let vendorNameForResponse = "";
 
@@ -55,9 +80,16 @@ serve(async (req) => {
     const { vendor_name, amount, user_industry, user_business_type }: VendorLookupRequest = await req.json();
     vendorNameForResponse = vendor_name || "";
 
-    if (!vendor_name) {
+    if (!vendor_name || typeof vendor_name !== "string" || vendor_name.trim().length === 0) {
       return new Response(
         JSON.stringify({ error: "vendor_name is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (vendor_name.length > 500) {
+      return new Response(
+        JSON.stringify({ error: "vendor_name must be 500 characters or fewer" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -96,7 +128,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: AI_MODEL,
           messages: [
             { 
               role: "system", 
@@ -213,7 +245,7 @@ Based on the web research and business profile, is this a legitimate business ex
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: AI_MODEL,
             messages: [
               { role: "system", content: systemPrompt },
               { role: "user", content: userPrompt },

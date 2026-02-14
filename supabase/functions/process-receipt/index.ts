@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,7 @@ const corsHeaders = {
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const AI_MODEL = Deno.env.get("AI_MODEL") || "google/gemini-2.5-flash";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -36,11 +38,25 @@ serve(async (req) => {
       );
     }
 
+    // Rate limit: 30 receipts per minute per user
+    const rl = checkRateLimit(user.id, "receipt", 30);
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.retryAfterMs!, corsHeaders);
+    }
+
     if (!OPENROUTER_API_KEY) {
       throw new Error("OPENROUTER_API_KEY is not configured");
     }
 
     const { imageBase64, imageUrl, categories } = await req.json();
+
+    // Max ~14MB base64 (approx 10MB raw image)
+    if (imageBase64 && imageBase64.length > 14_000_000) {
+      return new Response(
+        JSON.stringify({ error: "Image too large. Maximum size is 10MB." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!imageBase64 && !imageUrl) {
       return new Response(
@@ -111,7 +127,7 @@ Return a JSON object with:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: AI_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { 
@@ -155,8 +171,6 @@ Return a JSON object with:
       console.error("Failed to parse AI response:", content);
       throw new Error("Invalid AI response format");
     }
-
-    console.log("Receipt OCR result:", result);
 
     // Log audit entry
     await supabase.from("audit_log").insert({

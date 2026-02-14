@@ -133,7 +133,7 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
     : homeCounty;
 
   // Get commute method and vehicle ownership from first director's onboarding_data
-  const director1Data = (directorRows?.[0] as any)?.onboarding_data;
+  const director1Data = (directorRows?.[0] as Record<string, unknown>)?.onboarding_data as Record<string, unknown> | undefined;
   const commuteMethod = director1Data?.commute_method || "";
   const vehicleOwnedByDirector = director1Data?.vehicle_owned_by_director === true;
 
@@ -156,7 +156,7 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
 
     for (const inv of yearInvoices) {
       // Extract location from customer address
-      const customerAddress = (inv.customer as any)?.address || (inv as any)?.customer_address;
+      const customerAddress = (inv.customer as Record<string, unknown>)?.address || (inv as Record<string, unknown>)?.customer_address;
       if (!customerAddress) continue;
 
       const jobCounty = extractCountyFromAddress(customerAddress);
@@ -335,7 +335,7 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       results.push({
         invoiceId: inv.id,
         invoiceNumber: inv.invoice_number,
-        customerName: (inv.customer as any)?.name || "Unknown",
+        customerName: (inv.customer as Record<string, unknown>)?.name as string || "Unknown",
         jobLocation: jobCounty,
         invoiceDate: inv.invoice_date,
         matchedTrip,

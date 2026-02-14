@@ -17,17 +17,17 @@ interface FinancialContextInput {
   businessType: string;
   taxYear: string;
   ct1: CT1Data;
-  savedCT1: Record<string, any> | null;
-  directorData: Record<string, any> | null;
+  savedCT1: Record<string, unknown> | null;
+  directorData: Record<string, unknown> | null;
   transactionCount: number;
   // New expanded fields
-  profile?: Record<string, any> | null;
-  onboardingSettings?: Record<string, any> | null;
-  businessExtra?: Record<string, any> | null;
-  allDirectorData?: Record<string, any>[];
-  directorRows?: Record<string, any>[];
-  allForm11Data?: { directorNumber: number; data: Record<string, any> }[];
-  invoices?: Record<string, any>[];
+  profile?: Record<string, unknown> | null;
+  onboardingSettings?: Record<string, unknown> | null;
+  businessExtra?: Record<string, unknown> | null;
+  allDirectorData?: Record<string, unknown>[];
+  directorRows?: Record<string, unknown>[];
+  allForm11Data?: { directorNumber: number; data: Record<string, unknown> }[];
+  invoices?: Record<string, unknown>[];
 }
 
 export function buildFinancialContext(input: FinancialContextInput): string {
@@ -215,18 +215,18 @@ export function buildFinancialContext(input: FinancialContextInput): string {
   if (invoices && invoices.length > 0) {
     lines.push(`=== INVOICES ===`);
     lines.push(`  Total Invoices: ${invoices.length}`);
-    const paidInvoices = invoices.filter((inv: any) => inv.status === "paid");
-    const unpaidInvoices = invoices.filter((inv: any) => inv.status !== "paid");
-    const totalInvoiced = invoices.reduce((s: number, inv: any) => s + (Number(inv.total) || 0), 0);
-    const totalVatOnInvoices = invoices.reduce((s: number, inv: any) => s + (Number(inv.vat_amount) || 0), 0);
+    const paidInvoices = invoices.filter((inv: Record<string, unknown>) => inv.status === "paid");
+    const unpaidInvoices = invoices.filter((inv: Record<string, unknown>) => inv.status !== "paid");
+    const totalInvoiced = invoices.reduce((s: number, inv: Record<string, unknown>) => s + (Number(inv.total) || 0), 0);
+    const totalVatOnInvoices = invoices.reduce((s: number, inv: Record<string, unknown>) => s + (Number(inv.vat_amount) || 0), 0);
     lines.push(`  Paid: ${paidInvoices.length}, Unpaid: ${unpaidInvoices.length}`);
     lines.push(`  Total Invoiced: ${eur(totalInvoiced)}`);
     lines.push(`  Total VAT on Invoices: ${eur(totalVatOnInvoices)}`);
     // Show recent invoices (last 10)
     const recent = invoices.slice(0, 10);
     for (const inv of recent) {
-      const custName = (inv as any).customer?.name || "Unknown";
-      lines.push(`  ${(inv as any).invoice_number || "?"} — ${custName} — ${(inv as any).invoice_date || ""} — ${eur(Number((inv as any).total) || 0)} (${(inv as any).status || "draft"})`);
+      const custName = (inv.customer as Record<string, unknown>)?.name || "Unknown";
+      lines.push(`  ${inv.invoice_number || "?"} — ${custName} — ${inv.invoice_date || ""} — ${eur(Number(inv.total) || 0)} (${inv.status || "draft"})`);
     }
     if (invoices.length > 10) lines.push(`  ... and ${invoices.length - 10} more`);
     lines.push(``);
@@ -267,7 +267,7 @@ export function buildFinancialContext(input: FinancialContextInput): string {
     lines.push(`  Number of Directors: ${directors.length}`);
     for (let i = 0; i < directors.length; i++) {
       const d = directors[i];
-      const dbRow = directorRows?.[i] as any;
+      const dbRow = directorRows?.[i] as Record<string, unknown> | undefined;
       lines.push(`  --- Director ${i + 1} ---`);
       if (d.first_name || d.director_name || dbRow?.director_name) {
         lines.push(`  Name: ${d.director_name || dbRow?.director_name || `${d.first_name || ""} ${d.last_name || ""}`.trim()}`);

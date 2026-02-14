@@ -28,7 +28,8 @@ export function useAccounts(typeFilter?: string) {
         query = query.eq("account_type", typeFilter);
       }
 
-      let { data, error } = await query;
+      const { data: initialData, error } = await query;
+      let data = initialData;
       if (error) throw error;
 
       // If no accounts exist, create a default one and refetch

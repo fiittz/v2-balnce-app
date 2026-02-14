@@ -36,7 +36,7 @@ export function assembleBalanceSheetData(
     input.landBuildings + input.plantMachinery + input.motorVehicles + input.fixturesFittings;
 
   const currentAssets =
-    input.stock + input.debtors + input.cash + input.bankBalance + input.rctPrepayment;
+    input.stock + input.debtors + input.cash + input.bankBalance + (input.rctPrepayment ?? 0);
 
   const currentLiabilities =
     input.creditors + input.taxation + input.bankOverdraft + (input.directorsLoanTravel ?? 0);

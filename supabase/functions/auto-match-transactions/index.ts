@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +9,7 @@ const corsHeaders = {
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const AI_MODEL = Deno.env.get("AI_MODEL") || "google/gemini-2.5-flash";
 
 interface MatchCandidate {
   id: string;
@@ -56,6 +57,14 @@ serve(async (req) => {
     }
 
     const { action, transactionIds, transactionId } = await req.json();
+
+    // Input validation: max batch size of 100
+    if (transactionIds && Array.isArray(transactionIds) && transactionIds.length > 100) {
+      return new Response(
+        JSON.stringify({ error: "Maximum batch size is 100 transactions" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     console.log(`Auto-match action: ${action} for user: ${user.id}`);
 
@@ -343,7 +352,7 @@ Return JSON with:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: AI_MODEL,
         messages: [
           { role: "system", content: "You are a bookkeeping AI that matches bank transactions to invoices and expenses." },
           { role: "user", content: prompt },

@@ -43,7 +43,7 @@ const Welcome = () => {
     }
 
     if (!isEmailAllowed(email)) {
-      toast.error("Access is restricted. Contact jamie@oakmont.ie for access.");
+      toast.error("Access is restricted. Contact hello@balnce.ie for access.");
       return;
     }
 
@@ -63,8 +63,9 @@ const Welcome = () => {
         window.location.href = "/dashboard";
         return; // Exit early to prevent finally from resetting loading
       }
-    } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      toast.error(errMsg || "Failed to sign in");
       setIsLoading(false);
     }
   };
@@ -86,7 +87,7 @@ const Welcome = () => {
     }
 
     if (!isEmailAllowed(email)) {
-      toast.error("Access is restricted. Contact jamie@oakmont.ie for access.");
+      toast.error("Access is restricted. Contact hello@balnce.ie for access.");
       return;
     }
 
@@ -132,12 +133,13 @@ const Welcome = () => {
         toast.success("Check your email to confirm your account!");
         setIsLoading(false);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Signup error:", error);
-      if (error.message?.includes("already registered")) {
+      const errMsg = error instanceof Error ? error.message : String(error);
+      if (errMsg?.includes("already registered")) {
         toast.error("This email is already registered. Please log in instead.");
       } else {
-        toast.error(error.message || "Failed to create account");
+        toast.error(errMsg || "Failed to create account");
       }
       setIsLoading(false);
     }
@@ -150,7 +152,7 @@ const Welcome = () => {
         return;
       }
       if (!isEmailAllowed(email)) {
-        toast.error("Access is restricted. Contact jamie@oakmont.ie for access.");
+        toast.error("Access is restricted. Contact hello@balnce.ie for access.");
         return;
       }
       setScreen("business-type");

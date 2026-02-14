@@ -86,7 +86,7 @@ const BulkProcessor = () => {
             date: transaction.transaction_date,
             type: transaction.type as "income" | "expense",
           },
-          categories as any,
+          categories as unknown[],
           profile?.business_type || undefined
         );
 
@@ -105,7 +105,7 @@ const BulkProcessor = () => {
         await updateTransaction.mutateAsync({
           id,
           category_id: categoryId,
-          vat_rate: result.vat_rate as any,
+          vat_rate: result.vat_rate as string,
           notes: result.explanation || null,
         });
 

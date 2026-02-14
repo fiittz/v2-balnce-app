@@ -447,8 +447,8 @@ export default function DirectorOnboardingWizard() {
       }
     } catch (error) {
       console.error("Error saving director onboarding:", error);
-      const err = error as any;
-      toast.error(`Failed to save settings: ${err?.message || err?.code || "Unknown error"}`);
+      const errMsg = error instanceof Error ? error.message : String(error);
+      toast.error(`Failed to save settings: ${errMsg || "Unknown error"}`);
     } finally {
       setSaving(false);
     }
@@ -607,7 +607,7 @@ export default function DirectorOnboardingWizard() {
                   ].map((option) => (
                     <button
                       key={option.value}
-                      onClick={() => setState({ ...state, assessment_basis: option.value as any })}
+                      onClick={() => setState({ ...state, assessment_basis: option.value as "single" | "joint" | "separate" })}
                       className={cn(
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.assessment_basis === option.value
@@ -1339,7 +1339,7 @@ export default function DirectorOnboardingWizard() {
                 ].map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setState({ ...state, pays_preliminary_tax: option.value as any })}
+                    onClick={() => setState({ ...state, pays_preliminary_tax: option.value as "yes" | "no" | "unsure" })}
                     className={cn(
                       "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                       state.pays_preliminary_tax === option.value

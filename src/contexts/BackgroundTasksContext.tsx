@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { processReceipt, type ReceiptData } from "@/services/aiServices";
@@ -89,7 +90,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
       reader.readAsDataURL(file);
     });
 
-  const uploadToStorage = async (file: File, uid: string): Promise<string> => {
+  const uploadToStorage = useCallback(async (file: File, uid: string): Promise<string> => {
     const dataUrl = await fileToBase64(file);
     const base64Data = dataUrl.split(",")[1];
     const byteChars = atob(base64Data);
@@ -111,7 +112,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
       .getPublicUrl(data.path);
 
     return urlData.publicUrl;
-  };
+  }, []);
 
   const saveReceiptRecord = async (
     uid: string,
@@ -180,7 +181,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     });
   }, []);
 
-  const runMatching = async (uid: string) => {
+  const runMatching = useCallback(async (uid: string) => {
     setState((prev) => ({ ...prev, phase: "matching" }));
 
     let matched = 0;
@@ -251,7 +252,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     }));
 
     toast.success(`Matching complete: ${matched} matched, ${notMatched} need review`);
-  };
+  }, [updateFile]);
 
   const startReceiptProcessing = useCallback(async () => {
     if (!userId) {
@@ -300,7 +301,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     if (!abortRef.current) {
       await runMatching(userId);
     }
-  }, [userId, categories, updateFile]);
+  }, [userId, categories, updateFile, runMatching, uploadToStorage]);
 
   const createJob = useCreateJob();
 
@@ -357,7 +358,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
       // Fallback to client-side processing
       await startReceiptProcessing();
     }
-  }, [userId, categories, updateFile, createJob]);
+  }, [userId, categories, updateFile, createJob, startReceiptProcessing, uploadToStorage]);
 
   const manualMatch = useCallback(
     async (fileId: string, transactionId: string) => {

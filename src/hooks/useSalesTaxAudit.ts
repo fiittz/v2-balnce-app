@@ -104,9 +104,9 @@ export function useSalesTaxAudit() {
       businessName,
       startDate,
       endDate,
-      transactions as any,
-      expenses as any,
-      invoices as any
+      transactions as unknown[],
+      expenses as unknown[],
+      invoices as unknown[]
     );
   };
 

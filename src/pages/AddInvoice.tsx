@@ -47,8 +47,8 @@ const AddInvoice = () => {
   const { user, profile } = useAuth();
 
   // Set correct default VAT rate based on business settings
-  const rctActive = !!(onboarding as any)?.rct_status && (onboarding as any).rct_status !== "not_applicable";
-  const businessChargesVAT = (onboarding as any)?.vat_registered === true && !rctActive;
+  const rctActive = !!(onboarding as Record<string, unknown>)?.rct_status && (onboarding as Record<string, unknown>).rct_status !== "not_applicable";
+  const businessChargesVAT = (onboarding as Record<string, unknown>)?.vat_registered === true && !rctActive;
   const defaultVatRate: VatRate = businessChargesVAT ? "standard_23" : "zero_rated";
 
   // Determine if business is construction-related
@@ -60,8 +60,8 @@ const AddInvoice = () => {
     "project_management", "site_supervision", "property_maintenance",
     "property_development",
   ];
-  const primaryActivity = (onboarding as any)?.primary_activity || "";
-  const secondaryActivities: string[] = (onboarding as any)?.secondary_activities || [];
+  const primaryActivity = (onboarding as Record<string, unknown>)?.primary_activity || "";
+  const secondaryActivities: string[] = (onboarding as Record<string, unknown>)?.secondary_activities || [];
   const isConstructionTrade = CONSTRUCTION_ACTIVITIES.includes(primaryActivity) ||
     secondaryActivities.some((a: string) => CONSTRUCTION_ACTIVITIES.includes(a));
 
@@ -125,7 +125,7 @@ const AddInvoice = () => {
       }
 
       // Parse extra data from notes JSON
-      let notesObj: any = null;
+      let notesObj: Record<string, unknown> | null = null;
       try {
         notesObj = existingInvoice.notes ? JSON.parse(existingInvoice.notes) : null;
       } catch {
@@ -144,7 +144,7 @@ const AddInvoice = () => {
 
         const items = notesObj.line_items;
         if (Array.isArray(items) && items.length > 0) {
-          setLineItems(items.map((item: any, idx: number) => ({
+          setLineItems(items.map((item: Record<string, unknown>, idx: number) => ({
             id: idx + 1,
             description: item.description || "",
             qty: item.qty || 1,
@@ -154,7 +154,7 @@ const AddInvoice = () => {
         }
       }
     }
-  }, [existingInvoice, isEditMode, user]);
+  }, [existingInvoice, isEditMode, user, defaultVatRate]);
 
   // Customer details state
   const [customerName, setCustomerName] = useState("");

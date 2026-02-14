@@ -32,7 +32,7 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
   const [expandedSection, setExpandedSection] = useState<"sales" | "purchases" | null>(null);
 
   const vatSummary = useMemo(() => {
-    let vatOnSales = 0;
+    const vatOnSales = 0;
     let vatOnPurchases = 0;
     let salesCount = 0;
     let purchasesCount = 0;

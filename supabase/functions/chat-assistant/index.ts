@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,7 @@ const corsHeaders = {
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const CHAT_MODEL = Deno.env.get("CHAT_MODEL") || "anthropic/claude-sonnet-4-5-20250929";
 
 // Tool definitions sent to the model
 const TOOLS = [
@@ -168,14 +170,23 @@ serve(async (req) => {
       );
     }
 
-    let userId = "anonymous";
-    try {
-      const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-      const token = authHeader.replace("Bearer ", "");
-      const { data: { user } } = await supabase.auth.getUser(token);
-      if (user) userId = user.id;
-    } catch (e) {
-      console.log("Auth check skipped:", e);
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = user.id;
+
+    // Rate limit: 20 messages per minute per user
+    const rl = checkRateLimit(userId, "chat", 20);
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.retryAfterMs!, corsHeaders);
     }
 
     if (!OPENROUTER_API_KEY) {
@@ -331,7 +342,7 @@ ${financialContext}${pageContext}`;
         "X-Title": "Balnce AI Tax Assistant",
       },
       body: JSON.stringify({
-        model: "anthropic/claude-sonnet-4-5-20250929",
+        model: CHAT_MODEL,
         messages,
         tools: TOOLS,
         stream: true,

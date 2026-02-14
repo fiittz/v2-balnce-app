@@ -25,39 +25,7 @@ export function isVATDeductible(
   const accLower = (accountName || "").toLowerCase();
   const combined = `${descLower} ${catLower} ${accLower}`;
 
-  // Uncategorised expenses — cannot be claimed without proper categorisation
-  if (!categoryName) {
-    return {
-      isDeductible: false,
-      reason: "Uncategorised expense — not allowable without proper categorisation",
-    };
-  }
-
-  // Meals & Entertainment — not an allowable tax deduction
-  if (catLower.includes("meals") || catLower === "entertainment") {
-    return {
-      isDeductible: false,
-      reason: "Meals & Entertainment — not an allowable tax deduction",
-      section: "Section 60(2)(a)(i)/(iii)"
-    };
-  }
-
-  // Fines & Penalties — never deductible for tax purposes
-  if (catLower.includes("fine") || catLower.includes("penalt") ||
-      /\bfines?\b/.test(descLower) || /\bpenalt(y|ies)\b/.test(descLower)) {
-    return {
-      isDeductible: false,
-      reason: "Fines & penalties are not allowable tax deductions",
-    };
-  }
-
-  // Director's Drawings — capital withdrawals, not a business expense
-  if (catLower.includes("drawing") || catLower.includes("director's draw")) {
-    return {
-      isDeductible: false,
-      reason: "Director's Drawings — capital withdrawal, not a business expense",
-    };
-  }
+  // ── Section 60 keyword checks (description-based, fire first) ──
 
   // Section 60(2)(a)(i) - Food, drink, accommodation
   if (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => combined.includes(k))) {
@@ -89,7 +57,7 @@ export function isVATDeductible(
   // Section 60(2)(a)(v) - Petrol (but not diesel!)
   const hasPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some(k => combined.includes(k));
   const hasDiesel = ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => combined.includes(k));
-  
+
   if (hasPetrol && !hasDiesel) {
     return {
       isDeductible: false,
@@ -109,8 +77,7 @@ export function isVATDeductible(
   // Mixed fuel retailers without receipt - conservative approach
   const fuelStations = ["maxol", "circle k", "applegreen", "texaco", "esso", "shell", "topaz", "spar", "centra"];
   if (fuelStations.some(f => combined.includes(f))) {
-    // Check if explicitly categorized as diesel
-    if (combined.includes("diesel") || combined.includes("fuel") && !combined.includes("petrol")) {
+    if (combined.includes("diesel") || (combined.includes("fuel") && !combined.includes("petrol"))) {
       return {
         isDeductible: true,
         reason: "Fuel purchase - categorized as deductible"
@@ -132,19 +99,47 @@ export function isVATDeductible(
     };
   }
 
-  // Bank charges and fees - VAT exempt but allowable for CT1
+  // Bank charges and fees - VAT exempt, VAT NOT recoverable
   if (combined.includes("bank") && (combined.includes("fee") || combined.includes("charge"))) {
     return {
-      isDeductible: true,
-      reason: "Bank charges — VAT exempt but allowable business expense"
+      isDeductible: false,
+      reason: "Bank charges — VAT exempt supply, VAT not recoverable"
     };
   }
 
-  // Insurance - VAT exempt but allowable for CT1
+  // Insurance - VAT exempt, VAT NOT recoverable
   if (combined.includes("insurance") && !combined.includes("motor tax")) {
     return {
-      isDeductible: true,
-      reason: "Insurance — VAT exempt but allowable business expense"
+      isDeductible: false,
+      reason: "Insurance — VAT exempt supply, VAT not recoverable"
+    };
+  }
+
+  // ── Category-based checks ──
+
+  // Meals & Entertainment — not an allowable tax deduction
+  if (catLower.includes("meals") || catLower === "entertainment") {
+    return {
+      isDeductible: false,
+      reason: "Meals & Entertainment — not an allowable tax deduction",
+      section: "Section 60(2)(a)(i)/(iii)"
+    };
+  }
+
+  // Fines & Penalties — never deductible for tax purposes
+  if (catLower.includes("fine") || catLower.includes("penalt") ||
+      /\bfines?\b/.test(descLower) || /\bpenalt(y|ies)\b/.test(descLower)) {
+    return {
+      isDeductible: false,
+      reason: "Fines & penalties are not allowable tax deductions",
+    };
+  }
+
+  // Director's Drawings — capital withdrawals, not a business expense
+  if (catLower.includes("drawing") || catLower.includes("director's draw")) {
+    return {
+      isDeductible: false,
+      reason: "Director's Drawings — capital withdrawal, not a business expense",
     };
   }
 

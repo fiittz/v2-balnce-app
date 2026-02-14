@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { Upload, FileSpreadsheet, Loader2, CheckCircle2, AlertCircle, X, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -527,10 +527,10 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
   };
 
   // Helper to check if transaction is a duplicate
-  const isDuplicate = (t: ParsedTransaction): boolean => {
+  const isDuplicate = useCallback((t: ParsedTransaction): boolean => {
     const fingerprint = `${t.date}|${t.description.toLowerCase().trim()}|${Math.abs(t.amount).toFixed(2)}`;
     return duplicateFingerprints.has(fingerprint);
-  };
+  }, [duplicateFingerprints]);
 
   // Get transactions to import (filtered by skip duplicates setting)
   const transactionsToImport = useMemo(() => {
@@ -538,11 +538,11 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
       return parsedTransactions;
     }
     return parsedTransactions.filter(t => !isDuplicate(t));
-  }, [parsedTransactions, skipDuplicates, duplicateFingerprints]);
+  }, [parsedTransactions, skipDuplicates, duplicateFingerprints, isDuplicate]);
 
   const duplicateCount = useMemo(() => {
     return parsedTransactions.filter(t => isDuplicate(t)).length;
-  }, [parsedTransactions, duplicateFingerprints]);
+  }, [parsedTransactions, isDuplicate]);
 
   const handleImport = async () => {
     if (transactionsToImport.length === 0) {
@@ -617,9 +617,10 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
           });
           success += data.length;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const errMsg = err instanceof Error ? err.message : String(err);
         console.error(`[CSV Import] Bulk insert exception for chunk ${i / CHUNK_SIZE + 1}:`, err);
-        toast.error(`Failed to save transactions: ${err.message || "Unknown error"}`);
+        toast.error(`Failed to save transactions: ${errMsg || "Unknown error"}`);
       }
 
       setImportProgress(Math.round(((i + chunk.length) / rowsToInsert.length) * 100));
@@ -704,8 +705,8 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                   txnDirection
                 );
 
-                const vatDeductible = (engineResult as any).vat_deductible ?? true;
-                const needsReceipt = (engineResult as any).needs_receipt ?? false;
+                const vatDeductible = (engineResult as Record<string, unknown>).vat_deductible ?? true;
+                const needsReceipt = (engineResult as Record<string, unknown>).needs_receipt ?? false;
                 
                 console.log(`[AutoCat] "${txn.description}" → ${engineResult.category} | VAT: ${vatDeductible ? "✓" : "✗"} | Conf: ${engineResult.confidence_score}% → DB: ${matchedCategory?.name || "NO MATCH"}`);
 

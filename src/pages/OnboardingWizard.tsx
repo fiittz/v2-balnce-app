@@ -371,7 +371,7 @@ export default function OnboardingWizard() {
     if (field === "rct_status" && value !== "" && value !== "not_applicable") {
       updated.vat_registered = false;
       updated.vat_number = "";
-      updated.vat_basis = "" as any;
+      updated.vat_basis = "";
       updated.vat_registration_date = "";
     }
 
@@ -507,7 +507,7 @@ export default function OnboardingWizard() {
       await refreshOnboardingStatus();
       toast.success("Onboarding skipped - you can configure settings later");
       navigate("/dashboard");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error skipping onboarding:", error);
       toast.error("Failed to skip onboarding");
     } finally {
@@ -616,7 +616,7 @@ export default function OnboardingWizard() {
       await refreshOnboardingStatus();
       toast.success("Onboarding complete!");
       navigate("/onboarding/director");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error saving onboarding:", error);
       toast.error("Failed to save onboarding");
     } finally {
@@ -779,7 +779,7 @@ export default function OnboardingWizard() {
                           type="button"
                           onClick={() => {
                             const newBusinesses = [...state.businesses];
-                            newBusinesses[index] = { ...newBusinesses[index], structure: option.value as any };
+                            newBusinesses[index] = { ...newBusinesses[index], structure: option.value as "sole_trader" | "limited_company" };
                             setState({ ...state, businesses: newBusinesses });
                           }}
                           className={cn(
@@ -1258,7 +1258,7 @@ export default function OnboardingWizard() {
                       ].map((option) => (
                         <button
                           key={option.value}
-                          onClick={() => updateBusiness("vat_basis", option.value as any)}
+                          onClick={() => updateBusiness("vat_basis", option.value as "cash" | "invoice")}
                           className={cn(
                             "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                             currentBusiness.vat_basis === option.value

@@ -198,7 +198,7 @@ const AddExpense = () => {
   const getIconComponent = (iconName: string | null) => {
     if (!iconName) return LucideIcons.Folder;
     const pascalCase = iconName.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
-    return (LucideIcons as any)[pascalCase] || LucideIcons.Folder;
+    return (LucideIcons as unknown as Record<string, React.ComponentType>)[pascalCase] || LucideIcons.Folder;
   };
 
   return (

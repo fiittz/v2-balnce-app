@@ -105,8 +105,8 @@ export function useBulkRecategorize() {
                 merchant_name: txn.description,
                 transaction_type: undefined,
                 direction: txnDirection,
-                user_industry: (onboarding as any)?.business_type || profile?.business_type || "",
-                user_business_type: (onboarding as any)?.business_type || profile?.business_type || "",
+                user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 receipt_text: undefined,
               });
 
@@ -212,7 +212,7 @@ export function useBulkRecategorize() {
         total_items: uncategorized.length,
         input_data: {
           transaction_ids: uncategorized.map((t) => t.id),
-          business_type: (onboarding as any)?.business_type || profile?.business_type || "",
+          business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
         },
       });
 
@@ -308,8 +308,8 @@ export function useBulkRecategorize() {
                 merchant_name: txn.description,
                 transaction_type: undefined,
                 direction: txnDirection,
-                user_industry: (onboarding as any)?.business_type || profile?.business_type || "",
-                user_business_type: (onboarding as any)?.business_type || profile?.business_type || "",
+                user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 receipt_text: undefined,
               });
 
@@ -458,8 +458,8 @@ export function useBulkRecategorize() {
                 merchant_name: txn.description,
                 transaction_type: undefined,
                 direction: txnDirection,
-                user_industry: (onboarding as any)?.business_type || profile?.business_type || "",
-                user_business_type: (onboarding as any)?.business_type || profile?.business_type || "",
+                user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 receipt_text: undefined,
               });
 

@@ -1,4 +1,4 @@
-import balnceLogo from "@/assets/balnce-logo.png";
+import balnceLogo from "@/assets/balnce-logo.webp";
 
 interface LogoProps {
   className?: string;

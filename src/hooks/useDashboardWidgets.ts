@@ -113,7 +113,7 @@ export function useDashboardWidgets() {
       if (!user) return;
       await supabase
         .from("profiles")
-        .update({ dashboard_widget_preferences: next as any })
+        .update({ dashboard_widget_preferences: next as unknown as Record<string, unknown> })
         .eq("id", user.id);
     },
     [user]

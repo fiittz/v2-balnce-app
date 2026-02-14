@@ -82,7 +82,7 @@ export function useInvoice(id?: string) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["invoice", id],
+    queryKey: ["invoice", user?.id, id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("invoices")

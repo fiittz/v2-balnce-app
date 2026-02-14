@@ -90,16 +90,16 @@ const Settings = () => {
 
   const getDirectorSettings = () => {
     const d1 = directorRows?.[0];
-    const data = (d1 as any)?.onboarding_data;
+    const data = (d1 as Record<string, unknown>)?.onboarding_data as Record<string, unknown> | undefined;
     return {
-      commuteMethod: data?.commute_method || "",
+      commuteMethod: (data?.commute_method as string) || "",
       vehicleOwnedByDirector: data?.vehicle_owned_by_director === true,
     };
   };
 
   const getCommuteMethod = (): string => {
     const d1 = directorRows?.[0];
-    const data = (d1 as any)?.onboarding_data;
+    const data = (d1 as Record<string, unknown>)?.onboarding_data as Record<string, unknown> | undefined;
     return data?.commute_method || "";
   };
 
@@ -129,7 +129,7 @@ const Settings = () => {
     setIsSaving(true);
     try {
       // Update place_of_work in business_onboarding_extra (localStorage)
-      let extra: any = {};
+      let extra: Record<string, unknown> = {};
       try {
         const raw = localStorage.getItem("business_onboarding_extra");
         if (raw) extra = JSON.parse(raw);
@@ -154,7 +154,7 @@ const Settings = () => {
 
         if (existing) {
           const updatedData = {
-            ...((existing.onboarding_data as any) || {}),
+            ...((existing.onboarding_data as Record<string, unknown>) || {}),
             commute_method: commuteMethod,
             vehicle_owned_by_director: vehicleOwnedByDirector,
           };
@@ -185,7 +185,7 @@ const Settings = () => {
         .from("profiles")
         .update({
           business_name: businessName,
-          business_type: businessType as any,
+          business_type: businessType,
           vat_number: vatNumber,
           phone,
           address,

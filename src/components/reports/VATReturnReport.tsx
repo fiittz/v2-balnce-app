@@ -190,11 +190,11 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Unpaid invoices?</span>
                 <BooleanIndicator value={finalisationData.unpaid_invoices} />
               </div>
-              {finalisationData.unpaid_invoices && (finalisationData.unpaid_invoices_list as any[])?.length > 0 && (
+              {finalisationData.unpaid_invoices && (finalisationData.unpaid_invoices_list as { description: string; amount: number }[])?.length > 0 && (
                 <div className="bg-amber-50 rounded-lg p-3">
                   <p className="text-sm font-medium text-amber-800 mb-2">Unpaid Invoices:</p>
                   <ul className="text-sm text-amber-700 space-y-1">
-                    {(finalisationData.unpaid_invoices_list as any[]).map((item, i) => (
+                    {(finalisationData.unpaid_invoices_list as { description: string; amount: number }[]).map((item, i) => (
                       <li key={i}>• {item.description}: €{item.amount}</li>
                     ))}
                   </ul>
@@ -235,11 +235,11 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Missing receipts?</span>
                 <BooleanIndicator value={finalisationData.missing_receipts} />
               </div>
-              {finalisationData.missing_receipts && (finalisationData.missing_receipts_list as any[])?.length > 0 && (
+              {finalisationData.missing_receipts && (finalisationData.missing_receipts_list as { description: string; amount: number }[])?.length > 0 && (
                 <div className="bg-amber-50 rounded-lg p-3">
                   <p className="text-sm font-medium text-amber-800 mb-2">Missing Receipts:</p>
                   <ul className="text-sm text-amber-700 space-y-1">
-                    {(finalisationData.missing_receipts_list as any[]).map((item, i) => (
+                    {(finalisationData.missing_receipts_list as { description: string; amount: number }[]).map((item, i) => (
                       <li key={i}>• {item.description}: €{item.amount}</li>
                     ))}
                   </ul>
@@ -315,10 +315,10 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Has non-EU purchases?</span>
                 <BooleanIndicator value={finalisationData.non_eu_purchases} />
               </div>
-              {finalisationData.non_eu_purchases && (finalisationData.non_eu_purchase_details as any[])?.length > 0 && (
+              {finalisationData.non_eu_purchases && (finalisationData.non_eu_purchase_details as { description: string; amount: number }[])?.length > 0 && (
                 <div className="bg-purple-50 rounded-lg p-3">
                   <p className="text-sm font-medium text-purple-800 mb-2">
-                    {(finalisationData.non_eu_purchase_details as any[]).length} import(s) recorded
+                    {(finalisationData.non_eu_purchase_details as { description: string; amount: number }[]).length} import(s) recorded
                   </p>
                 </div>
               )}
@@ -336,11 +336,11 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Credit notes?</span>
                 <BooleanIndicator value={finalisationData.credit_notes} />
               </div>
-              {finalisationData.credit_notes && (finalisationData.credit_notes_details as any[])?.length > 0 && (
+              {finalisationData.credit_notes && (finalisationData.credit_notes_details as { description: string; amount: number }[])?.length > 0 && (
                 <div className="bg-muted rounded-lg p-3">
                   <p className="text-sm font-medium mb-2">Credit Notes:</p>
                   <ul className="text-sm space-y-1">
-                    {(finalisationData.credit_notes_details as any[]).map((item, i) => (
+                    {(finalisationData.credit_notes_details as { description: string; amount: number }[]).map((item, i) => (
                       <li key={i}>• {item.description}: €{item.amount}</li>
                     ))}
                   </ul>

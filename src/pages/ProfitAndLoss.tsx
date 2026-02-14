@@ -60,8 +60,8 @@ const ProfitAndLoss = () => {
   const isLoading = incomeLoading || expenseLoading;
 
   // Group income by category — exclude Revenue refunds (not taxable income)
-  const NON_TAXABLE_CATEGORIES = ["Tax Refund"];
   const incomeByCategory = useMemo(() => {
+    const NON_TAXABLE_CATEGORIES = ["Tax Refund"];
     const map = new Map<string, number>();
     for (const t of incomeTransactions ?? []) {
       const catName = (t.category as { id: string; name: string } | null)?.name ?? "Uncategorised";

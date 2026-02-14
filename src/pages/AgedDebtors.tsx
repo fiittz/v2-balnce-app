@@ -44,11 +44,11 @@ const AgedDebtors = () => {
   const navigate = useNavigate();
   const { data: invoices, isLoading } = useInvoices();
 
-  const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
+  const todayStr = new Date().toISOString().split("T")[0];
 
   // Process invoices into aged buckets
   const { buckets, totalOutstanding, hasOverdue90 } = useMemo(() => {
+    const today = new Date();
     if (!invoices) return { buckets: [] as AgingBucket[], totalOutstanding: 0, hasOverdue90: false };
 
     // Filter out paid invoices, compute days overdue
@@ -63,7 +63,7 @@ const AgedDebtors = () => {
         return {
           id: inv.id,
           invoiceNumber: inv.invoice_number || "N/A",
-          customer: (inv.customer as any)?.name || "Unknown",
+          customer: (inv.customer as Record<string, unknown>)?.name as string || "Unknown",
           total: Number(inv.total) || 0,
           dueDate: dueDate,
           invoiceDate: inv.invoice_date || "",
@@ -97,7 +97,7 @@ const AgedDebtors = () => {
     const hasOverdue90 = result[3].total > 0;
 
     return { buckets: result, totalOutstanding, hasOverdue90 };
-  }, [invoices, todayStr]);
+  }, [invoices]);
 
   if (isLoading) {
     return (

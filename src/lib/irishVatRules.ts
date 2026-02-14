@@ -325,7 +325,7 @@ export function determineVatTreatment(
   // Check for disallowed input credits first (for expenses)
   if (transactionType === "expense") {
     // Check food/drink/accommodation
-    const foodWordBoundary = (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION as any).wordBoundaryKeywords || [];
+    const foodWordBoundary = DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.wordBoundaryKeywords || [];
     const foodWordMatch = foodWordBoundary.some((k: string) => new RegExp(`\\b${k}\\b`).test(descLower));
     if (foodWordMatch || DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => descLower.includes(k))) {
       return {

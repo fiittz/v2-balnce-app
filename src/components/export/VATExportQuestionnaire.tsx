@@ -116,7 +116,7 @@ export function VATExportQuestionnaire({
   const handleComplete = () => {
     onComplete(data);
     setStep(0);
-    setData({ ...initialData, vatNumber: vatNumber || "", vatBasis: (vatBasis as any) || "cash_basis" });
+    setData({ ...initialData, vatNumber: vatNumber || "", vatBasis: (vatBasis as VATQuestionnaireData["vatBasis"]) || "cash_basis" });
   };
 
   const progress = ((step + 1) / SECTIONS.length) * 100;
@@ -151,7 +151,7 @@ export function VATExportQuestionnaire({
                 </div>
                 <div className="space-y-2">
                   <Label>VAT Accounting Basis</Label>
-                  <Select value={data.vatBasis} onValueChange={v => update("vatBasis", v as any)}>
+                  <Select value={data.vatBasis} onValueChange={v => update("vatBasis", v as VATQuestionnaireData["vatBasis"])}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cash_basis">Cash Basis</SelectItem>
@@ -161,7 +161,7 @@ export function VATExportQuestionnaire({
                 </div>
                 <div className="space-y-2">
                   <Label>Return Frequency</Label>
-                  <Select value={data.vatFrequency} onValueChange={v => update("vatFrequency", v as any)}>
+                  <Select value={data.vatFrequency} onValueChange={v => update("vatFrequency", v as VATQuestionnaireData["vatFrequency"])}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bi_monthly">Bi-monthly (VAT3)</SelectItem>

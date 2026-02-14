@@ -95,7 +95,7 @@ export function useVATWizardData(vatReturnId: string | undefined) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["vat-wizard-data", vatReturnId],
+    queryKey: ["vat-wizard-data", user?.id, vatReturnId],
     queryFn: async (): Promise<VATWizardData | null> => {
       if (!vatReturnId) return null;
       
@@ -121,7 +121,7 @@ export function useSaveVATWizard() {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["vat-wizard-data", variables.vat_return_id] });
+      queryClient.invalidateQueries({ queryKey: ["vat-wizard-data", user?.id, variables.vat_return_id] });
     },
     onError: (error) => {
       toast.error("Failed to save wizard data");
@@ -167,11 +167,12 @@ export function useExpensesForPeriod(periodStart: string, periodEnd: string) {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ["expenses-for-vat-period", periodStart, periodEnd],
+    queryKey: ["expenses-for-vat-period", user?.id, periodStart, periodEnd],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
         .select("*, supplier:suppliers(name), category:categories(name)")
+        .eq("user_id", user!.id)
         .gte("expense_date", periodStart)
         .lte("expense_date", periodEnd)
         .order("expense_date", { ascending: false });

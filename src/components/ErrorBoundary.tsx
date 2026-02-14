@@ -1,4 +1,5 @@
 import React, { Component, type ReactNode } from "react";
+import * as Sentry from "@sentry/react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface Props {
@@ -21,7 +22,10 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught:", error, errorInfo);
+    Sentry.captureException(error, { extra: { componentStack: errorInfo.componentStack } });
+    if (import.meta.env.DEV) {
+      console.error("ErrorBoundary caught:", error, errorInfo);
+    }
   }
 
   handleReset = () => {
@@ -37,9 +41,9 @@ class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
             <h1 className="text-xl font-semibold">Something went wrong</h1>
             <p className="text-sm text-muted-foreground">
-              {this.state.error?.message || "An unexpected error occurred."}
+              An unexpected error occurred. Please try again.
             </p>
-            {this.state.error?.stack && (
+            {import.meta.env.DEV && this.state.error?.stack && (
               <pre className="text-xs text-left bg-muted p-3 rounded-lg overflow-auto max-h-48 whitespace-pre-wrap">
                 {this.state.error.stack}
               </pre>

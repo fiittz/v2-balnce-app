@@ -117,7 +117,7 @@ export async function applyManualMatch(
   matchType: "invoice" | "expense"
 ): Promise<void> {
   // Update transaction
-  const updateData: any = {
+  const updateData: Record<string, unknown> = {
     is_reconciled: true,
   };
 

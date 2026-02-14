@@ -39,7 +39,7 @@ export default function JobProgressIndicator() {
     return () => {
       completedTimers.forEach((timer) => clearTimeout(timer));
     };
-  }, [activeJobs]);
+  }, [activeJobs, completedTimers]);
 
   const visibleJobs = activeJobs?.filter((j) => !dismissedJobs.has(j.id)) || [];
 

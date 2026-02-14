@@ -278,7 +278,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
 
     // 9. Vehicle asset — depreciation & capital allowances from director onboarding
     let vehicleAsset: CT1Data["vehicleAsset"] = null;
-    const director1Data = (directorRows?.[0] as any)?.onboarding_data;
+    const director1Data = (directorRows?.[0] as Record<string, unknown>)?.onboarding_data as Record<string, unknown> | undefined;
     if (director1Data?.vehicle_owned_by_director && director1Data?.vehicle_purchase_cost > 0) {
       const depreciation = calculateVehicleDepreciation(
         {
@@ -286,7 +286,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
           reg: director1Data.vehicle_reg || "",
           purchaseCost: Number(director1Data.vehicle_purchase_cost) || 0,
           dateAcquired: director1Data.vehicle_date_acquired || `${taxYear}-01-01`,
-          businessUsePct: Number(director1Data.vehicle_business_use_pct) ?? 100,
+          businessUsePct: Number(director1Data.vehicle_business_use_pct) || 100,
         },
         taxYear
       );
@@ -300,10 +300,11 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
     // 10. RCT prepayment — sum RCT deducted from invoices in the tax year
     let rctPrepayment = 0;
     for (const inv of invoices ?? []) {
-      const invDate = (inv as any).invoice_date ?? "";
+      const invDate = (inv as Record<string, unknown>).invoice_date ?? "";
       if (invDate < startDate || invDate > endDate) continue;
       try {
-        const notes = (inv as any).notes ? JSON.parse((inv as any).notes) : null;
+        const invRecord = inv as Record<string, unknown>;
+        const notes = invRecord.notes ? JSON.parse(invRecord.notes as string) : null;
         if (notes?.rct_enabled && notes?.rct_amount > 0) {
           rctPrepayment += Number(notes.rct_amount) || 0;
         }
@@ -347,5 +348,5 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
       reEvaluationWarnings,
       originalExpenseSummary: reEvaluationApplied ? originalExpenseSummary : undefined,
     };
-  }, [incomeTransactions, expenseTransactions, vatSummaryPre, vatSummaryPost, onboarding, directorRows, invoices, invoiceTrips, isLoading, hasVATSplit, options]);
+  }, [incomeTransactions, expenseTransactions, vatSummaryPre, vatSummaryPost, onboarding, directorRows, invoices, invoiceTrips, isLoading, hasVATSplit, options, endDate, startDate, taxYear]);
 }

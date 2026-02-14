@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +8,7 @@ import { MOCK_USER, MOCK_SESSION, MOCK_PROFILE, isDemoMode, disableDemoMode } fr
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  profile: any | null;
+  profile: Record<string, unknown> | null;
   isLoading: boolean;
   onboardingComplete: boolean | null;
   directorOnboardingComplete: boolean | null;
@@ -25,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null);
   const [directorOnboardingComplete, setDirectorOnboardingComplete] = useState<boolean | null>(null);
   const [directorCount, setDirectorCount] = useState<number>(1);

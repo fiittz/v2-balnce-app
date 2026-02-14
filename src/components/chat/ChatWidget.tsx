@@ -198,7 +198,7 @@ export default function ChatWidget() {
 
   const allDirectorData = useMemo(() => {
     if (!user?.id) return [];
-    const directors: Record<string, any>[] = [];
+    const directors: Record<string, unknown>[] = [];
     for (let i = 1; i <= (directorCount || 1); i++) {
       const raw = localStorage.getItem(`director_onboarding_${user.id}_${i}`);
       if (raw) directors.push(JSON.parse(raw));
@@ -208,7 +208,7 @@ export default function ChatWidget() {
 
   const allForm11Data = useMemo(() => {
     if (!user?.id) return [];
-    const forms: { directorNumber: number; data: Record<string, any> }[] = [];
+    const forms: { directorNumber: number; data: Record<string, unknown> }[] = [];
     for (let i = 1; i <= (directorCount || 1); i++) {
       const raw = localStorage.getItem(`form11_questionnaire_${user.id}_${i}`);
       if (raw) forms.push({ directorNumber: i, data: JSON.parse(raw) });
@@ -278,7 +278,7 @@ export default function ChatWidget() {
       parts.push(`You're missing ~**${eur(saving)}** in pension relief.`);
     }
 
-    const uncategorized = allTransactions.filter((t: any) => !t.category || t.category === "Uncategorized").length;
+    const uncategorized = allTransactions.filter((t: { category?: string | Record<string, unknown> | null }) => !t.category || t.category === "Uncategorized").length;
     if (uncategorized > 5) {
       parts.push(`${uncategorized} transactions need categorizing.`);
     }
@@ -290,7 +290,7 @@ export default function ChatWidget() {
   const suggestedQuestions = useMemo(() => {
     const questions: string[] = [];
     const txCount = allTransactions?.length ?? 0;
-    const uncategorized = allTransactions?.filter((t: any) => t.category === "Uncategorized" || !t.category).length ?? 0;
+    const uncategorized = allTransactions?.filter((t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category).length ?? 0;
 
     if (uncategorized > 0) {
       questions.push(`I have ${uncategorized} uncategorized transactions — can you help?`);
@@ -319,7 +319,7 @@ export default function ChatWidget() {
   // ── Insight badge count ───────────────────────────────────
   const insightCount = useMemo(() => {
     let count = 0;
-    const uncategorized = allTransactions?.filter((t: any) => t.category === "Uncategorized" || !t.category).length ?? 0;
+    const uncategorized = allTransactions?.filter((t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category).length ?? 0;
     if (uncategorized > 5) count++;
     const anyPension = allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
     if (!anyPension && (allTransactions?.length ?? 0) > 0) count++;
@@ -356,17 +356,16 @@ export default function ChatWidget() {
   useEffect(() => { if (isOpen && inputRef.current) inputRef.current.focus(); }, [isOpen]);
 
   // ── Raw tool-call detection ───────────────────────────────
-  const RAW_TOOL_PATTERNS = [
-    /### Function<[^>]*>(\w+)\s*(?:json\s*)?\s*(\{[\s\S]*?\})\s*#?/i,
-    /<\|tool_call\|>\s*(\w+)\s*(\{[\s\S]*?\})/i,
-    /<tool_call>\s*(\w+)\s*(\{[\s\S]*?\})/i,
-    /\u{FF1C}[^>]*tool[^>]*\u{FF1E}\s*(\w+)\s*(\{[\s\S]*?\})/iu,
-  ];
-
   const filterRawToolCalls = useCallback((accumulated: string): {
     cleanText: string;
     parsedCall: { id: string; name: string; arguments: string } | null;
   } => {
+    const RAW_TOOL_PATTERNS = [
+      /### Function<[^>]*>(\w+)\s*(?:json\s*)?\s*(\{[\s\S]*?\})\s*#?/i,
+      /<\|tool_call\|>\s*(\w+)\s*(\{[\s\S]*?\})/i,
+      /<tool_call>\s*(\w+)\s*(\{[\s\S]*?\})/i,
+      /\u{FF1C}[^>]*tool[^>]*\u{FF1E}\s*(\w+)\s*(\{[\s\S]*?\})/iu,
+    ];
     for (const pattern of RAW_TOOL_PATTERNS) {
       const match = accumulated.match(pattern);
       if (match && ALL_TOOL_NAMES.has(match[1])) {
@@ -376,7 +375,7 @@ export default function ChatWidget() {
         };
       }
     }
-    const junkPatterns = /### Function<[｜\|]tool[▁_]sep[｜\|]>|<\|tool_call\|>|<tool_call>|จัดอันดับ;/g;
+    const junkPatterns = /### Function<[｜|]tool[▁_]sep[｜|]>|<[|]tool_call[|]>|<tool_call>|จัดอันดับ;/g;
     if (junkPatterns.test(accumulated)) {
       return { cleanText: accumulated.replace(junkPatterns, "").trim(), parsedCall: null };
     }
@@ -497,7 +496,7 @@ export default function ChatWidget() {
             setLastToolUsed(toolName);
             toolWasUsed = true;
 
-            let args: Record<string, any> = {};
+            let args: Record<string, unknown> = {};
             try { args = JSON.parse(tc.arguments || "{}"); } catch { /* empty */ }
 
             const { result, navigated } = executeToolCall(toolName, args, toolContext);
@@ -744,7 +743,7 @@ export default function ChatWidget() {
                   <div className="space-y-2">
                     {(() => {
                       const cards: { text: string; question: string }[] = [];
-                      const uncategorized = allTransactions?.filter((t: any) => t.category === "Uncategorized" || !t.category).length ?? 0;
+                      const uncategorized = allTransactions?.filter((t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category).length ?? 0;
                       if (uncategorized > 5) {
                         cards.push({
                           text: `${uncategorized} transactions need categorizing`,

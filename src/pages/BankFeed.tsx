@@ -671,8 +671,8 @@ const BankFeed = () => {
     const isDrawingsCat = (name: string) => name.toLowerCase().includes("drawing");
 
     txs.forEach(t => {
-      const catName = (t as any).category?.name || "Uncategorised";
-      const desc = (t as any).description || "";
+      const catName = (t as unknown as { category?: { name: string }; description?: string }).category?.name || "Uncategorised";
+      const desc = (t as unknown as { description?: string }).description || "";
       const amount = Math.abs(t.amount);
       if (t.type === "income") {
         if (isRevRefund(catName, desc)) { revenueRefunds += amount; }
@@ -749,9 +749,9 @@ const BankFeed = () => {
     setShowBusinessQuestionnaire(false);
     const pnlCt1 = buildPnlCt1Summary();
     if (pendingExportType === "excel") {
-      exportToExcel(accountFilteredTransactions as any, undefined, data, pnlCt1);
+      exportToExcel(accountFilteredTransactions as unknown[], undefined, data, pnlCt1);
     } else if (pendingExportType === "pdf") {
-      exportToPDF(accountFilteredTransactions as any, undefined, data, pnlCt1, companyInfo, { isRCT: showRct, invoices: invoicesData as any });
+      exportToPDF(accountFilteredTransactions as unknown[], undefined, data, pnlCt1, companyInfo, { isRCT: showRct, invoices: invoicesData as unknown[] });
     }
     setPendingExportType(null);
     toast.success("Export completed with questionnaire attached");
@@ -760,9 +760,9 @@ const BankFeed = () => {
   const handleDirectorQuestionnaireComplete = (data: DirectorQuestionnaireData) => {
     setShowDirectorQuestionnaire(false);
     if (pendingExportType === "excel") {
-      exportDirectorToExcel(accountFilteredTransactions as any, undefined, data);
+      exportDirectorToExcel(accountFilteredTransactions as unknown[], undefined, data);
     } else if (pendingExportType === "pdf") {
-      exportDirectorToPDF(accountFilteredTransactions as any, undefined, data, companyInfo);
+      exportDirectorToPDF(accountFilteredTransactions as unknown[], undefined, data, companyInfo);
     }
     setPendingExportType(null);
     toast.success("Export completed with questionnaire attached");
@@ -797,8 +797,9 @@ const BankFeed = () => {
     const purchasesByRate = new Map<string, { net: number; vat: number }>();
 
     for (const txn of txs) {
-      const vatRate = (txn as any).vat_rate;
-      const vatAmount = (txn as any).vat_amount || 0;
+      const txnRecord = txn as unknown as Record<string, unknown>;
+      const vatRate = txnRecord.vat_rate;
+      const vatAmount = Number(txnRecord.vat_amount) || 0;
       const gross = Math.abs(txn.amount);
       const net = gross - vatAmount;
       const rateKey = vatRate ? String(vatRate) : "0%";
@@ -1698,8 +1699,9 @@ const BankFeed = () => {
                     const isDrawingsCat = (name: string) => name.toLowerCase().includes("drawing");
 
                     txs.forEach(t => {
-                      const catName = (t as any).category?.name || "Uncategorised";
-                      const desc = (t as any).description || "";
+                      const tRec = t as unknown as { category?: { name: string }; description?: string; amount: number; type: string };
+                      const catName = tRec.category?.name || "Uncategorised";
+                      const desc = tRec.description || "";
                       const amount = Math.abs(t.amount);
 
                       if (t.type === "income") {
@@ -1998,7 +2000,7 @@ const BankFeed = () => {
                     let totalDrawings = 0;
 
                     txs.forEach(t => {
-                      const catName = (t as any).category?.name || "Uncategorised";
+                      const catName = (t as unknown as { category?: { name: string } }).category?.name || "Uncategorised";
                       if (t.type === "income") {
                         totalIncome += Math.abs(t.amount);
                         if (!incomeByCategory[catName]) incomeByCategory[catName] = { amount: 0, txns: [] };
@@ -2022,16 +2024,17 @@ const BankFeed = () => {
                     const ty2 = now2.getMonth() >= 10 ? now2.getFullYear() : now2.getFullYear() - 1;
                     const rctDetails: { invoiceNumber: string; customerName: string; date: string; grossAmount: number; rctAmount: number }[] = [];
                     for (const inv of invs) {
-                      const invDate = (inv as any).invoice_date ?? "";
+                      const invRec = inv as unknown as Record<string, unknown>;
+                      const invDate = (invRec.invoice_date as string) ?? "";
                       if (invDate < `${ty2}-01-01` || invDate > `${ty2}-12-31`) continue;
                       try {
-                        const notes = (inv as any).notes ? JSON.parse((inv as any).notes) : null;
+                        const notes = invRec.notes ? JSON.parse(invRec.notes as string) : null;
                         if (notes?.rct_enabled && notes?.rct_amount > 0) {
                           rctDetails.push({
-                            invoiceNumber: (inv as any).invoice_number || "",
-                            customerName: (inv as any).customer?.name || "Unknown",
+                            invoiceNumber: (invRec.invoice_number as string) || "",
+                            customerName: (invRec.customer as Record<string, unknown>)?.name as string || "Unknown",
                             date: invDate,
-                            grossAmount: Number((inv as any).total_amount) || 0,
+                            grossAmount: Number(invRec.total_amount) || 0,
                             rctAmount: Number(notes.rct_amount) || 0,
                           });
                         }
@@ -2135,7 +2138,7 @@ const BankFeed = () => {
                                 </summary>
                                 <div className="ml-6 border-l border-border/30 pl-2">
                                   {catTxns.map(t => (
-                                    <TxnRow key={t.id} desc={(t as any).description || cat} date={(t as any).transaction_date || ""} amount={Math.abs(t.amount)} />
+                                    <TxnRow key={t.id} desc={(t as unknown as Record<string, unknown>).description as string || cat} date={(t as unknown as Record<string, unknown>).transaction_date as string || ""} amount={Math.abs(t.amount)} />
                                   ))}
                                 </div>
                               </details>
@@ -2183,7 +2186,7 @@ const BankFeed = () => {
                                   </summary>
                                   <div className="ml-4 border-l border-border/30 pl-2">
                                     {drawingTxns.map(t => (
-                                      <TxnRow key={t.id} desc={(t as any).description || "Drawing"} date={(t as any).transaction_date || ""} amount={Math.abs(t.amount)} />
+                                      <TxnRow key={t.id} desc={(t as unknown as Record<string, unknown>).description as string || "Drawing"} date={(t as unknown as Record<string, unknown>).transaction_date as string || ""} amount={Math.abs(t.amount)} />
                                     ))}
                                   </div>
                                 </details>
@@ -2257,7 +2260,7 @@ const BankFeed = () => {
                                   </summary>
                                   <div className="ml-4 border-l border-border/30 pl-2">
                                     {drawingTxns.map(t => (
-                                      <TxnRow key={t.id} desc={(t as any).description || "Drawing"} date={(t as any).transaction_date || ""} amount={Math.abs(t.amount)} />
+                                      <TxnRow key={t.id} desc={(t as unknown as Record<string, unknown>).description as string || "Drawing"} date={(t as unknown as Record<string, unknown>).transaction_date as string || ""} amount={Math.abs(t.amount)} />
                                     ))}
                                   </div>
                                 </details>

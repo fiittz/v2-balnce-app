@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,7 @@ const corsHeaders = {
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const AI_MODEL = Deno.env.get("AI_MODEL") || "google/gemini-2.5-flash";
 
 // Known Irish merchants database for smart categorization
 const KNOWN_MERCHANTS: Record<string, { 
@@ -154,7 +156,35 @@ serve(async (req) => {
       );
     }
 
+    // Rate limit: 60 categorizations per minute per user
+    const rl = checkRateLimit(user.id, "categorize", 60);
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.retryAfterMs!, corsHeaders);
+    }
+
     const { transaction, categories, businessType, action, receiptText } = await req.json();
+
+    // Input validation
+    if (!transaction || !transaction.description) {
+      return new Response(
+        JSON.stringify({ error: "transaction with description is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!action || !["categorize", "match", "detect_anomaly"].includes(action)) {
+      return new Response(
+        JSON.stringify({ error: "action must be one of: categorize, match, detect_anomaly" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (action === "categorize" && categories && !Array.isArray(categories)) {
+      return new Response(
+        JSON.stringify({ error: "categories must be an array" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!OPENROUTER_API_KEY) {
       throw new Error("OPENROUTER_API_KEY is not configured");
@@ -361,7 +391,7 @@ Respond with ONLY valid JSON:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: AI_MODEL,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

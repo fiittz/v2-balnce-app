@@ -31,7 +31,7 @@ export function useDirectorOnboarding() {
     (directorNumber: number) => {
       const row = query.data?.find((d) => d.director_number === directorNumber);
       if (!row?.onboarding_data) return null;
-      return row.onboarding_data as Record<string, any>;
+      return row.onboarding_data as Record<string, unknown>;
     },
     [query.data]
   );

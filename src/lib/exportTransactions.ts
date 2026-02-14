@@ -586,7 +586,7 @@ export const exportToPDF = (
         if (data.column.index === 1) data.cell.styles.halign = "right";
       },
     });
-    y = (doc as any).lastAutoTable.finalY + 6;
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
 
     if (pnlCt1.taxableProfit !== undefined) {
       checkPage(40);
@@ -633,7 +633,7 @@ export const exportToPDF = (
           if (data.column.index === 1) data.cell.styles.halign = "right";
         },
       });
-      y = (doc as any).lastAutoTable.finalY + 6;
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
     }
   }
 
@@ -666,7 +666,7 @@ export const exportToPDF = (
           if (label.startsWith("Directors Current A/C")) data.cell.styles.fontStyle = "bold";
         },
       });
-      y = (doc as any).lastAutoTable.finalY + 6;
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
     }
   }
 
@@ -691,7 +691,7 @@ export const exportToPDF = (
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [60, 60, 60] },
     });
-    y = (doc as any).lastAutoTable.finalY + 6;
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
   }
 
   // Sales Tax Audit Report — transactions grouped by VAT rate
@@ -876,7 +876,7 @@ export const exportToPDF = (
         }
       },
     });
-    y = (doc as any).lastAutoTable.finalY + 4;
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
   }
 
   // Summary — separate purchase / sales totals + VAT position
@@ -925,7 +925,7 @@ export const exportToPDF = (
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 3;
+  y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 3;
   addText(`${transactions.length} transactions`, 8, { color: [100, 100, 100] });
 
   // Signature lines based on director count
@@ -1095,7 +1095,7 @@ export const exportDirectorToPDF = (
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [60, 60, 60] },
     });
-    y = (doc as any).lastAutoTable.finalY + 6;
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
   }
 
   // Sales Tax Audit Report — transactions grouped by VAT rate
@@ -1201,7 +1201,7 @@ export const exportDirectorToPDF = (
         }
       },
     });
-    y = (doc as any).lastAutoTable.finalY + 4;
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
   }
 
   addText(`${transactions.length} transactions`, 8, { color: [100, 100, 100] });

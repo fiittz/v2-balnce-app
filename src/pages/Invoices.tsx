@@ -31,7 +31,7 @@ const Invoices = () => {
   const { profile } = useAuth();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const buildInvoiceHtml = async (invoice: any) => {
+  const buildInvoiceHtml = async (invoice: Record<string, unknown>) => {
     // Fetch customer details
     let customer = { name: "Customer", email: "", phone: "", address: "", vat_number: "" };
     if (invoice.customer_id) {
@@ -40,11 +40,11 @@ const Invoices = () => {
         .select("*")
         .eq("id", invoice.customer_id)
         .single();
-      if (cust) customer = cust as any;
+      if (cust) customer = cust as typeof customer;
     }
 
     // Parse notes JSON for line items + extra data
-    let notesObj: any = null;
+    let notesObj: Record<string, unknown> | null = null;
     let comment = "";
     try {
       notesObj = invoice.notes ? JSON.parse(invoice.notes) : null;
@@ -60,7 +60,7 @@ const Invoices = () => {
     const rctAmount = notesObj?.rct_amount || 0;
     if (notesObj?.comment) comment = notesObj.comment;
 
-    const items = lineItems.map((item: any) => {
+    const items = lineItems.map((item: Record<string, unknown>) => {
       const lineTotal = item.qty * item.price;
       const vatRate = VAT_RATES[item.vatRate as keyof typeof VAT_RATES] || 0;
       const itemVat = lineTotal * vatRate;
@@ -148,7 +148,7 @@ const Invoices = () => {
     return pdf.output("blob");
   };
 
-  const handleDownloadPdf = async (e: React.MouseEvent, invoice: any) => {
+  const handleDownloadPdf = async (e: React.MouseEvent, invoice: Record<string, unknown>) => {
     e.stopPropagation();
     setLoadingId(invoice.id);
     try {
@@ -171,7 +171,7 @@ const Invoices = () => {
     }
   };
 
-  const handleSend = async (e: React.MouseEvent, invoice: any) => {
+  const handleSend = async (e: React.MouseEvent, invoice: Record<string, unknown>) => {
     e.stopPropagation();
     setLoadingId(invoice.id);
     try {
@@ -215,9 +215,9 @@ const Invoices = () => {
         .from("invoices")
         .update({ status: "sent" })
         .eq("id", invoice.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // User cancelled share dialog — not an error
-      if (error?.name === "AbortError") return;
+      if (error instanceof Error && error.name === "AbortError") return;
       console.error("Error sending invoice:", error);
       toast.error("Failed to send invoice");
     } finally {
@@ -264,7 +264,7 @@ const Invoices = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {invoices.map((invoice: any, index: number) => {
+              {invoices.map((invoice: Record<string, unknown>, index: number) => {
                 const status = statusConfig[invoice.status as keyof typeof statusConfig] || statusConfig.draft;
                 const StatusIcon = status.icon;
                 const isLoading = loadingId === invoice.id;

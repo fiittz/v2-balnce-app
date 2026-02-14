@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,34 +9,38 @@ import { BackgroundTasksProvider } from "@/contexts/BackgroundTasksContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import BackgroundTasksStatus from "@/components/layout/BackgroundTasksStatus";
 import ErrorBoundary from "@/components/ErrorBoundary";
+
+// Eagerly loaded — landing/login page (first thing users see)
 import Welcome from "./pages/Welcome";
-import Dashboard from "./pages/Dashboard";
-import BookkeepingDashboard from "./pages/BookkeepingDashboard";
-import Invoices from "./pages/Invoices";
-import AddInvoice from "./pages/AddInvoice";
-import AddExpense from "./pages/AddExpense";
-import ReceiptScanner from "./pages/ReceiptScanner";
-import BankFeed from "./pages/BankFeed";
-import VATCentre from "./pages/VATCentre";
-import RCTCentre from "./pages/RCTCentre";
-import TaxCentre from "./pages/TaxCentre";
-import Settings from "./pages/Settings";
-import BulkProcessor from "./pages/BulkProcessor";
-import Reports from "./pages/Reports";
-import ChartOfAccounts from "./pages/ChartOfAccounts";
-import OnboardingWizard from "./pages/OnboardingWizard";
-import DirectorOnboardingWizard from "./pages/DirectorOnboardingWizard";
-import Accounts from "./pages/Accounts";
-import AccountDetail from "./pages/AccountDetail";
-import BulkReceiptUpload from "./pages/BulkReceiptUpload";
-import Form11Return from "./pages/Form11Return";
-import CT1Return from "./pages/CT1Return";
-import BalanceSheet from "./pages/BalanceSheet";
-import ReliefScanner from "./pages/ReliefScanner";
-import TripClaimsManager from "./pages/TripClaimsManager";
-import ProfitAndLoss from "./pages/ProfitAndLoss";
-import AgedDebtors from "./pages/AgedDebtors";
 import NotFound from "./pages/NotFound";
+
+// Lazy-loaded page components — split into separate chunks
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const BookkeepingDashboard = lazy(() => import("./pages/BookkeepingDashboard"));
+const Invoices = lazy(() => import("./pages/Invoices"));
+const AddInvoice = lazy(() => import("./pages/AddInvoice"));
+const AddExpense = lazy(() => import("./pages/AddExpense"));
+const ReceiptScanner = lazy(() => import("./pages/ReceiptScanner"));
+const BankFeed = lazy(() => import("./pages/BankFeed"));
+const VATCentre = lazy(() => import("./pages/VATCentre"));
+const RCTCentre = lazy(() => import("./pages/RCTCentre"));
+const TaxCentre = lazy(() => import("./pages/TaxCentre"));
+const Settings = lazy(() => import("./pages/Settings"));
+const BulkProcessor = lazy(() => import("./pages/BulkProcessor"));
+const Reports = lazy(() => import("./pages/Reports"));
+const ChartOfAccounts = lazy(() => import("./pages/ChartOfAccounts"));
+const OnboardingWizard = lazy(() => import("./pages/OnboardingWizard"));
+const DirectorOnboardingWizard = lazy(() => import("./pages/DirectorOnboardingWizard"));
+const Accounts = lazy(() => import("./pages/Accounts"));
+const AccountDetail = lazy(() => import("./pages/AccountDetail"));
+const BulkReceiptUpload = lazy(() => import("./pages/BulkReceiptUpload"));
+const Form11Return = lazy(() => import("./pages/Form11Return"));
+const CT1Return = lazy(() => import("./pages/CT1Return"));
+const BalanceSheet = lazy(() => import("./pages/BalanceSheet"));
+const ReliefScanner = lazy(() => import("./pages/ReliefScanner"));
+const TripClaimsManager = lazy(() => import("./pages/TripClaimsManager"));
+const ProfitAndLoss = lazy(() => import("./pages/ProfitAndLoss"));
+const AgedDebtors = lazy(() => import("./pages/AgedDebtors"));
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -48,6 +53,7 @@ const App = () => (
         <ErrorBoundary>
         <AuthProvider>
           <BackgroundTasksProvider>
+          <Suspense fallback={<div>Loading...</div>}>
           <Routes>
             <Route path="/" element={<Welcome />} />
             <Route path="/onboarding" element={<RequireAuth><OnboardingWizard /></RequireAuth>} />
@@ -78,6 +84,7 @@ const App = () => (
             <Route path="/chart-of-accounts" element={<RequireAuth><ChartOfAccounts /></RequireAuth>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </Suspense>
           <BackgroundTasksStatus />
           </BackgroundTasksProvider>
         </AuthProvider>

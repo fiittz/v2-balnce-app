@@ -98,9 +98,10 @@ const AccountDetail = () => {
     switch (dateRange) {
       case "this_month":
         return { start: startOfMonth(now), end: endOfMonth(now) };
-      case "last_month":
+      case "last_month": {
         const lastMonth = subMonths(now, 1);
         return { start: startOfMonth(lastMonth), end: endOfMonth(lastMonth) };
+      }
       case "ytd":
         return { start: startOfYear(now), end: now };
       case "all":

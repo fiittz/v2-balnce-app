@@ -62,7 +62,7 @@ export async function categorizeTransaction(
 
 export async function matchTransaction(
   transaction: Transaction,
-  candidates: any[]
+  candidates: unknown[]
 ): Promise<{
   match_id: string | null;
   match_type: "invoice" | "expense" | null;

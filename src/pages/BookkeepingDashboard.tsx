@@ -87,7 +87,7 @@ const BookkeepingDashboard = () => {
 
   const uncategorisedCount = useMemo(
     () =>
-      transactions.filter((t: any) => {
+      transactions.filter((t: Record<string, unknown>) => {
         // Count transactions without a category as needing review
         return !t.category_id;
       }).length,
@@ -96,7 +96,7 @@ const BookkeepingDashboard = () => {
 
   const incomeVsExpenses = useMemo(() => {
     const byMonth = new Map<string, { income: number; expenses: number }>();
-    (transactions as any[]).forEach((t) => {
+    (transactions as Record<string, unknown>[]).forEach((t) => {
       if (!t.transaction_date) return;
       const month = String(t.transaction_date).slice(0, 7);
       const entry = byMonth.get(month) || { income: 0, expenses: 0 };
@@ -115,8 +115,8 @@ const BookkeepingDashboard = () => {
   const autoCatStats = useMemo(() => {
     const total = transactions.length;
     if (!total) return { autoPercent: 0, flagged: 0 };
-    const categorized = transactions.filter((t: any) => t.category_id).length;
-    const uncategorized = transactions.filter((t: any) => !t.category_id).length;
+    const categorized = transactions.filter((t: Record<string, unknown>) => t.category_id).length;
+    const uncategorized = transactions.filter((t: Record<string, unknown>) => !t.category_id).length;
     return {
       autoPercent: Math.round((categorized / total) * 100),
       flagged: uncategorized,
@@ -133,10 +133,10 @@ const BookkeepingDashboard = () => {
     let subcontractors = 0;
     let fuel = 0;
 
-    (transactions as any[]).forEach((t) => {
+    (transactions as Record<string, unknown>[]).forEach((t) => {
       if (t.type !== "expense") return;
       const amount = Number(t.amount) || 0;
-      const catName = (t.category?.name || "").toLowerCase();
+      const catName = (String((t.category as Record<string, unknown>)?.name || "")).toLowerCase();
 
       if (catName.includes("material")) {
         materials += amount;
@@ -233,7 +233,7 @@ const BookkeepingDashboard = () => {
               <span className="text-xs text-muted-foreground">need attention</span>
             </div>
             <div className="space-y-1 text-xs text-muted-foreground">
-              {(transactions as any[])
+              {(transactions as Record<string, unknown>[])
                 .filter((t) => !t.category_id)
                 .slice(0, 3)
                 .map((t) => (

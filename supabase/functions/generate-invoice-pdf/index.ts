@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,8 +67,6 @@ serve(async (req) => {
     // If invoiceData is provided, generate PDF directly without fetching from DB
     // This is useful for previewing before saving
     if (invoiceData) {
-      console.log("Generating preview PDF from provided data:", JSON.stringify(invoiceData).slice(0, 200));
-      
       // Fetch supplier details from profile and onboarding
       const [profileResult, onboardingResult] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", user.id).single(),
@@ -147,6 +145,11 @@ serve(async (req) => {
   }
 });
 
+function escapeHtml(str: string | null | undefined): string {
+  if (!str) return "";
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
 function generateInvoiceHTML(invoice: any, profile: any, onboarding: any, isPreview: boolean): string {
   const formatDate = (date: string) => {
     if (!date) return "";
@@ -169,10 +172,10 @@ function generateInvoiceHTML(invoice: any, profile: any, onboarding: any, isPrev
   
   const itemsHTML = items.map((item: any) => `
     <tr>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.description}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${escapeHtml(item.description)}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity || item.qty}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.unit_price || item.price)}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${VAT_RATE_LABELS[item.vat_rate || item.vatRate] || item.vat_rate || item.vatRate}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${VAT_RATE_LABELS[item.vat_rate || item.vatRate] || escapeHtml(item.vat_rate || item.vatRate)}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.total_amount || item.lineTotal)}</td>
     </tr>
   `).join("") || "";
@@ -431,16 +434,16 @@ function generateInvoiceHTML(invoice: any, profile: any, onboarding: any, isPrev
   <!-- HEADER WITH SUPPLIER INFO -->
   <div class="header">
     <div class="logo-section">
-      <h1>${supplierName}</h1>
+      <h1>${escapeHtml(supplierName)}</h1>
       <div class="supplier-details">
-        ${supplierAddress ? `${supplierAddress}<br>` : ""}
-        ${supplierPhone ? `Tel: ${supplierPhone}<br>` : ""}
-        ${supplierVatNumber ? `<strong>VAT No: ${supplierVatNumber}</strong>` : ""}
+        ${supplierAddress ? `${escapeHtml(supplierAddress)}<br>` : ""}
+        ${supplierPhone ? `Tel: ${escapeHtml(supplierPhone)}<br>` : ""}
+        ${supplierVatNumber ? `<strong>VAT No: ${escapeHtml(supplierVatNumber)}</strong>` : ""}
       </div>
     </div>
     <div class="invoice-title">
       <h2>${invoice.invoiceType === "quote" ? "QUOTE" : "INVOICE"}</h2>
-      <p class="invoice-number">#${invoiceNumber}</p>
+      <p class="invoice-number">#${escapeHtml(invoiceNumber)}</p>
       ${!isPreview ? `<span class="status-badge status-${status}">${status}</span>` : ""}
     </div>
   </div>
@@ -450,11 +453,11 @@ function generateInvoiceHTML(invoice: any, profile: any, onboarding: any, isPrev
     <div class="details-block">
       <h3>Bill To</h3>
       <p>
-        <strong>${customerName || "Customer Name"}</strong><br>
-        ${customerAddress ? `${customerAddress}<br>` : ""}
-        ${customerEmail ? `${customerEmail}<br>` : ""}
-        ${customerPhone ? `Tel: ${customerPhone}<br>` : ""}
-        ${customerTaxNumber ? `<span class="label">Tax/VAT No:</span> ${customerTaxNumber}` : ""}
+        <strong>${escapeHtml(customerName) || "Customer Name"}</strong><br>
+        ${customerAddress ? `${escapeHtml(customerAddress)}<br>` : ""}
+        ${customerEmail ? `${escapeHtml(customerEmail)}<br>` : ""}
+        ${customerPhone ? `Tel: ${escapeHtml(customerPhone)}<br>` : ""}
+        ${customerTaxNumber ? `<span class="label">Tax/VAT No:</span> ${escapeHtml(customerTaxNumber)}` : ""}
       </p>
     </div>
   </div>
@@ -520,14 +523,14 @@ function generateInvoiceHTML(invoice: any, profile: any, onboarding: any, isPrev
   ${invoice.notes || invoice.comment ? `
   <div class="notes-section">
     <h3>Notes</h3>
-    <p>${invoice.notes || invoice.comment}</p>
+    <p>${escapeHtml(invoice.notes || invoice.comment)}</p>
   </div>
   ` : ""}
 
   <!-- FOOTER -->
   <div class="footer">
     <p>Thank you for your business!</p>
-    ${supplierVatNumber ? `<p style="margin-top: 8px;">VAT Registration: ${supplierVatNumber}</p>` : ""}
+    ${supplierVatNumber ? `<p style="margin-top: 8px;">VAT Registration: ${escapeHtml(supplierVatNumber)}</p>` : ""}
     <p style="margin-top: 8px; color: #999;">Generated ${formatDate(new Date().toISOString())}</p>
   </div>
 </body>

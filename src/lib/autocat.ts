@@ -50,11 +50,10 @@ export { VAT_RATES, DISALLOWED_VAT_CREDITS, ALLOWED_VAT_CREDITS, RCT_RULES, INDU
 export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   // Expense categories
   "Motor Vehicle Expenses": ["Vehicle Expenses", "Fuel", "Travel & Accommodation"],
-  "Motor/travel": ["Vehicle Expenses", "Travel & Accommodation", "Fuel"],
-  "Fuel": ["Fuel", "Vehicle Expenses"],
-  "Tools": ["Tools & Equipment"],
+  "Motor/travel": ["Van Costs", "Vehicle Expenses", "Travel & Accommodation", "Fuel"],
+  "Tools": ["Power Tools", "Tools & Equipment"],
   "Purchases": ["Materials & Supplies"],
-  "Materials": ["Materials & Supplies"],
+  "Materials": ["Timber & Sheet Materials", "Fixings & Consumables", "Materials & Supplies"],
   "Cost of Goods Sold": ["Materials & Supplies"],
   "Software": ["Subscriptions & Software", "Office Expenses"],
   "Phone": ["Telephone & Internet", "Subscriptions & Software"],
@@ -63,7 +62,6 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   "Bank Fees": ["Bank Charges"],
   "Medical": ["Medical Expenses"],
   "Drawings": ["Director's Drawings"],
-  "Fuel": ["Fuel", "Vehicle Expenses"],
   "Meals & Entertainment": ["Meals & Entertainment"],
   "Consulting & Accounting": ["Professional Fees"],
   "Wages": ["Subcontractor Payments"],
@@ -85,7 +83,7 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   // Waste
   "Waste": [],
   // Internal transfers — no matching category, will fall through
-  "Internal Transfer": [],
+  "Internal Transfer": ["Internal Transfers"],
   // Travel & Subsistence
   "Travel & Subsistence": ["Travel & Accommodation", "Vehicle Expenses"],
   // Income categories
@@ -851,9 +849,9 @@ function inferIncomeCategory(tx: TransactionInput): {
     desc.includes("faster payment") ||
     desc.includes("sepa credit");
 
-  let category = "Sales";
+  const category = "Sales";
   let purpose = "Client payment received.";
-  let confidenceBoost = looksLikeClientPayment ? 20 : 10;
+  const confidenceBoost = looksLikeClientPayment ? 20 : 10;
 
   if (userInConstruction) {
     purpose = "Client payment for construction/trades work.";
@@ -881,7 +879,7 @@ function refineWithReceipt(base: AutoCatResult, tx: TransactionInput): AutoCatRe
   const receipt = normalise(tx.receipt_text);
   if (!receipt) return base;
 
-  let result = { ...base };
+  const result = { ...base };
 
   // If receipt proves diesel (not petrol), allow VAT claim
   if (receipt.match(/diesel|derv/) && !receipt.match(/petrol|unleaded|gasoline/)) {
@@ -1037,10 +1035,7 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     }, tx);
   }
 
-  // 3) Merchant rules FIRST — specific vendor matches take priority over generic VAT keyword checks
-  const merchantMatch = matchMerchantRule(desc, merchant, tx.amount);
-
-  // 4) APPLY IRISH VAT RULES (Section 59/60) — only if no merchant rule matched
+  // 3) APPLY IRISH VAT RULES (Section 59/60) — statutory rules BEFORE merchant rules
   const vatTreatment = determineVatTreatment(
     tx.description,
     amountAbs,
@@ -1048,8 +1043,23 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     "expense"
   );
 
-  if (!merchantMatch && !vatTreatment.isVatRecoverable) {
-    const foodWordBoundary = (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION as any).wordBoundaryKeywords || [];
+  // Check for DIESEL specifically first - VAT IS recoverable
+  if (ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => desc.includes(k))) {
+    return finalizeResult({
+      category: "Motor Vehicle Expenses",
+      vat_type: "Standard 23%",
+      vat_deductible: true,
+      business_purpose: "Diesel fuel - VAT IS recoverable (unlike petrol). Section 59.",
+      confidence_score: 90,
+      notes: "Diesel purchase - VAT deductible.",
+      needs_review: false,
+      needs_receipt: true,
+      is_business_expense: true,
+    }, tx);
+  }
+
+  {
+    const foodWordBoundary = DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.wordBoundaryKeywords || [];
     const foodWordMatch = foodWordBoundary.some((k: string) => new RegExp(`\\b${k}\\b`).test(desc));
     const isDisallowedFood = foodWordMatch || DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => desc.includes(k));
     const isDisallowedEntertainment = DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some(k => desc.includes(k));
@@ -1057,7 +1067,7 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
 
     if (isDisallowedFood) {
       return finalizeResult({
-        category: "Meals & Entertainment",
+        category: "other",
         vat_type: "Standard 23%",
         vat_deductible: false,
         business_purpose: vatTreatment.explanation,
@@ -1071,7 +1081,7 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
 
     if (isDisallowedEntertainment) {
       return finalizeResult({
-        category: "Drawings",
+        category: "other",
         vat_type: "Standard 23%",
         vat_deductible: false,
         business_purpose: vatTreatment.explanation,
@@ -1098,22 +1108,10 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     }
   }
 
-  // 5) Check for DIESEL specifically - VAT IS recoverable
-  if (!merchantMatch && ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => desc.includes(k))) {
-    return finalizeResult({
-      category: "Motor Vehicle Expenses",
-      vat_type: "Standard 23%",
-      vat_deductible: true,
-      business_purpose: "Diesel fuel - VAT IS recoverable (unlike petrol). Section 59.",
-      confidence_score: 90,
-      notes: "Diesel purchase - VAT deductible.",
-      needs_review: false,
-      needs_receipt: true,
-      is_business_expense: true,
-    }, tx);
-  }
+  // 4) Merchant rules — specific vendor matches
+  const merchantMatch = matchMerchantRule(desc, merchant, tx.amount);
 
-  // 6) Apply merchant match if found
+  // 5) Apply merchant match if found
   
   if (merchantMatch) {
     const { rule, adjustedCategory, adjustedConfidence, adjustedPurpose, adjustedVatDeductible } = merchantMatch;

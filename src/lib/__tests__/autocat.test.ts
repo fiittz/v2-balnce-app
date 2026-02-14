@@ -424,11 +424,11 @@ describe("autoCategorise — training", () => {
 // autoCategorise — Waste disposal
 // ══════════════════════════════════════════════════════════════
 describe("autoCategorise — waste", () => {
-  it("Barna Recycling triggers false positive: 'bar' in 'barna' matches food/drink", () => {
-    // Known issue: substring "bar" in "barna" matches DISALLOWED_VAT_CREDITS food/drink keywords
+  it("Barna Recycling correctly categorised as Waste (word-boundary matching avoids 'bar' false positive)", () => {
+    // "bar" uses \bbar\b word-boundary matching, so "barna" does NOT trigger food/drink
     const result = autoCategorise(expense("BARNA RECYCLING COLLECTION"));
-    expect(result.category).toBe("other"); // Should be Waste but "bar" false-positive
-    expect(result.vat_deductible).toBe(false);
+    expect(result.category).toBe("Waste");
+    expect(result.vat_deductible).toBe(true);
   });
 
   it("categorises skip hire as Waste", () => {

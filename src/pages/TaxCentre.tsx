@@ -239,7 +239,7 @@ const TaxCentre = () => {
   // Calculate readiness score
   const calculateReadiness = () => {
     let score = 0;
-    let total = 4;
+    const total = 4;
     
     if (onboardingComplete) score++;
     if (directorOnboardingComplete) score++;

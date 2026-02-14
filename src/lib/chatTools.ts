@@ -222,16 +222,16 @@ function buildSources(ctx: ToolContext, extras?: string[]): string {
 // ── Client-side tool execution ─────────────────────────────
 export interface ToolContext {
   ct1: CT1Data;
-  savedCT1: Record<string, any> | null;
+  savedCT1: Record<string, unknown> | null;
   taxYear: number;
   navigate: (path: string) => void;
-  directorData: Record<string, any> | null;
+  directorData: Record<string, unknown> | null;
   transactionCount: number;
   invoiceCount: number;
-  transactions: Record<string, any>[];
-  invoices: Record<string, any>[];
+  transactions: Record<string, unknown>[];
+  invoices: Record<string, unknown>[];
   incorporationDate?: string | null;
-  allForm11Data: { directorNumber: number; data: Record<string, any> }[];
+  allForm11Data: { directorNumber: number; data: Record<string, unknown> }[];
 }
 
 // ── Helper: CT1 numbers (reused by multiple tools) ─────────
@@ -261,7 +261,7 @@ function computeCT1(ctx: ToolContext) {
 
 export function executeToolCall(
   name: string,
-  args: Record<string, any>,
+  args: Record<string, unknown>,
   ctx: ToolContext
 ): { result: string; navigated?: boolean } {
   switch (name) {
@@ -456,7 +456,7 @@ export function executeToolCall(
       const txs = ctx.transactions || [];
 
       // Uncategorized
-      const uncategorized = txs.filter((t: any) => !t.category || t.category === "Uncategorized");
+      const uncategorized = txs.filter((t: Record<string, unknown>) => !t.category || t.category === "Uncategorized");
       if (uncategorized.length > 0) {
         score -= Math.min(20, uncategorized.length);
         anomalies.push(`| Uncategorized Transactions | ${uncategorized.length} | May contain deductible expenses |`);
@@ -464,12 +464,12 @@ export function executeToolCall(
       }
 
       // Duplicate payments (same amount, same description, within 7 days)
-      const expenseTxs = txs.filter((t: any) => t.type === "expense");
+      const expenseTxs = txs.filter((t: Record<string, unknown>) => t.type === "expense");
       const dupes: string[] = [];
       for (let i = 0; i < expenseTxs.length && dupes.length < 3; i++) {
         for (let j = i + 1; j < expenseTxs.length && dupes.length < 3; j++) {
-          const a = expenseTxs[i] as any;
-          const b = expenseTxs[j] as any;
+          const a = expenseTxs[i] as Record<string, unknown>;
+          const b = expenseTxs[j] as Record<string, unknown>;
           if (
             a.amount === b.amount &&
             Math.abs(a.amount) >= 100 &&
@@ -488,7 +488,7 @@ export function executeToolCall(
       }
 
       // Large single expenses (>€5000)
-      const largeExpenses = expenseTxs.filter((t: any) => Math.abs(t.amount) >= 5000);
+      const largeExpenses = expenseTxs.filter((t: Record<string, unknown>) => Math.abs(Number(t.amount)) >= 5000);
       if (largeExpenses.length > 0) {
         anomalies.push(`| Large Expenses (>€5k) | ${largeExpenses.length} | Review for capitalisation (capital allowances) |`);
       }
@@ -920,10 +920,10 @@ export function executeToolCall(
       const limit = (args.limit as number) || 15;
       const txs = ctx.transactions || [];
 
-      const matches = txs.filter((t: any) => {
-        const desc = (t.description || "").toLowerCase();
-        const cat = (t.category || "").toLowerCase();
-        const vendor = (t.vendor_name || "").toLowerCase();
+      const matches = txs.filter((t: Record<string, unknown>) => {
+        const desc = (String(t.description || "")).toLowerCase();
+        const cat = (String(t.category || "")).toLowerCase();
+        const vendor = (String(t.vendor_name || "")).toLowerCase();
         return desc.includes(query) || cat.includes(query) || vendor.includes(query);
       }).slice(0, limit);
 
@@ -936,14 +936,14 @@ export function executeToolCall(
         ``,
         `| Date | Description | Category | Amount |`,
         `|------|-------------|----------|--------|`,
-        ...matches.map((t: any) => {
+        ...matches.map((t: Record<string, unknown>) => {
           const amt = Number(t.amount) || 0;
           const sign = t.type === "expense" ? "-" : "";
           return `| ${t.date || "—"} | ${(t.description || "—").slice(0, 40)} | ${t.category || "—"} | ${sign}${eur(Math.abs(amt))} |`;
         }),
       ];
 
-      const total = matches.reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0);
+      const total = matches.reduce((s: number, t: Record<string, unknown>) => s + (Number(t.amount) || 0), 0);
       lines.push(`| | | **Total** | **${eur(Math.abs(total))}** |`);
       lines.push(buildSources(ctx));
 
@@ -981,9 +981,10 @@ export function executeToolCall(
         const txs = ctx.transactions || [];
         const monthly: Record<string, number> = {};
         for (const t of txs) {
-          if ((t as any).type !== "expense" || !(t as any).date) continue;
-          const month = (t as any).date.slice(0, 7); // YYYY-MM
-          monthly[month] = (monthly[month] || 0) + Math.abs(Number((t as any).amount) || 0);
+          const txn = t as Record<string, unknown>;
+          if (txn.type !== "expense" || !txn.date) continue;
+          const month = String(txn.date).slice(0, 7); // YYYY-MM
+          monthly[month] = (monthly[month] || 0) + Math.abs(Number(txn.amount) || 0);
         }
         const chartData = Object.entries(monthly)
           .sort(([a], [b]) => a.localeCompare(b))
