@@ -62,9 +62,9 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      console.error("LOVABLE_API_KEY not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    if (!OPENROUTER_API_KEY) {
+      console.error("OPENROUTER_API_KEY not configured");
       // IMPORTANT: Returning a non-2xx status can surface as a runtime error in the UI.
       // Degrade gracefully: return a normal payload that tells the client to skip AI.
       return new Response(
@@ -89,10 +89,10 @@ serve(async (req) => {
     // Step 2: Web search to identify the vendor
     let webResearchResult = "";
     try {
-      const searchResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      const searchResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -206,10 +206,10 @@ Based on the web research and business profile, is this a legitimate business ex
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            Authorization: `Bearer ${OPENROUTER_API_KEY}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
