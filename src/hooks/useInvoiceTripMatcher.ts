@@ -170,10 +170,11 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       if (isLocalWork) continue;
 
       // If homeCounty is known and matches jobCounty → NOT outside home county (no overnights)
-      // If homeCounty is unknown, also check baseLocation against the job county
+      // If homeCounty is unknown, default to outside (eligible for overnight) since
+      // the trip already passed the local-work filter above.
       const baseCounty = baseLocation ? extractCountyFromAddress(baseLocation) : null;
       const effectiveHomeCounty = homeCounty || baseCounty;
-      const isOutsideHomeCounty = effectiveHomeCounty ? jobCounty !== effectiveHomeCounty : false;
+      const isOutsideHomeCounty = effectiveHomeCounty ? jobCounty !== effectiveHomeCounty : true;
 
       // Parse job start/end dates from notes JSON
       let jobStartDate: string | null = null;
