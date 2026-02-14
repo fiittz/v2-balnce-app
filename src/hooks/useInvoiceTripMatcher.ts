@@ -283,14 +283,17 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       let subsistenceMethod: "vouched" | "flat" = "flat";
 
       if (accommodationExpenses > 0 && nights > 0) {
-        // Vouched: actual accommodation + meals day rate per night
+        // Vouched: actual accommodation + meals day rate per night + day rate for extra days
         subsistenceMethod = "vouched";
-        subsistenceAllowance = accommodationExpenses + (nights * SUBSISTENCE_RATES.overnight.day_rate);
+        subsistenceAllowance = accommodationExpenses
+          + (nights * SUBSISTENCE_RATES.overnight.day_rate)
+          + (days * SUBSISTENCE_RATES.day_trip.ten_hours);
       } else if (nights > 0) {
-        // Flat rate: €191/night (no receipts)
-        subsistenceAllowance = nights * SUBSISTENCE_RATES.overnight.normal;
+        // Flat rate per night + day rate for extra working days
+        subsistenceAllowance = (nights * SUBSISTENCE_RATES.overnight.normal)
+          + (days * SUBSISTENCE_RATES.day_trip.ten_hours);
       } else {
-        // Day trip: €39.08/day (10+ hours)
+        // Day trip: €46.17/day (10+ hours)
         subsistenceAllowance = days * SUBSISTENCE_RATES.day_trip.ten_hours;
       }
 
@@ -307,9 +310,9 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
 
       // Calculate meals portion for display
       const mealsAllowance = subsistenceMethod === "vouched"
-        ? Math.round(nights * SUBSISTENCE_RATES.overnight.day_rate * 100) / 100
+        ? Math.round((nights * SUBSISTENCE_RATES.overnight.day_rate + days * SUBSISTENCE_RATES.day_trip.ten_hours) * 100) / 100
         : subsistenceMethod === "flat" && nights > 0
-          ? 0 // included in flat rate
+          ? Math.round(days * SUBSISTENCE_RATES.day_trip.ten_hours * 100) / 100 // extra day meals not included in flat overnight
           : Math.round(days * SUBSISTENCE_RATES.day_trip.ten_hours * 100) / 100;
 
       const totalRevenueAllowance = subsistenceAllowance + mileageAllowance;
