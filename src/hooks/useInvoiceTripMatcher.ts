@@ -170,11 +170,9 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       if (isLocalWork) continue;
 
       // If homeCounty is known and matches jobCounty → NOT outside home county (no overnights)
-      // If homeCounty is unknown, default to outside (eligible for overnight) since
-      // the trip already passed the local-work filter above.
+      // If homeCounty is unknown, defer to evidence: hotel transactions detected = overnight eligible
       const baseCounty = baseLocation ? extractCountyFromAddress(baseLocation) : null;
       const effectiveHomeCounty = homeCounty || baseCounty;
-      const isOutsideHomeCounty = effectiveHomeCounty ? jobCounty !== effectiveHomeCounty : true;
 
       // Parse job start/end dates from notes JSON
       let jobStartDate: string | null = null;
@@ -222,6 +220,13 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       }
       const overnightStayDetected = hotelTransactions.length > 0;
       const totalExpensesFromCsv = tripExpenses.reduce((sum, e) => sum + e.amount, 0);
+
+      // Determine if outside home county:
+      // - Known home county: compare directly
+      // - Unknown home county: use hotel evidence (overnight stays = outside county)
+      const isOutsideHomeCounty = effectiveHomeCounty
+        ? jobCounty !== effectiveHomeCounty
+        : overnightStayDetected;
 
       // Build trip input for detectTrips
       const tripInput: DetectTripsInput[] = nearbyExpenses.map((exp) => ({
