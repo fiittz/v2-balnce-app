@@ -123,7 +123,8 @@ const ReceiptScanner = () => {
         notes: receiptData.invoice_number ? `Invoice: ${receiptData.invoice_number}` : null,
       });
 
-      navigate("/dashboard");
+      reset();
+      toast.success("Expense saved — scan another receipt or go back.");
     } catch (err) {
       console.error("Failed to save expense:", err);
       toast.error("Failed to save expense. Please try again.");
