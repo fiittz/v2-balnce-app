@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Camera, Upload, Loader2, RefreshCw, AlertCircle, Files } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,32 @@ import { CameraCapture } from "@/components/receipt/CameraCapture";
 import { ReceiptPreview } from "@/components/receipt/ReceiptPreview";
 import { useReceiptScanner } from "@/hooks/useReceiptScanner";
 import { useAuth } from "@/hooks/useAuth";
+import { useCreateExpense } from "@/hooks/useExpenses";
+import { useExpenseCategories } from "@/hooks/useCategories";
+import { categorizeTransaction, calculateVat, VAT_RATES } from "@/services/categorization";
+import { toast } from "sonner";
 import AppLayout from "@/components/layout/AppLayout";
+
+const parseVatRateToNumeric = (vatRateStr: string): number => {
+  const num = parseFloat(
+    vatRateStr
+      .replace("standard_", "")
+      .replace("reduced_", "")
+      .replace("second_reduced_", "")
+      .replace("livestock_", "")
+      .replace("_", ".")
+  );
+  return isNaN(num) ? 0 : num;
+};
 
 const ReceiptScanner = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+  const createExpense = useCreateExpense();
+  const { data: categories } = useExpenseCategories();
+  const [isSaving, setIsSaving] = useState(false);
+
   const {
     state,
     imageData,
@@ -52,23 +71,65 @@ const ReceiptScanner = () => {
 
   const handleConfirm = async () => {
     if (!receiptData || !user) return;
-    
-    // Upload receipt image and get URL
-    const receiptUrl = await uploadReceipt(user.id);
-    
-    // Navigate to expense form with pre-filled data
-    const params = new URLSearchParams();
-    params.set("supplier", receiptData.supplier_name || "");
-    params.set("date", receiptData.date || "");
-    params.set("total", receiptData.total_amount.toString());
-    params.set("vat", receiptData.vat_amount?.toString() || "");
-    params.set("vatRate", receiptData.vat_rate || "standard_23");
-    params.set("net", receiptData.net_amount?.toString() || "");
-    params.set("invoiceNumber", receiptData.invoice_number || "");
-    params.set("category", receiptData.suggested_category || "");
-    if (receiptUrl) params.set("receiptUrl", receiptUrl);
-    
-    navigate(`/expense?${params.toString()}`);
+
+    setIsSaving(true);
+    try {
+      // Upload receipt image
+      const receiptUrl = await uploadReceipt(user.id);
+
+      // AI categorization
+      const vatRateStr = receiptData.vat_rate || "standard_23";
+      let categoryId: string | null = null;
+      let finalVatRate = vatRateStr;
+
+      if (categories && categories.length > 0) {
+        try {
+          const catResult = await categorizeTransaction(
+            { description: receiptData.supplier_name || "Expense", amount: receiptData.total_amount, date: receiptData.date || new Date().toISOString() },
+            categories,
+            profile?.business_type
+          );
+          if (catResult.category_id) {
+            categoryId = catResult.category_id;
+          } else if (catResult.category_name) {
+            const match = categories.find(c => c.name.toLowerCase() === catResult.category_name.toLowerCase());
+            if (match) categoryId = match.id;
+          }
+          if (catResult.vat_rate) finalVatRate = catResult.vat_rate;
+        } catch {
+          // Categorization failed — save without category
+        }
+      }
+
+      // If OCR suggested a category and AI didn't find one, try matching by name
+      if (!categoryId && receiptData.suggested_category && categories) {
+        const match = categories.find(c => c.name.toLowerCase().includes(receiptData.suggested_category!.toLowerCase()));
+        if (match) categoryId = match.id;
+      }
+
+      // Calculate VAT
+      const total = receiptData.total_amount;
+      const { vat: vatAmount } = calculateVat(total, finalVatRate);
+      const numericVatRate = parseVatRateToNumeric(finalVatRate);
+
+      await createExpense.mutateAsync({
+        amount: total,
+        vat_amount: receiptData.vat_amount ?? vatAmount,
+        vat_rate: numericVatRate,
+        category_id: categoryId,
+        description: receiptData.supplier_name || "Scanned Receipt",
+        expense_date: receiptData.date || new Date().toISOString().split("T")[0],
+        receipt_url: receiptUrl,
+        notes: receiptData.invoice_number ? `Invoice: ${receiptData.invoice_number}` : null,
+      });
+
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Failed to save expense:", err);
+      toast.error("Failed to save expense. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Camera view - full screen without layout
@@ -199,6 +260,7 @@ const ReceiptScanner = () => {
           onDataChange={updateReceiptData}
           onConfirm={handleConfirm}
           onRetake={reset}
+          isSaving={isSaving}
         />
       )}
     </AppLayout>

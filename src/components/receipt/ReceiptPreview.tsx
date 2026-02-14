@@ -1,4 +1,4 @@
-import { Check, AlertTriangle, Sparkles, Edit2 } from "lucide-react";
+import { Check, AlertTriangle, Sparkles, Edit2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ interface ReceiptPreviewProps {
   onDataChange: (data: ReceiptData) => void;
   onConfirm: () => void;
   onRetake: () => void;
+  isSaving?: boolean;
 }
 
 const vatRateLabels: Record<string, string> = {
@@ -42,6 +43,7 @@ export const ReceiptPreview = ({
   onDataChange,
   onConfirm,
   onRetake,
+  isSaving,
 }: ReceiptPreviewProps) => {
   const updateField = <K extends keyof ReceiptData>(field: K, value: ReceiptData[K]) => {
     onDataChange({ ...receiptData, [field]: value });
@@ -222,10 +224,20 @@ export const ReceiptPreview = ({
         </Button>
         <Button
           onClick={onConfirm}
+          disabled={isSaving}
           className="flex-1 h-14 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl font-semibold"
         >
-          <Check className="w-5 h-5 mr-2" />
-          Use Data
+          {isSaving ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Check className="w-5 h-5 mr-2" />
+              Use Data
+            </>
+          )}
         </Button>
       </div>
     </div>
