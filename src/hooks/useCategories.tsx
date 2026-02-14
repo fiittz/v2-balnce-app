@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { seedDefaultCategories } from "@/lib/seedCategories";
+import { seedDefaultCategories, ensureNewCategories } from "@/lib/seedCategories";
 
 export interface Category {
   id: string;
@@ -55,6 +55,20 @@ export function useCategories(type?: "income" | "expense") {
           if (refetchError) throw refetchError;
           data = refetchedData;
         }
+      } else if (data && data.length > 0 && user?.id) {
+        // Ensure newer categories (Subsistence, etc.) exist for existing users
+        await ensureNewCategories(user.id);
+        // Re-fetch in case new categories were added
+        let refetchQuery = supabase
+          .from("categories")
+          .select("*")
+          .eq("user_id", user!.id)
+          .order("name");
+        if (type) {
+          refetchQuery = refetchQuery.eq("type", type);
+        }
+        const { data: updated } = await refetchQuery;
+        if (updated) data = updated;
       }
 
       return data as Category[];
