@@ -116,8 +116,16 @@ export const TOOL_DEFINITIONS = [
   {
     type: "function" as const,
     function: {
-      name: "run_tax_health_check",
-      description: "Run a comprehensive tax health check. Returns CT1 summary, unclaimed reliefs with estimated savings, anomalies/red flags, upcoming deadlines, and a tax health score out of 100. Use when the user asks for an overview, health check, audit, or wants to know their overall tax position.",
+      name: "run_company_health_check",
+      description: "Run a company (Ltd) tax health check. Reviews the CT1 corporation tax return, capital allowances, RCT credits, start-up relief, expense anomalies, and business deadlines. Use when the user asks about their company tax position, CT1 health check, or business tax overview.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "run_director_health_check",
+      description: "Run a personal director tax health check. Reviews Form 11 income tax, pension contributions, salary vs dividend optimisation, small benefit exemption, mileage & subsistence claims, and personal tax credits. Use when the user asks about their personal tax, director's tax position, Form 11 health check, or personal tax planning.",
       parameters: { type: "object", properties: {} },
     },
   },
@@ -377,8 +385,8 @@ export function executeToolCall(
       return { result: lines.join("\n") };
     }
 
-    // ── TAX HEALTH CHECK ──────────────────────────────────
-    case "run_tax_health_check": {
+    // ── COMPANY HEALTH CHECK (Ltd / CT1) ──────────────────
+    case "run_company_health_check": {
       const n = computeCT1(ctx);
       const { ct1 } = ctx;
       let score = 100;
@@ -397,67 +405,50 @@ export function executeToolCall(
         `| **${n.balanceDue <= 0 ? "Refund Due" : "Balance Due"}** | **${eur(Math.abs(n.balanceDue))}** |`,
       ];
 
-      // --- Unclaimed Reliefs ---
+      // --- Company-level reliefs ---
       const reliefs: string[] = [];
       let potentialSavings = 0;
-
-      // Pension check
-      const anyPension = ctx.allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
-      if (!anyPension && n.tradingProfit > 10000) {
-        const pensionSuggestion = Math.min(n.tradingProfit * 0.3, 50000);
-        const saving = pensionSuggestion * 0.125 + pensionSuggestion * 0.492;
-        potentialSavings += saving;
-        reliefs.push(`| Employer Pension | ${eur(pensionSuggestion)} contribution | ~${eur(saving)} | Not claimed |`);
-        score -= 15;
-        issues.push("No pension contributions — biggest tax-saving opportunity missed");
-      } else if (anyPension) {
-        wins.push("Pension contributions active");
-      }
 
       // Start-up relief
       if (ctx.incorporationDate) {
         const incorpYear = new Date(ctx.incorporationDate).getFullYear();
         const yearsTrading = ctx.taxYear - incorpYear;
         if (yearsTrading <= 3 && n.totalCT > 0) {
-          reliefs.push(`| Start-up Relief | Year ${yearsTrading} of 3 | Up to ${eur(Math.min(n.totalCT, 40000))} | Check eligibility |`);
+          const saving = Math.min(n.totalCT, 40000);
+          potentialSavings += saving;
+          reliefs.push(`| Start-up Relief (s.486C) | Year ${yearsTrading} of 3 | Up to ${eur(saving)} | Check eligibility |`);
           wins.push(`Start-up relief available (year ${yearsTrading})`);
         }
       }
 
       // Capital allowances
       if (n.capitalAllowancesTotal > 0) {
-        wins.push(`Capital allowances: ${eur(n.capitalAllowancesTotal)}`);
+        wins.push(`Capital allowances claimed: ${eur(n.capitalAllowancesTotal)}`);
       } else if (ct1.flaggedCapitalItems.length > 0) {
         const flaggedTotal = ct1.flaggedCapitalItems.reduce((s, i) => s + i.amount, 0);
         const saving = flaggedTotal * 0.125 * 0.125;
         potentialSavings += saving;
         reliefs.push(`| Capital Allowances | ${ct1.flaggedCapitalItems.length} flagged items (${eur(flaggedTotal)}) | ~${eur(saving)}/yr | Review items |`);
         score -= 5;
-        issues.push("Capital items flagged but no allowances claimed");
+        issues.push("Capital items flagged but no allowances claimed — review for plant & machinery write-down");
       }
 
-      // Small Benefit Exemption
-      const directorSalary = Number(ctx.directorData?.salary || ctx.directorData?.annual_salary || 0);
-      if (directorSalary > 0) {
-        const sbeSaving = 1500 * 0.492;
-        potentialSavings += sbeSaving;
-        reliefs.push(`| Small Benefit Exemption | 5 vouchers × €300 | ~${eur(sbeSaving)} | Easy to claim |`);
-      }
-
-      // Travel/mileage
-      if (ct1.directorsLoanTravel > 0) {
-        wins.push(`Mileage & subsistence: ${eur(ct1.travelAllowance)}`);
-      } else {
-        const commuteKm = Number(ctx.directorData?.commute_distance_km || 0);
-        if (commuteKm > 0) {
-          score -= 5;
-          issues.push("Director has commute but no travel claims");
-        }
+      // Employer pension as CT deduction
+      const anyPension = ctx.allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
+      if (!anyPension && n.tradingProfit > 10000) {
+        const pensionSuggestion = Math.min(n.tradingProfit * 0.3, 50000);
+        const ctSaving = pensionSuggestion * 0.125;
+        potentialSavings += ctSaving;
+        reliefs.push(`| Employer Pension (CT deduction) | ${eur(pensionSuggestion)} contribution | ~${eur(ctSaving)} CT saved | Not claimed |`);
+        score -= 10;
+        issues.push("No employer pension contributions — reduces taxable trading profit");
+      } else if (anyPension) {
+        wins.push("Employer pension contributions reducing trading profit");
       }
 
       // RCT credit
       if (ct1.rctPrepayment > 0) {
-        wins.push(`RCT credit: ${eur(ct1.rctPrepayment)}`);
+        wins.push(`RCT credit offsetting CT: ${eur(ct1.rctPrepayment)}`);
       }
 
       // --- Anomalies ---
@@ -469,7 +460,7 @@ export function executeToolCall(
       if (uncategorized.length > 0) {
         score -= Math.min(20, uncategorized.length);
         anomalies.push(`| Uncategorized Transactions | ${uncategorized.length} | May contain deductible expenses |`);
-        issues.push(`${uncategorized.length} uncategorized transactions`);
+        issues.push(`${uncategorized.length} uncategorized transactions — categorise to maximise deductions`);
       }
 
       // Duplicate payments (same amount, same description, within 7 days)
@@ -499,7 +490,7 @@ export function executeToolCall(
       // Large single expenses (>€5000)
       const largeExpenses = expenseTxs.filter((t: any) => Math.abs(t.amount) >= 5000);
       if (largeExpenses.length > 0) {
-        anomalies.push(`| Large Expenses (>€5k) | ${largeExpenses.length} | Review for capitalisation |`);
+        anomalies.push(`| Large Expenses (>€5k) | ${largeExpenses.length} | Review for capitalisation (capital allowances) |`);
       }
 
       // Disallowed expenses ratio
@@ -507,18 +498,216 @@ export function executeToolCall(
         const ratio = ct1.expenseSummary.disallowed / (ct1.expenseSummary.allowable + ct1.expenseSummary.disallowed) * 100;
         if (ratio > 10) {
           score -= 5;
-          anomalies.push(`| High Disallowed Rate | ${ratio.toFixed(1)}% | ${eur(ct1.expenseSummary.disallowed)} disallowed |`);
-          issues.push(`${ratio.toFixed(1)}% of expenses are disallowed`);
+          anomalies.push(`| High Disallowed Rate | ${ratio.toFixed(1)}% | ${eur(ct1.expenseSummary.disallowed)} non-deductible |`);
+          issues.push(`${ratio.toFixed(1)}% of expenses are disallowed for CT purposes`);
         }
       }
 
-      // --- Deadlines ---
+      // --- Deadlines (company only) ---
       const today = new Date();
       const upcomingDeadlines: string[] = [];
       const dList = [
-        { name: "CT1 filing", date: new Date(ctx.taxYear + 1, 8, 23) },
-        { name: "Form 11 filing", date: new Date(ctx.taxYear + 1, 9, 31) },
-        { name: "CT1 prelim (small)", date: new Date(ctx.taxYear + 1, 5, 23) },
+        { name: "CT1 filing deadline", date: new Date(ctx.taxYear + 1, 8, 23) },
+        { name: "CT1 preliminary tax (small co.)", date: new Date(ctx.taxYear + 1, 5, 23) },
+        { name: "VAT3 return", date: null as Date | null, desc: "Bi-monthly — 19th of month following period" },
+        { name: "RCT return", date: null as Date | null, desc: "Monthly — 23rd of following month" },
+      ];
+      for (const d of dList) {
+        if (d.date) {
+          const daysLeft = Math.ceil((d.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          if (daysLeft > 0 && daysLeft <= 120) {
+            upcomingDeadlines.push(`- **${d.name}**: ${d.date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })} (${daysLeft} days)`);
+            if (daysLeft <= 30) { score -= 10; issues.push(`${d.name} due in ${daysLeft} days`); }
+          }
+        } else {
+          upcomingDeadlines.push(`- **${d.name}**: ${d.desc}`);
+        }
+      }
+
+      // --- Score ---
+      score = Math.max(0, Math.min(100, score));
+      let grade = "A+";
+      if (score < 90) grade = "A";
+      if (score < 80) grade = "B";
+      if (score < 70) grade = "C";
+      if (score < 60) grade = "D";
+      if (score < 50) grade = "F";
+
+      // --- Build report ---
+      const report: string[] = [
+        `# Company Health Check — ${ctx.taxYear}`,
+        `*Corporation Tax (CT1) & Business Review*`,
+        ``,
+        `## Score: ${score}/100 (${grade})`,
+        ``,
+        ...ctSummary,
+        ``,
+      ];
+
+      if (wins.length > 0) {
+        report.push(`## What the Company Is Doing Right`);
+        wins.forEach(w => report.push(`- ${w}`));
+        report.push(``);
+      }
+
+      if (reliefs.length > 0) {
+        report.push(`## Company Tax Reliefs & Opportunities`);
+        report.push(`| Relief | Detail | Est. CT Saving | Status |`);
+        report.push(`|--------|--------|----------------|--------|`);
+        report.push(...reliefs);
+        report.push(``);
+        if (potentialSavings > 0) {
+          report.push(`**Total potential company tax savings: ~${eur(potentialSavings)}**`);
+          report.push(``);
+        }
+      }
+
+      if (anomalies.length > 0) {
+        report.push(`## Anomalies & Red Flags`);
+        report.push(`| Issue | Count | Detail |`);
+        report.push(`|-------|-------|--------|`);
+        report.push(...anomalies);
+        report.push(``);
+      }
+
+      if (upcomingDeadlines.length > 0) {
+        report.push(`## Company Deadlines`);
+        report.push(...upcomingDeadlines);
+        report.push(``);
+      }
+
+      if (issues.length > 0) {
+        report.push(`## Action Items (Ltd)`);
+        issues.forEach((issue, i) => report.push(`${i + 1}. ${issue}`));
+        report.push(``);
+      }
+
+      report.push(`> *Tip: Run a **Director Health Check** for personal tax advice (Form 11, pension, salary vs dividend).*`);
+      report.push(buildSources(ctx, ["TCA 1997", "Revenue.ie Corporation Tax rates 2026"]));
+
+      return { result: report.join("\n") };
+    }
+
+    // ── DIRECTOR HEALTH CHECK (Personal / Form 11) ─────────
+    case "run_director_health_check": {
+      const n = computeCT1(ctx);
+      const { ct1 } = ctx;
+      let score = 100;
+      const issues: string[] = [];
+      const wins: string[] = [];
+
+      // --- Director info ---
+      const directorSalary = Number(ctx.directorData?.salary || ctx.directorData?.annual_salary || 0);
+      const directorName = ctx.directorData?.name || ctx.directorData?.full_name || "Director";
+
+      // --- Salary setup ---
+      const salarySummary: string[] = [];
+      if (directorSalary > 0) {
+        const employerPRSI = directorSalary <= 496 * 52 ? directorSalary * 0.09 : directorSalary * 0.1125;
+        const paye = Math.min(directorSalary, 44000) * 0.20 + Math.max(0, directorSalary - 44000) * 0.40;
+        const empPRSI = directorSalary > 352 * 52 ? directorSalary * 0.042 : 0;
+        const usc = Math.min(directorSalary, 12012) * 0.005 + Math.min(Math.max(0, directorSalary - 12012), 16688) * 0.02 + Math.min(Math.max(0, directorSalary - 28700), 41344) * 0.03 + Math.max(0, directorSalary - 70044) * 0.08;
+        const credits = 4000; // personal + employee
+        const netPay = directorSalary - paye - empPRSI - usc + credits;
+
+        salarySummary.push(
+          `## Director Salary & Tax`,
+          `| | Amount |`,
+          `|--|--------|`,
+          `| Gross Salary | ${eur(directorSalary)} |`,
+          `| PAYE | ${eur(paye)} |`,
+          `| Employee PRSI | ${eur(empPRSI)} |`,
+          `| USC | ${eur(usc)} |`,
+          `| Tax Credits | −${eur(credits)} |`,
+          `| **Net Pay** | **${eur(Math.max(0, netPay))}** |`,
+          `| Employer PRSI (company cost) | ${eur(employerPRSI)} |`,
+          ``,
+        );
+        wins.push(`Director salary set at ${eur(directorSalary)}`);
+      } else {
+        score -= 10;
+        issues.push("No director salary set — you may be missing personal tax credits (€4,000+)");
+        salarySummary.push(
+          `## Director Salary`,
+          `No salary recorded. Consider setting a salary to utilise your personal tax credits (${eur(4000)}).`,
+          ``,
+        );
+      }
+
+      // --- Pension ---
+      const reliefs: string[] = [];
+      let potentialSavings = 0;
+
+      const anyPension = ctx.allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
+      if (!anyPension && n.tradingProfit > 10000) {
+        const pensionSuggestion = Math.min(n.tradingProfit * 0.3, 50000);
+        const personalSaving = pensionSuggestion * 0.492;
+        const ctSaving = pensionSuggestion * 0.125;
+        potentialSavings += personalSaving + ctSaving;
+        reliefs.push(`| Employer Pension | ${eur(pensionSuggestion)} contribution | ~${eur(personalSaving)} personal tax + ~${eur(ctSaving)} CT | Not claimed |`);
+        score -= 15;
+        issues.push("No pension contributions — biggest personal tax-saving opportunity. The company pays into your pension, you avoid PAYE/PRSI/USC on the full amount");
+      } else if (anyPension) {
+        const pensionAmt = ctx.allForm11Data?.reduce((s, f) => s + Number(f.data?.pensionContributions || 0), 0) ?? 0;
+        wins.push(`Pension contributions active: ${eur(pensionAmt)}`);
+      }
+
+      // --- Small Benefit Exemption ---
+      if (directorSalary > 0) {
+        const sbeSaving = 1500 * 0.492;
+        potentialSavings += sbeSaving;
+        reliefs.push(`| Small Benefit Exemption | 5 vouchers × €300/yr | ~${eur(sbeSaving)} | Easy to claim |`);
+        issues.push("Consider Small Benefit Exemption — up to €1,500/yr in tax-free vouchers (5 × €300)");
+      }
+
+      // --- Salary vs Dividend optimisation ---
+      if (directorSalary > 0 && n.tradingProfit > directorSalary) {
+        const surplus = n.tradingProfit - directorSalary;
+        if (surplus > 5000) {
+          // Quick comparison
+          const divTax = surplus * 0.125 + (surplus * 0.875) * 0.492; // CT + personal
+          const salTax = surplus * 0.492 + surplus * 0.1125; // PAYE+PRSI+USC + employer PRSI
+          const pensionTax = 0;
+          const bestMethod = pensionTax < salTax && pensionTax < divTax ? "pension" : salTax < divTax ? "salary" : "dividend";
+          reliefs.push(`| Salary vs Dividend | ${eur(surplus)} surplus profit | Salary: ~${eur(salTax)} tax, Dividend: ~${eur(divTax)} tax | ${bestMethod === "pension" ? "**Pension best**" : bestMethod === "salary" ? "Salary more efficient" : "Dividend more efficient"} |`);
+        }
+      }
+
+      // --- Travel & Mileage ---
+      if (ct1.directorsLoanTravel > 0) {
+        wins.push(`Mileage & subsistence claims: ${eur(ct1.travelAllowance)} (tax-free)`);
+      } else {
+        const commuteKm = Number(ctx.directorData?.commute_distance_km || 0);
+        if (commuteKm > 0) {
+          const annualMileage = commuteKm * 2 * 220; // return trip × working days
+          const mileageRate = 0.4107; // civil service rate
+          const potentialClaim = annualMileage * mileageRate;
+          score -= 5;
+          issues.push(`You commute ${commuteKm}km each way but have no mileage claims. Potential tax-free reimbursement: ~${eur(potentialClaim)}/yr`);
+          reliefs.push(`| Mileage Allowance | ${commuteKm}km commute × 220 days | ~${eur(potentialClaim)}/yr tax-free | Not claimed |`);
+          potentialSavings += potentialClaim;
+        }
+      }
+
+      // --- Form 11 director data checks ---
+      for (const f of (ctx.allForm11Data || [])) {
+        const data = f.data || {};
+        // Check for rental income
+        if (Number(data.rentalIncome) > 0) {
+          wins.push(`Rental income declared: ${eur(Number(data.rentalIncome))}`);
+        }
+        // Check for medical expenses
+        if (Number(data.medicalExpenses) > 0) {
+          wins.push(`Medical expenses claimed: ${eur(Number(data.medicalExpenses))} (20% relief)`);
+        }
+      }
+
+      // --- Deadlines (personal) ---
+      const today = new Date();
+      const upcomingDeadlines: string[] = [];
+      const dList = [
+        { name: "Form 11 filing deadline", date: new Date(ctx.taxYear + 1, 9, 31) },
+        { name: "Form 11 preliminary tax", date: new Date(ctx.taxYear, 9, 31) },
       ];
       for (const d of dList) {
         const daysLeft = Math.ceil((d.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -539,12 +728,12 @@ export function executeToolCall(
 
       // --- Build report ---
       const report: string[] = [
-        `# Tax Health Check — ${ctx.taxYear}`,
+        `# Director Health Check — ${ctx.taxYear}`,
+        `*Personal Tax (Form 11) Review for ${directorName}*`,
         ``,
         `## Score: ${score}/100 (${grade})`,
         ``,
-        ...ctSummary,
-        ``,
+        ...salarySummary,
       ];
 
       if (wins.length > 0) {
@@ -554,38 +743,31 @@ export function executeToolCall(
       }
 
       if (reliefs.length > 0) {
-        report.push(`## Unclaimed Reliefs & Opportunities`);
-        report.push(`| Relief | Detail | Est. Saving | Status |`);
-        report.push(`|--------|--------|-------------|--------|`);
+        report.push(`## Personal Tax Opportunities`);
+        report.push(`| Opportunity | Detail | Est. Saving | Status |`);
+        report.push(`|-------------|--------|-------------|--------|`);
         report.push(...reliefs);
         report.push(``);
         if (potentialSavings > 0) {
-          report.push(`**Total potential savings: ~${eur(potentialSavings)}**`);
+          report.push(`**Total potential personal savings: ~${eur(potentialSavings)}**`);
           report.push(``);
         }
       }
 
-      if (anomalies.length > 0) {
-        report.push(`## Anomalies & Red Flags`);
-        report.push(`| Issue | Count | Detail |`);
-        report.push(`|-------|-------|--------|`);
-        report.push(...anomalies);
-        report.push(``);
-      }
-
       if (upcomingDeadlines.length > 0) {
-        report.push(`## Upcoming Deadlines`);
+        report.push(`## Personal Tax Deadlines`);
         report.push(...upcomingDeadlines);
         report.push(``);
       }
 
       if (issues.length > 0) {
-        report.push(`## Action Items`);
+        report.push(`## Action Items (Personal)`);
         issues.forEach((issue, i) => report.push(`${i + 1}. ${issue}`));
         report.push(``);
       }
 
-      report.push(buildSources(ctx, ["Irish tax legislation", "Revenue.ie rates 2026"]));
+      report.push(`> *Tip: Run a **Company Health Check** for CT1, capital allowances, and business tax advice.*`);
+      report.push(buildSources(ctx, ["TCA 1997", "Revenue.ie Income Tax rates 2026", "Form 11 guidance"]));
 
       return { result: report.join("\n") };
     }

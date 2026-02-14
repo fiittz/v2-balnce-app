@@ -190,12 +190,32 @@ const Welcome = () => {
 
       {screen === "welcome" && (
         <div className="flex-1 flex flex-col items-center justify-center px-6 animate-fade-in relative z-10">
-          <div className="mb-8">
-            <img src="/enhance-penguin-transparent.png" alt="Balnce" className="w-24 h-24 object-contain drop-shadow-lg" />
+          <div className="flex items-center gap-3 mb-2">
+            <img
+              src="/enhance-penguin-transparent.png"
+              alt="Balnce"
+              className="object-contain"
+              style={{ height: "clamp(4rem, 12vw, 7rem)", width: "auto" }}
+            />
+            <div className="inline-flex gap-[0.08em] items-center">
+              {"BALNCE".split("").map((char, i) => (
+                <div
+                  key={i}
+                  className="relative overflow-hidden flex items-center justify-center"
+                  style={{
+                    fontFamily: "'Bebas Neue', sans-serif",
+                    fontSize: "clamp(3rem, 10vw, 6rem)",
+                    width: "0.65em",
+                    height: "1.05em",
+                    backgroundColor: "#000",
+                    color: "#fff",
+                  }}
+                >
+                  {char}
+                </div>
+              ))}
+            </div>
           </div>
-          <h1 className="text-5xl font-semibold text-foreground tracking-widest mb-2 font-['IBM_Plex_Mono']">
-            BALNCE
-          </h1>
           <p className="text-muted-foreground text-base mb-12 font-['IBM_Plex_Sans']">
             Your AI accountant
           </p>

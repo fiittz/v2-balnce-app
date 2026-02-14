@@ -58,16 +58,17 @@ function AssistantMessage({ content }: { content: string }) {
 // ── Follow-up suggestion map ────────────────────────────────
 const FOLLOW_UPS: Record<string, string[]> = {
   show_tax_summary: ["Show my expense breakdown", "How can I reduce this?", "What if I contributed to pension?"],
-  show_expense_breakdown: ["Show expenses as a chart", "Which of these are disallowed?", "Run a tax health check"],
+  show_expense_breakdown: ["Show expenses as a chart", "Which of these are disallowed?", "Run a company health check"],
   calculate_pension_savings: ["Compare salary vs dividend vs pension", "Show me my CT1 computation", "What if I bought a van?"],
-  show_tax_deadlines: ["Run a tax health check", "How much CT do I owe?", "Show me my P&L"],
-  run_tax_health_check: ["How much could I save with pension?", "Show my expenses as a chart", "What are my deadlines?"],
-  what_if_buy_van: ["What if I hire an employee at €35k?", "Show my CT1 computation", "Run a tax health check"],
+  show_tax_deadlines: ["Run a company health check", "How much CT do I owe?", "Show me my P&L"],
+  run_company_health_check: ["Run a director health check", "How much could I save with pension?", "Show my expenses as a chart"],
+  run_director_health_check: ["Run a company health check", "Compare salary vs dividend", "What are my deadlines?"],
+  what_if_buy_van: ["What if I hire an employee at €35k?", "Show my CT1 computation", "Run a company health check"],
   what_if_hire_employee: ["Compare salary vs dividend", "What if I bought a van?", "Show my expense breakdown"],
-  what_if_salary_vs_dividend: ["Calculate pension savings for €20k", "Show me my CT1", "Run a tax health check"],
-  search_transactions: ["Show my expenses as a chart", "Run a tax health check", "How much CT do I owe?"],
-  show_chart: ["Show my expense breakdown", "How can I reduce my tax?", "Run a tax health check"],
-  navigate_to_page: ["How much CT do I owe?", "Run a tax health check", "Show my expenses"],
+  what_if_salary_vs_dividend: ["Calculate pension savings for €20k", "Show me my CT1", "Run a director health check"],
+  search_transactions: ["Show my expenses as a chart", "Run a company health check", "How much CT do I owe?"],
+  show_chart: ["Show my expense breakdown", "How can I reduce my tax?", "Run a company health check"],
+  navigate_to_page: ["How much CT do I owe?", "Run a company health check", "Show my expenses"],
 };
 
 // ── Tool status labels ──────────────────────────────────────
@@ -77,7 +78,8 @@ const TOOL_STATUS_LABELS: Record<string, string> = {
   show_expense_breakdown: "Analysing your expenses...",
   calculate_pension_savings: "Calculating pension savings...",
   show_tax_deadlines: "Checking deadlines...",
-  run_tax_health_check: "Running tax health check...",
+  run_company_health_check: "Running company health check...",
+  run_director_health_check: "Running director health check...",
   what_if_buy_van: "Modelling van purchase...",
   what_if_hire_employee: "Calculating employment costs...",
   what_if_salary_vs_dividend: "Comparing extraction methods...",
@@ -299,7 +301,10 @@ export default function ChatWidget() {
       questions.push("How much could I save with a pension contribution?");
     }
 
-    questions.push("Run a tax health check on my accounts");
+    questions.push("Run a company health check");
+    if (questions.length < 4) {
+      questions.push("Run a director health check");
+    }
 
     if (questions.length < 4) {
       questions.push("Show my expenses as a chart");
@@ -338,7 +343,7 @@ export default function ChatWidget() {
       return ["Show my expense breakdown", "How can I reduce this?", "What if I contributed to pension?"];
     }
     if (c.includes("pension")) {
-      return ["Compare salary vs dividend", "Show my CT1", "Run a health check"];
+      return ["Compare salary vs dividend", "Show my CT1", "Run a director health check"];
     }
     return [];
   }, [messages, lastToolUsed, isLoading]);
@@ -725,7 +730,7 @@ export default function ChatWidget() {
                 <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-3">
                   {proactiveGreeting ? (
                     <div className="text-sm text-foreground">
-                      <ChatMarkdown content={`Hi! I'm **Balnce**, your AI tax assistant. ${proactiveGreeting} Want me to run a full **tax health check**?`} />
+                      <ChatMarkdown content={`Hi! I'm **Balnce**, your AI tax assistant. ${proactiveGreeting} Want me to run a **company health check** or **director health check**?`} />
                     </div>
                   ) : (
                     <p className="text-sm text-foreground">
