@@ -50,6 +50,7 @@ const AddExpense = () => {
   const [selectedVat, setSelectedVat] = useState<VatRate>(prefillVatRate || "standard_23");
   const [amount, setAmount] = useState(prefillTotal || "");
   const [supplierId, setSupplierId] = useState<string | null>(null);
+  const [newSupplierName, setNewSupplierName] = useState("");
   const [description, setDescription] = useState(prefillSupplier || "");
   const [expenseDate, setExpenseDate] = useState(prefillDate || new Date().toISOString().split("T")[0]);
   const [invoiceNumber, setInvoiceNumber] = useState(prefillInvoiceNumber || "");
@@ -168,12 +169,19 @@ const AddExpense = () => {
         setProofUploading(false);
       }
 
+      // Create new supplier if needed
+      let finalSupplierId = supplierId === "new" ? null : supplierId;
+      if (supplierId === "new" && newSupplierName.trim()) {
+        const newSupplier = await createSupplier.mutateAsync({ name: newSupplierName.trim() });
+        finalSupplierId = newSupplier.id;
+      }
+
       await createExpense.mutateAsync({
         amount: total,
         vat_amount: vatAmount,
         vat_rate: parseFloat(selectedVat.replace("standard_", "").replace("reduced_", "").replace("second_reduced_", "").replace("livestock_", "").replace("_", ".")) || 0,
         category_id: selectedCategory,
-        supplier_id: supplierId,
+        supplier_id: finalSupplierId,
         description: description || "Expense",
         expense_date: expenseDate,
         notes: notes || null,
@@ -244,7 +252,10 @@ const AddExpense = () => {
         <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
           <div className="space-y-2">
             <Label className="font-medium">Supplier</Label>
-            <Select value={supplierId || ""} onValueChange={setSupplierId}>
+            <Select value={supplierId || ""} onValueChange={(val) => {
+              setSupplierId(val);
+              if (val !== "new") setNewSupplierName("");
+            }}>
               <SelectTrigger className="h-14 rounded-xl text-base">
                 <SelectValue placeholder="Select supplier" />
               </SelectTrigger>
@@ -257,6 +268,15 @@ const AddExpense = () => {
                 <SelectItem value="new">+ Add new supplier</SelectItem>
               </SelectContent>
             </Select>
+            {supplierId === "new" && (
+              <Input
+                placeholder="Enter supplier name"
+                value={newSupplierName}
+                onChange={(e) => setNewSupplierName(e.target.value)}
+                className="h-14 rounded-xl text-base mt-2"
+                autoFocus
+              />
+            )}
           </div>
         </div>
 
