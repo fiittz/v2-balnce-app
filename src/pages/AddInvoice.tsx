@@ -12,9 +12,12 @@ import { Switch } from "@/components/ui/switch";
 import { useCreateInvoice, useInvoice, useUpdateInvoice } from "@/hooks/useInvoices";
 import { supabase } from "@/integrations/supabase/client";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
+import { useAccounts } from "@/hooks/useAccounts";
 import { useAuth } from "@/hooks/useAuth";
 import { VAT_RATES } from "@/services/categorization";
 import { generateInvoiceHTML } from "@/lib/invoiceHtml";
+import { SITE_BASED_ACTIVITIES, PAYMENT_TERMS, UNIT_TYPES } from "@/lib/invoiceConstants";
+import type { PaymentTerm, UnitType } from "@/lib/invoiceConstants";
 import { toast } from "sonner";
 // VAT rate types for Irish system
 type VatRate = "standard_23" | "reduced_13_5" | "second_reduced_9" | "livestock_4_8" | "zero_rated" | "exempt";
@@ -25,6 +28,7 @@ interface LineItem {
   qty: number;
   price: number;
   vatRate: VatRate;
+  unitType: UnitType;
 }
 
 const vatRateLabels: Record<VatRate, string> = {
@@ -51,26 +55,22 @@ const AddInvoice = () => {
   const businessChargesVAT = (onboarding as Record<string, unknown>)?.vat_registered === true && !rctActive;
   const defaultVatRate: VatRate = businessChargesVAT ? "standard_23" : "zero_rated";
 
-  // Determine if business is construction-related
-  const CONSTRUCTION_ACTIVITIES = [
-    "carpentry_joinery", "general_construction", "electrical_contracting",
-    "plumbing_heating", "bricklaying_masonry", "plastering_drylining",
-    "painting_decorating", "roofing", "groundworks_civil", "landscaping",
-    "tiling_stonework", "steel_fabrication_welding", "quantity_surveying",
-    "project_management", "site_supervision", "property_maintenance",
-    "property_development",
-  ];
+  // Determine if business is site-based (construction, transport, etc.)
   const primaryActivity = (onboarding as Record<string, unknown>)?.primary_activity || "";
   const secondaryActivities: string[] = (onboarding as Record<string, unknown>)?.secondary_activities || [];
-  const isConstructionTrade = CONSTRUCTION_ACTIVITIES.includes(primaryActivity) ||
-    secondaryActivities.some((a: string) => CONSTRUCTION_ACTIVITIES.includes(a));
+  const isSiteBasedBusiness = (SITE_BASED_ACTIVITIES as readonly string[]).includes(primaryActivity as string) ||
+    secondaryActivities.some((a: string) => (SITE_BASED_ACTIVITIES as readonly string[]).includes(a));
+
+  // Fetch bank accounts for payment details
+  const { data: bankAccounts } = useAccounts("bank");
+  const primaryBank = bankAccounts?.[0];
 
   // Filter VAT rates based on business type
   const availableVatRates = (() => {
     if (!businessChargesVAT) {
       return { zero_rated: "No VAT", exempt: "Exempt" } as Record<VatRate, string>;
     }
-    if (!isConstructionTrade) {
+    if (!isSiteBasedBusiness) {
       return { standard_23: "23%", zero_rated: "0%", exempt: "Exempt" } as Record<VatRate, string>;
     }
     return vatRateLabels;
@@ -84,7 +84,7 @@ const AddInvoice = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: 1, description: "", qty: 1, price: 0, vatRate: defaultVatRate }
+    { id: 1, description: "", qty: 1, price: 0, vatRate: defaultVatRate, unitType: "items" }
   ]);
 
   // Supplier details state (your business) - pre-filled from onboarding
@@ -141,6 +141,9 @@ const AddInvoice = () => {
         setJobEndDate(notesObj.job_end_date || "");
         setRctEnabled(notesObj.rct_enabled || false);
         setRctRate(notesObj.rct_rate || 20);
+        setPaymentTerms(notesObj.payment_terms || "net_30");
+        setCustomDueDate(notesObj.custom_due_date || "");
+        setPoNumber(notesObj.po_number || "");
 
         const items = notesObj.line_items;
         if (Array.isArray(items) && items.length > 0) {
@@ -150,6 +153,7 @@ const AddInvoice = () => {
             qty: item.qty || 1,
             price: item.price || 0,
             vatRate: item.vatRate || defaultVatRate,
+            unitType: item.unitType || "items",
           })));
         }
       }
@@ -167,9 +171,14 @@ const AddInvoice = () => {
   const [supplyDate, setSupplyDate] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Job start/end dates for trip detection
+  // Job start/end dates for trip detection (site-based businesses only)
   const [jobStartDate, setJobStartDate] = useState("");
   const [jobEndDate, setJobEndDate] = useState("");
+
+  // Universal fields
+  const [paymentTerms, setPaymentTerms] = useState<PaymentTerm>("net_30");
+  const [customDueDate, setCustomDueDate] = useState("");
+  const [poNumber, setPoNumber] = useState("");
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -196,7 +205,7 @@ const AddInvoice = () => {
   };
 
   const addLineItem = () => {
-    setLineItems([...lineItems, { id: Date.now(), description: "", qty: 1, price: 0, vatRate: defaultVatRate }]);
+    setLineItems([...lineItems, { id: Date.now(), description: "", qty: 1, price: 0, vatRate: defaultVatRate, unitType: "items" }]);
   };
 
   const removeLineItem = (id: number) => {
@@ -290,6 +299,18 @@ const AddInvoice = () => {
         customerId = newCustomer.id;
       }
 
+      // Calculate due date from payment terms
+      const termDef = PAYMENT_TERMS.find(t => t.value === paymentTerms);
+      let calculatedDueDate: string;
+      if (paymentTerms === "custom" && customDueDate) {
+        calculatedDueDate = customDueDate;
+      } else {
+        const days = termDef?.days ?? 30;
+        const base = invoiceDate ? new Date(invoiceDate) : new Date();
+        base.setDate(base.getDate() + days);
+        calculatedDueDate = base.toISOString().split("T")[0];
+      }
+
       // Pack extra data into notes JSON
       const notesData = JSON.stringify({
         comment: comment || null,
@@ -300,17 +321,21 @@ const AddInvoice = () => {
         rct_enabled: rctEnabled,
         rct_rate: rctEnabled ? rctRate : 0,
         rct_amount: rctEnabled ? rctAmount : 0,
+        payment_terms: paymentTerms,
+        custom_due_date: paymentTerms === "custom" ? customDueDate : null,
+        po_number: poNumber || null,
         line_items: validItems.map(item => ({
           description: item.description,
           qty: item.qty,
           price: item.price,
           vatRate: item.vatRate,
+          unitType: item.unitType,
         })),
       });
 
       const invoiceData = {
         invoice_date: invoiceDate,
-        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+        due_date: calculatedDueDate,
         subtotal,
         vat_amount: vatAmount,
         total,
@@ -349,6 +374,18 @@ const AddInvoice = () => {
     try {
       const validItems = lineItems.filter(item => item.description && item.price > 0);
 
+      // Calculate due date for preview
+      const termDef = PAYMENT_TERMS.find(t => t.value === paymentTerms);
+      let previewDueDate: string;
+      if (paymentTerms === "custom" && customDueDate) {
+        previewDueDate = customDueDate;
+      } else {
+        const days = termDef?.days ?? 30;
+        const base = invoiceDate ? new Date(invoiceDate) : new Date();
+        base.setDate(base.getDate() + days);
+        previewDueDate = base.toISOString().split("T")[0];
+      }
+
       const items = validItems.map(item => {
         const lineTotal = item.qty * item.price;
         const vatRate = rctEnabled ? 0 : (VAT_RATES[item.vatRate] || 0);
@@ -358,6 +395,7 @@ const AddInvoice = () => {
           qty: item.qty,
           price: item.price,
           vatRate: rctEnabled ? "zero_rated" as VatRate : item.vatRate,
+          unitType: item.unitType,
           lineTotal,
           vat_amount: itemVat,
           total_amount: lineTotal + itemVat,
@@ -369,13 +407,17 @@ const AddInvoice = () => {
         supplierName,
         supplierAddress,
         supplierVatNumber,
+        supplierIban: primaryBank?.iban || "",
+        supplierBic: primaryBank?.bic || "",
         customerName,
         customerEmail,
         customerPhone,
         customerAddress,
         customerTaxNumber,
+        customerPoNumber: poNumber,
         invoiceDate,
         supplyDate,
+        dueDate: previewDueDate,
         items,
         subtotal,
         vatAmount,
@@ -554,27 +596,69 @@ const AddInvoice = () => {
             <p className="text-xs text-muted-foreground">Leave blank if same as invoice date</p>
           </div>
 
+          <div className="space-y-2">
+            <Label className="font-medium">PO Number</Label>
+            <Input
+              value={poNumber}
+              onChange={(e) => setPoNumber(e.target.value)}
+              placeholder="e.g. PO-12345"
+              className="h-14 rounded-xl text-base"
+            />
+            <p className="text-xs text-muted-foreground">Optional — for B2B purchase order reference</p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="font-medium">Job Start Date</Label>
-              <Input
-                type="date"
-                value={jobStartDate}
-                onChange={(e) => setJobStartDate(e.target.value)}
-                className="h-14 rounded-xl text-base"
-              />
+              <Label className="font-medium">Payment Terms</Label>
+              <Select value={paymentTerms} onValueChange={(v) => setPaymentTerms(v as PaymentTerm)}>
+                <SelectTrigger className="h-14 rounded-xl text-base">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_TERMS.map((term) => (
+                    <SelectItem key={term.value} value={term.value}>{term.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="font-medium">Job End Date</Label>
-              <Input
-                type="date"
-                value={jobEndDate}
-                onChange={(e) => setJobEndDate(e.target.value)}
-                className="h-14 rounded-xl text-base"
-              />
-            </div>
+            {paymentTerms === "custom" && (
+              <div className="space-y-2">
+                <Label className="font-medium">Custom Due Date</Label>
+                <Input
+                  type="date"
+                  value={customDueDate}
+                  onChange={(e) => setCustomDueDate(e.target.value)}
+                  className="h-14 rounded-xl text-base"
+                />
+              </div>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground">Used for trip detection — matches expenses within this date range</p>
+
+          {isSiteBasedBusiness && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-medium">Job Start Date</Label>
+                  <Input
+                    type="date"
+                    value={jobStartDate}
+                    onChange={(e) => setJobStartDate(e.target.value)}
+                    className="h-14 rounded-xl text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-medium">Job End Date</Label>
+                  <Input
+                    type="date"
+                    value={jobEndDate}
+                    onChange={(e) => setJobEndDate(e.target.value)}
+                    className="h-14 rounded-xl text-base"
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">Used for trip detection — matches expenses within this date range</p>
+            </>
+          )}
         </div>
 
         {/* Line Items */}
@@ -608,10 +692,10 @@ const AddInvoice = () => {
                   onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
                   className="h-12 rounded-lg"
                 />
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-3">
                   <div>
                     <Label className="text-xs text-muted-foreground">Qty</Label>
-                    <Input 
+                    <Input
                       type="number"
                       value={item.qty}
                       onChange={(e) => updateLineItem(item.id, "qty", parseInt(e.target.value) || 0)}
@@ -619,8 +703,24 @@ const AddInvoice = () => {
                     />
                   </div>
                   <div>
+                    <Label className="text-xs text-muted-foreground">Unit</Label>
+                    <Select
+                      value={item.unitType}
+                      onValueChange={(v) => updateLineItem(item.id, "unitType", v as UnitType)}
+                    >
+                      <SelectTrigger className="h-12 rounded-lg">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {UNIT_TYPES.map((u) => (
+                          <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label className="text-xs text-muted-foreground">Price (€)</Label>
-                    <Input 
+                    <Input
                       type="number"
                       value={item.price}
                       onChange={(e) => updateLineItem(item.id, "price", parseFloat(e.target.value) || 0)}
@@ -629,8 +729,8 @@ const AddInvoice = () => {
                   </div>
                   <div>
                     <Label className="text-xs text-muted-foreground">VAT</Label>
-                    <Select 
-                      value={item.vatRate} 
+                    <Select
+                      value={item.vatRate}
                       onValueChange={(v) => updateLineItem(item.id, "vatRate", v as VatRate)}
                     >
                       <SelectTrigger className="h-12 rounded-lg">
@@ -649,8 +749,8 @@ const AddInvoice = () => {
           </div>
         </div>
 
-        {/* RCT Toggle — only visible for construction trades */}
-        {isConstructionTrade && <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
+        {/* RCT Toggle — only visible for site-based trades */}
+        {isSiteBasedBusiness && <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold">RCT Applies</h3>
@@ -696,6 +796,30 @@ const AddInvoice = () => {
             className="min-h-[100px] rounded-xl resize-none"
           />
         </div>
+
+        {/* Bank Details */}
+        {primaryBank?.iban && (
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.19s" }}>
+            <h2 className="font-semibold text-lg mb-3">Bank Details</h2>
+            <p className="text-xs text-muted-foreground mb-3">Shown on invoice for payment. Edit in Settings &gt; Accounts.</p>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Account</span>
+                <span className="font-medium">{primaryBank.name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">IBAN</span>
+                <span className="font-mono font-medium">{primaryBank.iban}</span>
+              </div>
+              {primaryBank.bic && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">BIC</span>
+                  <span className="font-mono font-medium">{primaryBank.bic}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Summary */}
         <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.2s" }}>

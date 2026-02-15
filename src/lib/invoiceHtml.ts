@@ -10,6 +10,18 @@ const VAT_RATE_LABELS: Record<string, string> = {
   exempt: "Exempt",
 };
 
+const UNIT_TYPE_LABELS: Record<string, string> = {
+  hours: "Hours",
+  days: "Days",
+  items: "Items",
+  metres: "Metres",
+  sq_metres: "Sq M",
+  kg: "Kg",
+  litres: "Litres",
+  units: "Units",
+  fixed: "Fixed",
+};
+
 export interface InvoiceHTMLData {
   invoiceType?: "quote" | "invoice";
   invoiceNumber?: string;
@@ -18,11 +30,14 @@ export interface InvoiceHTMLData {
   supplierAddress?: string;
   supplierVatNumber?: string;
   supplierPhone?: string;
+  supplierIban?: string;
+  supplierBic?: string;
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;
   customerAddress?: string;
   customerTaxNumber?: string;
+  customerPoNumber?: string;
   invoiceDate: string;
   supplyDate?: string;
   dueDate?: string;
@@ -31,6 +46,7 @@ export interface InvoiceHTMLData {
     qty: number;
     price: number;
     vatRate: string;
+    unitType?: string;
     lineTotal: number;
     vat_amount: number;
     total_amount: number;
@@ -70,11 +86,14 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
     supplierAddress = "",
     supplierVatNumber = "",
     supplierPhone = "",
+    supplierIban = "",
+    supplierBic = "",
     customerName,
     customerEmail = "",
     customerPhone = "",
     customerAddress = "",
     customerTaxNumber = "",
+    customerPoNumber = "",
     invoiceDate,
     supplyDate,
     dueDate,
@@ -94,6 +113,7 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
   const itemsHTML = items.map((item) => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.description}</td>
+      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${UNIT_TYPE_LABELS[item.unitType || "items"] || "Items"}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.qty}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.price)}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${VAT_RATE_LABELS[item.vatRate] || item.vatRate}</td>
@@ -135,8 +155,8 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
     .date-item span { font-size: 14px; font-weight: 600; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
     th { background: #000; color: #fff; padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-    th:nth-child(2), th:nth-child(4) { text-align: center; }
-    th:nth-child(3), th:nth-child(5) { text-align: right; }
+    th:nth-child(2), th:nth-child(3), th:nth-child(5) { text-align: center; }
+    th:nth-child(4), th:nth-child(6) { text-align: right; }
     .totals-section { display: flex; justify-content: flex-end; }
     .totals-table { width: 300px; }
     .totals-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
@@ -198,12 +218,18 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
       <label>Due Date</label>
       <span>${formatDate(effectiveDueDate)}</span>
     </div>
+    ${customerPoNumber ? `
+    <div class="date-item">
+      <label>PO Number</label>
+      <span>${customerPoNumber}</span>
+    </div>` : ""}
   </div>
 
   <table>
     <thead>
       <tr>
         <th>Description</th>
+        <th>Unit</th>
         <th>Qty</th>
         <th>Unit Price</th>
         <th>VAT Rate</th>
@@ -240,6 +266,15 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
       </div>
     </div>
   </div>
+
+  ${supplierIban ? `
+  <div class="notes-section">
+    <h3>Payment Details</h3>
+    <p style="font-size: 13px; line-height: 1.8;">
+      <strong>IBAN:</strong> <span style="font-family: monospace;">${supplierIban}</span><br>
+      ${supplierBic ? `<strong>BIC:</strong> <span style="font-family: monospace;">${supplierBic}</span>` : ""}
+    </p>
+  </div>` : ""}
 
   ${noteText ? `
   <div class="notes-section">

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
+import { useAccounts } from "@/hooks/useAccounts";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,8 +29,10 @@ const Invoices = () => {
   const navigate = useNavigate();
   const { data: invoices, isLoading } = useInvoices();
   const { data: onboarding } = useOnboardingSettings();
+  const { data: bankAccounts } = useAccounts("bank");
   const { profile } = useAuth();
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const primaryBank = bankAccounts?.[0];
 
   const buildInvoiceHtml = async (invoice: Record<string, unknown>) => {
     // Fetch customer details
@@ -58,10 +61,11 @@ const Invoices = () => {
     const rctEnabled = notesObj?.rct_enabled || false;
     const rctRate = notesObj?.rct_rate || 0;
     const rctAmount = notesObj?.rct_amount || 0;
+    const poNumber = notesObj?.po_number || "";
     if (notesObj?.comment) comment = notesObj.comment;
 
     const items = lineItems.map((item: Record<string, unknown>) => {
-      const lineTotal = item.qty * item.price;
+      const lineTotal = (item.qty as number) * (item.price as number);
       const vatRate = VAT_RATES[item.vatRate as keyof typeof VAT_RATES] || 0;
       const itemVat = lineTotal * vatRate;
       return {
@@ -69,6 +73,7 @@ const Invoices = () => {
         qty: item.qty,
         price: item.price,
         vatRate: item.vatRate,
+        unitType: item.unitType || "items",
         lineTotal,
         vat_amount: itemVat,
         total_amount: lineTotal + itemVat,
@@ -83,11 +88,14 @@ const Invoices = () => {
         supplierName: onboarding?.business_name || profile?.business_name || "",
         supplierAddress: profile?.address || "",
         supplierVatNumber: onboarding?.vat_number || profile?.vat_number || "",
+        supplierIban: primaryBank?.iban || "",
+        supplierBic: primaryBank?.bic || "",
         customerName: customer.name,
         customerEmail: customer.email || "",
         customerPhone: customer.phone || "",
         customerAddress: customer.address || "",
         customerTaxNumber: customer.vat_number || "",
+        customerPoNumber: poNumber,
         invoiceDate: invoice.invoice_date,
         supplyDate,
         dueDate: invoice.due_date || undefined,
