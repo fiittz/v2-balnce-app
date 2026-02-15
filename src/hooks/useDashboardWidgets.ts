@@ -13,15 +13,17 @@ interface OnboardingSettings {
   vat_registered: boolean | null;
   rct_registered: boolean | null;
   business_type: string | null;
+  eu_trade_enabled: boolean | null;
 }
 
 function isWidgetApplicable(widget: WidgetDefinition, settings: OnboardingSettings): boolean {
   if (!widget.conditionalOn) return true;
 
-  const { vatRegistered, rctRegistered, businessTypes } = widget.conditionalOn;
+  const { vatRegistered, rctRegistered, euTradeEnabled, businessTypes } = widget.conditionalOn;
 
   if (vatRegistered && !settings.vat_registered) return false;
   if (rctRegistered && !settings.rct_registered) return false;
+  if (euTradeEnabled && !settings.eu_trade_enabled) return false;
   if (businessTypes && businessTypes.length > 0) {
     const bt = (settings.business_type || "").toLowerCase();
     if (!businessTypes.some((t) => bt.includes(t))) return false;
@@ -45,6 +47,7 @@ export function useDashboardWidgets() {
     vat_registered: null,
     rct_registered: null,
     business_type: null,
+    eu_trade_enabled: null,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,6 +61,7 @@ export function useDashboardWidgets() {
         vat_registered: true,
         rct_registered: true,
         business_type: "construction",
+        eu_trade_enabled: false,
       };
       setOnboardingSettings(settings);
       setPreferences(buildDefaults(settings));
@@ -71,7 +75,7 @@ export function useDashboardWidgets() {
       // Fetch onboarding settings for conditional logic
       const { data: onboarding } = await supabase
         .from("onboarding_settings")
-        .select("vat_registered, rct_registered, business_type")
+        .select("vat_registered, rct_registered, business_type, eu_trade_enabled")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -79,6 +83,7 @@ export function useDashboardWidgets() {
         vat_registered: onboarding?.vat_registered ?? null,
         rct_registered: onboarding?.rct_registered ?? null,
         business_type: onboarding?.business_type ?? null,
+        eu_trade_enabled: onboarding?.eu_trade_enabled ?? null,
       };
       setOnboardingSettings(settings);
 

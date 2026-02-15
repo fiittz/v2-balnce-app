@@ -11,7 +11,8 @@ export type WidgetId =
   | "automation_insights"
   | "rct_overview"
   | "construction_materials_labour"
-  | "tax_deadlines";
+  | "tax_deadlines"
+  | "eu_international_overview";
 
 export type WidgetCategory = "overview" | "financial" | "tasks" | "charts" | "construction";
 
@@ -26,6 +27,7 @@ export interface WidgetDefinition {
   conditionalOn?: {
     vatRegistered?: boolean;
     rctRegistered?: boolean;
+    euTradeEnabled?: boolean;
     businessTypes?: string[];
   };
 }
@@ -137,6 +139,14 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     description: "Upcoming VAT, CT1, and Form 11 deadlines",
     category: "tasks",
     defaultVisible: true,
+  },
+  {
+    id: "eu_international_overview",
+    label: "EU & International",
+    description: "Cross-border VAT trade summary and obligations",
+    category: "financial",
+    defaultVisible: true,
+    conditionalOn: { vatRegistered: true, euTradeEnabled: true },
   },
 ];
 
