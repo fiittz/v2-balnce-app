@@ -416,19 +416,26 @@ export function determineCrossBorderVAT(params: {
       };
     }
 
-    // Buying from GB or non-EU (imports)
-    if (counterpartyLocation === "non_eu" || counterpartyLocation === "gb" ||
-        (counterpartyLocation === "ni" && supplyType === "services")) {
+    // Buying services from GB, non-EU, or NI (reverse charge — same as EU services)
+    if ((counterpartyLocation === "non_eu" || counterpartyLocation === "gb" ||
+        (counterpartyLocation === "ni")) && supplyType === "services") {
+      return {
+        treatment: "reverse_charge",
+        explanation: "Services from non-EU supplier — self-account for Irish VAT at the applicable rate. Same reverse charge mechanism as EU services. Declare output VAT (T1) and input credit (T2) on your VAT3.",
+        vat3Boxes: ["T1", "T2"],
+        reportingObligations: [],
+        warnings: [],
+      };
+    }
+
+    // Buying goods from GB or non-EU (imports — postponed accounting)
+    if ((counterpartyLocation === "non_eu" || counterpartyLocation === "gb") && supplyType === "goods") {
       return {
         treatment: "postponed_accounting",
-        explanation: supplyType === "goods"
-          ? "Import from non-EU — import VAT applies on CIF + duties. Use postponed accounting (PA1) to avoid cash-flow impact."
-          : "Services from non-EU — reverse charge applies. Self-account for Irish VAT.",
-        vat3Boxes: supplyType === "goods" ? ["PA1"] : [],
+        explanation: "Import from non-EU — import VAT applies on CIF + duties. Use postponed accounting (PA1) to avoid cash-flow impact.",
+        vat3Boxes: ["PA1"],
         reportingObligations: [],
-        warnings: supplyType === "goods"
-          ? ["Consider applying for postponed accounting if not already authorised"]
-          : [],
+        warnings: ["Consider applying for postponed accounting if not already authorised"],
       };
     }
   }

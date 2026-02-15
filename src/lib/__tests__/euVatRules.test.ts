@@ -189,6 +189,55 @@ describe("determineCrossBorderVAT", () => {
     expect(result.treatment).toBe("self_accounting");
     expect(result.vat3Boxes).toContain("T1");
   });
+
+  it("services from non-EU = reverse charge (not postponed accounting)", () => {
+    const result = determineCrossBorderVAT({
+      direction: "purchase",
+      counterpartyLocation: "non_eu",
+      supplyType: "services",
+      customerType: "b2b",
+    });
+    expect(result.treatment).toBe("reverse_charge");
+    expect(result.vat3Boxes).toContain("T1");
+    expect(result.vat3Boxes).toContain("T2");
+    expect(result.vat3Boxes).not.toContain("PA1");
+  });
+
+  it("services from GB = reverse charge", () => {
+    const result = determineCrossBorderVAT({
+      direction: "purchase",
+      counterpartyLocation: "gb",
+      supplyType: "services",
+      customerType: "b2b",
+    });
+    expect(result.treatment).toBe("reverse_charge");
+    expect(result.vat3Boxes).toContain("T1");
+    expect(result.vat3Boxes).toContain("T2");
+  });
+
+  it("services from NI = reverse charge (NI services are non-EU)", () => {
+    const result = determineCrossBorderVAT({
+      direction: "purchase",
+      counterpartyLocation: "ni",
+      supplyType: "services",
+      customerType: "b2b",
+    });
+    expect(result.treatment).toBe("reverse_charge");
+    expect(result.vat3Boxes).toContain("T1");
+    expect(result.vat3Boxes).toContain("T2");
+  });
+
+  it("goods from non-EU = postponed accounting (unchanged)", () => {
+    const result = determineCrossBorderVAT({
+      direction: "purchase",
+      counterpartyLocation: "non_eu",
+      supplyType: "goods",
+      customerType: "b2b",
+    });
+    expect(result.treatment).toBe("postponed_accounting");
+    expect(result.vat3Boxes).toContain("PA1");
+    expect(result.vat3Boxes).not.toContain("T1");
+  });
 });
 
 // ══════════════════════════════════════════════════════════════

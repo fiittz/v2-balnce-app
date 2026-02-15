@@ -35,6 +35,8 @@ export interface VATWizardData {
     import_vat_amount: number;
     import_type: "goods" | "services";
     deferred_vat: boolean;
+    reverse_charge_applies: boolean;
+    supplier_tax_id?: string;
   }>;
   // Section 6: Adjustments
   credit_notes: boolean;

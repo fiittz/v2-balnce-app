@@ -306,7 +306,7 @@ export function VATReturnReport() {
             <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/50 rounded-xl hover:bg-muted transition-colors">
               <div className="flex items-center gap-2">
                 <Truck className="w-4 h-4" />
-                <span className="font-medium">Section 5: Non-EU Purchases (Imports)</span>
+                <span className="font-medium">Section 5: Non-EU Purchases</span>
               </div>
               {openSections.nonEuPurchases ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </CollapsibleTrigger>
@@ -315,13 +315,24 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Has non-EU purchases?</span>
                 <BooleanIndicator value={finalisationData.non_eu_purchases} />
               </div>
-              {finalisationData.non_eu_purchases && (finalisationData.non_eu_purchase_details as { description: string; amount: number }[])?.length > 0 && (
-                <div className="bg-purple-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-purple-800 mb-2">
-                    {(finalisationData.non_eu_purchase_details as { description: string; amount: number }[]).length} import(s) recorded
-                  </p>
-                </div>
-              )}
+              {finalisationData.non_eu_purchases && finalisationData.non_eu_purchase_details?.length > 0 && (() => {
+                const goodsCount = finalisationData.non_eu_purchase_details.filter(d => d.import_type === "goods").length;
+                const servicesCount = finalisationData.non_eu_purchase_details.filter(d => d.import_type === "services").length;
+                return (
+                  <div className="bg-purple-50 rounded-lg p-3 space-y-1">
+                    {goodsCount > 0 && (
+                      <p className="text-sm font-medium text-purple-800">
+                        {goodsCount} goods import(s) — postponed accounting (PA1)
+                      </p>
+                    )}
+                    {servicesCount > 0 && (
+                      <p className="text-sm font-medium text-purple-800">
+                        {servicesCount} service reverse charge(s) — self-account VAT (T1/T2)
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
             </CollapsibleContent>
           </Collapsible>
 

@@ -45,6 +45,7 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
             import_vat_amount: 0,
             import_type: "goods" as const,
             deferred_vat: false,
+            reverse_charge_applies: false,
           },
         ],
       });
@@ -64,9 +65,9 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h3 className="text-lg font-semibold">Non-EU Purchases (Imports)</h3>
+        <h3 className="text-lg font-semibold">Non-EU Purchases</h3>
         <p className="text-sm text-muted-foreground">
-          Identify imports from outside the EU and capture import VAT details
+          Identify purchases from non-EU suppliers — goods imports (postponed accounting) and services (reverse charge)
         </p>
       </div>
 
@@ -155,16 +156,16 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
             </div>
           )}
 
-          {/* Selected Import Details */}
+          {/* Selected Purchase Details */}
           {data.non_eu_purchase_details.length > 0 && (
             <div className="space-y-3 mt-4">
               <Label className="text-base font-medium">
-                Provide import VAT details for selected purchases:
+                Provide details for selected purchases:
               </Label>
               {data.non_eu_purchase_details.map((detail) => {
                 const expense = expenses.find(e => e.id === detail.transaction_id);
                 if (!expense) return null;
-                
+
                 return (
                   <div key={detail.transaction_id} className="p-4 border rounded-lg space-y-4">
                     <div className="flex items-center justify-between">
@@ -175,59 +176,94 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
                         €{expense.amount.toFixed(2)}
                       </span>
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Import type</Label>
-                        <Select
-                          value={detail.import_type}
-                          onValueChange={(v) => updateDetail(detail.transaction_id, { import_type: v as "goods" | "services" })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="goods">Goods</SelectItem>
-                            <SelectItem value="services">Services</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 pt-7">
-                        <Checkbox
-                          id={`vat-paid-${detail.transaction_id}`}
-                          checked={detail.import_vat_paid}
-                          onCheckedChange={(checked) => updateDetail(detail.transaction_id, { import_vat_paid: !!checked })}
-                        />
-                        <Label htmlFor={`vat-paid-${detail.transaction_id}`} className="cursor-pointer">
-                          Import VAT paid
-                        </Label>
-                      </div>
+
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <Select
+                        value={detail.import_type}
+                        onValueChange={(v) => updateDetail(detail.transaction_id, {
+                          import_type: v as "goods" | "services",
+                          ...(v === "services" ? { reverse_charge_applies: true, import_vat_paid: false, import_vat_amount: 0, deferred_vat: false } : { reverse_charge_applies: false }),
+                        })}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="goods">Goods (import)</SelectItem>
+                          <SelectItem value="services">Services (reverse charge)</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
-                    {detail.import_vat_paid && (
-                      <div className="space-y-2">
-                        <Label>Import VAT amount</Label>
-                        <Input
-                          type="number"
-                          placeholder="0.00"
-                          value={detail.import_vat_amount || ""}
-                          onChange={(e) => updateDetail(detail.transaction_id, { import_vat_amount: parseFloat(e.target.value) || 0 })}
-                          className="w-32"
-                        />
-                      </div>
+                    {/* Services: reverse charge fields */}
+                    {detail.import_type === "services" && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`rc-${detail.transaction_id}`}
+                            checked={detail.reverse_charge_applies}
+                            onCheckedChange={(checked) => updateDetail(detail.transaction_id, { reverse_charge_applies: !!checked })}
+                          />
+                          <Label htmlFor={`rc-${detail.transaction_id}`} className="cursor-pointer">
+                            Reverse charge applies
+                          </Label>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Supplier tax ID (optional)</Label>
+                          <Input
+                            type="text"
+                            placeholder="e.g. US EIN, UK UTR"
+                            value={detail.supplier_tax_id || ""}
+                            onChange={(e) => updateDetail(detail.transaction_id, { supplier_tax_id: e.target.value })}
+                            className="w-64"
+                          />
+                        </div>
+                        <p className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-lg">
+                          Self-account for Irish VAT at the applicable rate. Report on VAT3 boxes T1/T2.
+                        </p>
+                      </>
                     )}
 
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`deferred-${detail.transaction_id}`}
-                        checked={detail.deferred_vat}
-                        onCheckedChange={(checked) => updateDetail(detail.transaction_id, { deferred_vat: !!checked })}
-                      />
-                      <Label htmlFor={`deferred-${detail.transaction_id}`} className="cursor-pointer">
-                        Deferred VAT scheme applies
-                      </Label>
-                    </div>
+                    {/* Goods: import VAT fields */}
+                    {detail.import_type === "goods" && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`vat-paid-${detail.transaction_id}`}
+                            checked={detail.import_vat_paid}
+                            onCheckedChange={(checked) => updateDetail(detail.transaction_id, { import_vat_paid: !!checked })}
+                          />
+                          <Label htmlFor={`vat-paid-${detail.transaction_id}`} className="cursor-pointer">
+                            Import VAT paid
+                          </Label>
+                        </div>
+
+                        {detail.import_vat_paid && (
+                          <div className="space-y-2">
+                            <Label>Import VAT amount</Label>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              value={detail.import_vat_amount || ""}
+                              onChange={(e) => updateDetail(detail.transaction_id, { import_vat_amount: parseFloat(e.target.value) || 0 })}
+                              className="w-32"
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`deferred-${detail.transaction_id}`}
+                            checked={detail.deferred_vat}
+                            onCheckedChange={(checked) => updateDetail(detail.transaction_id, { deferred_vat: !!checked })}
+                          />
+                          <Label htmlFor={`deferred-${detail.transaction_id}`} className="cursor-pointer">
+                            Deferred VAT scheme applies
+                          </Label>
+                        </div>
+                      </>
+                    )}
                   </div>
                 );
               })}
