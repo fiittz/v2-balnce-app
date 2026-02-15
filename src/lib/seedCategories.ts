@@ -1,38 +1,52 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// account_type: "business" = CT1 company categories
+// account_type: "personal" = Director/Form 11 personal categories
+// account_type: "both" = Shared categories (appear in both)
+
 // Default Irish bookkeeping categories for construction/carpentry businesses
 const DEFAULT_EXPENSE_CATEGORIES = [
-  { name: "Materials & Supplies", account_code: "5100", vat_rate: 23 },
-  { name: "Subcontractor Payments", account_code: "5200", vat_rate: 23 },
-  { name: "Tools & Equipment", account_code: "5300", vat_rate: 23 },
-  { name: "Vehicle Expenses", account_code: "5400", vat_rate: 23 },
-  { name: "Fuel", account_code: "5410", vat_rate: 23 },
-  { name: "Insurance", account_code: "5500", vat_rate: 0 },
-  { name: "Professional Fees", account_code: "5600", vat_rate: 23 },
-  { name: "Office Expenses", account_code: "5700", vat_rate: 23 },
-  { name: "Telephone & Internet", account_code: "5710", vat_rate: 23 },
-  { name: "Bank Charges", account_code: "5800", vat_rate: 0 },
-  { name: "Rent & Rates", account_code: "5900", vat_rate: 0 },
-  { name: "Utilities", account_code: "5910", vat_rate: 13.5 },
-  { name: "Training & Certifications", account_code: "6000", vat_rate: 0 },
-  { name: "Advertising & Marketing", account_code: "6100", vat_rate: 23 },
-  { name: "Travel & Accommodation", account_code: "6200", vat_rate: 0 },
-  { name: "Subsistence", account_code: "6250", vat_rate: 0 },
-  { name: "Meals & Entertainment", account_code: "6300", vat_rate: 0 },
-  { name: "Repairs & Maintenance", account_code: "6400", vat_rate: 23 },
-  { name: "Protective Clothing & PPE", account_code: "6500", vat_rate: 23 },
-  { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23 },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0 },
-  { name: "Medical Expenses", account_code: "6800", vat_rate: 0 },
-  { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23 },
+  { name: "Materials & Supplies", account_code: "5100", vat_rate: 23, account_type: "business" },
+  { name: "Subcontractor Payments", account_code: "5200", vat_rate: 23, account_type: "business" },
+  { name: "Tools & Equipment", account_code: "5300", vat_rate: 23, account_type: "business" },
+  { name: "Vehicle Expenses", account_code: "5400", vat_rate: 23, account_type: "business" },
+  { name: "Fuel", account_code: "5410", vat_rate: 23, account_type: "business" },
+  { name: "Insurance", account_code: "5500", vat_rate: 0, account_type: "both" },
+  { name: "Professional Fees", account_code: "5600", vat_rate: 23, account_type: "both" },
+  { name: "Office Expenses", account_code: "5700", vat_rate: 23, account_type: "business" },
+  { name: "Telephone & Internet", account_code: "5710", vat_rate: 23, account_type: "business" },
+  { name: "Bank Charges", account_code: "5800", vat_rate: 0, account_type: "both" },
+  { name: "Rent & Rates", account_code: "5900", vat_rate: 0, account_type: "business" },
+  { name: "Utilities", account_code: "5910", vat_rate: 13.5, account_type: "business" },
+  { name: "Training & Certifications", account_code: "6000", vat_rate: 0, account_type: "business" },
+  { name: "Advertising & Marketing", account_code: "6100", vat_rate: 23, account_type: "business" },
+  { name: "Travel & Accommodation", account_code: "6200", vat_rate: 0, account_type: "business" },
+  { name: "Subsistence", account_code: "6250", vat_rate: 0, account_type: "business" },
+  { name: "Meals & Entertainment", account_code: "6300", vat_rate: 0, account_type: "business" },
+  { name: "Repairs & Maintenance", account_code: "6400", vat_rate: 23, account_type: "business" },
+  { name: "Protective Clothing & PPE", account_code: "6500", vat_rate: 23, account_type: "business" },
+  { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
+  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
+  { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
+  // Personal-only categories (Form 11 reliefs)
+  { name: "Groceries & Household", account_code: "7100", vat_rate: 0, account_type: "personal" },
+  { name: "Rent / Mortgage", account_code: "7200", vat_rate: 0, account_type: "personal" },
+  { name: "Pension Contributions", account_code: "7300", vat_rate: 0, account_type: "personal" },
+  { name: "Health Insurance", account_code: "7400", vat_rate: 0, account_type: "personal" },
+  { name: "Charitable Donations", account_code: "7500", vat_rate: 0, account_type: "personal" },
+  { name: "Tuition Fees", account_code: "7600", vat_rate: 0, account_type: "personal" },
+  { name: "Childcare", account_code: "7700", vat_rate: 0, account_type: "personal" },
+  { name: "Personal Transport", account_code: "7800", vat_rate: 0, account_type: "personal" },
+  { name: "Clothing & Personal", account_code: "7900", vat_rate: 0, account_type: "personal" },
 ];
 
 const DEFAULT_INCOME_CATEGORIES = [
-  { name: "Contract Work", account_code: "4100", vat_rate: 23 },
-  { name: "Labour Income", account_code: "4200", vat_rate: 23 },
-  { name: "Materials Charged", account_code: "4300", vat_rate: 23 },
-  { name: "Consultation Fees", account_code: "4400", vat_rate: 23 },
-  { name: "Other Income", account_code: "4900", vat_rate: 23 },
+  { name: "Contract Work", account_code: "4100", vat_rate: 23, account_type: "business" },
+  { name: "Labour Income", account_code: "4200", vat_rate: 23, account_type: "business" },
+  { name: "Materials Charged", account_code: "4300", vat_rate: 23, account_type: "business" },
+  { name: "Consultation Fees", account_code: "4400", vat_rate: 23, account_type: "business" },
+  { name: "Other Income", account_code: "4900", vat_rate: 23, account_type: "business" },
 ];
 
 export async function seedDefaultCategories(userId: string): Promise<boolean> {
@@ -91,9 +105,19 @@ export async function seedDefaultCategories(userId: string): Promise<boolean> {
  */
 export async function ensureNewCategories(userId: string): Promise<void> {
   const needed = [
-    { name: "Director's Drawings", account_code: "6700", vat_rate: 0, type: "expense" },
-    { name: "Medical Expenses", account_code: "6800", vat_rate: 0, type: "expense" },
-    { name: "Subsistence", account_code: "6250", vat_rate: 0, type: "expense" },
+    { name: "Director's Drawings", account_code: "6700", vat_rate: 0, type: "expense", account_type: "business" },
+    { name: "Medical Expenses", account_code: "6800", vat_rate: 0, type: "expense", account_type: "both" },
+    { name: "Subsistence", account_code: "6250", vat_rate: 0, type: "expense", account_type: "business" },
+    // Personal categories for existing users
+    { name: "Groceries & Household", account_code: "7100", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Rent / Mortgage", account_code: "7200", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Pension Contributions", account_code: "7300", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Health Insurance", account_code: "7400", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Charitable Donations", account_code: "7500", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Tuition Fees", account_code: "7600", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Childcare", account_code: "7700", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Personal Transport", account_code: "7800", vat_rate: 0, type: "expense", account_type: "personal" },
+    { name: "Clothing & Personal", account_code: "7900", vat_rate: 0, type: "expense", account_type: "personal" },
   ];
 
   for (const cat of needed) {

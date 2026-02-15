@@ -89,6 +89,7 @@ export type Database = {
       categories: {
         Row: {
           account_code: string | null
+          account_type: string
           created_at: string | null
           id: string
           name: string
@@ -99,6 +100,7 @@ export type Database = {
         }
         Insert: {
           account_code?: string | null
+          account_type?: string
           created_at?: string | null
           id?: string
           name: string
@@ -109,6 +111,7 @@ export type Database = {
         }
         Update: {
           account_code?: string | null
+          account_type?: string
           created_at?: string | null
           id?: string
           name?: string
@@ -216,6 +219,7 @@ export type Database = {
       }
       expenses: {
         Row: {
+          account_id: string | null
           amount: number
           category_id: string | null
           created_at: string | null
@@ -230,6 +234,7 @@ export type Database = {
           vat_rate: number | null
         }
         Insert: {
+          account_id?: string | null
           amount: number
           category_id?: string | null
           created_at?: string | null
@@ -244,6 +249,7 @@ export type Database = {
           vat_rate?: number | null
         }
         Update: {
+          account_id?: string | null
           amount?: number
           category_id?: string | null
           created_at?: string | null
@@ -258,6 +264,13 @@ export type Database = {
           vat_rate?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "expenses_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "expenses_category_id_fkey"
             columns: ["category_id"]

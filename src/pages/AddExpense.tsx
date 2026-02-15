@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Upload, Sparkles, Loader2, Paperclip } from "lucide-react";
+import { ArrowLeft, Upload, Sparkles, Loader2, Paperclip, AlertTriangle } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import * as LucideIcons from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useExpenseCategories } from "@/hooks/useCategories";
+import { useAccounts } from "@/hooks/useAccounts";
 import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
 import { useCreateExpense } from "@/hooks/useExpenses";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,10 +32,25 @@ const AddExpense = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { profile } = useAuth();
-  const { data: categories, isLoading: categoriesLoading } = useExpenseCategories();
+  const { data: accounts } = useAccounts();
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+
+  // Derive account type from selected account for category filtering
+  const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
+  const accountType = selectedAccount?.account_type;
+
+  const { data: categories, isLoading: categoriesLoading } = useExpenseCategories(accountType);
   const { data: suppliers } = useSuppliers();
   const createExpense = useCreateExpense();
   const createSupplier = useCreateSupplier();
+
+  // Auto-select default account when accounts load
+  useEffect(() => {
+    if (accounts && accounts.length > 0 && !selectedAccountId) {
+      const defaultAccount = accounts.find(a => a.is_default) || accounts[0];
+      setSelectedAccountId(defaultAccount.id);
+    }
+  }, [accounts, selectedAccountId]);
 
   // Get pre-filled data from receipt scanner
   const prefillSupplier = searchParams.get("supplier");
@@ -61,11 +78,21 @@ const AddExpense = () => {
   const [isAiCategorizing, setIsAiCategorizing] = useState(false);
   const [aiExplanation, setAiExplanation] = useState<string | null>(null);
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [showBusinessExpenseDialog, setShowBusinessExpenseDialog] = useState(false);
+  const [isOnBehalfOfBusiness, setIsOnBehalfOfBusiness] = useState<boolean | null>(null);
   
+  // Clear selected category when account type changes (categories reload)
+  useEffect(() => {
+    if (selectedCategory && categories) {
+      const stillValid = categories.find(c => c.id === selectedCategory);
+      if (!stillValid) setSelectedCategory(null);
+    }
+  }, [categories, selectedCategory]);
+
   // Initialize from prefill data
   useEffect(() => {
     if (prefillCategory && categories) {
-      const match = categories.find(c => 
+      const match = categories.find(c =>
         c.name.toLowerCase().includes(prefillCategory.toLowerCase())
       );
       if (match) setSelectedCategory(match.id);
@@ -152,12 +179,22 @@ const AddExpense = () => {
     return urlData.publicUrl;
   };
 
-  const handleSave = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
+  // Check if the selected category looks like a business expense on a personal account
+  const looksLikeBusinessExpense = (() => {
+    if (accountType !== "directors_personal_tax" || !selectedCategoryData) return false;
+    // Check if category's account_type is "business" — it would only show via "both"
+    // but also check the category name against known business patterns
+    const businessPatterns = [
+      "materials", "tools", "subcontractor", "vehicle", "fuel",
+      "office", "telephone", "training", "advertising", "travel",
+      "subsistence", "repairs", "protective", "ppe", "software",
+      "subscriptions", "equipment"
+    ];
+    const catLower = selectedCategoryData.name.toLowerCase();
+    return businessPatterns.some(p => catLower.includes(p));
+  })();
 
+  const doSave = async () => {
     try {
       let finalReceiptUrl = receiptUrl || null;
 
@@ -176,6 +213,16 @@ const AddExpense = () => {
         finalSupplierId = newSupplier.id;
       }
 
+      // Build notes with business expense flag if applicable
+      let finalNotes = notes || null;
+      if (isOnBehalfOfBusiness === true) {
+        const prefix = "[BUSINESS EXPENSE - Director's Current Account: Add]";
+        finalNotes = finalNotes ? `${prefix} ${finalNotes}` : prefix;
+      } else if (isOnBehalfOfBusiness === false) {
+        const prefix = "[PERSONAL EXPENSE]";
+        finalNotes = finalNotes ? `${prefix} ${finalNotes}` : prefix;
+      }
+
       await createExpense.mutateAsync({
         amount: total,
         vat_amount: vatAmount,
@@ -184,14 +231,31 @@ const AddExpense = () => {
         supplier_id: finalSupplierId,
         description: description || "Expense",
         expense_date: expenseDate,
-        notes: notes || null,
+        notes: finalNotes,
         receipt_url: finalReceiptUrl,
+        account_id: selectedAccountId,
       });
+      setIsOnBehalfOfBusiness(null);
       navigate("/dashboard");
     } catch (error) {
       setProofUploading(false);
       // Error handled in hook
     }
+  };
+
+  const handleSave = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    // If personal account + business-looking category, ask the user first
+    if (looksLikeBusinessExpense && isOnBehalfOfBusiness === null) {
+      setShowBusinessExpenseDialog(true);
+      return;
+    }
+
+    await doSave();
   };
 
   // Get icon component dynamically
@@ -216,6 +280,27 @@ const AddExpense = () => {
         </header>
 
         <main className="px-6 py-6 pb-32 max-w-2xl mx-auto space-y-6">
+        {/* Account Selector */}
+        {accounts && accounts.length > 1 && (
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
+            <div className="space-y-2">
+              <Label className="font-medium">Account</Label>
+              <Select value={selectedAccountId || ""} onValueChange={setSelectedAccountId}>
+                <SelectTrigger className="h-14 rounded-xl text-base">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+
         {/* Description (for AI categorization) */}
         <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
           <div className="space-y-2">
@@ -443,6 +528,58 @@ const AddExpense = () => {
           </Button>
         </div>
       </div>
+      {/* Business Expense Detection Dialog */}
+      <Dialog open={showBusinessExpenseDialog} onOpenChange={setShowBusinessExpenseDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-500" />
+              Business Expense Detected
+            </DialogTitle>
+            <DialogDescription>
+              This transaction appears to be a business expense recorded on your personal account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-foreground">
+              <strong>{description || "This expense"}</strong> ({selectedCategoryData?.name}) looks like it may have been incurred on behalf of the business.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Did you pay for this business expense personally? If so, it should be added to the director's current account (the company owes you).
+            </p>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-col">
+            <Button
+              className="w-full"
+              onClick={() => {
+                setIsOnBehalfOfBusiness(true);
+                setShowBusinessExpenseDialog(false);
+                doSave();
+              }}
+            >
+              Yes, on behalf of the business (add to director's account)
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setIsOnBehalfOfBusiness(false);
+                setShowBusinessExpenseDialog(false);
+                doSave();
+              }}
+            >
+              No, this is a personal expense
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => setShowBusinessExpenseDialog(false)}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </AppLayout>
   );

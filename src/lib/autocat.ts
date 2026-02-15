@@ -21,6 +21,7 @@ export interface TransactionInput {
   user_industry: string; // e.g. Construction, Hospitality
   user_business_type: string; // e.g. Sole Trader, Contractor, LTD
   receipt_text?: string; // optional OCR text
+  account_type?: string; // "limited_company" | "directors_personal_tax" — filters category matching
 }
 
 export interface AutoCatResult {
@@ -34,6 +35,7 @@ export interface AutoCatResult {
   needs_receipt?: boolean; // Flag for transactions that need receipt to claim VAT
   is_business_expense: boolean | null; // TRUE = business, FALSE = personal, NULL = needs review
   relief_type?: "medical" | "pension" | "health_insurance" | "rent" | "charitable" | "tuition" | null;
+  looks_like_business_expense?: boolean; // Flagged when personal account expense matches business patterns
 }
 
 // Re-export VAT rules for use elsewhere
@@ -95,28 +97,61 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
 };
 
 // Find matching category from database using the mapping
-export function findMatchingCategory<T extends { name: string; type?: string }>(
+// accountType: "limited_company" → prefer business+both, "directors_personal_tax" → prefer personal+both
+export function findMatchingCategory<T extends { name: string; type?: string; account_type?: string }>(
   autocatCategory: string,
   dbCategories: T[],
-  transactionType?: "income" | "expense"
+  transactionType?: "income" | "expense",
+  accountType?: string
 ): T | null {
   const normalizedAutocat = autocatCategory.toLowerCase().trim();
-  
-  // First try exact match
-  const exactMatch = dbCategories.find(
-    (c) => c.name.toLowerCase() === normalizedAutocat && 
+
+  // Filter categories by account type if provided
+  const filteredCategories = accountType
+    ? dbCategories.filter((c) => {
+        if (!c.account_type) return true; // No account_type = include
+        if (accountType === "limited_company") {
+          return c.account_type === "business" || c.account_type === "both";
+        }
+        if (accountType === "directors_personal_tax") {
+          return c.account_type === "personal" || c.account_type === "both";
+        }
+        return true;
+      })
+    : dbCategories;
+
+  // First try exact match in filtered set
+  const exactMatch = filteredCategories.find(
+    (c) => c.name.toLowerCase() === normalizedAutocat &&
     (!transactionType || c.type === transactionType)
   );
   if (exactMatch) return exactMatch;
 
-  // Then try via mapping
+  // Then try via mapping in filtered set
   const possibleNames = CATEGORY_NAME_MAP[autocatCategory] || [];
   for (const possibleName of possibleNames) {
-    const mapped = dbCategories.find(
+    const mapped = filteredCategories.find(
       (c) => c.name.toLowerCase() === possibleName.toLowerCase() &&
       (!transactionType || c.type === transactionType)
     );
     if (mapped) return mapped;
+  }
+
+  // Fallback: try all categories if filtered set had no match
+  if (accountType) {
+    const fallbackExact = dbCategories.find(
+      (c) => c.name.toLowerCase() === normalizedAutocat &&
+      (!transactionType || c.type === transactionType)
+    );
+    if (fallbackExact) return fallbackExact;
+
+    for (const possibleName of possibleNames) {
+      const mapped = dbCategories.find(
+        (c) => c.name.toLowerCase() === possibleName.toLowerCase() &&
+        (!transactionType || c.type === transactionType)
+      );
+      if (mapped) return mapped;
+    }
   }
 
   // No partial/fuzzy match — too error-prone (e.g. "General Expenses" matching
@@ -1305,6 +1340,14 @@ function determineBusinessExpense(
   return vatDeductible ? true : null;
 }
 
+// Categories that suggest a business expense when seen on a personal account
+const BUSINESS_INDICATOR_CATEGORIES = [
+  "materials", "tools", "subcontractor", "vehicle expenses", "fuel",
+  "office", "telephone", "training", "advertising", "travel",
+  "subsistence", "repairs", "protective clothing", "ppe", "workwear",
+  "software", "subscriptions", "equipment", "motor"
+];
+
 function finalizeResult(base: AutoCatResult, tx: TransactionInput): AutoCatResult {
   // Refine with receipt if available
   const withReceipt = refineWithReceipt(base, tx);
@@ -1319,11 +1362,23 @@ function finalizeResult(base: AutoCatResult, tx: TransactionInput): AutoCatResul
     finalNeedsReview = true;
   }
 
+  // Detect potential business expenses on personal accounts
+  let looksLikeBusiness = false;
+  if (tx.account_type === "directors_personal_tax") {
+    const catLower = withReceipt.category.toLowerCase();
+    looksLikeBusiness = BUSINESS_INDICATOR_CATEGORIES.some(bc => catLower.includes(bc));
+    // Also flag if a trade supplier was matched
+    if (withReceipt.is_business_expense === true) {
+      looksLikeBusiness = true;
+    }
+  }
+
   return {
     ...withReceipt,
     confidence_score: finalConfidence,
     notes: withReceipt.notes.trim(),
     needs_review: finalNeedsReview,
     is_business_expense: withReceipt.is_business_expense,
+    looks_like_business_expense: looksLikeBusiness || undefined,
   };
 }
