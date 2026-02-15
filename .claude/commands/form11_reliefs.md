@@ -8,13 +8,13 @@ Individual-level reliefs and credits for Form 11/12 Income Tax return preparatio
 
 | Credit | Amount |
 |--------|--------|
-| Single Person | €1,875 |
-| Married Person / Civil Partner | €3,750 |
-| PAYE Tax Credit | €1,875 |
+| Single Person | €2,000 |
+| Married Person / Civil Partner | €4,000 |
+| PAYE Tax Credit | €2,000 |
 | Earned Income Tax Credit | €2,000 |
 | Home Carer Tax Credit | €1,800 |
-| Widowed Person (bereaved in year) | €3,750 |
-| Widowed Person (subsequent years) | €1,875 |
+| Widowed Person (bereaved in year) | €4,000 |
+| Widowed Person (subsequent years) | €2,000 |
 | Single Person Child Carer Credit | €1,750 |
 | Incapacitated Child Credit | €3,500 |
 | Blind Person Credit (one spouse) | €1,650 |
@@ -72,7 +72,7 @@ Relief at marginal rate on contributions up to age-based percentage of net relev
 
 ## Rent Tax Credit
 
-- **Amount:** €750 per person / €1,500 per couple (2025)
+- **Amount:** €1,000 per person / €2,000 per couple (2025)
 - **Qualifying:** Rent paid on principal private residence, approved tenancy
 - **Ref:** TCA 1997 s.473B (introduced Finance Act 2022)
 

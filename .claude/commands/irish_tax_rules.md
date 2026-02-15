@@ -15,28 +15,45 @@ Rates card and key deadlines. For detailed workflows and reliefs, see the comman
 
 - **Rate:** 33%
 
-## Income Tax (2025)
+## Income Tax (2025/2026 — unchanged)
 
-| Band | Rate | Single Person |
-|------|------|---------------|
-| Standard | 20% | First €44,000 |
-| Higher | 40% | Balance |
+| Band | Rate | Single | Married (one income) |
+|------|------|--------|---------------------|
+| Standard | 20% | First €44,000 | First €53,000 |
+| Higher | 40% | Balance | Balance |
 
-## USC (2025)
+## Tax Credits (2025/2026 — unchanged)
 
-| Band | Rate |
-|------|------|
-| €0–€12,012 | 0.5% |
-| €12,013–€27,382 | 2% |
-| €27,383–€70,044 | 3% |
-| €70,045–€100,000 | 8% |
-| €100,001+ (self-assessed) | 11% |
+| Credit | Amount |
+|--------|--------|
+| Single Person | €2,000 |
+| Married / Civil Partner | €4,000 |
+| PAYE Credit | €2,000 |
+| Earned Income Credit | €2,000 |
+| Home Carer | €1,800 |
+| Single Person Child Carer | €1,750 |
+
+## USC
+
+| Band | 2025 | 2026 |
+|------|------|------|
+| First €12,012 | 0.5% | 0.5% |
+| Next band (2%) | €12,013–€27,382 | €12,013–€28,700 |
+| 3% | to €70,044 | to €70,044 |
+| 8% | €70,045–€100,000 | €70,045–€100,000 |
+| 11% (self-employed surcharge) | €100,001+ | €100,001+ |
 
 **Exempt** if total income < €13,000.
 
-## PRSI Class S
+## PRSI Class S (Self-Employed)
 
-- **Rate:** 4.1% (min €500/year)
+| Period | Rate |
+|--------|------|
+| 2025 Jan–Sep | 4.1% |
+| 2025 Oct–Dec / 2026 Jan–Sep | 4.2% |
+| 2026 Oct+ | 4.35% |
+
+Minimum contribution: €500/year. Threshold: €5,000.
 
 ## Key Deadlines
 

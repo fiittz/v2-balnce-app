@@ -28,7 +28,7 @@ export const TAX_CONSTANTS = {
 
   // PRSI Class S (self-employed / directors) — 2026
   prsi: {
-    rate: 0.042,     // 4.2% from Jan 2026 (rises to 4.35% from Oct)
+    rate: 0.042,     // 4.2% Jan–Sep 2026 (rises to 4.35% from Oct 2026)
     minimum: 500,
     threshold: 5_000,
   },
