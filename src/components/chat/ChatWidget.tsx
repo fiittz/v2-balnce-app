@@ -13,6 +13,7 @@ import { useDirectorOnboarding } from "@/hooks/useDirectorOnboarding";
 import { useInvoices } from "@/hooks/useInvoices";
 import { buildFinancialContext } from "@/lib/buildFinancialContext";
 import { executeToolCall, getPageLabel } from "@/lib/chatTools";
+import { useTrialBalance } from "@/hooks/useTrialBalance";
 import { supabase } from "@/integrations/supabase/client";
 import type { ToolContext } from "@/lib/chatTools";
 
@@ -69,6 +70,7 @@ const FOLLOW_UPS: Record<string, string[]> = {
   search_transactions: ["Show my expenses as a chart", "Run a company health check", "How much CT do I owe?"],
   show_chart: ["Show my expense breakdown", "How can I reduce my tax?", "Run a company health check"],
   navigate_to_page: ["How much CT do I owe?", "Run a company health check", "Show my expenses"],
+  show_trial_balance: ["Run a company health check", "Show my expense breakdown", "How can I fix these issues?"],
 };
 
 // ── Tool status labels ──────────────────────────────────────
@@ -85,6 +87,7 @@ const TOOL_STATUS_LABELS: Record<string, string> = {
   what_if_salary_vs_dividend: "Comparing extraction methods...",
   search_transactions: "Searching transactions...",
   show_chart: "Generating chart...",
+  show_trial_balance: "Checking your trial balance...",
 };
 
 const ALL_TOOL_NAMES = new Set(Object.keys(TOOL_STATUS_LABELS));
@@ -183,6 +186,7 @@ export default function ChatWidget() {
   const { data: onboardingSettings } = useOnboardingSettings();
   const { data: directorRows } = useDirectorOnboarding();
   const { data: invoices } = useInvoices();
+  const trialBalance = useTrialBalance();
 
   const businessExtra = useMemo(() => {
     const raw = localStorage.getItem("business_onboarding_extra");
@@ -233,8 +237,9 @@ export default function ChatWidget() {
       directorRows: directorRows ?? [],
       allForm11Data,
       invoices: invoices ?? [],
+      trialBalance,
     });
-  }, [ct1, savedCT1, allDirectorData, profile, taxYear, allTransactions, onboardingSettings, businessExtra, directorRows, allForm11Data, invoices]);
+  }, [ct1, savedCT1, allDirectorData, profile, taxYear, allTransactions, onboardingSettings, businessExtra, directorRows, allForm11Data, invoices, trialBalance]);
 
   const toolContext: ToolContext = useMemo(() => ({
     ct1,
@@ -248,7 +253,8 @@ export default function ChatWidget() {
     invoices: invoices ?? [],
     incorporationDate: profile?.incorporation_date ?? null,
     allForm11Data,
-  }), [ct1, savedCT1, taxYear, navigate, allDirectorData, allTransactions, invoices, profile, allForm11Data]);
+    trialBalance,
+  }), [ct1, savedCT1, taxYear, navigate, allDirectorData, allTransactions, invoices, profile, allForm11Data, trialBalance]);
 
   // ── Proactive personalized opener ─────────────────────────
   const proactiveGreeting = useMemo(() => {
@@ -283,8 +289,13 @@ export default function ChatWidget() {
       parts.push(`${uncategorized} transactions need categorizing.`);
     }
 
+    if (!trialBalance.isLoading && trialBalance.issues.length > 0) {
+      const issueCount = trialBalance.issues.length;
+      parts.push(`I found ${issueCount} bookkeeping issue${issueCount > 1 ? "s" : ""} in your accounts.`);
+    }
+
     return parts.join(" ");
-  }, [ct1, allTransactions, savedCT1, allForm11Data, taxYear]);
+  }, [ct1, allTransactions, savedCT1, allForm11Data, taxYear, trialBalance]);
 
   // ── Dynamic suggested questions ───────────────────────────
   const suggestedQuestions = useMemo(() => {
@@ -301,6 +312,10 @@ export default function ChatWidget() {
       questions.push("How much could I save with a pension contribution?");
     }
 
+    if (!trialBalance.isLoading && trialBalance.issues.length > 0) {
+      questions.push("Check my accounts for any issues");
+    }
+
     questions.push("Run a company health check");
     if (questions.length < 4) {
       questions.push("Run a director health check");
@@ -314,7 +329,7 @@ export default function ChatWidget() {
     }
 
     return questions.slice(0, 4);
-  }, [allTransactions, allForm11Data]);
+  }, [allTransactions, allForm11Data, trialBalance]);
 
   // ── Insight badge count ───────────────────────────────────
   const insightCount = useMemo(() => {
@@ -326,8 +341,9 @@ export default function ChatWidget() {
     const today = new Date();
     const oct31 = new Date(taxYear, 9, 31);
     if (oct31.getTime() - today.getTime() < 60 * 24 * 60 * 60 * 1000 && oct31 > today) count++;
+    if (!trialBalance.isLoading && trialBalance.issues.length > 0) count++;
     return count;
-  }, [allTransactions, allForm11Data, taxYear]);
+  }, [allTransactions, allForm11Data, taxYear, trialBalance]);
 
   // ── Follow-up suggestions for last message ────────────────
   const followUpSuggestions = useMemo(() => {

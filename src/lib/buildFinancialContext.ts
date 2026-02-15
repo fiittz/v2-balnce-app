@@ -4,6 +4,7 @@
  */
 
 import type { CT1Data } from "@/hooks/useCT1Data";
+import type { TrialBalanceResult } from "@/hooks/useTrialBalance";
 
 const eur = (n: number) =>
   new Intl.NumberFormat("en-IE", {
@@ -28,12 +29,14 @@ interface FinancialContextInput {
   directorRows?: Record<string, unknown>[];
   allForm11Data?: { directorNumber: number; data: Record<string, unknown> }[];
   invoices?: Record<string, unknown>[];
+  trialBalance?: TrialBalanceResult;
 }
 
 export function buildFinancialContext(input: FinancialContextInput): string {
   const {
     businessName, businessType, taxYear, ct1, savedCT1, directorData, transactionCount,
     profile, onboardingSettings, businessExtra, allDirectorData, directorRows, allForm11Data, invoices,
+    trialBalance,
   } = input;
 
   const totalIncome = ct1.detectedIncome.reduce((s, i) => s + i.amount, 0);
@@ -365,6 +368,34 @@ export function buildFinancialContext(input: FinancialContextInput): string {
       for (const f of extraFields) lines.push(`  ${f}`);
       lines.push(``);
     }
+  }
+
+  // === TRIAL BALANCE STATUS ===
+  if (trialBalance && !trialBalance.isLoading && trialBalance.accounts.length > 0) {
+    lines.push(`=== TRIAL BALANCE STATUS ===`);
+    lines.push(`  Total Debits: ${eur(trialBalance.totalDebits)}`);
+    lines.push(`  Total Credits: ${eur(trialBalance.totalCredits)}`);
+    lines.push(`  Balanced: ${trialBalance.isBalanced ? "Yes" : `NO — off by ${eur(Math.abs(trialBalance.imbalanceAmount))}`}`);
+    if (trialBalance.orphanedTransactions > 0) {
+      lines.push(`  Uncategorized Transactions: ${trialBalance.orphanedTransactions} (${eur(trialBalance.uncategorizedAmount)})`);
+    }
+    if (trialBalance.issues.length > 0) {
+      lines.push(`  Issues: ${trialBalance.issues.length}`);
+      for (const issue of trialBalance.issues) {
+        lines.push(`    - [${issue.severity}] ${issue.title}: ${issue.description}`);
+      }
+    }
+    // Top 10 accounts by balance size
+    const sorted = [...trialBalance.accounts]
+      .map(a => ({ ...a, balance: Math.abs(a.debit - a.credit) }))
+      .sort((a, b) => b.balance - a.balance)
+      .slice(0, 10);
+    lines.push(`  Top accounts by balance:`);
+    for (const a of sorted) {
+      const bal = a.debit - a.credit;
+      lines.push(`    ${a.accountName} (${a.accountType}): ${bal >= 0 ? "Dr" : "Cr"} ${eur(Math.abs(bal))}`);
+    }
+    lines.push(``);
   }
 
   // === TAX PLANNING OPPORTUNITIES ===

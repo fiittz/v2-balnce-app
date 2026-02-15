@@ -4,6 +4,7 @@
  */
 
 import type { CT1Data } from "@/hooks/useCT1Data";
+import type { TrialBalanceResult } from "@/hooks/useTrialBalance";
 
 // ── Route map ──────────────────────────────────────────────
 export const PAGE_ROUTES: Record<string, { path: string; label: string }> = {
@@ -200,6 +201,14 @@ export const TOOL_DEFINITIONS = [
       },
     },
   },
+  {
+    type: "function" as const,
+    function: {
+      name: "show_trial_balance",
+      description: "Show the user's trial balance — a double-entry summary of all accounts with debit and credit totals, plus any bookkeeping issues. Use when the user asks to check their accounts, trial balance, bookkeeping accuracy, or whether their books balance.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
 ];
 
 // ── Euro formatter ─────────────────────────────────────────
@@ -232,6 +241,7 @@ export interface ToolContext {
   invoices: Record<string, unknown>[];
   incorporationDate?: string | null;
   allForm11Data: { directorNumber: number; data: Record<string, unknown> }[];
+  trialBalance?: TrialBalanceResult;
 }
 
 // ── Helper: CT1 numbers (reused by multiple tools) ─────────
@@ -997,6 +1007,63 @@ export function executeToolCall(
       }
 
       return { result: "Unknown chart type. Try: expenses_pie, expenses_bar, income_vs_expenses, or monthly_spending." };
+    }
+
+    // ── TRIAL BALANCE ──────────────────────────────────────
+    case "show_trial_balance": {
+      const tb = ctx.trialBalance;
+      if (!tb || tb.isLoading) {
+        return { result: "Trial balance is still loading. Please try again in a moment." };
+      }
+      if (tb.accounts.length === 0) {
+        return { result: "No transactions to build a trial balance from yet. Import a bank CSV to get started." };
+      }
+
+      const lines: string[] = [
+        `# Trial Balance — ${ctx.taxYear}`,
+        ``,
+        `| Account | Type | Debit | Credit | Balance |`,
+        `|---------|------|-------|--------|---------|`,
+      ];
+
+      for (const a of tb.accounts) {
+        const balance = a.debit - a.credit;
+        const balStr = balance >= 0 ? eur(balance) : `(${eur(Math.abs(balance))})`;
+        lines.push(
+          `| ${a.accountName} | ${a.accountType} | ${a.debit > 0 ? eur(a.debit) : "—"} | ${a.credit > 0 ? eur(a.credit) : "—"} | ${balStr} |`
+        );
+      }
+
+      lines.push(
+        `| **TOTALS** | | **${eur(tb.totalDebits)}** | **${eur(tb.totalCredits)}** | **${eur(tb.imbalanceAmount)}** |`
+      );
+      lines.push(``);
+
+      // Status
+      if (tb.isBalanced) {
+        lines.push(`**Status: Balanced** — debits equal credits.`);
+      } else {
+        lines.push(`**Status: IMBALANCED** — off by ${eur(Math.abs(tb.imbalanceAmount))}.`);
+      }
+
+      if (tb.orphanedTransactions > 0) {
+        lines.push(`${tb.orphanedTransactions} uncategorized transactions (${eur(tb.uncategorizedAmount)}) sitting in suspense.`);
+      }
+      lines.push(``);
+
+      // Issues
+      if (tb.issues.length > 0) {
+        lines.push(`## Issues Found`);
+        for (const issue of tb.issues) {
+          const icon = issue.severity === "error" ? "**[!]**" : "[i]";
+          lines.push(`- ${icon} **${issue.title}** — ${issue.description}`);
+        }
+      } else {
+        lines.push(`No issues found. Your books look clean.`);
+      }
+
+      lines.push(buildSources(ctx, ["synthetic double-entry from bank transactions"]));
+      return { result: lines.join("\n") };
     }
 
     default:

@@ -154,6 +154,14 @@ const TOOLS = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "show_trial_balance",
+      description: "Show the user's trial balance — a double-entry summary of all accounts with debit and credit totals, plus any bookkeeping issues. Use when the user asks to check their accounts, trial balance, bookkeeping accuracy, or whether their books balance.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
 ];
 
 serve(async (req) => {
@@ -230,6 +238,7 @@ You have tools available. Use them proactively — don't just describe data, sho
 - **what_if_salary_vs_dividend**: When the user asks about salary vs dividends vs pension
 - **search_transactions**: When the user asks to find or look up specific transactions, payments, or spending
 - **show_chart**: When the user asks for a chart, graph, pie chart, or visual breakdown of their data
+- **show_trial_balance**: When the user asks to check their accounts, trial balance, bookkeeping accuracy, or whether their books balance
 
 ## Formatting
 You can use markdown: **bold** for amounts, tables for comparisons, bullet lists for multiple items. Keep responses concise. The tool results already include source citations — do not remove them.
