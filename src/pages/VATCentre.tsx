@@ -16,6 +16,8 @@ import { useVATSummary, useVATReturns, useCreateVATReturn, useUpdateVATReturn, g
 import { format, parseISO, differenceInDays, addDays } from "date-fns";
 import AppLayout from "@/components/layout/AppLayout";
 import { VATFinalisationWizard } from "@/components/vat/VATFinalisationWizard";
+import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
+import { Globe, MessageSquare } from "lucide-react";
 
 const eur = (n: number) =>
   new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", minimumFractionDigits: 2 }).format(n);
@@ -69,6 +71,9 @@ const VATCentre = () => {
   const { data: vatReturns, isLoading: returnsLoading } = useVATReturns();
   const createVATReturn = useCreateVATReturn();
   const updateVATReturn = useUpdateVATReturn();
+  const { data: onboardingSettings } = useOnboardingSettings();
+  const euTradeEnabled = onboardingSettings?.eu_trade_enabled;
+  const [euCardExpanded, setEuCardExpanded] = useState(false);
 
   // Find existing return for this period
   const existingReturn = vatReturns?.find(
@@ -473,6 +478,88 @@ const VATCentre = () => {
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
+
+        {/* EU & International Trade Card */}
+        {euTradeEnabled && (
+          <div className="bg-card rounded-2xl card-shadow animate-fade-in" style={{ animationDelay: "0.25s" }}>
+            <button
+              onClick={() => setEuCardExpanded(!euCardExpanded)}
+              className="w-full p-6 text-left flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <Globe className="w-5 h-5 text-blue-600" />
+                <div>
+                  <h2 className="font-semibold text-lg">EU & International Trade</h2>
+                  <p className="text-sm text-muted-foreground">Cross-border VAT treatment</p>
+                </div>
+              </div>
+              <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${euCardExpanded ? "rotate-180" : ""}`} />
+            </button>
+            {euCardExpanded && (
+              <div className="border-t border-border px-6 pb-6 space-y-4">
+                {/* Active trade types */}
+                <div className="space-y-2 pt-4">
+                  <p className="text-sm font-medium text-muted-foreground">Active trade types:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {onboardingSettings?.sells_goods_to_eu && (
+                      <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">Sells goods to EU</span>
+                    )}
+                    {onboardingSettings?.buys_goods_from_eu && (
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">Buys goods from EU</span>
+                    )}
+                    {onboardingSettings?.sells_services_to_eu && (
+                      <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">Sells services to EU</span>
+                    )}
+                    {onboardingSettings?.buys_services_from_eu && (
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">Buys services from EU</span>
+                    )}
+                    {onboardingSettings?.sells_digital_services_b2c && (
+                      <span className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded-full">Digital B2C (OSS)</span>
+                    )}
+                    {onboardingSettings?.sells_to_non_eu && (
+                      <span className="px-2.5 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">Exports (non-EU)</span>
+                    )}
+                    {onboardingSettings?.buys_from_non_eu && (
+                      <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-medium rounded-full">Imports (non-EU)</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Key reminders */}
+                <div className="space-y-2 bg-muted/50 rounded-xl p-4">
+                  <p className="text-sm font-medium">Key reminders:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1.5">
+                    {(onboardingSettings?.sells_goods_to_eu || onboardingSettings?.sells_services_to_eu) && (
+                      <li>VIES return due quarterly — 23rd of month after quarter-end</li>
+                    )}
+                    {(onboardingSettings?.sells_goods_to_eu || onboardingSettings?.buys_goods_from_eu) && (
+                      <li>Intrastat required if arrivals or dispatches exceed €750,000/year</li>
+                    )}
+                    {onboardingSettings?.sells_digital_services_b2c && (
+                      <li>OSS applies if EU B2C sales exceed €10,000 — charge destination country VAT</li>
+                    )}
+                    {onboardingSettings?.uses_postponed_accounting && (
+                      <li>Postponed accounting (PA1) active — import VAT self-accounted on VAT3</li>
+                    )}
+                    <li>Share your IE VAT number with EU suppliers for zero-rated invoicing</li>
+                  </ul>
+                </div>
+
+                {/* Ask Balance Assistant */}
+                <button
+                  onClick={() => {
+                    // Trigger chat widget by dispatching a custom event
+                    window.dispatchEvent(new CustomEvent("open-chat", { detail: { message: "Explain my EU VAT obligations" } }));
+                  }}
+                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Ask Balance Assistant about EU VAT
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Previous Returns */}
         {vatReturns && vatReturns.length > 0 && (
