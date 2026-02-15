@@ -71,6 +71,7 @@ const FOLLOW_UPS: Record<string, string[]> = {
   show_chart: ["Show my expense breakdown", "How can I reduce my tax?", "Run a company health check"],
   navigate_to_page: ["How much CT do I owe?", "Run a company health check", "Show my expenses"],
   show_trial_balance: ["Run a company health check", "Show my expense breakdown", "How can I fix these issues?"],
+  explain_eu_vat: ["How does reverse charge work for EU services?", "What are my VIES filing obligations?", "Explain postponed accounting"],
 };
 
 // ── Tool status labels ──────────────────────────────────────
@@ -88,6 +89,7 @@ const TOOL_STATUS_LABELS: Record<string, string> = {
   search_transactions: "Searching transactions...",
   show_chart: "Generating chart...",
   show_trial_balance: "Checking your trial balance...",
+  explain_eu_vat: "Looking up EU VAT rules...",
 };
 
 const ALL_TOOL_NAMES = new Set(Object.keys(TOOL_STATUS_LABELS));
@@ -241,6 +243,22 @@ export default function ChatWidget() {
     });
   }, [ct1, savedCT1, allDirectorData, profile, taxYear, allTransactions, onboardingSettings, businessExtra, directorRows, allForm11Data, invoices, trialBalance]);
 
+  const euTradeSettings = useMemo(() => {
+    if (!onboardingSettings?.eu_trade_enabled) return undefined;
+    return {
+      eu_trade_enabled: onboardingSettings.eu_trade_enabled,
+      sells_goods_to_eu: onboardingSettings.sells_goods_to_eu,
+      buys_goods_from_eu: onboardingSettings.buys_goods_from_eu,
+      sells_services_to_eu: onboardingSettings.sells_services_to_eu,
+      buys_services_from_eu: onboardingSettings.buys_services_from_eu,
+      sells_to_non_eu: onboardingSettings.sells_to_non_eu,
+      buys_from_non_eu: onboardingSettings.buys_from_non_eu,
+      sells_digital_services_b2c: onboardingSettings.sells_digital_services_b2c,
+      has_section_56_authorisation: onboardingSettings.has_section_56_authorisation,
+      uses_postponed_accounting: onboardingSettings.uses_postponed_accounting,
+    };
+  }, [onboardingSettings]);
+
   const toolContext: ToolContext = useMemo(() => ({
     ct1,
     savedCT1,
@@ -254,7 +272,8 @@ export default function ChatWidget() {
     incorporationDate: profile?.incorporation_date ?? null,
     allForm11Data,
     trialBalance,
-  }), [ct1, savedCT1, taxYear, navigate, allDirectorData, allTransactions, invoices, profile, allForm11Data, trialBalance]);
+    euTradeSettings,
+  }), [ct1, savedCT1, taxYear, navigate, allDirectorData, allTransactions, invoices, profile, allForm11Data, trialBalance, euTradeSettings]);
 
   // ── Proactive personalized opener ─────────────────────────
   const proactiveGreeting = useMemo(() => {
