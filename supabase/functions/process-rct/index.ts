@@ -22,14 +22,20 @@ serve(async (req) => {
       throw new Error("No authorization header");
     }
 
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-    
+    // Auth client - only used to verify the JWT
+    const authClient = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
     // Verify user
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await authClient.auth.getUser(token);
     if (authError || !user) {
       throw new Error("Unauthorized");
     }
+
+    // User client - uses the caller's JWT so RLS is enforced
+    const supabase = createClient(SUPABASE_URL!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
 
     const { action, ...params } = await req.json();
 
