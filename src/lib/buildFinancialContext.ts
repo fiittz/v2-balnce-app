@@ -398,6 +398,24 @@ export function buildFinancialContext(input: FinancialContextInput): string {
     lines.push(``);
   }
 
+  // === EU & INTERNATIONAL TRADE ===
+  if (onboardingSettings?.eu_trade_enabled) {
+    lines.push(`=== EU & INTERNATIONAL TRADE ===`);
+    lines.push(`  EU/International Trade: Enabled`);
+    const tradeTypes: string[] = [];
+    if (onboardingSettings.sells_goods_to_eu) tradeTypes.push("Sells goods to EU (ICS — zero-rated, VIES required)");
+    if (onboardingSettings.buys_goods_from_eu) tradeTypes.push("Buys goods from EU (ICA — self-accounting T1/T2)");
+    if (onboardingSettings.sells_services_to_eu) tradeTypes.push("Sells services to EU B2B (reverse charge ES1)");
+    if (onboardingSettings.buys_services_from_eu) tradeTypes.push("Buys services from EU B2B (reverse charge ES2)");
+    if (onboardingSettings.sells_digital_services_b2c) tradeTypes.push("Sells digital services B2C to EU (OSS may apply)");
+    if (onboardingSettings.sells_to_non_eu) tradeTypes.push("Exports to non-EU (zero-rated E2)");
+    if (onboardingSettings.buys_from_non_eu) tradeTypes.push("Imports from non-EU (import VAT / postponed accounting)");
+    for (const t of tradeTypes) lines.push(`  ${t}`);
+    if (onboardingSettings.uses_postponed_accounting) lines.push(`  Postponed Accounting (PA1): Active`);
+    if (onboardingSettings.has_section_56_authorisation) lines.push(`  Section 56 Authorisation: Active`);
+    lines.push(``);
+  }
+
   // === TAX PLANNING OPPORTUNITIES ===
   lines.push(`=== TAX PLANNING OPPORTUNITIES ===`);
   lines.push(`Based on the user's data, here are reliefs/deductions they may be entitled to. When asked about reducing tax, cite these SPECIFIC opportunities with amounts:`);

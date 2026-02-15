@@ -695,6 +695,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                   direction: txnDirection,
                   user_industry: onboarding?.business_type || profile?.business_type || "",
                   user_business_type: onboarding?.business_type || profile?.business_type || "",
+                  user_business_description: onboarding?.business_description || "",
                   receipt_text: undefined,
                 });
 

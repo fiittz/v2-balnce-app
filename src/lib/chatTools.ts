@@ -209,6 +209,39 @@ export const TOOL_DEFINITIONS = [
       parameters: { type: "object", properties: {} },
     },
   },
+  {
+    type: "function" as const,
+    function: {
+      name: "explain_eu_vat",
+      description: "Explain EU and international VAT rules — intra-community supplies, reverse charge, OSS, imports/exports, place of supply, VIES/Intrastat, UK post-Brexit, postponed accounting, Section 56. Use when the user asks about EU VAT, cross-border trade, reverse charge, exports, imports, or international VAT treatment.",
+      parameters: {
+        type: "object",
+        properties: {
+          topic: {
+            type: "string",
+            enum: [
+              "intra_community_supplies",
+              "reverse_charge_services",
+              "oss_distance_selling",
+              "imports_exports",
+              "place_of_supply",
+              "vies_intrastat",
+              "uk_post_brexit",
+              "postponed_accounting",
+              "section_56",
+              "general",
+            ],
+            description: "The EU VAT topic to explain",
+          },
+          scenario: {
+            type: "string",
+            description: "Optional specific scenario to analyse (e.g. 'buying software from Germany')",
+          },
+        },
+        required: ["topic"],
+      },
+    },
+  },
 ];
 
 // ── Euro formatter ─────────────────────────────────────────
@@ -229,6 +262,19 @@ function buildSources(ctx: ToolContext, extras?: string[]): string {
 }
 
 // ── Client-side tool execution ─────────────────────────────
+export interface EUTradeSettings {
+  eu_trade_enabled?: boolean;
+  sells_goods_to_eu?: boolean;
+  buys_goods_from_eu?: boolean;
+  sells_services_to_eu?: boolean;
+  buys_services_from_eu?: boolean;
+  sells_to_non_eu?: boolean;
+  buys_from_non_eu?: boolean;
+  sells_digital_services_b2c?: boolean;
+  has_section_56_authorisation?: boolean;
+  uses_postponed_accounting?: boolean;
+}
+
 export interface ToolContext {
   ct1: CT1Data;
   savedCT1: Record<string, unknown> | null;
@@ -242,6 +288,7 @@ export interface ToolContext {
   incorporationDate?: string | null;
   allForm11Data: { directorNumber: number; data: Record<string, unknown> }[];
   trialBalance?: TrialBalanceResult;
+  euTradeSettings?: EUTradeSettings;
 }
 
 // ── Helper: CT1 numbers (reused by multiple tools) ─────────
@@ -1064,6 +1111,130 @@ export function executeToolCall(
 
       lines.push(buildSources(ctx, ["synthetic double-entry from bank transactions"]));
       return { result: lines.join("\n") };
+    }
+
+    // ── EU VAT KNOWLEDGE ─────────────────────────────────────
+    case "explain_eu_vat": {
+      const topic = args.topic as string || "general";
+      const scenario = args.scenario as string | undefined;
+      const eu = ctx.euTradeSettings;
+
+      const sections: string[] = [];
+
+      // User's trade profile context
+      if (eu?.eu_trade_enabled) {
+        const activeTypes: string[] = [];
+        if (eu.sells_goods_to_eu) activeTypes.push("sells goods to EU");
+        if (eu.buys_goods_from_eu) activeTypes.push("buys goods from EU");
+        if (eu.sells_services_to_eu) activeTypes.push("sells services to EU");
+        if (eu.buys_services_from_eu) activeTypes.push("buys services from EU");
+        if (eu.sells_digital_services_b2c) activeTypes.push("sells digital services B2C to EU");
+        if (eu.sells_to_non_eu) activeTypes.push("exports to non-EU");
+        if (eu.buys_from_non_eu) activeTypes.push("imports from non-EU");
+        if (activeTypes.length > 0) {
+          sections.push(`**Your EU trade profile:** ${activeTypes.join(", ")}`);
+          if (eu.uses_postponed_accounting) sections.push("Postponed accounting: **enabled**");
+          if (eu.has_section_56_authorisation) sections.push("Section 56 authorisation: **active**");
+        }
+      }
+
+      // Topic-specific content
+      switch (topic) {
+        case "intra_community_supplies":
+          sections.push(
+            `## Intra-Community Supplies & Acquisitions`,
+            `**Selling goods to EU (ICS):** Zero-rated if (1) goods physically transported to another EU state, (2) customer provides valid EU VAT number verified via VIES, (3) proof of transport retained. Report in VAT3 box **E1** and **VIES return**.`,
+            `**Buying goods from EU (ICA):** Self-account for Irish VAT — both output (T1) and input (T2) declared on your VAT3. Net zero if fully deductible.`,
+            `**Triangulation:** Three-party simplification across three EU states — intermediary avoids registration in destination state.`,
+          );
+          break;
+        case "reverse_charge_services":
+          sections.push(
+            `## Reverse Charge on EU Services`,
+            `**B2B services from EU:** The EU supplier invoices without VAT. You self-account for Irish VAT on your VAT3 (box ES2). Both output and input VAT declared — net zero if fully deductible.`,
+            `**B2B services to EU:** Invoice without VAT, noting "Reverse charge — Article 196 EU VAT Directive". Report in VIES return (box ES1).`,
+            `**Key:** Your EU VAT number (IE prefix) must be on the invoice for reverse charge to apply.`,
+          );
+          break;
+        case "oss_distance_selling":
+          sections.push(
+            `## One Stop Shop (OSS) — Distance Selling`,
+            `**Threshold:** €10,000 combined EU B2C sales (goods + digital services).`,
+            `**Above threshold:** Register for Union OSS via Revenue. Charge destination country VAT rates. File quarterly OSS returns (separate from your VAT3).`,
+            `**Below threshold:** May charge Irish VAT rates instead, or voluntarily register for OSS.`,
+            `**Digital services:** SaaS, streaming, e-books, online courses — always destination-based for B2C.`,
+            `**IOSS:** For imported goods ≤€150 sold to EU consumers — collect VAT at point of sale, goods clear customs VAT-free.`,
+          );
+          break;
+        case "imports_exports":
+          sections.push(
+            `## Imports & Exports`,
+            `**Exports (non-EU):** Zero-rated. Retain customs declaration and shipping docs. VAT3 box **E2**.`,
+            `**Imports (non-EU):** VAT on CIF value + customs duty + excise duty at applicable Irish rate.`,
+            `**Postponed accounting (PA1):** Self-account for import VAT on your VAT3 instead of paying at customs — no cash-flow impact. VAT3 box **PA1**.`,
+          );
+          break;
+        case "place_of_supply":
+          sections.push(
+            `## Place of Supply — Services`,
+            `**B2B (general rule):** Where the customer is established → reverse charge applies.`,
+            `**B2C (general rule):** Where the supplier is established → Irish VAT applies.`,
+            `**Exceptions:** Digital services (destination), property services (where property is), passenger transport (where it occurs), events (where held), catering (where performed), short-term hire (where put at disposal).`,
+          );
+          break;
+        case "vies_intrastat":
+          sections.push(
+            `## VIES & Intrastat Reporting`,
+            `**VIES:** Quarterly return reporting all intra-community supplies of goods and services. No minimum threshold — all qualifying supplies must be reported. Deadline: 23rd of month after quarter-end. Penalty: €4,000/return for late filing.`,
+            `**Intrastat:** Monthly statistical return for EU goods movements. Required when arrivals OR dispatches exceed **€750,000/year**. Deadline: 23rd of following month.`,
+          );
+          break;
+        case "uk_post_brexit":
+          sections.push(
+            `## UK Post-Brexit VAT Treatment`,
+            `**Great Britain (England, Scotland, Wales):** Non-EU for both goods and services. Goods = import/export rules. Services = outside scope (reverse charge).`,
+            `**Northern Ireland:** EU single market for **goods** (Windsor Framework). Use XI-prefix VAT numbers. Intra-community rules apply to goods. Services follow non-EU rules.`,
+            `**GB VAT prefix:** GB | **NI VAT prefix:** XI`,
+          );
+          break;
+        case "postponed_accounting":
+          sections.push(
+            `## Postponed Accounting (PA1)`,
+            `Account for import VAT on your VAT3 instead of paying at the point of import.`,
+            `**Eligibility:** Must be VAT-registered with a Customs & Excise number.`,
+            `**How it works:** Both output and input VAT declared on the same return — net zero if goods are for taxable business use.`,
+            `**Benefit:** No cash-flow impact on imports.`,
+            `**VAT3 box:** PA1`,
+          );
+          break;
+        case "section_56":
+          sections.push(
+            `## Section 56 Authorisation`,
+            `Allows qualifying businesses to receive goods and services **without VAT being charged** by suppliers.`,
+            `**Eligibility:** At least 75% of taxable supplies must be zero-rated (exports or ICS).`,
+            `**How to apply:** Via Revenue for a Section 56 authorisation number. Suppliers quote this and invoice at 0%.`,
+            `**Typical users:** Export-focused businesses, large ICS traders.`,
+          );
+          break;
+        default:
+          sections.push(
+            `## EU & International VAT — Overview`,
+            `**Intra-Community Supplies (ICS):** Zero-rated goods sales to EU (VIES reporting required)`,
+            `**Intra-Community Acquisitions (ICA):** Self-account for VAT on EU goods purchases (T1/T2)`,
+            `**Reverse Charge Services:** B2B services from/to EU — self-account for VAT (ES1/ES2)`,
+            `**OSS:** Distance selling B2C to EU — destination country VAT above €10,000 threshold`,
+            `**Exports:** Zero-rated to non-EU (retain proof of export)`,
+            `**Imports:** VAT on CIF + duties — use postponed accounting (PA1) to avoid cash-flow impact`,
+            `**UK Post-Brexit:** GB = non-EU; NI = EU for goods only (XI prefix)`,
+          );
+      }
+
+      if (scenario) {
+        sections.push(``, `*Scenario context: "${scenario}" — apply the rules above to determine the correct VAT treatment.*`);
+      }
+
+      sections.push(buildSources(ctx, ["EU VAT Directive 2006/112/EC", "Revenue.ie cross-border VAT guidance"]));
+      return { result: sections.join("\n") };
     }
 
     default:

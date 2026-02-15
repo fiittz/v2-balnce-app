@@ -53,7 +53,13 @@ export function useCategories(type?: "income" | "expense", accountType?: string)
       // If no categories exist, seed defaults and refetch
       if ((!data || data.length === 0) && user?.id) {
         console.log("No categories found, seeding defaults...");
-        const seeded = await seedDefaultCategories(user.id);
+        // Fetch business_type so we seed industry-specific categories
+        const { data: settings } = await supabase
+          .from("onboarding_settings")
+          .select("business_type")
+          .eq("user_id", user.id)
+          .single();
+        const seeded = await seedDefaultCategories(user.id, settings?.business_type || undefined);
         if (seeded) {
           // Refetch after seeding
           let refetchQuery = supabase

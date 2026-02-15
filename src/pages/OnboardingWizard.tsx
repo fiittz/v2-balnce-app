@@ -1,9 +1,10 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Building2, Briefcase, CreditCard, Receipt, Wallet, Landmark, Banknote, Users, Check, ChevronDown, Search, HardHat, UserPlus, FileSpreadsheet } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Building2, Briefcase, CreditCard, Receipt, Wallet, Landmark, Banknote, Users, Check, ChevronDown, Search, HardHat, UserPlus, FileSpreadsheet, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ type OnboardingStep =
   | "business_activity"
   | "income_payments"
   | "vat_setup"
+  | "eu_international_trade"
   | "rct_subcontracting"
   | "expense_behaviour"
   | "capitalisation"
@@ -48,6 +50,7 @@ interface BusinessData {
   // Activity
   primary_activity: string;
   secondary_activities: string[];
+  business_description: string;
 
   // Income & Payments
   payment_methods: string[];
@@ -59,6 +62,18 @@ interface BusinessData {
   vat_basis: "cash" | "invoice" | "";
   vat_status_change_expected: boolean;
   vat_change_date: string;
+
+  // EU & International Trade
+  eu_trade_enabled: boolean;
+  sells_goods_to_eu: boolean;
+  buys_goods_from_eu: boolean;
+  sells_services_to_eu: boolean;
+  buys_services_from_eu: boolean;
+  sells_to_non_eu: boolean;
+  buys_from_non_eu: boolean;
+  sells_digital_services_b2c: boolean;
+  has_section_56_authorisation: boolean;
+  uses_postponed_accounting: boolean;
 
   // RCT & Subcontracting
   rct_status: "not_applicable" | "principal" | "subcontractor" | "both" | "";
@@ -128,6 +143,7 @@ const createEmptyBusiness = (): BusinessData => ({
   registered_address: "",
   primary_activity: "",
   secondary_activities: [],
+  business_description: "",
   payment_methods: [],
   vat_registered: false,
   vat_number: "",
@@ -135,6 +151,16 @@ const createEmptyBusiness = (): BusinessData => ({
   vat_basis: "",
   vat_status_change_expected: false,
   vat_change_date: "",
+  eu_trade_enabled: false,
+  sells_goods_to_eu: false,
+  buys_goods_from_eu: false,
+  sells_services_to_eu: false,
+  buys_services_from_eu: false,
+  sells_to_non_eu: false,
+  buys_from_non_eu: false,
+  sells_digital_services_b2c: false,
+  has_section_56_authorisation: false,
+  uses_postponed_accounting: false,
   rct_status: "",
   rct_rate: "",
   has_subcontractors: false,
@@ -185,6 +211,7 @@ const ALL_STEPS: OnboardingStep[] = [
   "business_activity",
   "income_payments",
   "vat_setup",
+  "eu_international_trade",
   "rct_subcontracting",
   "expense_behaviour",
   "capitalisation",
@@ -201,6 +228,7 @@ const STEP_LABELS: Record<OnboardingStep, string> = {
   business_activity: "Business Activity",
   income_payments: "Income & Payments",
   vat_setup: "VAT Setup",
+  eu_international_trade: "EU & International",
   rct_subcontracting: "RCT & Subcontracting",
   expense_behaviour: "Expense Behaviour",
   capitalisation: "Capitalisation Policy",
@@ -217,6 +245,7 @@ const STEP_ICONS: Record<OnboardingStep, React.ReactNode> = {
   business_activity: <Briefcase className="w-4 h-4" />,
   income_payments: <CreditCard className="w-4 h-4" />,
   vat_setup: <Receipt className="w-4 h-4" />,
+  eu_international_trade: <Globe className="w-4 h-4" />,
   rct_subcontracting: <HardHat className="w-4 h-4" />,
   expense_behaviour: <Wallet className="w-4 h-4" />,
   capitalisation: <Landmark className="w-4 h-4" />,
@@ -355,10 +384,13 @@ export default function OnboardingWizard() {
     CONSTRUCTION_ACTIVITIES.includes(b.primary_activity) ||
     b.secondary_activities.some(a => CONSTRUCTION_ACTIVITIES.includes(a))
   );
+  const isAnyVATRegistered = state.businesses.some(b => b.vat_registered);
   const STEPS = useMemo(() => {
-    if (isConstructionTrade) return ALL_STEPS;
-    return ALL_STEPS.filter(s => s !== "rct_subcontracting");
-  }, [isConstructionTrade]);
+    let steps = ALL_STEPS;
+    if (!isConstructionTrade) steps = steps.filter(s => s !== "rct_subcontracting");
+    if (!isAnyVATRegistered) steps = steps.filter(s => s !== "eu_international_trade");
+    return steps;
+  }, [isConstructionTrade, isAnyVATRegistered]);
 
   const step = STEPS[stepIndex];
   const progress = ((stepIndex + 1) / STEPS.length) * 100;
@@ -561,15 +593,30 @@ export default function OnboardingWizard() {
 
       if (existingError) throw existingError;
 
+      const euTradeFields = {
+        eu_trade_enabled: primaryBusiness.eu_trade_enabled,
+        sells_goods_to_eu: primaryBusiness.sells_goods_to_eu,
+        buys_goods_from_eu: primaryBusiness.buys_goods_from_eu,
+        sells_services_to_eu: primaryBusiness.sells_services_to_eu,
+        buys_services_from_eu: primaryBusiness.buys_services_from_eu,
+        sells_to_non_eu: primaryBusiness.sells_to_non_eu,
+        buys_from_non_eu: primaryBusiness.buys_from_non_eu,
+        sells_digital_services_b2c: primaryBusiness.sells_digital_services_b2c,
+        has_section_56_authorisation: primaryBusiness.has_section_56_authorisation,
+        uses_postponed_accounting: primaryBusiness.uses_postponed_accounting,
+      };
+
       if (existing?.id) {
         const { error } = await supabase
           .from("onboarding_settings")
           .update({
             business_name: primaryBusiness.name,
             business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+            business_description: primaryBusiness.business_description || null,
             vat_registered: primaryBusiness.vat_registered,
             vat_number: vatNumber,
             onboarding_completed: true,
+            ...euTradeFields,
           })
           .eq("id", existing.id);
 
@@ -581,9 +628,11 @@ export default function OnboardingWizard() {
             user_id: user.id,
             business_name: primaryBusiness.name,
             business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+            business_description: primaryBusiness.business_description || null,
             vat_registered: primaryBusiness.vat_registered,
             vat_number: vatNumber,
             onboarding_completed: true,
+            ...euTradeFields,
           });
 
         if (error) throw error;
@@ -595,6 +644,7 @@ export default function OnboardingWizard() {
         .update({
           business_name: primaryBusiness.name,
           business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+          business_description: primaryBusiness.business_description || null,
         })
         .eq("id", user.id);
 
@@ -1165,6 +1215,23 @@ export default function OnboardingWizard() {
                   </Popover>
                 )}
               </div>
+
+              <div>
+                <Label className="text-base font-medium">Describe what your business does (optional)</Label>
+                <p className="text-sm text-muted-foreground mb-3">Max 40 words — helps us categorise your transactions accurately</p>
+                <Textarea
+                  className="min-h-[80px] text-base"
+                  placeholder="e.g. We build custom kitchens and wardrobes for residential clients in Dublin"
+                  value={currentBusiness.business_description}
+                  onChange={(e) => {
+                    const words = e.target.value.trim().split(/\s+/).filter(Boolean);
+                    if (words.length <= 40) updateBusiness("business_description", e.target.value);
+                  }}
+                />
+                <p className="text-xs text-muted-foreground mt-1 text-right">
+                  {currentBusiness.business_description.trim().split(/\s+/).filter(Boolean).length}/40 words
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -1339,6 +1406,138 @@ export default function OnboardingWizard() {
                         onChange={(e) => updateBusiness("vat_change_date", e.target.value)}
                         className="mt-1.5"
                       />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* EU & International Trade (conditional on VAT registration) */}
+        {step === "eu_international_trade" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold mb-2">EU & International Trade</h2>
+              <p className="text-muted-foreground">Set up cross-border VAT treatment for EU and non-EU trade.</p>
+            </div>
+
+            <BusinessTabs />
+
+            {/* IE VAT number reminder */}
+            {currentBusiness.vat_number && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-blue-800 text-sm space-y-1">
+                <p className="font-medium">Your EU VAT number: IE{currentBusiness.vat_number.replace(/^IE/i, "")}</p>
+                <p>Give this number to EU suppliers so they can zero-rate their invoices to you. You then self-account for Irish VAT via reverse charge on your VAT3.</p>
+              </div>
+            )}
+
+            {/* Master toggle */}
+            <div className="bg-card rounded-2xl p-6 shadow-sm space-y-5">
+              <div>
+                <Label className="text-base font-medium">Does your business trade with EU or non-EU countries?</Label>
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  {[
+                    { value: true, label: "Yes" },
+                    { value: false, label: "No" },
+                  ].map((option) => (
+                    <button
+                      key={String(option.value)}
+                      onClick={() => updateBusiness("eu_trade_enabled", option.value)}
+                      className={cn(
+                        "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
+                        currentBusiness.eu_trade_enabled === option.value
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                        currentBusiness.eu_trade_enabled === option.value ? "border-primary bg-primary" : "border-muted-foreground"
+                      )}>
+                        {currentBusiness.eu_trade_enabled === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      </div>
+                      <span className="font-medium">{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {currentBusiness.eu_trade_enabled && (
+                <>
+                  <div className="space-y-3">
+                    <Label className="text-base font-medium">What types of cross-border trade do you do?</Label>
+                    <p className="text-sm text-muted-foreground">Select all that apply</p>
+
+                    {[
+                      { field: "sells_goods_to_eu" as const, label: "Sell goods to EU countries", desc: "Intra-Community Supplies (ICS) — zero-rated with VIES reporting" },
+                      { field: "buys_goods_from_eu" as const, label: "Buy goods from EU countries", desc: "Intra-Community Acquisitions (ICA) — self-account for VAT" },
+                      { field: "sells_services_to_eu" as const, label: "Sell services to EU businesses", desc: "Reverse charge — invoice without VAT" },
+                      { field: "buys_services_from_eu" as const, label: "Buy services from EU businesses", desc: "Reverse charge — self-account for Irish VAT" },
+                      { field: "sells_digital_services_b2c" as const, label: "Sell digital services to EU consumers (B2C)", desc: "One Stop Shop (OSS) may apply above €10,000" },
+                      { field: "sells_to_non_eu" as const, label: "Export goods/services to non-EU countries", desc: "Zero-rated exports — retain proof of export" },
+                      { field: "buys_from_non_eu" as const, label: "Import goods/services from non-EU countries", desc: "Import VAT applies — postponed accounting available" },
+                    ].map((item) => (
+                      <label
+                        key={item.field}
+                        className={cn(
+                          "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
+                          currentBusiness[item.field]
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <Checkbox
+                          checked={currentBusiness[item.field]}
+                          onCheckedChange={(checked) => updateBusiness(item.field, !!checked)}
+                          className="mt-0.5"
+                        />
+                        <div>
+                          <span className="font-medium">{item.label}</span>
+                          <p className="text-sm text-muted-foreground mt-0.5">{item.desc}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Conditional sub-questions */}
+                  {(currentBusiness.buys_from_non_eu || currentBusiness.buys_goods_from_eu) && (
+                    <div className="space-y-3 border-t pt-4">
+                      <Label className="text-base font-medium">Additional import/acquisition options</Label>
+
+                      {currentBusiness.buys_from_non_eu && (
+                        <label className={cn(
+                          "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
+                          currentBusiness.uses_postponed_accounting ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                        )}>
+                          <Checkbox
+                            checked={currentBusiness.uses_postponed_accounting}
+                            onCheckedChange={(checked) => updateBusiness("uses_postponed_accounting", !!checked)}
+                            className="mt-0.5"
+                          />
+                          <div>
+                            <span className="font-medium">Postponed Accounting (PA1)</span>
+                            <p className="text-sm text-muted-foreground mt-0.5">Account for import VAT on your VAT3 instead of paying at the point of import — no cash-flow impact.</p>
+                          </div>
+                        </label>
+                      )}
+
+                      {(currentBusiness.sells_goods_to_eu || currentBusiness.sells_to_non_eu) && (
+                        <label className={cn(
+                          "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
+                          currentBusiness.has_section_56_authorisation ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                        )}>
+                          <Checkbox
+                            checked={currentBusiness.has_section_56_authorisation}
+                            onCheckedChange={(checked) => updateBusiness("has_section_56_authorisation", !!checked)}
+                            className="mt-0.5"
+                          />
+                          <div>
+                            <span className="font-medium">Section 56 Authorisation</span>
+                            <p className="text-sm text-muted-foreground mt-0.5">Receive goods/services without VAT being charged — for businesses where 75%+ of sales are zero-rated (exports/ICS).</p>
+                          </div>
+                        </label>
+                      )}
                     </div>
                   )}
                 </>

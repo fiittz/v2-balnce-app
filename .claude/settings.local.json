@@ -58,7 +58,10 @@
       "Bash(dir \"C:\\\\Users\\\\onejf\\\\OneDrive\\\\Documenti\" /b)",
       "Bash(npx next build)",
       "WebFetch(domain:supabase.com)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(npm test:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
     ]
   }
 }

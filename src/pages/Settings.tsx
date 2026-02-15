@@ -4,6 +4,7 @@ import { ArrowLeft, Building2, FileText, Receipt, ChevronRight, CreditCard, User
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 import {
   Dialog,
@@ -63,6 +64,7 @@ const Settings = () => {
   const [vatNumber, setVatNumber] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [businessDescription, setBusinessDescription] = useState("");
 
   // Form state — Travel & Trips
   const [placeOfWork, setPlaceOfWork] = useState("");
@@ -110,6 +112,7 @@ const Settings = () => {
     setVatNumber(onboarding?.vat_number || profile?.vat_number || "");
     setPhone(profile?.phone || "");
     setAddress(profile?.address || "");
+    setBusinessDescription(onboarding?.business_description || profile?.business_description || "");
     setShowBusinessDialog(true);
   };
 
@@ -186,6 +189,7 @@ const Settings = () => {
         .update({
           business_name: businessName,
           business_type: businessType,
+          business_description: businessDescription || null,
           vat_number: vatNumber,
           phone,
           address,
@@ -200,6 +204,7 @@ const Settings = () => {
         .update({
           business_name: businessName,
           business_type: businessType,
+          business_description: businessDescription || null,
           vat_number: vatNumber,
         })
         .eq("user_id", user.id);
@@ -332,6 +337,23 @@ const Settings = () => {
                 onChange={setAddress}
                 placeholder="Enter business address"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="businessDescription">Business Description</Label>
+              <Textarea
+                id="businessDescription"
+                className="min-h-[80px]"
+                placeholder="e.g. We build custom kitchens and wardrobes for residential clients in Dublin"
+                value={businessDescription}
+                onChange={(e) => {
+                  const words = e.target.value.trim().split(/\s+/).filter(Boolean);
+                  if (words.length <= 40) setBusinessDescription(e.target.value);
+                }}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {businessDescription.trim().split(/\s+/).filter(Boolean).length}/40 words
+              </p>
             </div>
           </div>
           

@@ -303,6 +303,19 @@ export const INDUSTRY_VAT_RULES: Record<string, {
       "Professional services at 23%",
       "Some financial services exempt"
     ]
+  },
+  technology_it: {
+    defaultOutputRate: "standard_23",
+    commonInputRates: ["standard_23", "exempt"],
+    specialRules: [
+      "SaaS/software subscriptions at 23% (electronically supplied services)",
+      "EU B2B sales: reverse charge — 0% on invoice, report in VIES",
+      "EU B2C digital sales: OSS — charge destination country VAT rate",
+      "Non-EU sales: outside scope of Irish VAT (zero-rated export)",
+      "Reverse charge self-accounting on imported services (AWS, GitHub, etc.)",
+      "R&D tax credit 30% on qualifying software development expenditure (Section 766)",
+      "Knowledge Development Box: 6.25% CT rate on qualifying IP profits (Section 769R)"
+    ]
   }
 };
 

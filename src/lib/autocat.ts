@@ -22,6 +22,7 @@ export interface TransactionInput {
   user_business_type: string; // e.g. Sole Trader, Contractor, LTD
   receipt_text?: string; // optional OCR text
   account_type?: string; // "limited_company" | "directors_personal_tax" — filters category matching
+  user_business_description?: string; // free-text description of what the business does (max 40 words)
 }
 
 export interface AutoCatResult {
@@ -42,44 +43,41 @@ export interface AutoCatResult {
 export { VAT_RATES, DISALLOWED_VAT_CREDITS, ALLOWED_VAT_CREDITS, RCT_RULES, INDUSTRY_VAT_RULES, applyTwoThirdsRule };
 
 // Map autocat category names → possible database category names (in priority order)
-// MUST include the actual seeded DB category names from seedCategories.ts:
-// EXPENSE: Materials & Supplies, Subcontractor Payments, Tools & Equipment, Vehicle Expenses,
-//   Fuel, Insurance, Professional Fees, Office Expenses, Telephone & Internet, Bank Charges,
-//   Rent & Rates, Utilities, Training & Certifications, Advertising & Marketing,
-//   Travel & Accommodation, Meals & Entertainment, Repairs & Maintenance,
-//   Protective Clothing & PPE, Subscriptions & Software, Miscellaneous Expenses
-// INCOME: Contract Work, Labour Income, Materials Charged, Consultation Fees, Other Income
+// These mappings bridge autocat output strings to the actual seeded DB category names,
+// which vary by industry (construction, technology, hospitality, etc.)
 export const CATEGORY_NAME_MAP: Record<string, string[]> = {
-  // Expense categories
-  "Motor Vehicle Expenses": ["Vehicle Expenses", "Fuel", "Travel & Accommodation"],
-  "Motor/travel": ["Van Costs", "Vehicle Expenses", "Travel & Accommodation", "Fuel"],
-  "Tools": ["Power Tools", "Tools & Equipment"],
-  "Purchases": ["Materials & Supplies"],
-  "Materials": ["Timber & Sheet Materials", "Fixings & Consumables", "Materials & Supplies"],
-  "Cost of Goods Sold": ["Materials & Supplies"],
-  "Software": ["Subscriptions & Software", "Office Expenses"],
+  // ── Expense categories ──
+  "Motor Vehicle Expenses": ["Vehicle Expenses", "Fuel", "Vehicle Maintenance & Repairs", "Travel & Accommodation"],
+  "Motor/travel": ["Van Costs", "Vehicle Expenses", "Vehicle Maintenance & Repairs", "Travel & Accommodation", "Fuel", "Tolls & Parking"],
+  "Tools": ["Power Tools", "Tools & Equipment", "Hardware & Equipment"],
+  "Purchases": ["Materials & Supplies", "Cost of Goods Sold", "Raw Materials"],
+  "Materials": ["Timber & Sheet Materials", "Fixings & Consumables", "Materials & Supplies", "Raw Materials"],
+  "Cost of Goods Sold": ["Cost of Goods Sold", "Materials & Supplies", "Raw Materials"],
+  "Software": ["Subscriptions & Software", "Software & Licenses", "Office Expenses"],
+  "Cloud Hosting": ["Cloud Hosting & Infrastructure", "Subscriptions & Software", "Software & Licenses", "API & Third-Party Services"],
+  "Payment Processing": ["Payment Processing Fees", "Bank Charges"],
   "Phone": ["Telephone & Internet", "Subscriptions & Software"],
-  "Insurance": ["Insurance"],
+  "Insurance": ["Insurance", "Vehicle Insurance"],
   "Bank fees": ["Bank Charges"],
   "Bank Fees": ["Bank Charges"],
   "Medical": ["Medical Expenses"],
   "Drawings": ["Director's Drawings"],
   "Meals & Entertainment": ["Meals & Entertainment"],
   "Consulting & Accounting": ["Professional Fees"],
-  "Wages": ["Subcontractor Payments"],
-  "Labour costs": ["Subcontractor Payments"],
-  "Sub Con": ["Subcontractor Payments"],
-  "Repairs and Maintenance": ["Repairs & Maintenance"],
-  "Cleaning": [],
+  "Wages": ["Subcontractor Payments", "Staff Wages", "Contractor Payments", "Driver Wages"],
+  "Labour costs": ["Subcontractor Payments", "Staff Wages", "Contractor Payments"],
+  "Sub Con": ["Subcontractor Payments", "Contractor Payments"],
+  "Repairs and Maintenance": ["Repairs & Maintenance", "Vehicle Maintenance & Repairs"],
+  "Cleaning": ["Cleaning & Hygiene"],
   "General Expenses": [],
   "Advertising": ["Advertising & Marketing"],
   "Marketing": ["Advertising & Marketing"],
-  "Subsistence": ["Travel & Accommodation", "Meals & Entertainment"],
+  "Subsistence": ["Subsistence", "Travel & Accommodation", "Meals & Entertainment"],
   "Workwear": ["Protective Clothing & PPE"],
-  "Tolls & Parking": ["Vehicle Expenses", "Travel & Accommodation"],
-  "Training": ["Training & Certifications"],
-  "Rent": ["Rent & Rates"],
-  "Equipment": ["Tools & Equipment"],
+  "Tolls & Parking": ["Tolls & Parking", "Vehicle Expenses", "Travel & Accommodation"],
+  "Training": ["Training & Certifications", "Training & Conferences", "Training & CPD"],
+  "Rent": ["Rent & Rates", "Rent & Co-working"],
+  "Equipment": ["Tools & Equipment", "Hardware & Equipment", "Equipment & Furniture", "Machinery & Equipment", "Kitchen Equipment", "Shop Fittings & Equipment", "Audio/Visual Equipment"],
   "Office": ["Office Expenses", "Subscriptions & Software"],
   "other": [],
   // Waste
@@ -88,11 +86,21 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   "Internal Transfer": ["Internal Transfers"],
   // Travel & Subsistence
   "Travel & Subsistence": ["Travel & Accommodation", "Vehicle Expenses"],
-  // Income categories
-  "Sales": ["Contract Work", "Labour Income", "Other Income", "Consultation Fees", "Materials Charged"],
+  // ── Income categories ──
+  "Sales": [
+    "Contract Work", "Labour Income", "Other Income", "Consultation Fees", "Materials Charged",
+    "SaaS Subscription Revenue", "Consulting & Services", "Product Sales", "Food Sales",
+    "Delivery Services", "Haulage Income", "Rental Income", "Services",
+    "Project Fees", "Retainer Income", "Online Sales", "Wholesale Revenue",
+    "Contract Manufacturing", "Catering Income", "Beverage Sales",
+    "Management Fees", "Plant Hire Income", "Membership & Subscriptions",
+    "Implementation & Onboarding Fees",
+    "Software Sales & Licensing", "Development Services", "Maintenance & Support",
+    "Event Tickets & Admissions", "Sponsorship Income", "Venue Hire Income", "Catering & Bar Revenue",
+  ],
   "RCT": ["Contract Work", "Labour Income"],
   "Interest Income": ["Other Income"],
-  "Subscription Income": ["Other Income"],
+  "Subscription Income": ["Other Income", "SaaS Subscription Revenue", "Membership & Subscriptions"],
   "Tax Refund": ["Other Income"],
 };
 
@@ -172,15 +180,21 @@ interface MerchantRule {
   purpose: string;
   needs_receipt?: boolean; // True if receipt required to claim VAT
   isTradeSupplier?: boolean; // True for merchants that are ALWAYS business for trade industries
+  isTechSupplier?: boolean; // True for merchants that are ALWAYS business for tech/SaaS industries
   relief_type?: "medical" | "pension" | "health_insurance" | "rent" | "charitable" | "tuition" | null;
   amountLogic?: (amount: number) => { category?: string; confidence?: number; purpose?: string; vat_deductible?: boolean } | null;
 }
 
 // Trade industries that should get boosted confidence for trade suppliers
 const TRADE_INDUSTRIES = [
-  "construction", "carpentry_joinery", "carpentry", "joinery", "electrical", 
-  "plumbing_heating", "plumbing", "heating", "landscaping_groundworks", 
+  "construction", "carpentry_joinery", "carpentry", "joinery", "electrical",
+  "plumbing_heating", "plumbing", "heating", "landscaping_groundworks",
   "painting_decorating", "manufacturing", "maintenance_facilities", "trades"
+];
+
+// Tech/SaaS industries that should get boosted confidence for tech suppliers
+const TECH_INDUSTRIES = [
+  "technology_it", "technology", "software", "saas", "professional_services"
 ];
 
 const merchantRules: MerchantRule[] = [
@@ -775,6 +789,169 @@ const merchantRules: MerchantRule[] = [
     purpose: "Waste disposal/skip hire. VAT deductible under Section 59.",
   },
 
+  // === TECH / SAAS SUPPLIERS === (VAT via reverse charge — self-account at 23%)
+  // These merchants are ALWAYS business for tech/SaaS industries
+  {
+    patterns: ["aws", "amazon web services", "amazonaws"],
+    category: "Cloud Hosting",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Cloud infrastructure (AWS). Reverse charge self-account at 23%. VAT reclaimable.",
+  },
+  {
+    patterns: ["microsoft azure", "azure", "microsoft 365", "microsoft office", "msft"],
+    category: "Cloud Hosting",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Cloud infrastructure / SaaS (Microsoft). Reverse charge self-account at 23%. VAT reclaimable.",
+  },
+  {
+    patterns: ["google cloud", "gcp", "google workspace", "google domains"],
+    category: "Cloud Hosting",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Cloud infrastructure / SaaS (Google). Reverse charge self-account at 23%. VAT reclaimable.",
+  },
+  {
+    patterns: ["github", "gitlab", "bitbucket"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Code repository / DevOps platform. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["atlassian", "jira", "confluence", "trello"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Project management / collaboration tools. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["vercel", "netlify", "heroku", "digitalocean", "digital ocean", "linode", "cloudflare", "render"],
+    category: "Cloud Hosting",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Cloud hosting / deployment platform. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["stripe", "stripe payments", "stripe ireland"],
+    category: "Payment Processing",
+    vat_type: "Exempt",
+    vat_deductible: false,
+    isTechSupplier: true,
+    purpose: "Payment processing fees. Financial services — VAT exempt, not reclaimable.",
+  },
+  {
+    patterns: ["hubspot", "salesforce", "pipedrive", "close.com", "apollo.io", "apollo"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "CRM / GTM sales platform. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["intercom", "drift", "zendesk", "freshdesk", "crisp"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Customer support / messaging platform. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["slack", "notion", "asana", "monday.com", "clickup", "linear"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Team collaboration / productivity tool. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["figma", "canva", "adobe", "creative cloud", "sketch", "miro"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Design / creative tool. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["mailchimp", "sendgrid", "postmark", "customer.io", "brevo", "sendinblue"],
+    category: "Advertising",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Email marketing / transactional email platform. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["openai", "anthropic", "cohere"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "AI / LLM API provider. Reverse charge. VAT reclaimable. May qualify for R&D credit (Section 766).",
+  },
+  {
+    patterns: ["datadog", "sentry", "new relic", "logflare", "logrocket"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Monitoring / observability platform. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["supabase", "firebase", "planetscale", "neon", "mongodb atlas", "redis cloud"],
+    category: "Cloud Hosting",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Database / backend-as-a-service. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["twilio", "vonage", "messagebird"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Communications API (SMS/voice). Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["zoom", "loom", "calendly", "cal.com"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Video conferencing / scheduling tool. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["semrush", "ahrefs", "hotjar", "mixpanel", "amplitude", "posthog", "segment"],
+    category: "Advertising",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "SEO / analytics / product analytics platform. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["namecheap", "godaddy", "porkbun", "hover"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "Domain registration / DNS. Reverse charge. VAT reclaimable.",
+  },
+  {
+    patterns: ["apple developer", "google play developer", "app store"],
+    category: "Subscriptions & Software",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    isTechSupplier: true,
+    purpose: "App store developer account / fees. Reverse charge. VAT reclaimable.",
+  },
+
   // === TUITION FEES === (Form 11 relief: tuition — 20% on amounts over EUR 3,000)
   {
     patterns: ["ucd", "tcd", "trinity college", "dcu", "nuig", "university of galway", "ucc", "maynooth university", "tu dublin", "technological university", "griffith college", "ncad", "rcsi", "dit", "athlone it", "waterford it", "letterkenny it", "sligo it", "carlow it", "dundalk it", "limerick it"],
@@ -851,7 +1028,9 @@ function inferIncomeCategory(tx: TransactionInput): {
   if (tx.direction !== "income") return null;
 
   const industry = normalise(tx.user_industry);
-  const userInConstruction = !!industry.match(/construct|carpentry|trades|electrical|plumbing|building|joinery/);
+  const bizDesc = normalise(tx.user_business_description);
+  const industryContext = `${industry} ${bizDesc}`;
+  const userInConstruction = !!industryContext.match(/construct|carpentry|trades|electrical|plumbing|building|joinery|kitchen|wardrobe|fitting|renovation/);
 
   // Check for RCT income (construction company payments)
   const isFromCompany = desc.includes("limited") || desc.includes("ltd") ||
@@ -994,6 +1173,7 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
   // Get user industry for VAT rules
   const userIndustry = normalise(tx.user_industry);
   const userBusinessType = normalise(tx.user_business_type);
+  const userBizDesc = normalise(tx.user_business_description);
 
   // 1) Income handling
   if (tx.direction === "income") {
@@ -1160,17 +1340,34 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     needs_receipt = rule.needs_receipt ?? false;
     relief_type = rule.relief_type ?? null;
     
-    // INDUSTRY-AWARE BOOST: If trade supplier + user in trade industry = 95% confidence + definitely business
-    const isTradeUser = TRADE_INDUSTRIES.some(ti => 
-      userIndustry.includes(ti) || userBusinessType.includes(ti)
+    // INDUSTRY-AWARE BOOST: If trade/tech supplier + user in matching industry = 95% confidence + definitely business
+    const isTradeUser = TRADE_INDUSTRIES.some(ti =>
+      userIndustry.includes(ti) || userBusinessType.includes(ti) || userBizDesc.includes(ti)
     );
-    
+    const isTechUser = TECH_INDUSTRIES.some(ti =>
+      userIndustry.includes(ti) || userBusinessType.includes(ti) || userBizDesc.includes(ti)
+    );
+
+    const industryLabel = tx.user_industry || tx.user_business_type;
+    const descSuffix = tx.user_business_description ? ` (${tx.user_business_description})` : "";
+
     if (rule.isTradeSupplier && isTradeUser) {
       confidence = 95;
       is_business_expense = true; // Definitely business for trade users
       vat_deductible = true; // Trade supplies are always VAT deductible for trade users
-      notes = `Trade supplier for ${tx.user_industry || tx.user_business_type} business. Auto-approved.`;
-      business_purpose = `${rule.purpose} Industry: ${tx.user_industry || tx.user_business_type}.`;
+      notes = `Trade supplier for ${industryLabel} business. Auto-approved.`;
+      business_purpose = `${rule.purpose} Industry: ${industryLabel}${descSuffix}.`;
+    } else if (rule.isTechSupplier && isTechUser) {
+      confidence = 95;
+      is_business_expense = true;
+      // Preserve original vat_deductible (Stripe is exempt, cloud hosting is reclaimable)
+      notes = `Tech/SaaS supplier for ${industryLabel} business. Auto-approved.`;
+      business_purpose = `${rule.purpose} Industry: ${industryLabel}${descSuffix}.`;
+    } else if (rule.isTechSupplier && !isTechUser) {
+      // Tech supplier but user NOT in tech industry - still likely business but lower confidence
+      confidence = 75;
+      is_business_expense = true; // Most businesses use SaaS tools
+      notes = `Tech/SaaS supplier. User industry (${tx.user_industry || "unspecified"}) is not tech — verify business use.`;
     } else if (rule.isTradeSupplier && !isTradeUser) {
       // Trade supplier but user NOT in trade industry - lower confidence, might be personal
       confidence = 65;

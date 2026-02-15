@@ -22,6 +22,7 @@ React, TypeScript, Vite, Supabase, Shadcn/ui, Tailwind CSS, Lucide icons
 - `/bookkeeping_rules` — Double entry, DEAD CLIC, books of prime entry, ledger structure
 - `/vat_compliance` — VAT rates, registration, returns, RCT, invoices, penalties
 - `/carpenter_trade_profile` — Carpenter VAT, two-thirds rule, capitalisation, chart of accounts
+- `/tech_saas_profile` — SaaS VAT (ESS/OSS/reverse charge), R&D tax credit, KDB, capitalisation
 - `/categorization_rules` — Vendor matching, receipt validation, capitalisation policy
 - `/receipt_matching` — OCR processing, receipt-to-transaction matching, CSV import, bulk upload
 

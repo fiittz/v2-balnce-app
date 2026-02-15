@@ -383,6 +383,7 @@ export type Database = {
       }
       onboarding_settings: {
         Row: {
+          business_description: string | null
           business_name: string | null
           business_type: string | null
           created_at: string | null
@@ -395,6 +396,7 @@ export type Database = {
           vat_registered: boolean | null
         }
         Insert: {
+          business_description?: string | null
           business_name?: string | null
           business_type?: string | null
           created_at?: string | null
@@ -407,6 +409,7 @@ export type Database = {
           vat_registered?: boolean | null
         }
         Update: {
+          business_description?: string | null
           business_name?: string | null
           business_type?: string | null
           created_at?: string | null
@@ -474,6 +477,7 @@ export type Database = {
       profiles: {
         Row: {
           address: string | null
+          business_description: string | null
           business_name: string | null
           business_type: string | null
           created_at: string | null
@@ -486,6 +490,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          business_description?: string | null
           business_name?: string | null
           business_type?: string | null
           created_at?: string | null
@@ -498,6 +503,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          business_description?: string | null
           business_name?: string | null
           business_type?: string | null
           created_at?: string | null

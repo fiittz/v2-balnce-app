@@ -162,6 +162,28 @@ const TOOLS = [
       parameters: { type: "object", properties: {} },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "explain_eu_vat",
+      description: "Explain EU and international VAT rules — intra-community supplies, reverse charge, OSS, imports/exports, place of supply, VIES/Intrastat, UK post-Brexit, postponed accounting, Section 56. Use when the user asks about EU VAT, cross-border trade, reverse charge, exports, imports, or international VAT treatment.",
+      parameters: {
+        type: "object",
+        properties: {
+          topic: {
+            type: "string",
+            enum: ["intra_community_supplies","reverse_charge_services","oss_distance_selling","imports_exports","place_of_supply","vies_intrastat","uk_post_brexit","postponed_accounting","section_56","general"],
+            description: "The EU VAT topic to explain",
+          },
+          scenario: {
+            type: "string",
+            description: "Optional specific scenario to analyse",
+          },
+        },
+        required: ["topic"],
+      },
+    },
+  },
 ];
 
 serve(async (req) => {
@@ -239,6 +261,7 @@ You have tools available. Use them proactively — don't just describe data, sho
 - **search_transactions**: When the user asks to find or look up specific transactions, payments, or spending
 - **show_chart**: When the user asks for a chart, graph, pie chart, or visual breakdown of their data
 - **show_trial_balance**: When the user asks to check their accounts, trial balance, bookkeeping accuracy, or whether their books balance
+- **explain_eu_vat**: When the user asks about EU VAT, cross-border trade, reverse charge, OSS, imports/exports, VIES, Intrastat, UK post-Brexit, or international VAT
 
 ## Formatting
 You can use markdown: **bold** for amounts, tables for comparisons, bullet lists for multiple items. Keep responses concise. The tool results already include source citations — do not remove them.
@@ -357,6 +380,19 @@ Bicycle: 8c/km flat
 - Fixed deduction by trade/profession — no receipts required
 - Carpenter/joiner: check Revenue's published list
 - Claimed automatically against employment income
+
+### EU & International VAT (Cross-Border Trade)
+**Intra-Community Supplies (ICS):** Selling goods to EU — zero-rated if goods transported to another EU state, customer provides valid EU VAT number (verified on VIES), and proof of transport retained. Report in VAT3 box E1 and VIES return.
+**Intra-Community Acquisitions (ICA):** Buying goods from EU — self-account for Irish VAT. Output (T1) and input (T2) on VAT3. Net zero if fully deductible.
+**Reverse Charge Services:** B2B services from/to EU — invoice without VAT. Self-account for Irish VAT. Boxes ES1 (outgoing) and ES2 (incoming).
+**One Stop Shop (OSS):** EU B2C sales of goods or digital services above €10,000 combined — charge destination country VAT rates. Register via Revenue's OSS portal. Quarterly returns.
+**Exports to non-EU:** Zero-rated. Retain customs export documentation. VAT3 box E2.
+**Imports from non-EU:** VAT on CIF + customs duty + excise duty. Use Postponed Accounting (PA1) to self-account on VAT3 — no cash-flow impact.
+**Section 56:** For exporters where 75%+ of supplies are zero-rated — receive goods/services without VAT being charged.
+**UK Post-Brexit:** GB (England, Scotland, Wales) = non-EU for goods and services. Northern Ireland = EU for goods (XI prefix VAT numbers, intra-community rules), non-EU for services.
+**VIES Return:** Quarterly, report all intra-community supplies. No threshold. Due 23rd of month after quarter-end.
+**Intrastat:** Monthly statistical return when arrivals or dispatches exceed €750,000/year.
+**Irish VAT number = EU VAT number:** The IE prefix identifies the company in the EU VIES system. Customers/suppliers must share this number for zero-rating and reverse charge to apply.
 
 ## The User's Financial Data
 ${financialContext}${pageContext}`;
