@@ -76,6 +76,36 @@ export function buildFinancialContext(input: FinancialContextInput): string {
   if (biz?.primary_activity) lines.push(`Primary Activity: ${biz.primary_activity}`);
   if (biz?.secondary_activities?.length > 0) lines.push(`Secondary Activities: ${biz.secondary_activities.join(", ")}`);
   if (biz?.has_company_secretary) lines.push(`Company Secretary: ${biz.company_secretary_name || "Yes"}`);
+  if (onboardingSettings?.business_description) lines.push(`Business Description: ${onboardingSettings.business_description}`);
+  // Industry category group — helps AI understand which chart of accounts template was seeded
+  if (biz?.primary_activity || onboardingSettings?.business_type) {
+    const activity = biz?.primary_activity || onboardingSettings?.business_type;
+    const ACTIVITY_GROUPS: Record<string, string> = {
+      carpentry_joinery: "construction", general_construction: "construction", electrical_contracting: "construction",
+      plumbing_heating: "construction", bricklaying_masonry: "construction", plastering_drylining: "construction",
+      painting_decorating: "construction", roofing: "construction", groundworks_civil: "construction",
+      landscaping: "construction", tiling_stonework: "construction", steel_fabrication_welding: "construction",
+      property_maintenance: "construction",
+      software_development: "software_dev",
+      it_services: "technology", web_design: "technology", digital_marketing: "technology", content_creation: "technology",
+      cafe_restaurant: "hospitality", takeaway: "hospitality", catering: "hospitality", mobile_food: "hospitality",
+      physical_retail: "retail", online_retail: "retail", market_stall: "retail", wholesale_distribution: "retail",
+      haulage_hgv: "transport", courier_services: "transport", taxi_private_hire: "transport",
+      delivery_services: "transport", plant_hire: "transport",
+      beauty_wellness: "health", fitness_sports: "health", care_services: "health",
+      property_development: "property", letting_property_management: "property", quantity_surveying: "property",
+      manufacturing: "manufacturing", bespoke_fabrication: "manufacturing", food_production: "manufacturing",
+      event_hosting: "events", event_management: "events",
+    };
+    const GROUP_LABELS: Record<string, string> = {
+      construction: "Construction & Trades", technology: "Technology & IT Services", software_dev: "Software Development",
+      hospitality: "Hospitality & Food", retail: "Retail & E-commerce", transport: "Transport & Logistics",
+      health: "Health & Wellness", property: "Property & Development", manufacturing: "Manufacturing & Production",
+      events: "Events & Hosting", professional: "Professional Services",
+    };
+    const group = ACTIVITY_GROUPS[activity as string] || "professional";
+    lines.push(`Industry Category Group: ${GROUP_LABELS[group] || group} — expense/income categories are tailored for this industry`);
+  }
   lines.push(``);
 
   // === VAT REGISTRATION ===

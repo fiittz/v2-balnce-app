@@ -78,8 +78,16 @@ const TOOLS = [
   {
     type: "function",
     function: {
-      name: "run_tax_health_check",
-      description: "Run a comprehensive tax health check. Returns CT1 summary, unclaimed reliefs with estimated savings, anomalies/red flags, upcoming deadlines, and a tax health score out of 100. Use when the user asks for an overview, health check, audit, or wants to know their overall tax position.",
+      name: "run_company_health_check",
+      description: "Run a company (Ltd) tax health check. Reviews the CT1 corporation tax return, capital allowances, RCT credits, start-up relief, expense anomalies, and business deadlines. Use when the user asks about their company tax position, CT1 health check, or business tax overview.",
+      parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "run_director_health_check",
+      description: "Run a personal director tax health check. Reviews Form 11 income tax, pension contributions, salary vs dividend optimisation, small benefit exemption, mileage & subsistence claims, and personal tax credits. Use when the user asks about their personal tax, director's tax position, Form 11 health check, or personal tax planning.",
       parameters: { type: "object", properties: {} },
     },
   },
@@ -254,7 +262,8 @@ You have tools available. Use them proactively — don't just describe data, sho
 - **show_expense_breakdown**: When the user asks about their expenses or deductions
 - **calculate_pension_savings**: When the user asks about pension savings or "what if I contributed X to pension"
 - **show_tax_deadlines**: When the user asks about upcoming deadlines
-- **run_tax_health_check**: When the user asks for an overview, health check, audit, or "how am I doing"
+- **run_company_health_check**: When the user asks about their company tax position, CT1 health check, or business tax overview
+- **run_director_health_check**: When the user asks about their personal tax, director's tax position, Form 11 health check, or personal tax planning
 - **what_if_buy_van**: When the user asks about buying a van or vehicle
 - **what_if_hire_employee**: When the user asks about hiring costs
 - **what_if_salary_vs_dividend**: When the user asks about salary vs dividends vs pension
