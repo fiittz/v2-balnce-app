@@ -142,11 +142,13 @@ export async function detectAnomaly(
  */
 export async function processReceipt(
   imageBase64: string,
-  categories?: Category[]
+  categories?: Category[],
+  mimeType?: string
 ): Promise<ReceiptResult> {
   const { data, error } = await supabase.functions.invoke("process-receipt", {
     body: {
       imageBase64,
+      mimeType: mimeType || "image/jpeg",
       categories,
     },
   });

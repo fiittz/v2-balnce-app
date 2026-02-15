@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, XCircle, Loader2, Search, Trash2, FileImage } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Search, Trash2, FileImage, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -213,8 +213,10 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
             {/* Thumbnail + filename */}
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                {f.imageUrl ? (
+                {f.imageUrl && f.file.type !== "application/pdf" ? (
                   <img src={f.imageUrl} alt="" className="w-full h-full object-cover" />
+                ) : f.file.type === "application/pdf" ? (
+                  <FileText className="w-6 h-6 text-red-500" />
                 ) : (
                   <FileImage className="w-6 h-6 text-muted-foreground" />
                 )}

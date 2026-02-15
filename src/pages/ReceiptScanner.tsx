@@ -57,12 +57,12 @@ const ReceiptScanner = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith("image/")) {
-        alert("Please select an image file");
+      if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+        alert("Please select an image or PDF file");
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
-        alert("File size must be less than 5MB");
+      if (file.size > 10 * 1024 * 1024) {
+        alert("File size must be less than 10MB");
         return;
       }
       uploadFile(file);
@@ -184,7 +184,7 @@ const ReceiptScanner = () => {
               className="w-full h-16 rounded-xl text-lg font-semibold flex items-center justify-center gap-3 border-2"
             >
               <Upload className="w-6 h-6" />
-              Upload Image
+              Upload Image / PDF
             </Button>
 
             <Button
@@ -199,7 +199,7 @@ const ReceiptScanner = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,.pdf,application/pdf"
               onChange={handleFileSelect}
               className="hidden"
             />

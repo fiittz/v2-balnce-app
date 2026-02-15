@@ -48,12 +48,12 @@ serve(async (req) => {
       throw new Error("OPENROUTER_API_KEY is not configured");
     }
 
-    const { imageBase64, imageUrl, categories } = await req.json();
+    const { imageBase64, imageUrl, mimeType, categories } = await req.json();
 
-    // Max ~14MB base64 (approx 10MB raw image)
+    // Max ~14MB base64 (approx 10MB raw file)
     if (imageBase64 && imageBase64.length > 14_000_000) {
       return new Response(
-        JSON.stringify({ error: "Image too large. Maximum size is 10MB." }),
+        JSON.stringify({ error: "File too large. Maximum size is 10MB." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -68,8 +68,9 @@ serve(async (req) => {
     console.log("Processing receipt for user:", user.id);
 
     // Build messages for vision model
+    const detectedMime = mimeType || "image/jpeg";
     const imageContent = imageBase64
-      ? { type: "image_url", image_url: { url: `data:image/jpeg;base64,${imageBase64}` } }
+      ? { type: "image_url", image_url: { url: `data:${detectedMime};base64,${imageBase64}` } }
       : { type: "image_url", image_url: { url: imageUrl } };
 
     const systemPrompt = `You are an expert Irish receipt OCR AI for Balnce bookkeeping. 

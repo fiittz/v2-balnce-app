@@ -10,7 +10,7 @@ const corsHeaders = {
 const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const CHAT_MODEL = Deno.env.get("CHAT_MODEL") || "anthropic/claude-sonnet-4-5-20250929";
+const CHAT_MODEL = Deno.env.get("CHAT_MODEL") || "anthropic/claude-sonnet-4-5";
 
 // Tool definitions sent to the model
 const TOOLS = [
@@ -299,6 +299,55 @@ Bicycle: 8c/km flat
 - Day (10+ hours away): €46.17
 - Day (5–10 hours away): €19.25
 - These are tax-free to the employee/director and deductible for the company
+
+### SURE (Start-Up Relief for Entrepreneurs) — s.507C TCA 1997
+- Refund of PAYE income tax paid in the 6 years before starting a qualifying business
+- Must invest in shares of a new qualifying company (own company counts)
+- Min investment: €250. Max relief: €700,000 (lifetime)
+- Must hold shares for 4 years minimum
+- Must work full-time as director/employee in the company
+- Cannot have been self-employed in the 2 years before
+- The company must be a qualifying new venture (trading company, <€500K assets at time of investment)
+- Relief = income tax paid in prior 6 years, up to the amount invested
+- Example: director invested €100K and paid €80K PAYE over prior 6 years → refund of €80K
+
+### Entrepreneur Relief (CGT) — s.597AA TCA 1997
+- 10% CGT rate (instead of 33%) on disposal of qualifying business assets
+- Lifetime limit: €1,000,000 in chargeable gains
+- Must hold at least 5% of ordinary shares for 3 continuous years in the 5 years before disposal
+- Must be a working director/employee who spends 50%+ of their time in the business
+- Applies to: disposal of shares in a qualifying company, disposal of a business or part of a business
+- The company must be a trading company (not investment/property)
+- Saving: on €1M gain, pay €100K CGT instead of €330K = €230K saved
+
+### Medical Expenses Relief — s.469 TCA 1997
+- 20% tax relief on qualifying unreimbursed medical expenses
+- Qualifying: doctor/consultant fees, prescribed drugs, hospital charges, physio, non-routine dental, nursing home
+- Non-qualifying: routine dental, routine optical
+- No excess/threshold — relief from first euro spent
+- Claim on Form 11 or Med 1
+
+### Remote Working Relief — s.114A TCA 1997
+- 30% of vouched electricity, heating, and broadband costs for WFH days
+- Apportion by days worked at home vs total working days
+- Employer e-working allowance: up to €3.20/day tax-free (no receipts needed)
+- Both can be claimed (employer allowance + personal relief on remaining costs)
+
+### Charitable Donations Relief — s.848A TCA 1997
+- Min donation: €250/year to an approved body
+- Company donations: deductible trading expense (reduces CT)
+- Individual donations: relief at marginal rate
+- Max: 10% of total income
+- The charity must be on Revenue's list of approved bodies
+
+### Home Carer Tax Credit
+- €1,800 credit if spouse/partner cares for a dependant (child, elderly, incapacitated person) at home
+- Carer's income must be ≤€7,200 (reduced credit if €7,200–€10,400)
+
+### Flat-Rate Expenses
+- Fixed deduction by trade/profession — no receipts required
+- Carpenter/joiner: check Revenue's published list
+- Claimed automatically against employment income
 
 ## The User's Financial Data
 ${financialContext}${pageContext}`;

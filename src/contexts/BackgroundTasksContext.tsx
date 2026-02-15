@@ -139,15 +139,20 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
   };
 
   const addReceiptFiles = useCallback((newFiles: File[]) => {
+    const ALLOWED_EXTENSIONS = /\.(jpe?g|png|gif|webp|heic|heif|bmp|tiff?|pdf)$/i;
     const validFiles = newFiles.filter((f) => {
-      if (!f.type.startsWith("image/")) return false;
-      if (f.size > 5 * 1024 * 1024) return false;
+      // Check by MIME type or file extension (folder uploads can have empty MIME)
+      const hasValidType = f.type.startsWith("image/") || f.type === "application/pdf";
+      const hasValidExt = ALLOWED_EXTENSIONS.test(f.name);
+      if (!hasValidType && !hasValidExt) return false;
+      if (f.size > 10 * 1024 * 1024) return false;
+      if (f.name.startsWith(".")) return false; // skip hidden files
       return true;
     });
 
     if (validFiles.length < newFiles.length) {
       toast.warning(
-        `${newFiles.length - validFiles.length} file(s) skipped (not an image or >5MB)`
+        `${newFiles.length - validFiles.length} file(s) skipped (unsupported format or >10MB)`
       );
     }
 
@@ -278,7 +283,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
 
         const dataUrl = await fileToBase64(entry.file);
         const base64Data = dataUrl.split(",")[1];
-        const result = await processReceipt(base64Data, categories || undefined);
+        const result = await processReceipt(base64Data, categories || undefined, entry.file.type || "image/jpeg");
 
         if (!result.success || !result.data) {
           throw new Error("OCR returned no data");

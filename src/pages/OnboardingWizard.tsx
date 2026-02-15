@@ -268,15 +268,21 @@ const BUSINESS_ACTIVITIES = {
   "Professional Services": [
     { value: "accounting_bookkeeping", label: "Accounting / bookkeeping" },
     { value: "legal_services", label: "Legal services" },
-    { value: "consultancy", label: "Consultancy" },
+    { value: "consultancy", label: "Consultancy / consulting" },
     { value: "hr_recruitment", label: "HR / recruitment" },
+    { value: "financial_services", label: "Financial services" },
+    { value: "insurance_broker", label: "Insurance / broker" },
+    { value: "architecture", label: "Architecture" },
+    { value: "engineering_consultancy", label: "Engineering consultancy" },
   ],
   "Digital & Creative": [
     { value: "software_development", label: "Software development" },
+    { value: "it_services", label: "IT services / managed services" },
     { value: "web_design", label: "Web design" },
     { value: "graphic_design", label: "Graphic design" },
     { value: "digital_marketing", label: "Digital marketing" },
     { value: "photography_videography", label: "Photography / videography" },
+    { value: "content_creation", label: "Content creation / media" },
   ],
   "Food & Hospitality": [
     { value: "cafe_restaurant", label: "Cafe / restaurant" },
@@ -294,6 +300,8 @@ const BUSINESS_ACTIVITIES = {
     { value: "waste_removal", label: "Waste removal" },
     { value: "pest_control", label: "Pest control" },
     { value: "care_services", label: "Care services" },
+    { value: "beauty_wellness", label: "Beauty / wellness / salon" },
+    { value: "fitness_sports", label: "Fitness / sports / gym" },
   ],
   "Education & Training": [
     { value: "training_provider", label: "Training provider" },
@@ -392,8 +400,8 @@ export default function OnboardingWizard() {
           return hasBasicInfo;
         });
       case "business_activity":
-        // All businesses must have a primary activity
-        return state.businesses.every(b => b.primary_activity);
+        // All businesses must have a primary activity (and description if "other")
+        return state.businesses.every(b => b.primary_activity && (b.primary_activity !== "other" || (b as any).primary_activity_other));
       case "vat_setup":
         // All businesses must have valid VAT setup
         return state.businesses.every(b => !b.vat_registered || (b.vat_number && b.vat_basis));
@@ -558,7 +566,7 @@ export default function OnboardingWizard() {
           .from("onboarding_settings")
           .update({
             business_name: primaryBusiness.name,
-            business_type: primaryBusiness.primary_activity || null,
+            business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
             vat_registered: primaryBusiness.vat_registered,
             vat_number: vatNumber,
             onboarding_completed: true,
@@ -572,7 +580,7 @@ export default function OnboardingWizard() {
           .insert({
             user_id: user.id,
             business_name: primaryBusiness.name,
-            business_type: primaryBusiness.primary_activity || null,
+            business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
             vat_registered: primaryBusiness.vat_registered,
             vat_number: vatNumber,
             onboarding_completed: true,
@@ -586,7 +594,7 @@ export default function OnboardingWizard() {
         .from("profiles")
         .update({
           business_name: primaryBusiness.name,
-          business_type: primaryBusiness.primary_activity || null,
+          business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
         })
         .eq("id", user.id);
 
@@ -1082,9 +1090,23 @@ export default function OnboardingWizard() {
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="w-5 h-5 text-primary" />
                     <span className="font-medium">
-                      {getAllActivities().find(a => a.value === currentBusiness.primary_activity)?.label}
+                      {currentBusiness.primary_activity === "other"
+                        ? "Other"
+                        : getAllActivities().find(a => a.value === currentBusiness.primary_activity)?.label}
                     </span>
                   </div>
+                </div>
+              )}
+
+              {currentBusiness.primary_activity === "other" && (
+                <div>
+                  <Label className="text-base font-medium">Describe your business activity *</Label>
+                  <Input
+                    className="mt-2 h-14 text-base"
+                    placeholder="e.g. Consulting, IT services, coaching..."
+                    value={currentBusiness.primary_activity_other || ""}
+                    onChange={(e) => updateBusiness("primary_activity_other" as any, e.target.value)}
+                  />
                 </div>
               )}
 

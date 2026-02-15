@@ -1,14 +1,26 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Upload, Loader2, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { ArrowLeft, Upload, Loader2, CheckCircle2, XCircle, Trash2, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBulkReceiptUpload } from "@/hooks/useBulkReceiptUpload";
 import { BulkReceiptGrid } from "@/components/receipt/BulkReceiptGrid";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import AppLayout from "@/components/layout/AppLayout";
 
 const BulkReceiptUpload = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
+
+  // Callback ref to set webkitdirectory on mount
+  const setFolderRef = useCallback((node: HTMLInputElement | null) => {
+    if (node) {
+      node.setAttribute("webkitdirectory", "true");
+      node.setAttribute("directory", "true");
+      (folderInputRef as React.MutableRefObject<HTMLInputElement | null>).current = node;
+    }
+  }, []);
 
   const {
     files,
@@ -47,6 +59,40 @@ const BulkReceiptUpload = () => {
     }
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAllReceipts = async () => {
+    if (!confirm("Delete ALL receipts from the database? This cannot be undone.")) return;
+    setIsDeleting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not logged in");
+
+      // Unlink receipts from transactions
+      await supabase
+        .from("transactions")
+        .update({ receipt_url: null })
+        .eq("user_id", user.id)
+        .not("receipt_url", "is", null);
+
+      // Delete all receipts from DB
+      const { error } = await supabase
+        .from("receipts")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      clearAll();
+      toast.success("All receipts deleted");
+    } catch (err) {
+      toast.error("Failed to delete receipts");
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const isProcessing = phase === "ocr" || phase === "matching";
   const queuedCount = files.filter((f) => f.status === "queued").length;
 
@@ -59,7 +105,15 @@ const BulkReceiptUpload = () => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <h1 className="font-semibold text-xl">Bulk Receipt Upload</h1>
-          <div className="w-10" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:text-destructive"
+            onClick={handleDeleteAllReceipts}
+            disabled={isDeleting}
+          >
+            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+          </Button>
         </div>
       </header>
 
@@ -74,19 +128,38 @@ const BulkReceiptUpload = () => {
         >
           <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
           <p className="font-medium mb-1">
-            {isProcessing ? "Processing in progress..." : "Drop receipt images here"}
+            {isProcessing ? "Processing in progress..." : "Drop files here or click to browse"}
           </p>
           <p className="text-sm text-muted-foreground">
             {isProcessing
               ? `Processing ${currentIndex} of ${totalFiles - queuedCount + currentIndex}...`
-              : "Or click to browse. JPG, PNG, WebP, HEIC up to 5MB each."}
+              : "JPG, PNG, WebP, HEIC, PDF up to 10MB each."}
           </p>
         </div>
+
+        {/* Upload Folder button - separate from drop zone */}
+        {!isProcessing && (
+          <Button
+            variant="outline"
+            className="w-full h-14 rounded-xl text-base font-semibold flex items-center justify-center gap-3 border-2"
+            onClick={() => folderInputRef.current?.click()}
+          >
+            <FolderOpen className="w-6 h-6" />
+            Upload Entire Folder
+          </Button>
+        )}
 
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,.pdf,application/pdf"
+          multiple
+          onChange={handleFileInput}
+          className="hidden"
+        />
+        <input
+          ref={setFolderRef}
+          type="file"
           multiple
           onChange={handleFileInput}
           className="hidden"
