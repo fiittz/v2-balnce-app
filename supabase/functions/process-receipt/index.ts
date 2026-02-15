@@ -2,8 +2,10 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
 
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "*";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -50,10 +52,10 @@ serve(async (req) => {
 
     const { imageBase64, imageUrl, mimeType, categories } = await req.json();
 
-    // Max ~14MB base64 (approx 10MB raw file)
-    if (imageBase64 && imageBase64.length > 14_000_000) {
+    // Max ~5MB raw file (base64 is ~1.37x the raw size, so 7MB base64 ≈ 5MB raw)
+    if (imageBase64 && imageBase64.length > 7_000_000) {
       return new Response(
-        JSON.stringify({ error: "File too large. Maximum size is 10MB." }),
+        JSON.stringify({ error: "Image too large. Maximum size is 5MB." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

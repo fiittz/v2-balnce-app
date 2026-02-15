@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "*";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -58,10 +60,10 @@ serve(async (req) => {
 
     const { action, transactionIds, transactionId } = await req.json();
 
-    // Input validation: max batch size of 100
-    if (transactionIds && Array.isArray(transactionIds) && transactionIds.length > 100) {
+    // Input validation: max batch size of 10
+    if (transactionIds && Array.isArray(transactionIds) && transactionIds.length > 10) {
       return new Response(
-        JSON.stringify({ error: "Maximum batch size is 100 transactions" }),
+        JSON.stringify({ error: "Maximum batch size is 10 transactions" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -205,7 +207,7 @@ async function matchAllUnmatched(
     .is("invoice_id", null)
     .is("expense_id", null)
     .order("transaction_date", { ascending: false })
-    .limit(50); // Process in batches
+    .limit(10); // Process in small batches to limit AI cost per request
 
   if (error) {
     throw new Error("Failed to fetch unmatched transactions");

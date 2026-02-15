@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "*";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -107,7 +109,7 @@ serve(async (req) => {
           vendor_type: "AI Not Configured",
           category_suggestion: "General Expenses",
           vat_rate_suggestion: "standard_23",
-          is_vat_recoverable: true,
+          is_vat_recoverable: false,
           explanation: "AI service not configured - vendor lookup skipped.",
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -315,7 +317,7 @@ Based on the web research and business profile, is this a legitimate business ex
               vendor_type: "AI Rate Limited",
               category_suggestion: "General Expenses",
               vat_rate_suggestion: "standard_23",
-              is_vat_recoverable: true,
+              is_vat_recoverable: false,
               explanation: "AI rate limit exceeded - vendor lookup skipped. Please wait a minute and try again.",
               web_research: webResearchResult || undefined,
             }),
@@ -333,7 +335,7 @@ Based on the web research and business profile, is this a legitimate business ex
               vendor_type: "AI Unavailable",
               category_suggestion: "General Expenses",
               vat_rate_suggestion: "standard_23",
-              is_vat_recoverable: true,
+              is_vat_recoverable: false,
               explanation: "AI credits exhausted - vendor lookup skipped. Please add AI credits to continue.",
               web_research: webResearchResult || undefined,
             }),
@@ -369,7 +371,7 @@ Based on the web research and business profile, is this a legitimate business ex
         vendor_type: "Unknown",
         category_suggestion: "General Expenses",
         vat_rate_suggestion: "standard_23",
-        is_vat_recoverable: true,
+        is_vat_recoverable: false,
         explanation: "Could not analyze vendor - please review manually",
         web_research: webResearchResult || undefined,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -388,7 +390,7 @@ Based on the web research and business profile, is this a legitimate business ex
           vendor_type: "Unknown",
           category_suggestion: "General Expenses",
           vat_rate_suggestion: "standard_23",
-          is_vat_recoverable: true,
+          is_vat_recoverable: false,
           explanation: "Could not analyze vendor",
           web_research: webResearchResult || undefined,
         }),
@@ -429,7 +431,7 @@ Based on the web research and business profile, is this a legitimate business ex
         vendor_type: "Lookup Failed",
         category_suggestion: "General Expenses",
         vat_rate_suggestion: "standard_23",
-        is_vat_recoverable: true,
+        is_vat_recoverable: false,
         explanation: error instanceof Error ? error.message : "Unknown error",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

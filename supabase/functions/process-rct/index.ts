@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "*";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -67,6 +69,22 @@ serve(async (req) => {
 
     if (action === "record_deduction") {
       const { expenseId, subcontractorId, contractId, grossAmount, rctRate, paymentDate } = params;
+
+      // Validate RCT rate is one of the allowed values
+      if (![0, 20, 35].includes(rctRate)) {
+        return new Response(
+          JSON.stringify({ error: "Invalid RCT rate. Must be 0, 20, or 35." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Validate gross amount is a positive number
+      if (typeof grossAmount !== "number" || !isFinite(grossAmount) || grossAmount <= 0) {
+        return new Response(
+          JSON.stringify({ error: "grossAmount must be a positive number." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       const rctDeducted = Number((grossAmount * (rctRate / 100)).toFixed(2));
       const netPayable = Number((grossAmount - rctDeducted).toFixed(2));

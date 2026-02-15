@@ -1,8 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
 
+const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "*";
+
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
@@ -444,7 +446,7 @@ function generateInvoiceHTML(invoice: any, profile: any, onboarding: any, isPrev
     <div class="invoice-title">
       <h2>${invoice.invoiceType === "quote" ? "QUOTE" : "INVOICE"}</h2>
       <p class="invoice-number">#${escapeHtml(invoiceNumber)}</p>
-      ${!isPreview ? `<span class="status-badge status-${status}">${status}</span>` : ""}
+      ${!isPreview ? `<span class="status-badge status-${escapeHtml(status)}">${escapeHtml(status)}</span>` : ""}
     </div>
   </div>
 
