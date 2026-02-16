@@ -248,3 +248,33 @@ describe("detectTrips", () => {
     expect(trips[0].transactions.find((t) => t.id === "2")?.expenseType).toBe("subsistence");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// detectTransactionLocation — port/ferry/airport pattern branch
+// ══════════════════════════════════════════════════════════════
+describe("detectTransactionLocation — port match fallback", () => {
+  it("returns null when port-of location is not in IRISH_LOCATIONS", () => {
+    expect(detectTransactionLocation("PORT OF TIMBUKTU FEE")).toBeNull();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// classifyTripExpense — excluded keywords
+// ══════════════════════════════════════════════════════════════
+describe("classifyTripExpense — excluded keywords", () => {
+  it("classifies bank charge as other (excluded)", () => {
+    expect(classifyTripExpense("BANK CHARGE Q1")).toBe("other");
+  });
+
+  it("classifies revenue payment as other (excluded)", () => {
+    expect(classifyTripExpense("REV COMM PAYMENT")).toBe("other");
+  });
+
+  it("classifies ferry as transport", () => {
+    expect(classifyTripExpense("STENA LINE FERRY")).toBe("transport");
+  });
+
+  it("classifies bus as transport", () => {
+    expect(classifyTripExpense("BUS EIREANN TICKET")).toBe("transport");
+  });
+});

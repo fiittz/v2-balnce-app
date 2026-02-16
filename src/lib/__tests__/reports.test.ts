@@ -358,3 +358,331 @@ describe("assembleForm11ReportData", () => {
     }).toMatchSnapshot();
   });
 });
+
+// ── Balance Sheet — conditional rows ─────────────────────────────
+
+describe("assembleBalanceSheetData — conditional rows", () => {
+  const baseInput: BalanceSheetInput = {
+    landBuildings: 0,
+    plantMachinery: 15000,
+    motorVehicles: 25000,
+    fixturesFittings: 5000,
+    stock: 3000,
+    debtors: 8000,
+    cash: 500,
+    bankBalance: 12000,
+    rctPrepayment: 0,
+    creditors: 6000,
+    taxation: 3000,
+    bankOverdraft: 0,
+    directorsLoanTravel: 0,
+    bankLoans: 10000,
+    directorsLoans: 5000,
+    shareCapital: 100,
+    retainedProfits: 44400,
+  };
+
+  it("includes RCT prepayment row when rctPrepayment > 0", () => {
+    const input = { ...baseInput, rctPrepayment: 1500 };
+    const result = assembleBalanceSheetData(input, META);
+    const currentAssetsSection = result.sections.find(s => s.title === "Current Assets")!;
+    const rctRow = currentAssetsSection.rows.find(r => r.label === "RCT Prepayment");
+    expect(rctRow).toBeDefined();
+    // rctPrepayment is included in the current assets total
+    expect(result.currentAssets).toBe(3000 + 8000 + 500 + 12000 + 1500);
+  });
+
+  it("omits RCT prepayment row when rctPrepayment is 0", () => {
+    const input = { ...baseInput, rctPrepayment: 0 };
+    const result = assembleBalanceSheetData(input, META);
+    const currentAssetsSection = result.sections.find(s => s.title === "Current Assets")!;
+    const rctRow = currentAssetsSection.rows.find(r => r.label === "RCT Prepayment");
+    expect(rctRow).toBeUndefined();
+  });
+
+  it("includes Director's Loan row when directorsLoanTravel > 0", () => {
+    const input = { ...baseInput, directorsLoanTravel: 800 };
+    const result = assembleBalanceSheetData(input, META);
+    const clSection = result.sections.find(s => s.title === "Current Liabilities")!;
+    const dlRow = clSection.rows.find(r => r.label === "Director's Loan");
+    expect(dlRow).toBeDefined();
+    // directorsLoanTravel is included in current liabilities total
+    expect(result.currentLiabilities).toBe(6000 + 3000 + 0 + 800);
+  });
+
+  it("omits Director's Loan row when directorsLoanTravel is 0", () => {
+    const input = { ...baseInput, directorsLoanTravel: 0 };
+    const result = assembleBalanceSheetData(input, META);
+    const clSection = result.sections.find(s => s.title === "Current Liabilities")!;
+    const dlRow = clSection.rows.find(r => r.label === "Director's Loan");
+    expect(dlRow).toBeUndefined();
+  });
+});
+
+// ── Abridged Accounts — conditional rows ─────────────────────────
+
+describe("assembleAbridgedAccountsData — conditional rows", () => {
+  const baseInput: AbridgedAccountsInput = {
+    companyName: "Test Carpentry Ltd",
+    croNumber: "123456",
+    registeredAddress: "123 Main St, Dublin 15",
+    accountingYearEnd: "31 December 2024",
+    directorNames: ["John Smith"],
+    companySecretaryName: "Jane Smith",
+    fixedAssetsTangible: 30000,
+    stock: 2000,
+    wip: 0,
+    debtors: 5000,
+    prepayments: 0,
+    cashAtBank: 10000,
+    creditors: 4000,
+    accruals: 0,
+    taxation: 0,
+    bankLoans: 0,
+    directorsLoans: 0,
+    shareCapital: 100,
+    retainedProfits: 30900,
+  };
+
+  it("includes WIP row when wip > 0", () => {
+    const input = { ...baseInput, wip: 1500 };
+    const result = assembleAbridgedAccountsData(input, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const wipRow = bs.rows.find(r => r.label === "  Work-in-progress");
+    expect(wipRow).toBeDefined();
+  });
+
+  it("omits WIP row when wip is 0", () => {
+    const result = assembleAbridgedAccountsData(baseInput, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const wipRow = bs.rows.find(r => r.label === "  Work-in-progress");
+    expect(wipRow).toBeUndefined();
+  });
+
+  it("includes Prepayments row when prepayments > 0", () => {
+    const input = { ...baseInput, prepayments: 500 };
+    const result = assembleAbridgedAccountsData(input, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find(r => r.label === "  Prepayments and accrued income");
+    expect(row).toBeDefined();
+  });
+
+  it("omits Prepayments row when prepayments is 0", () => {
+    const result = assembleAbridgedAccountsData(baseInput, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find(r => r.label === "  Prepayments and accrued income");
+    expect(row).toBeUndefined();
+  });
+
+  it("includes Accruals row when accruals > 0", () => {
+    const input = { ...baseInput, accruals: 1000 };
+    const result = assembleAbridgedAccountsData(input, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find(r => r.label === "  Accruals and deferred income");
+    expect(row).toBeDefined();
+  });
+
+  it("omits Accruals row when accruals is 0", () => {
+    const result = assembleAbridgedAccountsData(baseInput, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find(r => r.label === "  Accruals and deferred income");
+    expect(row).toBeUndefined();
+  });
+
+  it("includes Taxation row when taxation > 0", () => {
+    const input = { ...baseInput, taxation: 2000 };
+    const result = assembleAbridgedAccountsData(input, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find(r => r.label === "  Taxation");
+    expect(row).toBeDefined();
+  });
+
+  it("omits Taxation row when taxation is 0", () => {
+    const result = assembleAbridgedAccountsData(baseInput, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find(r => r.label === "  Taxation");
+    expect(row).toBeUndefined();
+  });
+
+  it("includes long-term liabilities section when longTermLiabilities > 0", () => {
+    const input = { ...baseInput, bankLoans: 8000, directorsLoans: 3000 };
+    const result = assembleAbridgedAccountsData(input, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const header = bs.rows.find(r => r.label === "CREDITORS: amounts falling due after more than one year");
+    expect(header).toBeDefined();
+    const bankLoansRow = bs.rows.find(r => r.label === "  Bank loans");
+    expect(bankLoansRow).toBeDefined();
+  });
+
+  it("omits long-term liabilities section when all zero", () => {
+    const result = assembleAbridgedAccountsData(baseInput, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const header = bs.rows.find(r => r.label === "CREDITORS: amounts falling due after more than one year");
+    expect(header).toBeUndefined();
+  });
+
+  it("shows directorsLoanDirection 'from_company' label", () => {
+    const input = { ...baseInput, directorsLoans: 5000, directorsLoanDirection: "from_company" as const };
+    const result = assembleAbridgedAccountsData(input, META);
+    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
+    const dlRow = bs.rows.find(r => r.label.includes("Directors' loan") && r.label.includes("due from company"));
+    expect(dlRow).toBeDefined();
+  });
+
+  it("shows directorsLoanDirection 'to_company' note text", () => {
+    const input = { ...baseInput, directorsLoans: 5000, directorsLoanDirection: "to_company" as const };
+    const result = assembleAbridgedAccountsData(input, META);
+    const notes = result.sections.find(s => s.title === "Notes to the Financial Statements")!;
+    const dlNote = notes.rows.find(r => r.label.includes("Directors' Loans"));
+    expect(dlNote).toBeDefined();
+    expect(dlNote!.value).toContain("owed to the company by the directors");
+  });
+
+  it("shows generic note text when no directorsLoanDirection", () => {
+    const input = { ...baseInput, directorsLoans: 5000 };
+    const result = assembleAbridgedAccountsData(input, META);
+    const notes = result.sections.find(s => s.title === "Notes to the Financial Statements")!;
+    const dlNote = notes.rows.find(r => r.label.includes("Directors' Loans"));
+    expect(dlNote).toBeDefined();
+    // Ends with just a period, no direction specified
+    expect(dlNote!.value).not.toContain("owed by the company");
+    expect(dlNote!.value).not.toContain("owed to the company");
+  });
+
+  it("omits directors loan note when directorsLoans is 0", () => {
+    const result = assembleAbridgedAccountsData(baseInput, META);
+    const notes = result.sections.find(s => s.title === "Notes to the Financial Statements")!;
+    const dlNote = notes.rows.find(r => r.label.includes("Directors' Loans"));
+    expect(dlNote).toBeUndefined();
+  });
+});
+
+// ── Form 11 Report — conditional sections ────────────────────────
+
+describe("assembleForm11ReportData — conditional sections", () => {
+  const form11Input: Form11Input = {
+    directorName: "John Smith",
+    ppsNumber: "1234567T",
+    dateOfBirth: "1985-06-15",
+    maritalStatus: "single",
+    assessmentBasis: "single",
+    salary: 60000,
+    dividends: 0,
+    bik: 0,
+    businessIncome: 20000,
+    businessExpenses: 5000,
+    capitalAllowances: 2000,
+    rentalIncome: 0,
+    rentalExpenses: 0,
+    foreignIncome: 0,
+    otherIncome: 0,
+    capitalGains: 5000,
+    capitalLosses: 0,
+    pensionContributions: 5000,
+    medicalExpenses: 500,
+    rentPaid: 6000,
+    charitableDonations: 0,
+    remoteWorkingCosts: 0,
+    spouseIncome: 0,
+    claimHomeCarer: false,
+    claimSingleParent: false,
+    hasPAYEIncome: true,
+    mileageAllowance: 0,
+    preliminaryTaxPaid: 10000,
+  };
+
+  it("shows USC exempt message when income below \u20AC13,000", () => {
+    const lowIncomeInput: Form11Input = {
+      ...form11Input,
+      salary: 10000,
+      businessIncome: 0,
+      businessExpenses: 0,
+      capitalAllowances: 0,
+      capitalGains: 0,
+      pensionContributions: 0,
+      medicalExpenses: 0,
+      rentPaid: 0,
+    };
+    const calcResult = calculateForm11(lowIncomeInput);
+    expect(calcResult.uscExempt).toBe(true);
+    const report = assembleForm11ReportData(lowIncomeInput, calcResult, META);
+    const uscSection = report.sections.find(s => s.title === "Universal Social Charge");
+    expect(uscSection).toBeDefined();
+    expect(uscSection!.rows[0].value).toContain("Exempt");
+    expect(uscSection!.rows[0].value).toContain("13,000");
+  });
+
+  it("includes split-year assessment section when applicable", () => {
+    const splitInput: Form11Input = {
+      ...form11Input,
+      changeEffectiveDate: "2024-07-01",
+      preChangeAssessmentBasis: "single",
+      assessmentBasis: "joint",
+      maritalStatus: "married",
+      spouseIncome: 30000,
+    };
+    const calcResult = calculateForm11(splitInput);
+    expect(calcResult.splitYearApplied).toBe(true);
+    const report = assembleForm11ReportData(splitInput, calcResult, META);
+    const splitSection = report.sections.find(s => s.title === "Split-Year Assessment");
+    expect(splitSection).toBeDefined();
+    expect(splitSection!.rows[0].value).toContain("changed on");
+  });
+
+  it("includes warnings section when warnings present", () => {
+    // Charitable donation below minimum triggers a warning
+    const warnInput: Form11Input = {
+      ...form11Input,
+      charitableDonations: 100, // below €250 minimum
+    };
+    const calcResult = calculateForm11(warnInput);
+    expect(calcResult.warnings.length).toBeGreaterThan(0);
+    const report = assembleForm11ReportData(warnInput, calcResult, META);
+    const warningsSection = report.sections.find(s => s.title === "Warnings");
+    expect(warningsSection).toBeDefined();
+    expect(warningsSection!.rows.length).toBeGreaterThan(0);
+  });
+
+  it("omits warnings section when no warnings", () => {
+    // Default form11Input has charitableDonations: 0, no pension cap hit
+    const noWarnInput: Form11Input = {
+      ...form11Input,
+      charitableDonations: 0,
+      pensionContributions: 0,
+    };
+    const calcResult = calculateForm11(noWarnInput);
+    expect(calcResult.warnings.length).toBe(0);
+    const report = assembleForm11ReportData(noWarnInput, calcResult, META);
+    const warningsSection = report.sections.find(s => s.title === "Warnings");
+    expect(warningsSection).toBeUndefined();
+  });
+
+  it("includes income breakdown table when incomeByCategory provided", () => {
+    const calcResult = calculateForm11(form11Input);
+    const report = assembleForm11ReportData(form11Input, calcResult, META, {
+      incomeByCategory: [
+        { category: "Carpentry", amount: 15000 },
+        { category: "Consultancy", amount: 5000 },
+      ],
+    });
+    const incTable = report.tables.find(t => t.title === "Business Income Breakdown");
+    expect(incTable).toBeDefined();
+    expect(incTable!.rows.length).toBe(3); // 2 categories + total
+  });
+
+  it("omits Schedule E section when no employment income", () => {
+    const noEmploymentInput: Form11Input = {
+      ...form11Input,
+      salary: 0,
+      dividends: 0,
+      bik: 0,
+      mileageAllowance: 0,
+    };
+    const calcResult = calculateForm11(noEmploymentInput);
+    const report = assembleForm11ReportData(noEmploymentInput, calcResult, META);
+    const scheduleE = report.sections.find(s => s.title === "Schedule E — Employment Income");
+    // scheduleE is 0 and scheduleERows has only 1 row (the Net Schedule E line),
+    // so the section is omitted because length <= 1
+    expect(scheduleE).toBeUndefined();
+  });
+});

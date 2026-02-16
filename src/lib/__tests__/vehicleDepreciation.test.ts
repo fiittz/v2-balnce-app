@@ -487,3 +487,13 @@ describe("full 8-year lifecycle at 100% business use", () => {
     expect(r.fullyDepreciated).toBe(true);
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// Edge case — empty/falsy dateAcquired
+// ══════════════════════════════════════════════════════════════
+describe("edge case — empty/falsy dateAcquired", () => {
+  it("defaults to taxYear when dateAcquired is empty string", () => {
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "" }), 2025);
+    expect(result.yearsOwned).toBe(1); // acquiredYear defaults to taxYear, so 2025-2025+1=1
+  });
+});

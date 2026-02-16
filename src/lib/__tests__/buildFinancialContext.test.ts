@@ -1419,3 +1419,124 @@ describe("tax planning — home office", () => {
     expect(result).toContain("HOME OFFICE: Claiming 30%");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// Trial balance section (lines 405-428)
+// ══════════════════════════════════════════════════════════════
+describe("trial balance section", () => {
+  it("does not appear when trialBalance is undefined", () => {
+    const result = buildFinancialContext(makeInput());
+    expect(result).not.toContain("=== TRIAL BALANCE STATUS ===");
+  });
+
+  it("shows trial balance when accounts are present", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        trialBalance: {
+          isLoading: false,
+          accounts: [
+            { accountName: "Sales", accountType: "Income", debit: 0, credit: 50000 },
+            { accountName: "Materials", accountType: "Expense", debit: 20000, credit: 0 },
+          ],
+          totalDebits: 20000,
+          totalCredits: 50000,
+          isBalanced: false,
+          imbalanceAmount: -30000,
+          orphanedTransactions: 3,
+          uncategorizedAmount: 1500,
+          issues: [
+            { severity: "error", title: "Imbalanced", description: "Debits do not equal credits" },
+          ],
+        },
+      })
+    );
+    expect(result).toContain("=== TRIAL BALANCE STATUS ===");
+    expect(result).toContain(`Total Debits: ${eur(20000)}`);
+    expect(result).toContain(`Total Credits: ${eur(50000)}`);
+    expect(result).toContain("NO");
+    expect(result).toContain("Uncategorized Transactions: 3");
+    expect(result).toContain("Issues: 1");
+    expect(result).toContain("[error] Imbalanced");
+    expect(result).toContain("Top accounts by balance");
+  });
+
+  it("shows balanced status", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        trialBalance: {
+          isLoading: false,
+          accounts: [
+            { accountName: "Sales", accountType: "Income", debit: 0, credit: 10000 },
+          ],
+          totalDebits: 10000,
+          totalCredits: 10000,
+          isBalanced: true,
+          imbalanceAmount: 0,
+          orphanedTransactions: 0,
+          uncategorizedAmount: 0,
+          issues: [],
+        },
+      })
+    );
+    expect(result).toContain("Balanced: Yes");
+  });
+
+  it("does not appear when trialBalance is loading", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        trialBalance: {
+          isLoading: true,
+          accounts: [],
+          totalDebits: 0,
+          totalCredits: 0,
+          isBalanced: true,
+          imbalanceAmount: 0,
+          orphanedTransactions: 0,
+          uncategorizedAmount: 0,
+          issues: [],
+        },
+      })
+    );
+    expect(result).not.toContain("=== TRIAL BALANCE STATUS ===");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// EU & International trade section (lines 433-446)
+// ══════════════════════════════════════════════════════════════
+describe("EU & international trade section", () => {
+  it("shows EU trade section when eu_trade_enabled", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        onboardingSettings: {
+          eu_trade_enabled: true,
+          sells_goods_to_eu: true,
+          buys_goods_from_eu: true,
+          sells_services_to_eu: true,
+          buys_services_from_eu: true,
+          sells_digital_services_b2c: true,
+          sells_to_non_eu: true,
+          buys_from_non_eu: true,
+          uses_postponed_accounting: true,
+          has_section_56_authorisation: true,
+        },
+      })
+    );
+    expect(result).toContain("=== EU & INTERNATIONAL TRADE ===");
+    expect(result).toContain("EU/International Trade: Enabled");
+    expect(result).toContain("Sells goods to EU");
+    expect(result).toContain("Buys goods from EU");
+    expect(result).toContain("Sells services to EU");
+    expect(result).toContain("Buys services from EU");
+    expect(result).toContain("Sells digital services B2C");
+    expect(result).toContain("Exports to non-EU");
+    expect(result).toContain("Imports from non-EU");
+    expect(result).toContain("Postponed Accounting (PA1): Active");
+    expect(result).toContain("Section 56 Authorisation: Active");
+  });
+
+  it("does not appear when eu_trade_enabled is falsy", () => {
+    const result = buildFinancialContext(makeInput());
+    expect(result).not.toContain("=== EU & INTERNATIONAL TRADE ===");
+  });
+});

@@ -836,3 +836,229 @@ describe("executeToolCall — search_transactions respects limit", () => {
     expect(dataRows.length).toBe(5);
   });
 });
+
+// ================================================================
+// show_trial_balance (lines 1061-1114)
+// ================================================================
+describe("executeToolCall — show_trial_balance", () => {
+  it("returns loading message when trial balance is loading", () => {
+    const ctx = makeCtx({ trialBalance: { isLoading: true } } as Partial<ToolContext>);
+    const { result } = executeToolCall("show_trial_balance", {}, ctx);
+    expect(result).toContain("still loading");
+  });
+
+  it("returns no-data message when no accounts", () => {
+    const ctx = makeCtx({
+      trialBalance: { isLoading: false, accounts: [] },
+    } as Partial<ToolContext>);
+    const { result } = executeToolCall("show_trial_balance", {}, ctx);
+    expect(result).toContain("No transactions");
+  });
+
+  it("returns trial balance table when accounts present", () => {
+    const ctx = makeCtx({
+      trialBalance: {
+        isLoading: false,
+        accounts: [
+          { accountName: "Sales", accountType: "Income", debit: 0, credit: 50000 },
+          { accountName: "Materials", accountType: "Expense", debit: 30000, credit: 0 },
+        ],
+        totalDebits: 30000,
+        totalCredits: 50000,
+        isBalanced: false,
+        imbalanceAmount: -20000,
+        orphanedTransactions: 2,
+        uncategorizedAmount: 1200,
+        issues: [
+          { severity: "error", title: "Imbalanced", description: "Off by 20k" },
+        ],
+      },
+    } as Partial<ToolContext>);
+    const { result } = executeToolCall("show_trial_balance", {}, ctx);
+    expect(result).toContain("Trial Balance");
+    expect(result).toContain("| Account | Type | Debit | Credit | Balance |");
+    expect(result).toContain("Sales");
+    expect(result).toContain("Materials");
+    expect(result).toContain("IMBALANCED");
+    expect(result).toContain("uncategorized");
+    expect(result).toContain("Issues Found");
+    expect(result).toContain("Imbalanced");
+  });
+
+  it("shows balanced status and no issues when books are clean", () => {
+    const ctx = makeCtx({
+      trialBalance: {
+        isLoading: false,
+        accounts: [
+          { accountName: "Sales", accountType: "Income", debit: 0, credit: 10000 },
+        ],
+        totalDebits: 10000,
+        totalCredits: 10000,
+        isBalanced: true,
+        imbalanceAmount: 0,
+        orphanedTransactions: 0,
+        uncategorizedAmount: 0,
+        issues: [],
+      },
+    } as Partial<ToolContext>);
+    const { result } = executeToolCall("show_trial_balance", {}, ctx);
+    expect(result).toContain("Balanced");
+    expect(result).toContain("books look clean");
+  });
+
+  it("returns loading message when trialBalance is undefined", () => {
+    const ctx = makeCtx({ trialBalance: undefined } as Partial<ToolContext>);
+    const { result } = executeToolCall("show_trial_balance", {}, ctx);
+    expect(result).toContain("still loading");
+  });
+});
+
+// ================================================================
+// explain_eu_vat (lines 1117-1237)
+// ================================================================
+describe("executeToolCall — explain_eu_vat", () => {
+  it("returns general overview for default topic", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall("explain_eu_vat", {}, ctx);
+    expect(result).toContain("EU & International VAT");
+    expect(result).toContain("Intra-Community Supplies");
+    expect(result).toContain("Reverse Charge");
+  });
+
+  it("returns ICS content for intra_community_supplies topic", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "intra_community_supplies" },
+      ctx
+    );
+    expect(result).toContain("Intra-Community Supplies");
+    expect(result).toContain("E1");
+    expect(result).toContain("VIES");
+  });
+
+  it("returns reverse charge content for reverse_charge_services topic", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "reverse_charge_services" },
+      ctx
+    );
+    expect(result).toContain("Reverse Charge");
+    expect(result).toContain("ES2");
+    expect(result).toContain("Article 196");
+  });
+
+  it("returns OSS content for oss_distance_selling topic", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "oss_distance_selling" },
+      ctx
+    );
+    expect(result).toContain("One Stop Shop");
+    expect(result).toContain("€10,000");
+    expect(result).toContain("IOSS");
+  });
+
+  it("returns imports/exports content", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "imports_exports" },
+      ctx
+    );
+    expect(result).toContain("Imports & Exports");
+    expect(result).toContain("E2");
+    expect(result).toContain("PA1");
+  });
+
+  it("returns place of supply content", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "place_of_supply" },
+      ctx
+    );
+    expect(result).toContain("Place of Supply");
+    expect(result).toContain("B2B");
+    expect(result).toContain("B2C");
+  });
+
+  it("returns VIES/Intrastat content", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "vies_intrastat" },
+      ctx
+    );
+    expect(result).toContain("VIES");
+    expect(result).toContain("Intrastat");
+    expect(result).toContain("€750,000");
+  });
+
+  it("returns UK post-Brexit content", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "uk_post_brexit" },
+      ctx
+    );
+    expect(result).toContain("Post-Brexit");
+    expect(result).toContain("Northern Ireland");
+    expect(result).toContain("XI");
+  });
+
+  it("returns postponed accounting content", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "postponed_accounting" },
+      ctx
+    );
+    expect(result).toContain("Postponed Accounting");
+    expect(result).toContain("PA1");
+  });
+
+  it("returns section 56 content", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "section_56" },
+      ctx
+    );
+    expect(result).toContain("Section 56");
+    expect(result).toContain("75%");
+  });
+
+  it("appends scenario context when provided", () => {
+    const ctx = makeCtx();
+    const { result } = executeToolCall(
+      "explain_eu_vat",
+      { topic: "general", scenario: "selling SaaS to Germany" },
+      ctx
+    );
+    expect(result).toContain("selling SaaS to Germany");
+  });
+
+  it("shows user EU trade profile when configured", () => {
+    const ctx = makeCtx({
+      euTradeSettings: {
+        eu_trade_enabled: true,
+        sells_goods_to_eu: true,
+        buys_goods_from_eu: false,
+        sells_services_to_eu: true,
+        buys_services_from_eu: false,
+        sells_digital_services_b2c: false,
+        sells_to_non_eu: false,
+        buys_from_non_eu: false,
+        uses_postponed_accounting: true,
+        has_section_56_authorisation: false,
+      },
+    } as Partial<ToolContext>);
+    const { result } = executeToolCall("explain_eu_vat", {}, ctx);
+    expect(result).toContain("Your EU trade profile");
+    expect(result).toContain("sells goods to EU");
+    expect(result).toContain("Postponed accounting");
+  });
+});

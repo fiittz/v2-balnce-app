@@ -770,3 +770,133 @@ describe("generateInvoiceHTML – additional edge cases", () => {
     expect(html).toContain("€615.00");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// Unit type label mapping (line 116)
+// ══════════════════════════════════════════════════════════════
+describe("generateInvoiceHTML – unit type labels", () => {
+  it("maps 'hours' to 'Hours'", () => {
+    const html = generateInvoiceHTML(
+      makeData({
+        items: [
+          {
+            description: "Consulting",
+            qty: 8,
+            price: 75,
+            vatRate: "standard_23",
+            unitType: "hours",
+            lineTotal: 600,
+            vat_amount: 138,
+            total_amount: 738,
+          },
+        ],
+      })
+    );
+    expect(html).toContain(">Hours</td>");
+  });
+
+  it("maps 'sq_metres' to 'Sq M'", () => {
+    const html = generateInvoiceHTML(
+      makeData({
+        items: [
+          {
+            description: "Flooring",
+            qty: 50,
+            price: 20,
+            vatRate: "reduced_13_5",
+            unitType: "sq_metres",
+            lineTotal: 1000,
+            vat_amount: 135,
+            total_amount: 1135,
+          },
+        ],
+      })
+    );
+    expect(html).toContain(">Sq M</td>");
+  });
+
+  it("falls back to 'Items' for unknown unitType", () => {
+    const html = generateInvoiceHTML(
+      makeData({
+        items: [
+          {
+            description: "Widget",
+            qty: 1,
+            price: 50,
+            vatRate: "standard_23",
+            unitType: "unknown_unit",
+            lineTotal: 50,
+            vat_amount: 11.5,
+            total_amount: 61.5,
+          },
+        ],
+      })
+    );
+    expect(html).toContain(">Items</td>");
+  });
+
+  it("defaults to 'Items' when unitType is undefined", () => {
+    const html = generateInvoiceHTML(
+      makeData({
+        items: [
+          {
+            description: "Service",
+            qty: 1,
+            price: 100,
+            vatRate: "standard_23",
+            lineTotal: 100,
+            vat_amount: 23,
+            total_amount: 123,
+          },
+        ],
+      })
+    );
+    expect(html).toContain(">Items</td>");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// PO Number display (line 221)
+// ══════════════════════════════════════════════════════════════
+describe("generateInvoiceHTML – PO number", () => {
+  it("shows PO Number when provided", () => {
+    const html = generateInvoiceHTML(makeData({ customerPoNumber: "PO-12345" }));
+    expect(html).toContain("PO Number");
+    expect(html).toContain("PO-12345");
+  });
+
+  it("hides PO Number when not provided", () => {
+    const html = generateInvoiceHTML(makeData({ customerPoNumber: undefined }));
+    expect(html).not.toContain("PO Number");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// Payment details / IBAN section (lines 270-275)
+// ══════════════════════════════════════════════════════════════
+describe("generateInvoiceHTML – payment details", () => {
+  it("shows IBAN and BIC when both provided", () => {
+    const html = generateInvoiceHTML(
+      makeData({ supplierIban: "IE29AIBK93115212345678", supplierBic: "AIBKIE2D" })
+    );
+    expect(html).toContain("Payment Details");
+    expect(html).toContain("IBAN");
+    expect(html).toContain("IE29AIBK93115212345678");
+    expect(html).toContain("BIC");
+    expect(html).toContain("AIBKIE2D");
+  });
+
+  it("shows IBAN without BIC when BIC is empty", () => {
+    const html = generateInvoiceHTML(
+      makeData({ supplierIban: "IE29AIBK93115212345678", supplierBic: "" })
+    );
+    expect(html).toContain("IBAN");
+    expect(html).toContain("IE29AIBK93115212345678");
+    expect(html).not.toContain("BIC");
+  });
+
+  it("hides payment details when IBAN is empty", () => {
+    const html = generateInvoiceHTML(makeData({ supplierIban: "" }));
+    expect(html).not.toContain("Payment Details");
+  });
+});

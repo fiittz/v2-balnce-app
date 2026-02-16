@@ -591,3 +591,21 @@ describe("calculateForm11 — integration: typical director", () => {
     expect(result.balanceDue).toBe(result.totalLiability);
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// calculateForm11 — getAge fallback (lines 224-229)
+// ══════════════════════════════════════════════════════════════
+describe("calculateForm11 — empty dateOfBirth fallback", () => {
+  it("defaults to age 35 when dateOfBirth is empty string", () => {
+    const result = calculateForm11(
+      baseInput({
+        dateOfBirth: "",
+        salary: 80_000,
+        pensionContributions: 20_000,
+      })
+    );
+    // Age defaults to 35 → falls in 30-39 band = 20%
+    // Max pension: 80000 * 0.20 = 16000
+    expect(result.pensionRelief).toBe(16_000);
+  });
+});

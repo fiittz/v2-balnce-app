@@ -1212,3 +1212,73 @@ describe("exportToCSV", () => {
     expect(csv).toContain("SUMMARY");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// formatDate fallback (line 97 — catch branch)
+// ══════════════════════════════════════════════════════════════
+describe("formatDate fallback in export", () => {
+  it("handles transaction with invalid date string gracefully", () => {
+    const txn = makeTransaction({
+      description: "Valid transaction",
+      amount: 100,
+      type: "income",
+      vat_rate: "zero_rated",
+      transaction_date: "not-a-real-date",
+    });
+
+    const report = generateSalesTaxAuditReport(
+      BUSINESS_NAME,
+      PERIOD_START,
+      PERIOD_END,
+      [txn],
+      [],
+      [],
+    );
+
+    // The report should still generate without crashing
+    expect(report.sections.length).toBeGreaterThan(0);
+
+    // Export should also not crash
+    const csv = exportToCSV(report);
+    expect(csv).toContain("Sales Tax Audit Report");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// downloadCSV function test (lines 382-393)
+// ══════════════════════════════════════════════════════════════
+describe("downloadCSV", () => {
+  it("is importable and callable", async () => {
+    // Since downloadCSV uses document.createElement, we test that it exists
+    const mod = await import("../salesTaxAuditReport");
+    expect(typeof mod.downloadCSV).toBe("function");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// Uncategorised expense handling
+// ══════════════════════════════════════════════════════════════
+describe("uncategorised expense filtering", () => {
+  it("filters out expense transactions with no category (null)", () => {
+    const txn = makeTransaction({
+      description: "Random purchase",
+      amount: 200,
+      type: "expense",
+      vat_rate: "standard_23",
+      category: null,
+    });
+
+    const report = generateSalesTaxAuditReport(
+      BUSINESS_NAME,
+      PERIOD_START,
+      PERIOD_END,
+      [txn],
+      [],
+      [],
+    );
+
+    // Uncategorised expenses should be filtered by isVATDeductible returning false
+    const purchaseSections = report.sections.filter(s => s.type === "purchases");
+    expect(purchaseSections).toHaveLength(0);
+  });
+});

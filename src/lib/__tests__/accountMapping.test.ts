@@ -336,3 +336,55 @@ describe("getAccountSuggestion", () => {
     expect(getAccountSuggestion("Sales", "income", "standard_23")!.confidence).toBe(85);
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// findMatchingAccount — partial name matching fallback (lines 350-356)
+// ══════════════════════════════════════════════════════════════
+describe("findMatchingAccount — partial match fallback", () => {
+  it("falls back to partial match when exact account name is missing", () => {
+    // Create accounts that only partially match the mapping candidates
+    const partialAccounts = [
+      mockAccount("Motor Expenses", "Expense"),
+    ];
+    // "Motor/travel" maps to ["Motor – Fuel", "Motor Tax & Insurance"]
+    // Neither exact match exists, but "Motor" is the first word of the candidate name
+    // and "Motor Expenses" contains "Motor"
+    const result = findMatchingAccount("Motor/travel", "expense", undefined, partialAccounts);
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Motor Expenses");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// getAccountSuggestion — income with no VAT rate (line 373)
+// ══════════════════════════════════════════════════════════════
+describe("getAccountSuggestion — income without VAT rate", () => {
+  it("returns category-based suggestion for income without VAT rate", () => {
+    const result = getAccountSuggestion("Sales", "income", undefined);
+    expect(result).not.toBeNull();
+    expect(result!.account_name).toBe("Sales Ireland 23%");
+    expect(result!.confidence).toBe(80);
+  });
+
+  it("returns null for income with unknown VAT rate and no category mapping", () => {
+    const result = getAccountSuggestion("NonExistent123", "income", "unknown_vat");
+    expect(result).toBeNull();
+  });
+
+  it("returns null for income with empty candidates", () => {
+    // RCT has no expense mapping but has income mapping
+    const result = getAccountSuggestion("RCT", "expense", undefined);
+    expect(result).toBeNull();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// findMatchingAccount — case-insensitive category with account type
+// ══════════════════════════════════════════════════════════════
+describe("findMatchingAccount — case-insensitive income lookup", () => {
+  it("matches income category case-insensitively", () => {
+    const result = findMatchingAccount("sales", "income", undefined, accounts);
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Sales Ireland 23%");
+  });
+});

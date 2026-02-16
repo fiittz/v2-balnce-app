@@ -171,3 +171,20 @@ describe("DISALLOWED_VAT_CREDITS keywords", () => {
     expect(keywords).not.toContain("diesel");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// determineVatTreatment — wordBoundary food keywords (line 341)
+// ══════════════════════════════════════════════════════════════
+describe("determineVatTreatment — word-boundary keyword matching", () => {
+  it("matches word-boundary food keyword (e.g. 'bar') as standalone word", () => {
+    const result = determineVatTreatment("The bar tab", 50, "construction", "expense");
+    expect(result.isVatRecoverable).toBe(false);
+    expect(result.explanation).toContain("Section 60");
+  });
+
+  it("does not match word-boundary keyword as substring (e.g. 'barna' should not match 'bar')", () => {
+    const result = determineVatTreatment("Barna recycling", 100, "construction", "expense");
+    // "barna" should NOT trigger the food/drink word-boundary match for "bar"
+    expect(result.isVatRecoverable).toBe(true);
+  });
+});

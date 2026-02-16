@@ -610,3 +610,61 @@ describe("autoCategorise — confidence and review flags", () => {
     expect(result.needs_review).toBe(true);
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — directors personal account detection (lines 1564-1569)
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — directors_personal_tax account", () => {
+  it("flags looks_like_business_expense for business category on personal account", () => {
+    const result = autoCategorise(
+      expense("SCREWFIX IRELAND", { account_type: "directors_personal_tax" })
+    );
+    expect(result.looks_like_business_expense).toBe(true);
+  });
+
+  it("does not flag looks_like_business for non-business category on personal account", () => {
+    const result = autoCategorise(
+      expense("RANDOM UNKNOWN VENDOR XYZ123", { account_type: "directors_personal_tax" })
+    );
+    // "other" category does not match BUSINESS_INDICATOR_CATEGORIES
+    expect(result.looks_like_business_expense).toBeUndefined();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — trade user materials detection (line 1516-1517)
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — trade user industry-specific detection", () => {
+  it("returns null for unknown description even for construction industry user", () => {
+    // "GENERIC MATERIAL SUPPLY" doesn't match any merchant patterns or keyword rules,
+    // so it falls through to the unknown path with is_business_expense = null
+    const result = autoCategorise(
+      expense("GENERIC MATERIAL SUPPLY", { user_industry: "construction" })
+    );
+    expect(result.category).toBe("other");
+    expect(result.is_business_expense).toBeNull();
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("detects business expense when trade supplier matches for trade user", () => {
+    // CHADWICKS is a known trade supplier → Materials category → business expense
+    const result = autoCategorise(
+      expense("CHADWICKS BUILDING SUPPLIES", { user_industry: "construction" })
+    );
+    expect(result.category).toBe("Materials");
+    expect(result.is_business_expense).toBe(true);
+    expect(result.confidence_score).toBeGreaterThanOrEqual(90);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Internal Transfer is_business_expense (line 1527-1528)
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — internal transfer business expense", () => {
+  it("sets is_business_expense to null for internal transfers", () => {
+    const result = autoCategorise(expense("*Mobi Online Saver Transfer"));
+    expect(result.category).toBe("Internal Transfer");
+    // Internal transfers are neither business nor personal
+    expect(result.is_business_expense).toBeNull();
+  });
+});

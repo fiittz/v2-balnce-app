@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, FileText, Clock, CheckCircle, Send, Download } from "lucide-react";
+import { Plus, FileText, Clock, CheckCircle, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import AppLayout from "@/components/layout/AppLayout";
@@ -186,91 +186,6 @@ const Invoices = () => {
     }
   };
 
-  const blobToBase64 = (blob: Blob): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-
-  const handleSend = async (e: React.MouseEvent, invoice: Record<string, unknown>) => {
-    e.stopPropagation();
-    setLoadingId(invoice.id as string);
-    try {
-      const { html, customer } = await buildInvoiceHtml(invoice);
-
-      // Validate customer has email
-      if (!customer.email) {
-        toast.error("Customer has no email address — add one before sending");
-        return;
-      }
-
-      // Generate PDF
-      const blob = await generatePdfBlob(html);
-
-      // Check PDF size (Resend limit is 4MB)
-      if (blob.size > 4 * 1024 * 1024) {
-        toast.error("PDF is too large to email (max 4 MB). Download and send manually.");
-        return;
-      }
-
-      // Convert to base64 for server-side attachment
-      const pdfBase64 = await blobToBase64(blob);
-
-      // Send via edge function
-      const { data, error } = await supabase.functions.invoke("send-invoice-email", {
-        body: {
-          invoiceId: invoice.id,
-          pdfBase64,
-          recipientEmail: customer.email,
-        },
-      });
-
-      if (error || !data?.success) {
-        throw new Error(error?.message || data?.error || "Edge function failed");
-      }
-
-      // Success — refresh invoice list and notify
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
-      toast.success(`Invoice emailed to ${customer.email}`);
-    } catch (error: unknown) {
-      console.error("Error sending invoice via email:", error);
-
-      // Graceful fallback — download PDF + open mailto
-      toast.warning("Email sending failed — downloading PDF for manual send");
-      try {
-        const { html, customer } = await buildInvoiceHtml(invoice);
-        const blob = await generatePdfBlob(html);
-        const fileName = `${invoice.invoice_number || "Invoice"}.pdf`;
-
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        const total = Number(invoice.total || 0).toFixed(2);
-        const invDate = invoice.invoice_date ? format(new Date(invoice.invoice_date as string), "d MMM yyyy") : "";
-        const subject = encodeURIComponent(`Invoice ${invoice.invoice_number} — €${total}`);
-        const body = encodeURIComponent(
-          `Hi ${customer.name},\n\nPlease find attached invoice ${invoice.invoice_number} dated ${invDate} for €${total}.\n\nPayment is due within 30 days.\n\nThank you for your business.\n\nKind regards`
-        );
-        setTimeout(() => {
-          window.location.href = `mailto:${customer.email || ""}?subject=${subject}&body=${body}`;
-        }, 300);
-      } catch (fallbackError) {
-        console.error("Fallback also failed:", fallbackError);
-        toast.error("Failed to send invoice");
-      }
-    } finally {
-      setLoadingId(null);
-    }
-  };
-
   return (
     <AppLayout>
       <div className="flex-1">
@@ -371,16 +286,6 @@ const Invoices = () => {
                           >
                             <Download className="w-3.5 h-3.5 mr-1" />
                             PDF
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-lg"
-                            disabled={isLoading}
-                            onClick={(e) => handleSend(e, invoice)}
-                          >
-                            <Send className="w-3.5 h-3.5 mr-1" />
-                            Send
                           </Button>
                         </div>
                       </div>
