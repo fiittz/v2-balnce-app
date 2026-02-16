@@ -450,7 +450,7 @@ export const exportToExcel = (
     tx.vat_amount?.toFixed(2) || "",
     tx.net_amount?.toFixed(2) || "",
     tx.bank_reference || "",
-    tx.receipt_url ? "Yes" : ""
+    tx.receipt_url ? "Yes" : "No"
   ]);
 
   // Create CSV content (Excel compatible)
@@ -464,6 +464,20 @@ export const exportToExcel = (
   // Add questionnaire if provided
   if (questionnaire) {
     csvContent += formatBusinessQuestionnaireSection(questionnaire);
+  }
+
+  // Receipt Matching Summary
+  {
+    const totalTx = transactions.length;
+    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const unmatched = totalTx - matched;
+    const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
+    const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
+    csvContent += "Receipt Matching Summary\n";
+    csvContent += `"Total transactions","${totalTx}"\n`;
+    csvContent += `"Receipts matched","${matched} (${matchedPct}%)"\n`;
+    csvContent += `"Unmatched","${unmatched} (${unmatchedPct}%)"\n`;
+    csvContent += "\n";
   }
 
   csvContent += [
@@ -768,7 +782,7 @@ export const exportToPDF = (
           format(new Date(tx.transaction_date), "d/MM/yyyy"),
           "", tx.bank_reference || "", tx.description,
           fmtEur(-absGross), fmtEur(-tax), fmtEur(-net),
-          tx.receipt_url ? "Yes" : "",
+          tx.receipt_url ? "Yes" : "No",
         ]);
         grpGross -= absGross; grpTax -= tax; grpNet -= net;
       }
@@ -827,7 +841,7 @@ export const exportToPDF = (
           format(new Date(tx.transaction_date), "d/MM/yyyy"),
           "", tx.bank_reference || "", tx.description,
           fmtEur(absGross), fmtEur(tax), fmtEur(net),
-          tx.receipt_url ? "Yes" : "",
+          tx.receipt_url ? "Yes" : "No",
         ]);
         grpGross += absGross; grpTax += tax; grpNet += net;
       }
@@ -928,6 +942,33 @@ export const exportToPDF = (
   y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 3;
   addText(`${transactions.length} transactions`, 8, { color: [100, 100, 100] });
 
+  // Receipt Matching Summary
+  {
+    const totalTx = transactions.length;
+    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const unmatched = totalTx - matched;
+    const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
+    const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
+
+    checkPage(30);
+    y += 4;
+    addText("Receipt Matching Summary", 11, { bold: true }); y += 2;
+    autoTable(doc, {
+      startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+      body: [
+        ["Total transactions", String(totalTx)],
+        ["Receipts matched", `${matched} (${matchedPct}%)`],
+        ["Unmatched", `${unmatched} (${unmatchedPct}%)`],
+      ],
+      styles: { fontSize: 8, cellPadding: 1.5 },
+      columnStyles: {
+        0: { cellWidth: 50, fontStyle: "bold" },
+        1: { cellWidth: 40 },
+      },
+    });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+  }
+
   // Signature lines based on director count
   const directors = companyInfo?.directorNames ?? [];
   if (directors.length > 0) {
@@ -1014,7 +1055,7 @@ export const exportDirectorToExcel = (
     tx.vat_amount?.toFixed(2) || "",
     tx.net_amount?.toFixed(2) || "",
     tx.bank_reference || "",
-    tx.receipt_url ? "Yes" : ""
+    tx.receipt_url ? "Yes" : "No"
   ]);
 
   let csvContent = "";
@@ -1022,7 +1063,21 @@ export const exportDirectorToExcel = (
   if (questionnaire) {
     csvContent += formatDirectorQuestionnaireSection(questionnaire);
   }
-  
+
+  // Receipt Matching Summary
+  {
+    const totalTx = transactions.length;
+    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const unmatched = totalTx - matched;
+    const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
+    const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
+    csvContent += "Receipt Matching Summary\n";
+    csvContent += `"Total transactions","${totalTx}"\n`;
+    csvContent += `"Receipts matched","${matched} (${matchedPct}%)"\n`;
+    csvContent += `"Unmatched","${unmatched} (${unmatchedPct}%)"\n`;
+    csvContent += "\n";
+  }
+
   csvContent += [
     headers.join(","),
     ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
@@ -1030,7 +1085,7 @@ export const exportDirectorToExcel = (
 
   const bom = "\uFEFF";
   const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8" });
-  
+
   const defaultFilename = `director_transactions_${format(new Date(), "yyyy-MM-dd")}.csv`;
   downloadBlob(blob, filename || defaultFilename);
 };
@@ -1168,7 +1223,7 @@ export const exportDirectorToPDF = (
           "",
           tx.description,
           fmtEur(sign * absGross), fmtEur(sign * tax), fmtEur(sign * net),
-          tx.receipt_url ? "Yes" : "",
+          tx.receipt_url ? "Yes" : "No",
         ]);
       }
     }
@@ -1205,6 +1260,33 @@ export const exportDirectorToPDF = (
   }
 
   addText(`${transactions.length} transactions`, 8, { color: [100, 100, 100] });
+
+  // Receipt Matching Summary
+  {
+    const totalTx = transactions.length;
+    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const unmatched = totalTx - matched;
+    const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
+    const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
+
+    checkPage(30);
+    y += 4;
+    addText("Receipt Matching Summary", 11, { bold: true }); y += 2;
+    autoTable(doc, {
+      startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+      body: [
+        ["Total transactions", String(totalTx)],
+        ["Receipts matched", `${matched} (${matchedPct}%)`],
+        ["Unmatched", `${unmatched} (${unmatchedPct}%)`],
+      ],
+      styles: { fontSize: 8, cellPadding: 1.5 },
+      columnStyles: {
+        0: { cellWidth: 50, fontStyle: "bold" },
+        1: { cellWidth: 40 },
+      },
+    });
+    y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+  }
 
   doc.save(filename || `director_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };

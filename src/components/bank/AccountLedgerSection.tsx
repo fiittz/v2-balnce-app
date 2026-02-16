@@ -1,7 +1,11 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, ArrowUpRight, ArrowDownLeft, Tag, CheckCircle2, Link2, Loader2, Briefcase, User, HelpCircle, Brain, MessageSquare, Pencil } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowUpRight, ArrowDownLeft, Tag, CheckCircle2, Link2, Loader2, Briefcase, User, HelpCircle, Brain, MessageSquare, Pencil, Camera } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 import TransactionEditDialog from "./TransactionEditDialog";
 import TransactionRowActions from "./TransactionRowActions";
 import InlineCategoryPicker from "./InlineCategoryPicker";
@@ -18,6 +22,7 @@ interface Transaction {
   category?: { name: string } | null;
   account_id?: string | null;
   notes?: string | null;
+  receipt_url?: string | null;
 }
 
 interface AccountLedgerSectionProps {
@@ -50,6 +55,7 @@ export default function AccountLedgerSection({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [categorizingTxId, setCategorizingTxId] = useState<string | null>(null);
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
 
   // Calculate account totals
   const totalDebits = transactions
@@ -223,6 +229,18 @@ export default function AccountLedgerSection({
                           Match
                         </button>
                       )}
+                      {transaction.receipt_url && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReceiptPreviewUrl(transaction.receipt_url!);
+                          }}
+                          className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-green-200 transition-colors"
+                        >
+                          <Camera className="w-3 h-3" />
+                          Receipt
+                        </button>
+                      )}
                     </>
                   )}
                 </div>
@@ -257,6 +275,19 @@ export default function AccountLedgerSection({
         open={!!editingTransaction}
         onOpenChange={(open) => !open && setEditingTransaction(null)}
       />
+
+      {/* Receipt Preview Dialog */}
+      <Dialog open={!!receiptPreviewUrl} onOpenChange={(open) => !open && setReceiptPreviewUrl(null)}>
+        <DialogContent className="sm:max-w-lg">
+          {receiptPreviewUrl && (
+            <img
+              src={receiptPreviewUrl}
+              alt="Receipt"
+              className="w-full rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

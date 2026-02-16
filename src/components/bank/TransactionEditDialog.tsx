@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Loader2, MessageSquare, BookOpen } from "lucide-react";
+import { Loader2, MessageSquare, BookOpen, Camera } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +27,7 @@ interface Transaction {
   transaction_date: string;
   account_id?: string | null;
   notes?: string | null;
+  receipt_url?: string | null;
 }
 
 interface TransactionEditDialogProps {
@@ -94,6 +95,26 @@ export default function TransactionEditDialog({
             <p className={`text-2xl font-bold mt-1 ${transaction.type === "income" ? "text-green-600" : ""}`}>
               {transaction.type === "income" ? "+" : "-"}€{Math.abs(transaction.amount).toFixed(2)}
             </p>
+          </div>
+
+          {/* Receipt */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Camera className="w-4 h-4" />
+              Receipt
+            </Label>
+            {transaction.receipt_url ? (
+              <a href={transaction.receipt_url} target="_blank" rel="noopener noreferrer" className="block">
+                <img
+                  src={transaction.receipt_url}
+                  alt="Receipt"
+                  className="w-full max-h-48 object-contain rounded-lg border border-border cursor-pointer hover:opacity-90 transition-opacity"
+                />
+                <p className="text-xs text-green-600 mt-1 font-medium">Receipt matched</p>
+              </a>
+            ) : (
+              <p className="text-sm text-muted-foreground">No receipt attached</p>
+            )}
           </div>
 
           {/* Account Selection */}

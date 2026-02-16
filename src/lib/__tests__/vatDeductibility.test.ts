@@ -154,3 +154,43 @@ describe("calculateVATFromGross", () => {
     expect(result.netAmount).toBe(0);
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// isVATDeductible — additional branch coverage
+// ══════════════════════════════════════════════════════════════
+describe("isVATDeductible — additional branch coverage", () => {
+  it("allows fuel station purchase when description includes diesel", () => {
+    const result = isVATDeductible("Circle K diesel purchase");
+    expect(result.isDeductible).toBe(true);
+    expect(result.reason).toContain("recoverable");
+  });
+
+  it("allows fuel station when 'fuel' keyword present without 'petrol'", () => {
+    const result = isVATDeductible("Applegreen fuel");
+    expect(result.isDeductible).toBe(true);
+  });
+
+  it("blocks meals category via category name", () => {
+    const result = isVATDeductible("Some expense", "meals & entertainment");
+    expect(result.isDeductible).toBe(false);
+    expect(result.section).toContain("60");
+  });
+
+  it("blocks fines category via category name", () => {
+    const result = isVATDeductible("Parking", "Fines & Penalties");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks fines in description via regex", () => {
+    const result = isVATDeductible("penalty charge notice");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks director's drawings category", () => {
+    const result = isVATDeductible("Transfer", "Director's Drawings");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Drawing");
+  });
+});

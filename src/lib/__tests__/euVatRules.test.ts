@@ -395,3 +395,47 @@ describe("Knowledge base constants", () => {
     expect(PLACE_OF_SUPPLY_SERVICES.general_rule.b2c.rule).toContain("supplier");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// determineCrossBorderVAT — B2C services to EU (line 349)
+// ══════════════════════════════════════════════════════════════
+describe("determineCrossBorderVAT — B2C services to EU", () => {
+  it("B2C services sale to EU = standard rated with digital service warning", () => {
+    const result = determineCrossBorderVAT({
+      direction: "sale",
+      counterpartyLocation: "eu",
+      supplyType: "services",
+      customerType: "b2c",
+    });
+    expect(result.treatment).toBe("standard_rated");
+    expect(result.warnings).toContain("Check if this is a digital/electronic service — different rules apply");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// determineCrossBorderVAT — fallback default (line 443)
+// ══════════════════════════════════════════════════════════════
+describe("determineCrossBorderVAT — fallback default treatment", () => {
+  it("treats B2C EU goods purchase as intra-community acquisition (same as B2B)", () => {
+    // EU goods purchase matches regardless of customerType — ICA rules apply
+    const result = determineCrossBorderVAT({
+      direction: "purchase",
+      counterpartyLocation: "eu",
+      supplyType: "goods",
+      customerType: "b2c",
+    });
+    expect(result.treatment).toBe("self_accounting");
+  });
+
+  it("returns standard_rated with advisor warning for truly unmatched combinations", () => {
+    // Use an invalid direction to hit the default fallback
+    const result = determineCrossBorderVAT({
+      direction: "other" as "purchase",
+      counterpartyLocation: "eu",
+      supplyType: "goods",
+      customerType: "b2c",
+    });
+    expect(result.treatment).toBe("standard_rated");
+    expect(result.warnings).toContain("Consult a tax advisor for the correct treatment");
+  });
+});
