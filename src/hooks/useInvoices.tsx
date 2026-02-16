@@ -7,7 +7,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Invoice = Database["public"]["Tables"]["invoices"]["Row"];
 type InvoiceInsert = Database["public"]["Tables"]["invoices"]["Insert"];
 
-export function useInvoices(options?: { limit?: number; status?: string }) {
+export function useInvoices(options?: { limit?: number; status?: string; account_id?: string }) {
   const { user } = useAuth();
 
   return useQuery({
@@ -24,6 +24,9 @@ export function useInvoices(options?: { limit?: number; status?: string }) {
 
       if (options?.status) {
         query = query.eq("status", options.status);
+      }
+      if (options?.account_id) {
+        query = query.eq("account_id", options.account_id);
       }
       if (options?.limit) {
         query = query.limit(options.limit);

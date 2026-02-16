@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, FileText, Clock, CheckCircle, Send, Download } from "lucide-react";
 import html2canvas from "html2canvas";
@@ -7,6 +7,7 @@ import AppLayout from "@/components/layout/AppLayout";
 import PageHeader from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
@@ -28,7 +29,11 @@ const statusConfig = {
 
 const Invoices = () => {
   const navigate = useNavigate();
-  const { data: invoices, isLoading } = useInvoices();
+  const { data: accounts } = useAccounts();
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const { data: invoices, isLoading } = useInvoices(
+    selectedAccountId ? { account_id: selectedAccountId } : undefined
+  );
   const { data: onboarding } = useOnboardingSettings();
   const { data: bankAccounts } = useAccounts("bank");
   const { profile } = useAuth();
@@ -284,6 +289,27 @@ const Invoices = () => {
         />
 
         <main className="px-6 py-6 pb-24 max-w-4xl mx-auto">
+          {accounts && accounts.length > 1 && (
+            <div className="mb-6">
+              <Select
+                value={selectedAccountId || "all"}
+                onValueChange={(v) => setSelectedAccountId(v === "all" ? null : v)}
+              >
+                <SelectTrigger className="h-12 rounded-xl text-base w-full max-w-xs">
+                  <SelectValue placeholder="All accounts" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All accounts</SelectItem>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="space-y-4">
               {[1, 2, 3].map((i) => (

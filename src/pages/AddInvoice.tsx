@@ -61,9 +61,19 @@ const AddInvoice = () => {
   const isSiteBasedBusiness = (SITE_BASED_ACTIVITIES as readonly string[]).includes(primaryActivity as string) ||
     secondaryActivities.some((a: string) => (SITE_BASED_ACTIVITIES as readonly string[]).includes(a));
 
-  // Fetch bank accounts for payment details
+  // Fetch all accounts for selector + bank accounts for payment details
+  const { data: allAccounts } = useAccounts();
   const { data: bankAccounts } = useAccounts("bank");
   const primaryBank = bankAccounts?.[0];
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+
+  // Auto-select default account when accounts load
+  useEffect(() => {
+    if (allAccounts && allAccounts.length > 0 && !selectedAccountId) {
+      const defaultAccount = allAccounts.find(a => a.is_default) || allAccounts[0];
+      setSelectedAccountId(defaultAccount.id);
+    }
+  }, [allAccounts, selectedAccountId]);
 
   // Filter VAT rates based on business type
   const availableVatRates = (() => {
@@ -105,6 +115,9 @@ const AddInvoice = () => {
   useEffect(() => {
     if (existingInvoice && isEditMode) {
       setInvoiceDate(existingInvoice.invoice_date || new Date().toISOString().split("T")[0]);
+      if (existingInvoice.account_id) {
+        setSelectedAccountId(existingInvoice.account_id);
+      }
 
       // Load customer details from FK
       if (existingInvoice.customer_id && user) {
@@ -341,6 +354,7 @@ const AddInvoice = () => {
         total,
         notes: notesData,
         customer_id: customerId,
+        account_id: selectedAccountId,
       };
 
       if (isEditMode && editId) {
@@ -497,6 +511,27 @@ const AddInvoice = () => {
 
 
 
+
+        {/* Account Selector */}
+        {allAccounts && allAccounts.length > 1 && (
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
+            <div className="space-y-2">
+              <Label className="font-medium">Account</Label>
+              <Select value={selectedAccountId || ""} onValueChange={setSelectedAccountId}>
+                <SelectTrigger className="h-14 rounded-xl text-base">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
 
         {/* Customer & Invoice Details */}
         <div className="bg-card rounded-2xl p-6 card-shadow space-y-5 animate-fade-in">

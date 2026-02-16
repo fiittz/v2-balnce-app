@@ -327,6 +327,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          account_id: string | null
           created_at: string | null
           customer_id: string | null
           due_date: string | null
@@ -342,6 +343,7 @@ export type Database = {
           vat_amount: number | null
         }
         Insert: {
+          account_id?: string | null
           created_at?: string | null
           customer_id?: string | null
           due_date?: string | null
@@ -357,6 +359,7 @@ export type Database = {
           vat_amount?: number | null
         }
         Update: {
+          account_id?: string | null
           created_at?: string | null
           customer_id?: string | null
           due_date?: string | null
@@ -372,6 +375,13 @@ export type Database = {
           vat_amount?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_customer_id_fkey"
             columns: ["customer_id"]
