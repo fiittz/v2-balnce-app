@@ -274,6 +274,13 @@ describe("validateEUVATFormat", () => {
     const result = validateEUVATFormat("ATU12345678", "AT");
     expect(result.valid).toBe(true);
   });
+
+  it("returns descriptive error for known country with invalid format", () => {
+    const result = validateEUVATFormat("AT12345", "AT");
+    expect(result.valid).toBe(false);
+    expect(result.message).toContain("Invalid format for Austria");
+    expect(result.message).toContain("ATU");
+  });
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -425,6 +432,31 @@ describe("determineCrossBorderVAT — fallback default treatment", () => {
       customerType: "b2c",
     });
     expect(result.treatment).toBe("self_accounting");
+  });
+
+  it("services sale to NI = zero-rated (services follow non-EU rules)", () => {
+    const result = determineCrossBorderVAT({
+      direction: "sale",
+      counterpartyLocation: "ni",
+      supplyType: "services",
+      customerType: "b2b",
+    });
+    expect(result.treatment).toBe("zero_rated");
+    expect(result.explanation).toContain("outside scope of Irish VAT");
+    expect(result.vat3Boxes).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it("goods sale to non-EU = zero-rated with E2 and customs warning", () => {
+    const result = determineCrossBorderVAT({
+      direction: "sale",
+      counterpartyLocation: "non_eu",
+      supplyType: "goods",
+      customerType: "b2c",
+    });
+    expect(result.treatment).toBe("zero_rated");
+    expect(result.vat3Boxes).toContain("E2");
+    expect(result.warnings).toContain("Retain customs export documentation");
   });
 
   it("returns standard_rated with advisor warning for truly unmatched combinations", () => {

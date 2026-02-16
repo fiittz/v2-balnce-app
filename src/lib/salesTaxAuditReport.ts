@@ -378,16 +378,17 @@ export function exportToCSV(report: SalesTaxAuditReport): string {
   return lines.join("\n");
 }
 
+/* v8 ignore next 13 -- DOM-only download helper, untestable in Node */
 export function downloadCSV(report: SalesTaxAuditReport, filename?: string): void {
   const csv = exportToCSV(report);
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
   const url = URL.createObjectURL(blob);
-  
+
   link.setAttribute("href", url);
   link.setAttribute("download", filename || `Sales_Tax_Audit_Report_${report.periodStart.replace(/ /g, "_")}_to_${report.periodEnd.replace(/ /g, "_")}.csv`);
   link.style.visibility = "hidden";
-  
+
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

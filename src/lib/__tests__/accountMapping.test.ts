@@ -388,3 +388,27 @@ describe("findMatchingAccount — case-insensitive income lookup", () => {
     expect(result!.name).toBe("Sales Ireland 23%");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// findMatchingAccount — VAT rate income mapping fallthrough (lines 309-313)
+// ══════════════════════════════════════════════════════════════
+describe("findMatchingAccount — VAT rate mapping miss then category fallback", () => {
+  it("falls through VAT rate mapping when account not in user's list", () => {
+    // Only have "General Expenses" — no income accounts at all
+    const noIncomeAccounts = [mockAccount("General Expenses", "Expense")];
+    const result = findMatchingAccount("Sales", "income", "standard_23", noIncomeAccounts);
+    // vatAccountName = "Sales Ireland 23%" but it's not in noIncomeAccounts
+    // Then falls to category mapping, but no matching account exists
+    expect(result).toBeNull();
+  });
+
+  it("returns category-mapped income when VAT rate account is missing", () => {
+    // Has "Other Income" but not "Sales Ireland 23%"
+    const limitedAccounts = [mockAccount("Other Income", "Income")];
+    const result = findMatchingAccount("other", "income", "unknown_vat_rate", limitedAccounts);
+    // VAT rate lookup fails (unknown rate), falls to category mapping for "other"
+    // "other" income candidates: [{ name: "Other Income", type: "Income" }]
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Other Income");
+  });
+});

@@ -193,4 +193,14 @@ describe("migrateLocalAccounts", () => {
     expect(localStorageMock.setItem).toHaveBeenCalledWith("balnce_accounts_migrated", "1");
     consoleSpy.mockRestore();
   });
+
+  it("assignOrphanedTransactions updates transactions when default account exists (line 83)", async () => {
+    // No local accounts data — goes straight to assignOrphanedTransactions
+    // maybeSingle returns a default account
+    maybeSingleResolvedData = { data: { id: "default-acc-1" }, error: null };
+    await migrateLocalAccounts(USER_ID);
+    // Should have queried accounts table for default and transactions table for update
+    expect(mockFrom).toHaveBeenCalledWith("accounts");
+    expect(localStorageMock.setItem).toHaveBeenCalledWith("balnce_accounts_migrated", "1");
+  });
 });

@@ -892,4 +892,47 @@ describe("linkReceiptToTransaction", () => {
       receipt_url: "https://example.com/receipt.jpg",
     });
   });
+
+  it("throws when receipt update fails (line 187)", async () => {
+    // Make the chain return an error for the receipt update
+    mockResolvedData = { data: null, error: { message: "receipt update failed" } };
+
+    await expect(
+      linkReceiptToTransaction("r-1", "t-1", "https://example.com/img.jpg")
+    ).rejects.toThrow("Failed to link receipt: receipt update failed");
+  });
+
+  it("throws when transaction update fails (line 201)", async () => {
+    // First call (receipts) succeeds, second call (transactions) fails
+    // Since both use the same mockResolvedData chain in this mock setup,
+    // we need to simulate the error on the second from() call
+    let callCount = 0;
+    mockFrom.mockImplementation((...args: unknown[]) => {
+      callCount++;
+      const chain: Record<string, unknown> = {
+        select: (...a: unknown[]) => { mockSelect(...a); return chain; },
+        update: (...a: unknown[]) => { mockUpdate(...a); return chain; },
+        eq: (...a: unknown[]) => { mockEq(...a); return chain; },
+        is: (...a: unknown[]) => { mockIs(...a); return chain; },
+        gte: (...a: unknown[]) => { mockGte(...a); return chain; },
+        lte: (...a: unknown[]) => { mockLte(...a); return chain; },
+        order: (...a: unknown[]) => { mockOrder(...a); return chain; },
+        single: () => { mockSingle(); return chain; },
+        then: (resolve: (value: unknown) => void) => {
+          if (callCount === 1) {
+            // receipts update succeeds
+            resolve({ error: null });
+          } else {
+            // transactions update fails
+            resolve({ error: { message: "tx update failed" } });
+          }
+        },
+      };
+      return chain;
+    });
+
+    await expect(
+      linkReceiptToTransaction("r-1", "t-1", "https://example.com/img.jpg")
+    ).rejects.toThrow("Failed to update transaction: tx update failed");
+  });
 });

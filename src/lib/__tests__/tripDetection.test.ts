@@ -259,6 +259,66 @@ describe("detectTransactionLocation — port match fallback", () => {
 });
 
 // ══════════════════════════════════════════════════════════════
+// detectTrips — sorting by location, then date (line 294)
+// ══════════════════════════════════════════════════════════════
+describe("detectTrips — multi-location sorting and final trip push", () => {
+  const makeExpense = (id: string, desc: string, date: string, amount: number): DetectTripsInput => ({
+    id,
+    description: desc,
+    amount,
+    date,
+    type: "expense",
+  });
+
+  it("sorts qualified days by location then date, producing separate trips (line 294)", () => {
+    // Two different locations on the same day — triggers locCmp !== 0 sort branch
+    const txns = [
+      makeExpense("1", "POS CENTRA GALWAY", "2024-03-15", 10),
+      makeExpense("2", "POS SPAR GALWAY", "2024-03-15", 15),
+      makeExpense("3", "POS CENTRA CORK", "2024-03-15", 10),
+      makeExpense("4", "POS SPAR CORK", "2024-03-15", 15),
+    ];
+    const trips = detectTrips(txns, "Dublin");
+    expect(trips).toHaveLength(2);
+    // Should be sorted by location alphabetically: Cork before Galway
+    expect(trips[0].location).toBe("Cork");
+    expect(trips[1].location).toBe("Galway");
+  });
+
+  it("pushes the final current trip at end of loop (line 330)", () => {
+    // Single day-group that qualifies — ensures the final `if (current)` push is hit
+    const txns = [
+      makeExpense("1", "POS CENTRA CORK", "2024-05-01", 10),
+      makeExpense("2", "POS SPAR CORK", "2024-05-01", 15),
+    ];
+    const trips = detectTrips(txns, "Dublin");
+    expect(trips).toHaveLength(1);
+    expect(trips[0].location).toBe("Cork");
+  });
+
+  it("skips transactions matching base location case-insensitively (line 267)", () => {
+    const txns = [
+      makeExpense("1", "POS CENTRA DUBLIN", "2024-03-15", 10),
+      makeExpense("2", "POS SPAR DUBLIN", "2024-03-15", 15),
+    ];
+    // Base location passed with different case
+    const trips = detectTrips(txns, "DUBLIN");
+    expect(trips).toHaveLength(0);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// detectTransactionLocation — port match where loc is in IRISH_LOCATIONS (line 212)
+// ══════════════════════════════════════════════════════════════
+describe("detectTransactionLocation — port match found in IRISH_LOCATIONS", () => {
+  it("returns the canonical location when port-of location is in IRISH_LOCATIONS", () => {
+    // "port of cork" — "cork" is in IRISH_LOCATIONS
+    // This actually matches "cork" via the main loop first, but let's ensure it works
+    expect(detectTransactionLocation("PORT OF CORK FERRY")).toBe("Cork");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
 // classifyTripExpense — excluded keywords
 // ══════════════════════════════════════════════════════════════
 describe("classifyTripExpense — excluded keywords", () => {

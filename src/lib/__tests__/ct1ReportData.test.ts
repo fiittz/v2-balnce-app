@@ -267,6 +267,30 @@ describe("assembleCT1ReportData — Flagged Capital Items", () => {
   });
 });
 
+// ── VAT Position — refundable branch (line 176) ─────────────────
+
+describe("assembleCT1ReportData — VAT Position refundable", () => {
+  it("shows VAT Refundable when vatPosition type is refundable", () => {
+    const ct1 = makeCT1({ vatPosition: { type: "refundable", amount: 1500 } });
+    const result = assembleCT1ReportData(ct1, null, META);
+    const section = result.sections.find((s) => s.title === "VAT Position");
+    expect(section).toBeDefined();
+    expect(section!.rows[0].label).toBe("VAT Refundable");
+    expect(section!.rows[0].value).toBe(fmtEuro(1500));
+  });
+});
+
+// ── Construction Trade false path (line 52) ─────────────────────
+
+describe("assembleCT1ReportData — Construction Trade false", () => {
+  it("shows 'No' when isConstructionTrade is false", () => {
+    const ct1 = makeCT1({ isConstructionTrade: false });
+    const result = assembleCT1ReportData(ct1, null, META);
+    const info = result.sections.find((s) => s.title === "Company Information")!;
+    expect(info.rows.find((r) => r.label === "Construction Trade")?.value).toBe("No");
+  });
+});
+
 // ── Return Values ──────────────────────────────────────────────
 
 describe("assembleCT1ReportData — return values", () => {

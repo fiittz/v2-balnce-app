@@ -1504,6 +1504,56 @@ describe("trial balance section", () => {
 // ══════════════════════════════════════════════════════════════
 // EU & International trade section (lines 433-446)
 // ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// Industry category group mapping (lines 82-107)
+// ══════════════════════════════════════════════════════════════
+describe("industry category group mapping", () => {
+  it("maps primary_activity 'general_construction' to Construction & Trades group", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        businessExtra: { businesses: [{ primary_activity: "general_construction" }] },
+      })
+    );
+    expect(result).toContain("Industry Category Group: Construction & Trades");
+  });
+
+  it("maps primary_activity 'software_development' to Software Development group", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        businessExtra: { businesses: [{ primary_activity: "software_development" }] },
+      })
+    );
+    expect(result).toContain("Industry Category Group: Software Development");
+  });
+
+  it("maps primary_activity 'cafe_restaurant' to Hospitality & Food group", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        businessExtra: { businesses: [{ primary_activity: "cafe_restaurant" }] },
+      })
+    );
+    expect(result).toContain("Industry Category Group: Hospitality & Food");
+  });
+
+  it("defaults to Professional Services for unknown primary_activity", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        businessExtra: { businesses: [{ primary_activity: "unknown_activity_xyz" }] },
+      })
+    );
+    expect(result).toContain("Industry Category Group: Professional Services");
+  });
+
+  it("falls back to onboardingSettings.business_type when no primary_activity", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        onboardingSettings: { business_type: "taxi_private_hire" },
+      })
+    );
+    expect(result).toContain("Industry Category Group: Transport & Logistics");
+  });
+});
+
 describe("EU & international trade section", () => {
   it("shows EU trade section when eu_trade_enabled", () => {
     const result = buildFinancialContext(

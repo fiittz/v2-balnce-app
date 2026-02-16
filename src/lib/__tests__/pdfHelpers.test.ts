@@ -173,6 +173,20 @@ describe("addSection", () => {
     expect(mockDoc.addPage).toHaveBeenCalled();
   });
 
+  it("adds new page inside row loop when y exceeds 275", () => {
+    const doc = createPdfDoc();
+    // Create a section with many rows so that y surpasses 275 during iteration
+    const manyRows = Array.from({ length: 50 }, (_, i) => ({
+      label: `Row ${i}`,
+      value: `${i * 100}`,
+    }));
+    const section = makeSection({ rows: manyRows });
+    // Start at y=100. Each row adds 6, so after ~30 rows y = 100 + 7 (title) + 30*6 = 287 > 275
+    addSection(doc, section, 100);
+    // addPage should be called once (for exceeding 275 inside the loop)
+    expect(mockDoc.addPage).toHaveBeenCalled();
+  });
+
   it("applies alternating row fill on even indices", () => {
     const doc = createPdfDoc();
     const section = makeSection();
@@ -207,6 +221,13 @@ describe("addTable", () => {
         ],
       })
     );
+  });
+
+  it("adds new page when startY exceeds 250", () => {
+    const doc = createPdfDoc();
+    const table = makeTable();
+    addTable(doc, table, 255);
+    expect(mockDoc.addPage).toHaveBeenCalled();
   });
 
   it("returns finalY + 8 from lastAutoTable", () => {

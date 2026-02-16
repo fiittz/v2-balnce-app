@@ -11,7 +11,25 @@ const {
   mockAddSignatures,
   mockSavePdf,
 } = vi.hoisted(() => {
-  const mockDoc = { fake: "doc" };
+  const mockDoc = {
+    fake: "doc",
+    setFontSize: vi.fn(),
+    setFont: vi.fn(),
+    setTextColor: vi.fn(),
+    setDrawColor: vi.fn(),
+    setLineWidth: vi.fn(),
+    setFillColor: vi.fn(),
+    text: vi.fn(),
+    line: vi.fn(),
+    rect: vi.fn(),
+    addPage: vi.fn(),
+    setPage: vi.fn(),
+    save: vi.fn(),
+    getNumberOfPages: vi.fn(() => 1),
+    internal: { pageSize: { getWidth: () => 210 } },
+    lastAutoTable: { finalY: 100 },
+    splitTextToSize: vi.fn((text: string) => [text]),
+  };
   return {
     mockDoc,
     mockCreatePdfDoc: vi.fn(() => mockDoc),

@@ -670,6 +670,23 @@ describe("assembleForm11ReportData — conditional sections", () => {
     expect(incTable!.rows.length).toBe(3); // 2 categories + total
   });
 
+  it("includes Rental / Investment Income section when rentalProfit, foreignIncome or otherIncome > 0", () => {
+    const rentalInput: Form11Input = {
+      ...form11Input,
+      rentalIncome: 15000,
+      rentalExpenses: 5000,
+      foreignIncome: 2000,
+      otherIncome: 1000,
+    };
+    const calcResult = calculateForm11(rentalInput);
+    const report = assembleForm11ReportData(rentalInput, calcResult, META);
+    const rentalSection = report.sections.find(s => s.title === "Rental / Investment Income");
+    expect(rentalSection).toBeDefined();
+    expect(rentalSection!.rows.some(r => r.label === "Rental Profit")).toBe(true);
+    expect(rentalSection!.rows.some(r => r.label === "Foreign Income")).toBe(true);
+    expect(rentalSection!.rows.some(r => r.label === "Other Income")).toBe(true);
+  });
+
   it("omits Schedule E section when no employment income", () => {
     const noEmploymentInput: Form11Input = {
       ...form11Input,

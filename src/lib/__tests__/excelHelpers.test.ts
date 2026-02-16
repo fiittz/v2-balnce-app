@@ -232,15 +232,46 @@ describe("styleSheet", () => {
     expect(mockColumn.eachCell).toHaveBeenCalled();
   });
 
-  it("sets minimum width on narrow columns", () => {
+  it("sets column width based on default maxLength when eachCell has no content", () => {
     const narrowColumn = { width: 5, eachCell: vi.fn() };
     const ws = {
       columns: [narrowColumn],
-      getColumn: vi.fn(() => narrowColumn),
+      getColumn: vi.fn(() => ({ width: 0 })),
     };
     styleSheet(ws as never);
-    // Width should be set to at least min (12+4 = 16 if maxLength stays at 12)
+    // eachCell is called; since callback never runs, maxLength stays at 12
+    // column.width = Math.min(12 + 4, 50) = 16
+    expect(narrowColumn.eachCell).toHaveBeenCalled();
     expect(narrowColumn.width).toBe(16);
+  });
+
+  it("invokes the eachCell callback and adjusts width based on cell content length", () => {
+    const column = {
+      width: 5,
+      eachCell: vi.fn((opts: unknown, cb: (cell: { value: string }) => void) => {
+        cb({ value: "A very long cell content string here" });
+      }),
+    };
+    const ws = {
+      columns: [column, column],
+      getColumn: vi.fn(() => ({ width: 0 })),
+    };
+    styleSheet(ws as never);
+    // "A very long cell content string here" = 36 chars
+    // maxLength = max(12, 36) = 36, width = min(36 + 4, 50) = 40
+    expect(column.width).toBe(40);
+  });
+
+  it("sets column 2 width to 20 when worksheet has fewer than 2 columns", () => {
+    const singleColumn = { width: 5, eachCell: vi.fn() };
+    const getColumnResult = { width: 0 };
+    const ws = {
+      columns: [singleColumn],
+      getColumn: vi.fn(() => getColumnResult),
+    };
+    styleSheet(ws as never);
+    expect(ws.getColumn).toHaveBeenCalledWith(2);
+    expect(getColumnResult.width).toBe(20);
   });
 });
 

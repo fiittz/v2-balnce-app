@@ -738,6 +738,33 @@ describe("executeToolCall — run_director_health_check", () => {
     const { result } = executeToolCall("run_director_health_check", {}, ctx);
     expect(result).toContain("Company Health Check");
   });
+
+  it("shows upcoming deadlines and penalises score when deadline is within 30 days", () => {
+    // We need a taxYear such that one of the deadlines (Form 11 filing: Oct 31 of taxYear+1,
+    // or Form 11 preliminary tax: Oct 31 of taxYear) is within 30 days of "today".
+    // Use vi to set fake date close to Oct 31 of a relevant year.
+    const realDate = Date;
+    // Set today to Oct 10 of 2026 — so Form 11 preliminary tax deadline (Oct 31, 2025)
+    // won't work. Instead set taxYear to 2025 so filing deadline is Oct 31 2026,
+    // and set today to Oct 15 2026 → 16 days away (within 30).
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 9, 15)); // Oct 15, 2026
+
+    const ctx = makeCtx({
+      taxYear: 2025,
+      directorData: { name: "Jane Doe", salary: 60000 },
+    });
+    const { result } = executeToolCall("run_director_health_check", {}, ctx);
+
+    expect(result).toContain("Personal Tax Deadlines");
+    expect(result).toContain("Form 11 filing deadline");
+    expect(result).toContain("days");
+    // The score should be penalised — check Action Items
+    expect(result).toContain("Action Items");
+    expect(result).toContain("due in");
+
+    vi.useRealTimers();
+  });
 });
 
 // ================================================================

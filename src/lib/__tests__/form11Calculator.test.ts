@@ -609,3 +609,23 @@ describe("calculateForm11 — empty dateOfBirth fallback", () => {
     expect(result.pensionRelief).toBe(16_000);
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// calculateForm11 — getAge birthday not yet passed (line 229)
+// ══════════════════════════════════════════════════════════════
+describe("calculateForm11 — getAge birthday later in year", () => {
+  it("subtracts 1 from age when birthday has not yet occurred this year", () => {
+    // Use a DOB with month=December so the birthday is always in the future
+    // In Feb 2026, someone born 1986-12-25 should be 39 (not 40 yet)
+    // 39 falls in 30-39 band = 20%
+    const result = calculateForm11(
+      baseInput({
+        dateOfBirth: "1986-12-25",
+        salary: 80_000,
+        pensionContributions: 20_000,
+      })
+    );
+    // Age = 39 → 30-39 band = 20%, Max: 80000 * 0.20 = 16000
+    expect(result.pensionRelief).toBe(16_000);
+  });
+});
