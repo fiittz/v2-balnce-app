@@ -1,12 +1,15 @@
-import { 
-  VAT_RATES, 
-  DISALLOWED_VAT_CREDITS, 
-  ALLOWED_VAT_CREDITS, 
+import {
+  VAT_RATES,
+  DISALLOWED_VAT_CREDITS,
+  ALLOWED_VAT_CREDITS,
   RCT_RULES,
   INDUSTRY_VAT_RULES,
   determineVatTreatment,
-  applyTwoThirdsRule 
+  applyTwoThirdsRule
 } from './irishVatRules';
+import { matchVendor, type VendorMatchResult } from './vendorMatcher';
+import type { VendorCacheEntry } from '@/services/vendorCacheService';
+import { extractVendorPattern, getCorrectionConfidence, type UserCorrection } from './correctionUtils';
 
 export type TransactionDirection = "income" | "expense";
 
@@ -23,6 +26,7 @@ export interface TransactionInput {
   receipt_text?: string; // optional OCR text
   account_type?: string; // "limited_company" | "directors_personal_tax" — filters category matching
   user_business_description?: string; // free-text description of what the business does (max 40 words)
+  mcc_code?: number; // optional MCC code from bank feed
 }
 
 export interface AutoCatResult {
@@ -168,22 +172,9 @@ export function findMatchingCategory<T extends { name: string; type?: string; ac
   return null;
 }
 
-// =================== MERCHANT RULES ===================
-// Based on real Irish VAT categorization rules from user's P&L analysis
-// Following Section 59/60 of VAT Consolidation Act 2010
-
-interface MerchantRule {
-  patterns: string[];
-  category: string;
-  vat_type: string;
-  vat_deductible: boolean;
-  purpose: string;
-  needs_receipt?: boolean; // True if receipt required to claim VAT
-  isTradeSupplier?: boolean; // True for merchants that are ALWAYS business for trade industries
-  isTechSupplier?: boolean; // True for merchants that are ALWAYS business for tech/SaaS industries
-  relief_type?: "medical" | "pension" | "health_insurance" | "rent" | "charitable" | "tuition" | null;
-  amountLogic?: (amount: number) => { category?: string; confidence?: number; purpose?: string; vat_deductible?: boolean } | null;
-}
+// =================== VENDOR MATCHING ===================
+// Vendor database with 500+ patterns, fuzzy matching, and MCC fallback
+// replaces the old inline merchantRules[] array.
 
 // Trade industries that should get boosted confidence for trade suppliers
 const TRADE_INDUSTRIES = [
@@ -197,824 +188,8 @@ const TECH_INDUSTRIES = [
   "technology_it", "technology", "software", "saas", "professional_services"
 ];
 
-const merchantRules: MerchantRule[] = [
-  // === REVENUE COMMISSIONERS === (Tax refunds - NOT taxable income)
-  {
-    patterns: ["revenue", "revenue commissioners", "rev comm", "revenue comm", "collector general", "collector-general", "rev.ie", "ros refund", "revenue refund", "tax refund", "vat refund", "paye refund", "ct refund", "rct refund"],
-    category: "Tax Refund",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Tax refund from Revenue Commissioners. Not taxable income — this is a return of previously overpaid tax.",
-  },
-
-  // === INTERNAL TRANSFERS === (Not income/expense - internal movement of funds)
-  {
-    patterns: ["*mobi online saver", "*mobi current", "mobi online saver", "mobi current", "mobi saver", "online saver", "current account", "from current", "to current", "savings transfer", "internal transfer"],
-    category: "Internal Transfer",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Internal transfer between accounts. Not actual income or expense - funds movement only.",
-  },
-
-  // === SOFTWARE SUBSCRIPTIONS === (VAT Deductible @ 23%)
-  {
-    patterns: ["openai", "chatgpt", "gpt", "ai subscr"],
-    category: "Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Software subscription for business operations. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["surveymonkey", "survey monkey"],
-    category: "Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Survey software subscription. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["xero", "sage", "quickbooks"],
-    category: "Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Accounting software subscription. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["qr.io", "qr generator"],
-    category: "Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Digital service subscription. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["apple.com/bill", "apple.com", "itunes"],
-    category: "Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Software/app subscription. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["spotify", "adobe", "microsoft", "shopify", "google storage", "dropbox", "canva", "zoom", "slack"],
-    category: "Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Software subscription. VAT deductible under Section 59.",
-  },
-
-  // === INTERNET/HOSTING SERVICES === (VAT Deductible @ 23%)
-  {
-    patterns: ["blacknight", "hosting", "domain"],
-    category: "Marketing",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Web hosting/internet services for business. VAT deductible under Section 59.",
-  },
-
-  // === FUEL STATIONS === (Multi-vendor — sells fuel, food, car washes, etc.)
-  // Cannot determine what was purchased without receipt — leave uncategorized
-  {
-    patterns: ["maxol", "m3 mulhuddart maxol", "m3 maxol"],
-    category: "General Expenses",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Fuel station — multi-vendor store. Need receipt to determine purchase (diesel/petrol/food/other).",
-  },
-  {
-    patterns: ["circle k", "circlek"],
-    category: "General Expenses",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Fuel station — multi-vendor store. Need receipt to determine purchase.",
-  },
-  {
-    patterns: ["applegreen"],
-    category: "General Expenses",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Fuel station — multi-vendor store. Need receipt to determine purchase.",
-  },
-  {
-    patterns: ["texaco"],
-    category: "General Expenses",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Fuel station — multi-vendor store. Need receipt to determine purchase.",
-  },
-
-  // === CONVENIENCE STORES === (Drawings/personal unless proven otherwise)
-  {
-    patterns: ["spar", "spar hollystown"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Convenience store — likely personal. Treated as drawings unless receipt proves business supplies.",
-  },
-  {
-    patterns: ["centra", "daybreak"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Convenience store — likely personal food/drink. Treated as drawings.",
-  },
-  {
-    patterns: ["mr price"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Discount retailer — likely personal. Treated as drawings unless receipt proves business use.",
-  },
-
-  // === FOOD/DRINK/ENTERTAINMENT === (Meals & Entertainment — VAT NEVER Deductible)
-  // Section 60(2)(a)(i) and (iii)
-  {
-    patterns: ["mcdonalds", "mcdonald", "burger king", "kfc", "subway", "supermacs"],
-    category: "Meals & Entertainment",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Food/drink expense. VAT NOT deductible under Section 60(2)(a)(i).",
-  },
-  {
-    patterns: ["kennedys", "murrays bar", "madigans", "the pub", "bar & grill", "bar restaurant", "public house"],
-    category: "Meals & Entertainment",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Food/drink/entertainment. VAT NOT deductible under Section 60(2)(a)(i) and (iii).",
-  },
-  {
-    patterns: ["butlers chocolate", "cafe", "coffee", "starbucks", "costa"],
-    category: "Meals & Entertainment",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Food/drink expense. VAT NOT deductible under Section 60(2)(a)(i).",
-  },
-  {
-    patterns: ["just eat", "deliveroo", "uber eats"],
-    category: "Meals & Entertainment",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Food delivery. VAT NOT deductible under Section 60(2)(a)(i).",
-  },
-  {
-    patterns: ["hotel", "accommodation", "b&b", "airbnb"],
-    category: "Subsistence",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Accommodation for staff. VAT NOT deductible under Section 60(2)(a)(i).",
-  },
-
-  // === PERSONAL/ENTERTAINMENT === (Drawings — Not Deductible)
-  {
-    patterns: ["smyths", "smyth toy"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Toy retailer. Personal expense — treated as drawings.",
-  },
-  {
-    patterns: ["playstation", "xbox", "netflix", "amazon prime", "disney"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Entertainment subscription. Personal expense — treated as drawings.",
-  },
-  {
-    patterns: ["lidl", "tesco", "aldi", "dunnes", "supervalu"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Supermarket. Likely personal/food — treated as drawings unless receipt proves business supplies.",
-  },
-  {
-    patterns: ["penneys", "primark", "tk maxx", "zara", "h&m"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Clothing retailer. Personal expense — treated as drawings unless proven workwear.",
-  },
-  {
-    patterns: ["vapevend", "vapeend", "vape"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Personal expense — treated as drawings.",
-  },
-  {
-    patterns: ["planet leisure", "nya*planet"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Entertainment/leisure. Personal expense — treated as drawings.",
-  },
-  {
-    patterns: ["uisce beatha"],
-    category: "Meals & Entertainment",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    purpose: "Pub/bar. Food and drink expense. VAT NOT deductible (Section 60(2)(a)(i)).",
-  },
-
-  // === TAXI/TRANSPORT === (VAT Deductible @ 13.5%)
-  {
-    patterns: ["freenow", "free now", "bolt", "uber", "mytaxi"],
-    category: "Motor/travel",
-    vat_type: "Reduced 13.5%",
-    vat_deductible: true,
-    needs_receipt: true,
-    purpose: "Taxi/transport service. VAT deductible at 13.5% if for business travel (need receipt).",
-  },
-
-  // === ACCOMMODATION === (VAT NOT Deductible)
-  {
-    patterns: ["booking.com", "hotel at booking", "dooleys hotel", "dooleys"],
-    category: "Subsistence",
-    vat_type: "Reduced 13.5%",
-    vat_deductible: false,
-    purpose: "Hotel/accommodation. VAT NOT deductible under Section 60(2)(a)(i) unless qualifying conference.",
-  },
-
-  // === PORT/FERRY === (Business travel)
-  {
-    patterns: ["port of waterford", "irish ferries", "stena line"],
-    category: "Motor/travel",
-    vat_type: "Zero",
-    vat_deductible: true,
-    purpose: "Port/ferry charges for business travel. Zero-rated transport.",
-  },
-
-  // === MISC SHOPS/LOCATIONS ===
-  {
-    patterns: ["waterfrd", "waterford"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Retail purchase — treated as drawings unless receipt proves business use.",
-  },
-
-  // === RETAIL (Could be business supplies) ===
-  {
-    patterns: ["the range"],
-    category: "Drawings",
-    vat_type: "Standard 23%",
-    vat_deductible: false,
-    needs_receipt: true,
-    purpose: "Retail store — treated as drawings unless receipt proves business supplies.",
-  },
-
-  // === BANK FEES === (Exempt - No VAT)
-  {
-    patterns: ["revolut business fee", "revolut fee", "basic plan fee"],
-    category: "Bank fees",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Financial services are VAT exempt. No VAT to claim.",
-  },
-  {
-    patterns: ["stamp duty", "fee-qtr", "service charge", "account fee", "monthly fee", "bank charge"],
-    category: "Bank fees",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Bank fees/charges. Financial services are VAT exempt.",
-  },
-
-  // === TOLLS === (Zero-rated - No VAT to claim but expense is deductible)
-  {
-    patterns: ["eflow", "e-flow", "e flow", "e-toll", "etoll", "barrier free tol", "toll", "m50", "barrier free"],
-    category: "Motor/travel",
-    vat_type: "Zero",
-    vat_deductible: true,
-    purpose: "Toll charges for business travel. Zero-rated/exempt - no VAT to claim but expense is deductible.",
-  },
-
-  // === PARKING === (VAT Deductible @ 23%)
-  {
-    patterns: ["parkingpay", "parking", "car park", "ncp"],
-    category: "Motor/travel",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Parking for business travel. VAT deductible under Section 59.",
-  },
-
-  // === TRADE SUPPLIES === (VAT Deductible @ 23%)
-  // These merchants are ALWAYS business for trade industries
-  {
-    patterns: ["screwfix", "screwfix ireland"],
-    category: "Materials",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Trade supplies/tools for business. VAT deductible under Section 59.",
-    isTradeSupplier: true, // Flag for industry-aware boost
-  },
-  {
-    patterns: ["chadwicks", "chadwick"],
-    category: "Materials",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Building materials supplier. VAT deductible under Section 59.",
-    isTradeSupplier: true,
-  },
-  {
-    patterns: ["woodies", "woodie"],
-    category: "Tools",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "DIY/hardware supplies. VAT deductible under Section 59.",
-    isTradeSupplier: true,
-  },
-  {
-    patterns: ["mcquillan", "jj mcquillan", "powertoolhub", "howdens", "noyeks", "ptrs"],
-    category: "Materials",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Trade supplies/materials. VAT deductible under Section 59.",
-    isTradeSupplier: true,
-  },
-  {
-    patterns: ["pat mcdonnell paint", "strahan", "hardwood", "timber"],
-    category: "Materials",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Construction materials. VAT deductible under Section 59.",
-    isTradeSupplier: true,
-  },
-  // Additional carpentry/joinery specific suppliers
-  {
-    patterns: ["brooks", "brooks timber", "murdock builders", "heiton buckley", "toolstation"],
-    category: "Materials",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Trade supplies/materials. VAT deductible under Section 59.",
-    isTradeSupplier: true,
-  },
-  {
-    patterns: ["harvey norman"],
-    category: "Equipment",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    needs_receipt: true,
-    purpose: "Electronics/equipment. VAT deductible if for business use (need receipt).",
-  },
-
-  // === VEHICLE PARTS/REPAIRS === (VAT Deductible @ 23%)
-  {
-    patterns: ["partsforcars", "parts for cars"],
-    category: "Motor/travel",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Vehicle parts for business vehicle. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["first stop", "fastfit", "kwik fit", "ats euromaster", "halfords"],
-    category: "Repairs and Maintenance",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Vehicle maintenance/parts. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["nct", "road safety", "cvrt"],
-    category: "Motor/travel",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Vehicle testing. VAT deductible under Section 59.",
-  },
-
-  // === OFFICE/PRINTING === (VAT Deductible @ 23%)
-  {
-    patterns: ["nya*print", "print copy", "printing"],
-    category: "Office",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Printing/office services. VAT deductible under Section 59.",
-  },
-
-  // === PHONE/COMMUNICATIONS === (VAT Deductible @ 23%)
-  {
-    patterns: ["three ireland", "vodafone", "eir", "48", "gomo", "tesco mobile"],
-    category: "Phone",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Phone/communications for business. VAT deductible under Section 59.",
-  },
-
-  // === BUSINESS INSURANCE === (Exempt)
-  {
-    patterns: ["axa", "allianz", "fbd", "liberty insurance"],
-    category: "Insurance",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Business insurance premium. VAT exempt - no VAT to claim.",
-  },
-
-  // === HEALTH INSURANCE === (Exempt — Form 11 relief: health_insurance)
-  {
-    patterns: ["vhi", "laya healthcare", "laya health", "irish life health", "glo health"],
-    category: "Medical",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    relief_type: "health_insurance",
-    purpose: "Health insurance premium. Tax relief at source (TRS). Section 470 TCA 1997.",
-  },
-
-  // === PHARMACY / CHEMIST === (Form 11 relief: medical @ 20% Section 469)
-  {
-    patterns: ["pharmacy", "chemist", "boots", "lloyds pharmacy", "mccabes", "hickeys", "sam mccauley", "cara pharmacy", "totalhealth", "allcare"],
-    category: "Medical",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    relief_type: "medical",
-    purpose: "Pharmacy/prescription expense. Eligible for 20% tax relief under Section 469 TCA 1997.",
-  },
-
-  // === MEDICAL (non-routine) === (Form 11 relief: medical @ 20% Section 469)
-  {
-    patterns: ["physio", "physiotherapy", "dental surgery", "orthodont", "oral surgery", "hospital", "consultant", "surgeon", "dermatolog", "fertility", "ivf", "mater private", "blackrock clinic", "beacon hospital", "st vincent", "galway clinic", "bon secours"],
-    category: "Medical",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    relief_type: "medical",
-    purpose: "Non-routine medical expense. Eligible for 20% tax relief under Section 469 TCA 1997.",
-  },
-
-  // === PENSION FUNDS === (Form 11 relief: pension)
-  {
-    patterns: ["irish life pension", "zurich pension", "aviva pension", "new ireland", "standard life"],
-    category: "Insurance",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    relief_type: "pension",
-    purpose: "Pension contribution. Tax relief at marginal rate. Section 774 TCA 1997.",
-  },
-
-  // === CHARITABLE DONATIONS === (Form 11 relief: charitable)
-  {
-    patterns: ["trocaire", "concern worldwide", "goal", "svp", "st vincent de paul", "unicef ireland", "irish cancer society", "pieta house", "barnardos"],
-    category: "other",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    relief_type: "charitable",
-    purpose: "Charitable donation. Tax relief under Section 848A TCA 1997 (min €250).",
-  },
-
-  // === ACCOUNTING === (VAT Deductible @ 23%)
-  {
-    patterns: ["accountant", "accounting", "tax return", "vat return"],
-    category: "Consulting & Accounting",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Accounting/tax services. VAT deductible under Section 59.",
-  },
-
-  // === WORKWEAR === (VAT Deductible @ 23%)
-  {
-    patterns: ["workwear", "work clothes", "hi-vis", "safety boots", "ppe"],
-    category: "Workwear",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Workwear/PPE for business. VAT deductible under Section 59.",
-  },
-
-  // === ADVERTISING === (VAT Deductible @ 23%)
-  {
-    patterns: ["facebook ads", "google ads", "instagram", "linkedin", "vistaprint", "advertising"],
-    category: "Advertising",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Advertising expense. VAT deductible under Section 59.",
-  },
-
-  // === BROADBAND/INTERNET PROVIDERS === (VAT Deductible @ 23% — business portion)
-  {
-    patterns: ["virgin media", "sky ireland", "pure telecom", "digiweb", "imagine broadband"],
-    category: "Phone",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Broadband/internet service. Business portion VAT deductible under Section 59.",
-  },
-
-  // === PROFESSIONAL BODY MEMBERSHIPS === (Allowable expense)
-  {
-    patterns: ["cif", "engineers ireland", "law society", "cpa ireland", "acca", "chartered accountants", "riai", "reci", "cro annual return"],
-    category: "Consulting & Accounting",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Professional body membership/registration. Allowable business expense.",
-  },
-
-  // === TRAINING & CERTIFICATION === (VAT Deductible @ 23%)
-  {
-    patterns: ["safe pass", "solas", "cscs card", "qqi", "city & guilds", "fetac", "manual handling", "first aid course", "iosh", "citb"],
-    category: "Training",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTradeSupplier: true,
-    purpose: "Training/certification for business. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["ehs international", "ehs intl"],
-    category: "Training",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTradeSupplier: true,
-    purpose: "Safe Pass / health & safety training and certification. VAT deductible under Section 59.",
-  },
-
-  // === MOTOR TAX & VEHICLE ADMIN === (Exempt — business vehicle expense)
-  {
-    patterns: ["motor tax", "dublin city", "motor tax online", "motortax"],
-    category: "Motor Vehicle Expenses",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Motor tax for business vehicle. Exempt from VAT. Allowable business expense.",
-  },
-
-  // === SCRAP / VEHICLE PARTS === (VAT Deductible @ 23%)
-  {
-    patterns: ["car dismantlers", "kilcock car", "scrap yard", "breakers yard", "auto parts", "car parts"],
-    category: "Motor/travel",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Vehicle parts/scrap for business vehicle. VAT deductible under Section 59.",
-  },
-
-  // === FLOORING / MATERIALS SUPPLIERS === (VAT Deductible @ 23%)
-  {
-    patterns: ["havwoods", "havwood"],
-    category: "Materials",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTradeSupplier: true,
-    purpose: "Flooring materials supplier. VAT deductible under Section 59.",
-  },
-  {
-    patterns: ["tj o'mahony", "tj omahony", "tj o mahony", "o'mahony", "omahony", "tj o'mahoney", "tj omahoney", "tj o mahoney", "o'mahoney", "omahoney builders"],
-    category: "Materials",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTradeSupplier: true,
-    purpose: "Building materials supplier. VAT deductible under Section 59.",
-  },
-
-  // === CONFERENCES === (VAT Deductible @ 23%)
-  {
-    patterns: ["startupnetwork", "startup network", "conference", "summit", "expo", "convention"],
-    category: "Training",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Business conference/networking event. VAT deductible under Section 59.",
-  },
-
-  // === BRANDING / LOGO === (VAT Deductible @ 23%)
-  {
-    patterns: ["looka", "logo maker", "logo design", "brand design", "fiverr", "99designs"],
-    category: "Marketing",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    purpose: "Company branding/logo design. VAT deductible under Section 59.",
-  },
-
-  // === WASTE DISPOSAL === (VAT Deductible @ 23%)
-  {
-    patterns: ["barna recycling", "greenstar", "panda waste", "panda", "thorntons recycling", "country clean", "oxigen", "skip hire", "greyhound recycling"],
-    category: "Waste",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTradeSupplier: true,
-    purpose: "Waste disposal/skip hire. VAT deductible under Section 59.",
-  },
-
-  // === TECH / SAAS SUPPLIERS === (VAT via reverse charge — self-account at 23%)
-  // These merchants are ALWAYS business for tech/SaaS industries
-  {
-    patterns: ["aws", "amazon web services", "amazonaws"],
-    category: "Cloud Hosting",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Cloud infrastructure (AWS). Reverse charge self-account at 23%. VAT reclaimable.",
-  },
-  {
-    patterns: ["microsoft azure", "azure", "microsoft 365", "microsoft office", "msft"],
-    category: "Cloud Hosting",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Cloud infrastructure / SaaS (Microsoft). Reverse charge self-account at 23%. VAT reclaimable.",
-  },
-  {
-    patterns: ["google cloud", "gcp", "google workspace", "google domains"],
-    category: "Cloud Hosting",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Cloud infrastructure / SaaS (Google). Reverse charge self-account at 23%. VAT reclaimable.",
-  },
-  {
-    patterns: ["github", "gitlab", "bitbucket"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Code repository / DevOps platform. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["atlassian", "jira", "confluence", "trello"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Project management / collaboration tools. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["vercel", "netlify", "heroku", "digitalocean", "digital ocean", "linode", "cloudflare", "render"],
-    category: "Cloud Hosting",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Cloud hosting / deployment platform. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["stripe", "stripe payments", "stripe ireland"],
-    category: "Payment Processing",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    isTechSupplier: true,
-    purpose: "Payment processing fees. Financial services — VAT exempt, not reclaimable.",
-  },
-  {
-    patterns: ["hubspot", "salesforce", "pipedrive", "close.com", "apollo.io", "apollo"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "CRM / GTM sales platform. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["intercom", "drift", "zendesk", "freshdesk", "crisp"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Customer support / messaging platform. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["slack", "notion", "asana", "monday.com", "clickup", "linear"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Team collaboration / productivity tool. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["figma", "canva", "adobe", "creative cloud", "sketch", "miro"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Design / creative tool. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["mailchimp", "sendgrid", "postmark", "customer.io", "brevo", "sendinblue"],
-    category: "Advertising",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Email marketing / transactional email platform. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["openai", "anthropic", "cohere"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "AI / LLM API provider. Reverse charge. VAT reclaimable. May qualify for R&D credit (Section 766).",
-  },
-  {
-    patterns: ["datadog", "sentry", "new relic", "logflare", "logrocket"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Monitoring / observability platform. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["supabase", "firebase", "planetscale", "neon", "mongodb atlas", "redis cloud"],
-    category: "Cloud Hosting",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Database / backend-as-a-service. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["twilio", "vonage", "messagebird"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Communications API (SMS/voice). Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["zoom", "loom", "calendly", "cal.com"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Video conferencing / scheduling tool. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["semrush", "ahrefs", "hotjar", "mixpanel", "amplitude", "posthog", "segment"],
-    category: "Advertising",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "SEO / analytics / product analytics platform. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["namecheap", "godaddy", "porkbun", "hover"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "Domain registration / DNS. Reverse charge. VAT reclaimable.",
-  },
-  {
-    patterns: ["apple developer", "google play developer", "app store"],
-    category: "Subscriptions & Software",
-    vat_type: "Standard 23%",
-    vat_deductible: true,
-    isTechSupplier: true,
-    purpose: "App store developer account / fees. Reverse charge. VAT reclaimable.",
-  },
-
-  // === TUITION FEES === (Form 11 relief: tuition — 20% on amounts over EUR 3,000)
-  {
-    patterns: ["ucd", "tcd", "trinity college", "dcu", "nuig", "university of galway", "ucc", "maynooth university", "tu dublin", "technological university", "griffith college", "ncad", "rcsi", "dit", "athlone it", "waterford it", "letterkenny it", "sligo it", "carlow it", "dundalk it", "limerick it"],
-    category: "other",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    relief_type: "tuition",
-    purpose: "Tuition fees. 20% tax relief on qualifying fees over EUR 3,000. Section 473A TCA 1997.",
-  },
-
-  // === RENT (PERSONAL) === (Form 11 relief: rent tax credit)
-  {
-    patterns: ["rent payment", "monthly rent", "residential tenancies", "rtb registration"],
-    category: "Rent",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    relief_type: "rent",
-    purpose: "Rent payment. Rent tax credit up to EUR 750 (single) / EUR 1,500 (couple). Section 473B TCA 1997.",
-  },
-
-  // === INVESTMENT / BROKERAGE === (CGT flag — Section 7 Form 11)
-  {
-    patterns: ["degiro", "interactive brokers", "trading 212", "etoro", "revolut trading", "ibkr"],
-    category: "other",
-    vat_type: "Exempt",
-    vat_deductible: false,
-    purpose: "Investment/brokerage platform. Review for CGT reporting in Form 11 Section 7.",
-  },
-];
-
 function normalise(text: string | undefined | null): string {
   return (text ?? "").toLowerCase().replace(/\s+/g, " ").trim();
-}
-
-function matchMerchantRule(desc: string, merchant: string, amount: number): {
-  rule: MerchantRule;
-  adjustedCategory?: string;
-  adjustedConfidence?: number;
-  adjustedPurpose?: string;
-  adjustedVatDeductible?: boolean;
-} | null {
-  const haystack = normalise(`${desc} ${merchant}`);
-  
-  for (const rule of merchantRules) {
-    const matched = rule.patterns.some((p) => haystack.includes(p.toLowerCase()));
-    if (matched) {
-      // Apply amount-based logic if available
-      if (rule.amountLogic) {
-        const adjustment = rule.amountLogic(amount);
-        if (adjustment) {
-          return {
-            rule,
-            adjustedCategory: adjustment.category,
-            adjustedConfidence: adjustment.confidence,
-            adjustedPurpose: adjustment.purpose,
-            adjustedVatDeductible: adjustment.vat_deductible,
-          };
-        }
-      }
-      return { rule };
-    }
-  }
-  return null;
 }
 
 function inferIncomeCategory(tx: TransactionInput): {
@@ -1144,8 +319,8 @@ function refineWithReceipt(base: AutoCatResult, tx: TransactionInput): AutoCatRe
 function isPaymentToIndividual(desc: string): boolean {
   const normalised = normalise(desc);
   // Transfers "To [Name]" that don't contain company indicators
-  if (normalised.startsWith("to ") && 
-      !normalised.includes("limited") && 
+  if (normalised.startsWith("to ") &&
+      !normalised.includes("limited") &&
       !normalised.includes("ltd") &&
       !normalised.includes("group") &&
       !normalised.includes("company")) {
@@ -1154,7 +329,11 @@ function isPaymentToIndividual(desc: string): boolean {
   return false;
 }
 
-export function autoCategorise(tx: TransactionInput): AutoCatResult {
+export function autoCategorise(
+  tx: TransactionInput,
+  vendorCache?: Map<string, VendorCacheEntry>,
+  userCorrections?: Map<string, UserCorrection>
+): AutoCatResult {
   const desc = normalise(tx.description);
   const merchant = normalise(tx.merchant_name ?? tx.description);
   const amountAbs = Math.abs(tx.amount);
@@ -1222,7 +401,7 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
       // Use industry-specific VAT rate for income
       const industryRules = INDUSTRY_VAT_RULES[userIndustry] || INDUSTRY_VAT_RULES[userBusinessType];
       const outputRate = industryRules?.defaultOutputRate || "standard_23";
-      
+
       category = "Sales";
       vat_type = VAT_RATES[outputRate.toUpperCase().replace("_", "_") as keyof typeof VAT_RATES]?.label || "Standard Rate (23%)";
       vat_deductible = false;
@@ -1250,7 +429,74 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     }, tx);
   }
 
-  // 3) APPLY IRISH VAT RULES (Section 59/60) — statutory rules BEFORE merchant rules
+  // 2.5) User corrections lookup — highest priority after statutory rules
+  let correctionHit: UserCorrection | undefined;
+  if (userCorrections && userCorrections.size > 0) {
+    const vendorPattern = extractVendorPattern(tx.description);
+    if (vendorPattern && userCorrections.has(vendorPattern)) {
+      const correction = userCorrections.get(vendorPattern)!;
+      const correctionConfidence = getCorrectionConfidence(correction);
+      if (correctionConfidence > 0) {
+        correctionHit = correction;
+      }
+    }
+  }
+
+  if (correctionHit) {
+    const correctionConfidence = getCorrectionConfidence(correctionHit);
+    return finalizeResult({
+      category: correctionHit.corrected_category,
+      vat_type: correctionHit.corrected_vat_rate != null
+        ? correctionHit.corrected_vat_rate === 23 ? "Standard 23%"
+          : correctionHit.corrected_vat_rate === 13.5 ? "Reduced 13.5%"
+          : correctionHit.corrected_vat_rate === 9 ? "Second Reduced 9%"
+          : correctionHit.corrected_vat_rate === 0 ? "Zero"
+          : "Standard 23%"
+        : "N/A",
+      vat_deductible: correctionHit.corrected_vat_rate != null && correctionHit.corrected_vat_rate > 0,
+      business_purpose: `User-corrected category (${correctionHit.transaction_count} corrections).`,
+      confidence_score: correctionConfidence,
+      notes: `Applied user correction for "${correctionHit.vendor_pattern}".`,
+      needs_review: false,
+      is_business_expense: true,
+    }, tx);
+  }
+
+  // 3) Vendor cache lookup — check cached entries before hardcoded rules
+  let cacheHit: VendorCacheEntry | undefined;
+  if (vendorCache && vendorCache.size > 0) {
+    const tokens = desc.split(/\s+/);
+    // Try progressively longer n-grams (longest match wins)
+    for (let len = tokens.length; len >= 1 && !cacheHit; len--) {
+      for (let i = 0; i <= tokens.length - len && !cacheHit; i++) {
+        const ngram = tokens.slice(i, i + len).join(" ");
+        if (vendorCache.has(ngram)) {
+          cacheHit = vendorCache.get(ngram);
+        }
+      }
+    }
+  }
+
+  // 3.5) Vendor match — uses vendorDatabase (exact → fuzzy → MCC fallback)
+  const vendorMatch: VendorMatchResult | null = cacheHit
+    ? {
+        vendor: {
+          name: cacheHit.normalized_name,
+          patterns: [cacheHit.vendor_pattern],
+          category: cacheHit.category,
+          vat_type: cacheHit.vat_type,
+          vat_deductible: cacheHit.vat_deductible,
+          purpose: cacheHit.business_purpose ?? "",
+          sector: cacheHit.sector ?? undefined,
+        },
+        matchType: 'exact',
+        matchedPattern: cacheHit.vendor_pattern,
+        confidence: cacheHit.confidence,
+      }
+    : matchVendor(tx.description, tx.merchant_name, tx.amount, tx.mcc_code);
+
+  // 4) APPLY IRISH VAT RULES (Section 59/60) — statutory rules ALWAYS take priority
+  //    These fire regardless of vendor match because Section 60 is law.
   const vatTreatment = determineVatTreatment(
     tx.description,
     amountAbs,
@@ -1258,8 +504,15 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     "expense"
   );
 
+  const foodWordBoundary = (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION as any).wordBoundaryKeywords || [];
+  const foodWordMatch = foodWordBoundary.some((k: string) => new RegExp(`\\b${k}\\b`).test(desc));
+  const isDisallowedFood = foodWordMatch || DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => desc.includes(k));
+  const isDisallowedEntertainment = DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some(k => desc.includes(k));
+  const isDisallowedPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some(k => desc.includes(k));
+  const isDiesel = ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => desc.includes(k));
+
   // Check for DIESEL specifically first - VAT IS recoverable
-  if (ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => desc.includes(k))) {
+  if (isDiesel) {
     return finalizeResult({
       category: "Motor Vehicle Expenses",
       vat_type: "Standard 23%",
@@ -1273,73 +526,63 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     }, tx);
   }
 
-  {
-    const foodWordBoundary = DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.wordBoundaryKeywords || [];
-    const foodWordMatch = foodWordBoundary.some((k: string) => new RegExp(`\\b${k}\\b`).test(desc));
-    const isDisallowedFood = foodWordMatch || DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => desc.includes(k));
-    const isDisallowedEntertainment = DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some(k => desc.includes(k));
-    const isDisallowedPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some(k => desc.includes(k));
-
-    if (isDisallowedFood) {
-      return finalizeResult({
-        category: "other",
-        vat_type: "Standard 23%",
-        vat_deductible: false,
-        business_purpose: vatTreatment.explanation,
-        confidence_score: 90,
-        notes: "Section 60(2)(a)(i) - Food/drink/accommodation VAT not recoverable.",
-        needs_review: false,
-        needs_receipt: false,
-        is_business_expense: false,
-      }, tx);
-    }
-
-    if (isDisallowedEntertainment) {
-      return finalizeResult({
-        category: "other",
-        vat_type: "Standard 23%",
-        vat_deductible: false,
-        business_purpose: vatTreatment.explanation,
-        confidence_score: 90,
-        notes: "Section 60(2)(a)(iii) - Entertainment VAT not recoverable.",
-        needs_review: false,
-        needs_receipt: false,
-        is_business_expense: false,
-      }, tx);
-    }
-
-    if (isDisallowedPetrol) {
-      return finalizeResult({
-        category: "Motor Vehicle Expenses",
-        vat_type: "Standard 23%",
-        vat_deductible: false,
-        business_purpose: vatTreatment.explanation,
-        confidence_score: 85,
-        notes: "Section 60(2)(a)(v) - Petrol VAT not recoverable (diesel IS recoverable).",
-        needs_review: false,
-        needs_receipt: true,
-        is_business_expense: true,
-      }, tx);
-    }
+  if (isDisallowedFood) {
+    return finalizeResult({
+      category: "other",
+      vat_type: "Standard 23%",
+      vat_deductible: false,
+      business_purpose: vatTreatment.explanation,
+      confidence_score: 90,
+      notes: "Section 60(2)(a)(i) - Food/drink/accommodation VAT not recoverable.",
+      needs_review: false,
+      needs_receipt: false,
+      is_business_expense: false,
+    }, tx);
   }
 
-  // 4) Merchant rules — specific vendor matches
-  const merchantMatch = matchMerchantRule(desc, merchant, tx.amount);
+  if (isDisallowedEntertainment) {
+    return finalizeResult({
+      category: "other",
+      vat_type: "Standard 23%",
+      vat_deductible: false,
+      business_purpose: vatTreatment.explanation,
+      confidence_score: 90,
+      notes: "Section 60(2)(a)(iii) - Entertainment VAT not recoverable.",
+      needs_review: false,
+      needs_receipt: false,
+      is_business_expense: false,
+    }, tx);
+  }
 
-  // 5) Apply merchant match if found
-  
-  if (merchantMatch) {
-    const { rule, adjustedCategory, adjustedConfidence, adjustedPurpose, adjustedVatDeductible } = merchantMatch;
-    
-    category = adjustedCategory || rule.category;
-    vat_type = rule.vat_type;
-    vat_deductible = adjustedVatDeductible ?? rule.vat_deductible;
-    business_purpose = adjustedPurpose || rule.purpose;
-    confidence = adjustedConfidence || 85;
-    notes = `Matched vendor: ${rule.patterns[0]}.`;
-    needs_receipt = rule.needs_receipt ?? false;
-    relief_type = rule.relief_type ?? null;
-    
+  if (isDisallowedPetrol) {
+    return finalizeResult({
+      category: "Motor Vehicle Expenses",
+      vat_type: "Standard 23%",
+      vat_deductible: false,
+      business_purpose: vatTreatment.explanation,
+      confidence_score: 85,
+      notes: "Section 60(2)(a)(v) - Petrol VAT not recoverable (diesel IS recoverable).",
+      needs_review: false,
+      needs_receipt: true,
+      is_business_expense: true,
+    }, tx);
+  }
+
+  // 5) Apply vendor match if found
+  if (vendorMatch) {
+    const { vendor, adjustedCategory, adjustedConfidence, adjustedPurpose, adjustedVatDeductible } = vendorMatch;
+
+    category = adjustedCategory || vendor.category;
+    vat_type = vendor.vat_type;
+    vat_deductible = adjustedVatDeductible ?? vendor.vat_deductible;
+    business_purpose = adjustedPurpose || vendor.purpose;
+    confidence = adjustedConfidence || vendorMatch.confidence;
+    notes = vendorMatch.matchedPattern
+      ? `Matched vendor: ${vendorMatch.matchedPattern}${vendorMatch.matchType === 'fuzzy' ? ` (fuzzy ~${Math.round((vendorMatch.similarity ?? 0) * 100)}%)` : ''}.`
+      : `Matched via MCC code.`;
+    needs_receipt = vendor.needs_receipt ?? false;
+    relief_type = vendor.relief_type ?? null;
+
     // INDUSTRY-AWARE BOOST: If trade/tech supplier + user in matching industry = 95% confidence + definitely business
     const isTradeUser = TRADE_INDUSTRIES.some(ti =>
       userIndustry.includes(ti) || userBusinessType.includes(ti) || userBizDesc.includes(ti)
@@ -1351,24 +594,24 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
     const industryLabel = tx.user_industry || tx.user_business_type;
     const descSuffix = tx.user_business_description ? ` (${tx.user_business_description})` : "";
 
-    if (rule.isTradeSupplier && isTradeUser) {
+    if (vendor.isTradeSupplier && isTradeUser) {
       confidence = 95;
       is_business_expense = true; // Definitely business for trade users
       vat_deductible = true; // Trade supplies are always VAT deductible for trade users
       notes = `Trade supplier for ${industryLabel} business. Auto-approved.`;
-      business_purpose = `${rule.purpose} Industry: ${industryLabel}${descSuffix}.`;
-    } else if (rule.isTechSupplier && isTechUser) {
+      business_purpose = `${vendor.purpose} Industry: ${industryLabel}${descSuffix}.`;
+    } else if (vendor.isTechSupplier && isTechUser) {
       confidence = 95;
       is_business_expense = true;
       // Preserve original vat_deductible (Stripe is exempt, cloud hosting is reclaimable)
       notes = `Tech/SaaS supplier for ${industryLabel} business. Auto-approved.`;
-      business_purpose = `${rule.purpose} Industry: ${industryLabel}${descSuffix}.`;
-    } else if (rule.isTechSupplier && !isTechUser) {
+      business_purpose = `${vendor.purpose} Industry: ${industryLabel}${descSuffix}.`;
+    } else if (vendor.isTechSupplier && !isTechUser) {
       // Tech supplier but user NOT in tech industry - still likely business but lower confidence
       confidence = 75;
       is_business_expense = true; // Most businesses use SaaS tools
       notes = `Tech/SaaS supplier. User industry (${tx.user_industry || "unspecified"}) is not tech — verify business use.`;
-    } else if (rule.isTradeSupplier && !isTradeUser) {
+    } else if (vendor.isTradeSupplier && !isTradeUser) {
       // Trade supplier but user NOT in trade industry - lower confidence, might be personal
       confidence = 65;
       is_business_expense = null; // Uncertain - could be DIY/personal
@@ -1376,16 +619,16 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
       notes = `Trade supplier but user industry (${tx.user_industry || "unspecified"}) is not trades. Review if business expense.`;
     } else {
       // Apply VAT treatment based on Irish rules
-      if (!vatTreatment.isVatRecoverable && rule.vat_deductible) {
+      if (!vatTreatment.isVatRecoverable && vendor.vat_deductible) {
         // Override if Irish VAT rules say not recoverable
         vat_deductible = false;
         notes += ` ${vatTreatment.warnings.join(". ")}`;
       }
-      
+
       // Determine business vs personal based on merchant category
       is_business_expense = determineBusinessExpense(category, vat_deductible, needs_receipt, userIndustry, userBusinessType);
     }
-    
+
     // Flag non-deductible expenses for review
     if (!vat_deductible && category === "other") {
       needs_review = true;
@@ -1490,8 +733,8 @@ export function autoCategorise(tx: TransactionInput): AutoCatResult {
 // Helper function to determine if expense is business or personal
 // Now considers user industry/business type for better accuracy
 function determineBusinessExpense(
-  category: string, 
-  vatDeductible: boolean, 
+  category: string,
+  vatDeductible: boolean,
   needsReceipt: boolean,
   userIndustry?: string,
   userBusinessType?: string
@@ -1503,7 +746,7 @@ function determineBusinessExpense(
     "Workwear", "Training", "Office", "Equipment", "Advertising", "Marketing",
     "Fuel", "Rent", "Cleaning", "Labour costs", "Sub Con", "Wages", "Motor Vehicle Expenses"
   ];
-  
+
   if (businessCategories.some(bc => category.toLowerCase().includes(bc.toLowerCase()))) {
     return true;
   }
@@ -1511,28 +754,33 @@ function determineBusinessExpense(
   // Industry-specific business expense detection
   const industry = normalise(userIndustry || userBusinessType || "");
   const isTradeUser = TRADE_INDUSTRIES.some(ti => industry.includes(ti));
-  
+
   // For trade users, materials and tools are always business
   if (isTradeUser && (category.toLowerCase().includes("material") || category.toLowerCase().includes("tool"))) {
     return true;
   }
-  
-  // DEFINITELY PERSONAL (FALSE) - VAT not deductible AND category is "other" with specific patterns
-  // If category is "other" and VAT is not deductible and no receipt needed to verify
+
+  // DEFINITELY PERSONAL (FALSE) - Form 11 relief categories are personal expenses (not business)
+  const personalReliefCategories = ["Medical", "Pension", "Health Insurance", "Charitable", "Tuition"];
+  if (personalReliefCategories.some(pc => category.toLowerCase().includes(pc.toLowerCase()))) {
+    return false; // Personal — Form 11 relief
+  }
+
+  // VAT not deductible AND category is "other" with specific patterns
   if (category === "other" && !vatDeductible && !needsReceipt) {
     return false; // Personal
   }
-  
+
   // Internal transfers are not business expenses (they're not expenses at all)
   if (category === "Internal Transfer") {
     return null; // Neither business nor personal - it's a transfer
   }
-  
+
   // UNCERTAIN (NULL) - mixed retailers, supermarkets, needs receipt to determine
   if (needsReceipt || category === "other") {
     return null;
   }
-  
+
   // Default to business if VAT is deductible
   return vatDeductible ? true : null;
 }

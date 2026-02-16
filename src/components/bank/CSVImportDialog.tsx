@@ -26,6 +26,10 @@ import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
 import { autoCategorise, findMatchingCategory } from "@/lib/autocat";
 import { supabase } from "@/integrations/supabase/client";
 import { useCreateImportBatch } from "@/hooks/useImportBatches";
+import { useVendorCache } from "@/hooks/useVendorCache";
+import { useUserCorrections } from "@/hooks/useUserCorrections";
+import { enrichLowConfidenceTransactions, type EnrichmentProgress } from "@/services/postImportEnrichment";
+import EnrichmentBanner from "./EnrichmentBanner";
 import { detectTrips, extractBaseLocation, type DetectedTrip, type DetectTripsInput } from "@/lib/tripDetection";
 import { useTripRecategorize } from "@/hooks/useTripRecategorize";
 import { useInvoiceTripMatcher, type InvoiceTrip } from "@/hooks/useInvoiceTripMatcher";
@@ -78,7 +82,9 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
   const { data: accounts = [] } = useAccounts(); // Get all accounts for Chart of Accounts linking
   const { profile, user } = useAuth();
   const { data: onboarding } = useOnboardingSettings();
-  
+  const { vendorCache } = useVendorCache();
+  const { userCorrections } = useUserCorrections();
+
   const [currentFilename, setCurrentFilename] = useState<string>("");
   const [totalDataRows, setTotalDataRows] = useState<number>(0);
   
@@ -86,6 +92,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
   const [isCategorizing, setIsCategorizing] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [enrichmentProgress, setEnrichmentProgress] = useState<EnrichmentProgress | null>(null);
   const [detectedTrips, setDetectedTrips] = useState<DetectedTrip[]>([]);
   const { recategorizeTrips, isRunning: isTripProcessing } = useTripRecategorize();
   const { invoiceTrips } = useInvoiceTripMatcher();
@@ -697,7 +704,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                   user_business_type: onboarding?.business_type || profile?.business_type || "",
                   user_business_description: onboarding?.business_description || "",
                   receipt_text: undefined,
-                });
+                }, vendorCache, userCorrections);
 
                 // Use flexible category matching with mapping
                 const matchedCategory = findMatchingCategory(
@@ -754,6 +761,20 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
 
         setIsCategorizing(false);
         toast.success(`Auto-categorized ${successfulCategorizations} of ${createdTransactions.length} transactions`);
+
+        // Trigger async AI enrichment for uncategorized transactions (fire-and-forget)
+        const uncategorizedCount = createdTransactions.length - successfulCategorizations;
+        if (uncategorizedCount > 0 && user?.id) {
+          const allTxnIds = createdTransactions.map((t) => t.id);
+          enrichLowConfidenceTransactions({
+            userId: user.id,
+            transactionIds: allTxnIds,
+            vendorCache,
+            userIndustry: onboarding?.business_type || profile?.business_type || "",
+            userBusinessType: onboarding?.business_type || profile?.business_type || "",
+            onProgress: setEnrichmentProgress,
+          }).catch((err) => console.error("[PostImportEnrichment] Error:", err));
+        }
       }
     }
 
@@ -1141,6 +1162,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                 AI is analyzing merchants and assigning categories...
               </p>
             )}
+            <EnrichmentBanner progress={enrichmentProgress} />
           </div>
         )}
 

@@ -4,11 +4,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useCategories } from "@/hooks/useCategories";
 import { useUpdateTransaction } from "@/hooks/useTransactions";
+import { useAuth } from "@/hooks/useAuth";
+import { recordCorrection } from "@/services/userCorrectionService";
 
 interface InlineCategoryPickerProps {
   transactionId: string;
   currentCategory: { name: string } | null | undefined;
   currentCategoryId: string | null;
+  transactionDescription?: string;
+  currentVatRate?: number | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -17,14 +21,31 @@ export default function InlineCategoryPicker({
   transactionId,
   currentCategory,
   currentCategoryId,
+  transactionDescription,
+  currentVatRate,
   isOpen,
   onOpenChange,
 }: InlineCategoryPickerProps) {
   const { data: categories } = useCategories();
   const updateTransaction = useUpdateTransaction();
+  const { user } = useAuth();
 
   const handleSelect = (categoryId: string) => {
+    const selectedCat = categories?.find((c) => c.id === categoryId);
     updateTransaction.mutate({ id: transactionId, category_id: categoryId });
+
+    // Record user correction for learning (fire-and-forget)
+    if (user?.id && transactionDescription && selectedCat && categoryId !== currentCategoryId) {
+      recordCorrection(
+        user.id,
+        transactionDescription,
+        currentCategory?.name ?? null,
+        selectedCat.name,
+        categoryId,
+        currentVatRate ?? null
+      ).catch(() => {});
+    }
+
     onOpenChange(false);
   };
 

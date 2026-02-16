@@ -156,6 +156,8 @@ export default function CategoryLedgerSection({
                     transactionId={transaction.id}
                     currentCategory={transaction.category}
                     currentCategoryId={transaction.category_id}
+                    transactionDescription={transaction.description}
+                    currentVatRate={transaction.vat_amount}
                     isOpen={categorizingTxId === transaction.id}
                     onOpenChange={(open) => setCategorizingTxId(open ? transaction.id : null)}
                   />

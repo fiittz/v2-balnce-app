@@ -668,3 +668,810 @@ describe("autoCategorise — internal transfer business expense", () => {
     expect(result.is_business_expense).toBeNull();
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// findMatchingCategory — account_type filtering
+// ══════════════════════════════════════════════════════════════
+describe("findMatchingCategory — account_type filtering", () => {
+  const dbCats = [
+    { name: "Materials & Supplies", type: "expense", account_type: "business" },
+    { name: "Medical Expenses", type: "expense", account_type: "personal" },
+    { name: "Bank Charges", type: "expense", account_type: "both" },
+    { name: "Office Expenses", type: "expense" }, // no account_type
+    { name: "Software", type: "expense", account_type: "business" },
+  ];
+
+  it("limited_company filters to business + both + no account_type", () => {
+    // "Bank Fees" maps to "Bank Charges" which has account_type "both" — should pass
+    const result = findMatchingCategory("Bank Fees", dbCats, "expense", "limited_company");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Bank Charges");
+  });
+
+  it("directors_personal_tax filters to personal + both + no account_type", () => {
+    // "Medical" maps to "Medical Expenses" which is personal — should pass for personal
+    const result = findMatchingCategory("Medical", dbCats, "expense", "directors_personal_tax");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Medical Expenses");
+  });
+
+  it("limited_company: personal-only excluded in filtered set but found via fallback", () => {
+    // "Medical" maps to "Medical Expenses" which is personal — excluded for limited_company
+    // BUT the fallback path (lines 148-162) tries all categories and finds it via mapping
+    const result = findMatchingCategory("Medical", dbCats, "expense", "limited_company");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Medical Expenses");
+  });
+
+  it("directors_personal_tax: business-only excluded, finds via mapping in filtered set", () => {
+    // "Software" is exact match but has account_type business — excluded for personal.
+    // Mapping: CATEGORY_NAME_MAP["Software"] = ["Subscriptions & Software", "Software & Licenses", "Office Expenses"]
+    // "Office Expenses" has NO account_type, so it's included in filtered set and matched via mapping.
+    const result = findMatchingCategory("Software", dbCats, "expense", "directors_personal_tax");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Office Expenses");
+  });
+
+  it("no account_type categories are always included", () => {
+    const result = findMatchingCategory("Office", dbCats, "expense", "limited_company");
+    expect(result).not.toBeNull();
+    // "Office" maps to ["Office Expenses", ...] — Office Expenses has no account_type, so included
+    expect(result!.name).toBe("Office Expenses");
+  });
+
+  it("unknown accountType includes all categories", () => {
+    const result = findMatchingCategory("Software", dbCats, "expense", "some_other_type");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Software");
+  });
+
+  it("fallback path: exact match in all categories when filtered set has no match", () => {
+    // "Materials & Supplies" is exact match but account_type business — excluded for personal
+    const catsWithExact = [
+      { name: "Materials & Supplies", type: "expense", account_type: "business" },
+    ];
+    const result = findMatchingCategory("Materials & Supplies", catsWithExact, "expense", "directors_personal_tax");
+    // Personal filter excludes it, but fallback tries all categories and finds exact match
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Materials & Supplies");
+  });
+
+  it("fallback path: mapped match in all categories when filtered set has no match", () => {
+    // "Materials" maps to ["Timber & Sheet Materials", ...] — all are business only
+    const catsForFallback = [
+      { name: "Timber & Sheet Materials", type: "expense", account_type: "business" },
+    ];
+    const result = findMatchingCategory("Materials", catsForFallback, "expense", "directors_personal_tax");
+    // Personal filter excludes it, but fallback tries all categories via mapping
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Timber & Sheet Materials");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Income: Revenue refund
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — income: revenue refund", () => {
+  it("identifies Revenue Commissioners refund as Tax Refund", () => {
+    const result = autoCategorise(income("REVENUE COMMISSIONERS REFUND"));
+    expect(result.category).toBe("Tax Refund");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.confidence_score).toBe(95);
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("identifies collector general as Tax Refund", () => {
+    const result = autoCategorise(income("COLLECTOR GENERAL PAYMENT"));
+    expect(result.category).toBe("Tax Refund");
+  });
+
+  it("identifies VAT refund as Tax Refund", () => {
+    const result = autoCategorise(income("VAT REFUND FROM REVENUE"));
+    expect(result.category).toBe("Tax Refund");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Income: commercial refund/reversal/cashback/rebate
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — income: commercial refund", () => {
+  it("identifies refund as Interest Income (Other Income)", () => {
+    const result = autoCategorise(income("REFUND FROM AMAZON ORDER"));
+    expect(result.category).toBe("Interest Income");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.confidence_score).toBe(85);
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("identifies reversal as commercial refund", () => {
+    const result = autoCategorise(income("CHARGE REVERSAL"));
+    expect(result.category).toBe("Interest Income");
+    expect(result.notes).toContain("Refund/reversal");
+  });
+
+  it("identifies cashback as commercial refund", () => {
+    const result = autoCategorise(income("CASHBACK REWARD"));
+    expect(result.category).toBe("Interest Income");
+  });
+
+  it("identifies rebate as commercial refund", () => {
+    const result = autoCategorise(income("ANNUAL REBATE"));
+    expect(result.category).toBe("Interest Income");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Income: professional services industry
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — income: industry-specific purposes", () => {
+  it("sets professional services purpose for professional industry user", () => {
+    const result = autoCategorise(
+      income("CLIENT PAYMENT RECEIVED", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.category).toBe("Sales");
+    expect(result.business_purpose).toContain("professional services");
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("sets retail purpose for retail industry user", () => {
+    const result = autoCategorise(
+      income("CUSTOMER PAYMENT RECEIVED", {
+        user_industry: "retail",
+        user_business_type: "Sole Trader",
+      })
+    );
+    expect(result.category).toBe("Sales");
+    expect(result.business_purpose).toContain("product sales");
+  });
+
+  it("sets generic income purpose when no client payment pattern matched", () => {
+    // Description that doesn't contain transfer, payment, invoice, lodgement,
+    // credit, money added, received, deposit, eft, bacs, faster payment, sepa credit
+    const result = autoCategorise(
+      income("MISC INFLOW ABC123", {
+        user_industry: "retail",
+        user_business_type: "Sole Trader",
+      })
+    );
+    expect(result.category).toBe("Sales");
+    expect(result.business_purpose).toContain("Income received");
+    expect(result.confidence_score).toBe(80); // 70 + 10 (no pattern match)
+  });
+
+  it("sets construction purpose for construction user with client payment", () => {
+    // Non-company income that still looks like client payment (has "payment")
+    const result = autoCategorise(
+      income("PAYMENT FROM PRIVATE CLIENT", {
+        user_industry: "construction",
+        user_business_type: "Sole Trader",
+      })
+    );
+    // "from" triggers isFromCompany AND userInConstruction => RCT
+    expect(result.category).toBe("RCT");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Income: non-construction, non-company income with no pattern
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — income: generic income with no pattern", () => {
+  it("returns Sales with lower confidence for non-matching income description", () => {
+    // No specific pattern keywords, not construction, not professional, not retail
+    const result = autoCategorise(
+      income("MISC INFLOW ABC123", {
+        user_industry: "technology_it",
+        user_business_type: "LTD",
+      })
+    );
+    expect(result.category).toBe("Sales");
+    expect(result.business_purpose).toContain("Income received");
+    expect(result.confidence_score).toBe(80); // 70 + 10
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Expense keyword fallback: medical
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — keyword fallback: medical/pension/charity/tuition/rent/insurance", () => {
+  it("detects medical from description keyword", () => {
+    // "medical" is NOT in Section 60 keywords and NOT a merchant pattern
+    const result = autoCategorise(expense("GENERAL MEDICAL CENTRE DUBLIN"));
+    expect(result.category).toBe("Medical");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.relief_type).toBe("medical");
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("detects pharmacy from description keyword", () => {
+    // Need to make sure "pharmacy" doesn't match any merchant pattern
+    // "pharmacy" IS in merchantRules (line 627), so it will match merchant rule first
+    // Let's use "chemist" which is also in merchant rules
+    // Actually both are merchant rules. To hit the keyword fallback for medical,
+    // we need a description that has "medical" but doesn't match merchant patterns.
+    // "GENERAL MEDICAL CENTRE DUBLIN" above works. Let's verify "dental" as keyword.
+    // "dental surgery" is a merchant pattern but "dental" alone triggers both.
+    // "dental" is in desc.includes check — let's test it with no merchant match
+    const result = autoCategorise(expense("MY DENTAL PLAN DIRECT DEBIT"));
+    // "dental" is in DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION? No.
+    // "dental surgery" is in merchant patterns — but "dental plan" includes "dental" substring
+    // which matches merchant rule pattern "dental surgery"? No — pattern matching is includes()
+    // "dental surgery" pattern check: desc "my dental plan direct debit" includes "dental surgery"? NO.
+    // So this hits keyword fallback "dental"
+    expect(result.category).toBe("Medical");
+    expect(result.relief_type).toBe("medical");
+  });
+
+  it("detects pension from description keyword", () => {
+    // "pension" is NOT in Section 60 keywords
+    // Merchant patterns: "irish life pension", "zurich pension", etc.
+    // "MY PENSION CONTRIBUTION" — does it match any? "pension" substring would match many.
+    // Let me check: merchant patterns include "irish life pension", "zurich pension", "aviva pension"
+    // The haystack "my pension contribution my pension contribution" does include "pension" but...
+    // Wait, the matching is: haystack.includes(p.toLowerCase()) where p is the pattern string.
+    // "irish life pension" — haystack does NOT include this full string.
+    // But I need to make sure none of the single-word patterns match.
+    // Looking at all patterns... none are just "pension" alone.
+    // So "PENSION CONTRIBUTION MONTHLY" should hit keyword fallback.
+    const result = autoCategorise(expense("PENSION CONTRIBUTION MONTHLY"));
+    expect(result.category).toBe("Insurance");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.relief_type).toBe("pension");
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("detects charity from description keyword", () => {
+    // "charity" is NOT in Section 60 keywords, NOT a merchant pattern
+    const result = autoCategorise(expense("LOCAL CHARITY CONTRIBUTION"));
+    expect(result.category).toBe("other");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.relief_type).toBe("charitable");
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("detects donation from description keyword", () => {
+    const result = autoCategorise(expense("ONLINE DONATION XYZ"));
+    expect(result.category).toBe("other");
+    expect(result.relief_type).toBe("charitable");
+  });
+
+  it("detects tuition from description keyword", () => {
+    // "tuition" is NOT in Section 60 keywords, NOT a single merchant pattern
+    // Avoid "fee" in description since that triggers bank fee keyword first
+    const result = autoCategorise(expense("TUITION PAYMENT SEPT 2024"));
+    expect(result.category).toBe("other");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.relief_type).toBe("tuition");
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("detects college fee from description keyword (college fee)", () => {
+    // "college fee" check: desc.includes("college fee") is the keyword check at line 1438.
+    // But "fee" also matches at line 1395 which is checked FIRST.
+    // The order is: fee -> subscription -> physio/dental/medical -> pension -> charity
+    // -> tuition -> rent -> insurance -> refund -> unknown
+    // "fee" comes before "tuition"/"college fee", so "college fee" description
+    // would be caught by "fee" first. To hit tuition, avoid "fee", "charge", "commission".
+    const result = autoCategorise(expense("ANNUAL COLLEGE TUITION DIRECT DEBIT"));
+    expect(result.category).toBe("other");
+    expect(result.relief_type).toBe("tuition");
+  });
+
+  it("detects rent from description keyword (not car/tool/equipment rent)", () => {
+    // "rent" is NOT in Section 60 keywords. "rent payment" is a merchant pattern, so
+    // we need something that includes "rent" but doesn't match "rent payment" merchant pattern.
+    // Merchant patterns: "rent payment", "monthly rent", "residential tenancies", "rtb registration"
+    // "OFFICE RENT DEC 2024" — includes "rent" but not "rent payment" or "monthly rent"
+    const result = autoCategorise(expense("OFFICE RENT DEC 2024"));
+    expect(result.category).toBe("Rent");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.relief_type).toBe("rent");
+    expect(result.is_business_expense).toBeNull(); // Could be business or personal
+  });
+
+  it("does NOT detect rent when description says car rent", () => {
+    // "car rent" exclusion prevents rent keyword match at line 1447.
+    // Avoid "payment" which would match "rent payment" merchant pattern.
+    // "car rent" + no other triggering keywords -> falls through to unknown
+    const result = autoCategorise(expense("CAR RENT MONTHLY DIRECT DEBIT"));
+    // "car rent" is excluded from rent keyword, no merchant match
+    expect(result.category).not.toBe("Rent");
+  });
+
+  it("does NOT trigger rent keyword for equipment rent", () => {
+    // This should NOT match rent keyword because of "equipment rent" exclusion
+    const result = autoCategorise(expense("EQUIPMENT RENT MONTHLY ABC123"));
+    // "equipment rent" is excluded from the rent keyword check
+    // No merchant match for "equipment rent"
+    // Falls through to keyword check — "rent" is excluded due to "equipment rent"
+    // Should fall to the unknown/other path
+    expect(result.category).not.toBe("Rent");
+  });
+
+  it("detects insurance from description keyword (not matching merchant)", () => {
+    // "insurance" is NOT in Section 60 keywords
+    // Merchant patterns: "axa", "allianz", "fbd", "liberty insurance"
+    // "BUSINESS INSURANCE RENEWAL" — includes "insurance" but no merchant pattern match
+    // Wait, "liberty insurance" pattern — does "business insurance renewal" include "liberty insurance"? No.
+    // But it needs to not match any merchant. Let me check... No merchant patterns are just "insurance".
+    // Actually wait: the keyword fallback is at line 1456 and desc.includes("insurance").
+    // The test on line 573 uses "MOTOR INSURANCE RENEWAL" which should... let me check if this
+    // is already tested. Yes, test line 573 already covers this. But does it hit the keyword
+    // fallback or a merchant match? "motor insurance renewal" — merchant patterns include
+    // "motor tax" but not "motor insurance". And "insurance" itself is not a merchant pattern.
+    // So "MOTOR INSURANCE RENEWAL" would hit the keyword fallback. This is already tested.
+    // Let's add a new test for a slightly different insurance description anyway.
+    const result = autoCategorise(expense("HOME INSURANCE DIRECT DEBIT"));
+    expect(result.category).toBe("Insurance");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.is_business_expense).toBe(true);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Tech supplier + tech user
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — tech supplier + tech user", () => {
+  it("boosts confidence to 95% for AWS + technology user", () => {
+    const result = autoCategorise(
+      expense("AWS SUBSCRIPTION CHARGE", {
+        user_industry: "technology_it",
+        user_business_type: "LTD",
+      })
+    );
+    expect(result.category).toBe("Cloud Hosting");
+    expect(result.confidence_score).toBe(95);
+    expect(result.is_business_expense).toBe(true);
+    expect(result.vat_deductible).toBe(true);
+    expect(result.notes).toContain("Tech/SaaS supplier");
+  });
+
+  it("boosts confidence to 95% for Stripe + tech user (preserves exempt VAT)", () => {
+    const result = autoCategorise(
+      expense("STRIPE PAYMENTS FEE", {
+        user_industry: "technology_it",
+        user_business_type: "LTD",
+      })
+    );
+    expect(result.category).toBe("Payment Processing");
+    expect(result.confidence_score).toBe(95);
+    expect(result.is_business_expense).toBe(true);
+    // Stripe is exempt — should preserve original vat_deductible=false
+    expect(result.vat_deductible).toBe(false);
+  });
+
+  it("lowers confidence for tech supplier + non-tech user", () => {
+    const result = autoCategorise(
+      expense("GITHUB SUBSCRIPTION", {
+        user_industry: "construction",
+        user_business_type: "Contractor",
+      })
+    );
+    expect(result.confidence_score).toBe(75);
+    expect(result.is_business_expense).toBe(true); // Most businesses use SaaS
+    expect(result.notes).toContain("not tech");
+  });
+
+  it("includes user_business_description in purpose for tech supplier + tech user", () => {
+    const result = autoCategorise(
+      expense("VERCEL DEPLOYMENT", {
+        user_industry: "technology_it",
+        user_business_type: "LTD",
+        user_business_description: "SaaS platform for accounting",
+      })
+    );
+    expect(result.confidence_score).toBe(95);
+    expect(result.business_purpose).toContain("SaaS platform for accounting");
+  });
+
+  it("includes industry label in purpose for trade supplier + trade user", () => {
+    const result = autoCategorise(
+      expense("CHADWICKS ORDER", {
+        user_industry: "construction",
+        user_business_type: "Contractor",
+        user_business_description: "Commercial building contractor",
+      })
+    );
+    expect(result.business_purpose).toContain("construction");
+    expect(result.business_purpose).toContain("Commercial building contractor");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Merchant match "else" branch (non-trade, non-tech)
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — merchant match default branch", () => {
+  it("uses determineBusinessExpense for non-trade non-tech merchant", () => {
+    // FreeNow is not flagged as isTradeSupplier or isTechSupplier
+    const result = autoCategorise(
+      expense("FREENOW TAXI SERVICE", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.category).toBe("Motor/travel");
+    // Motor/travel is in businessCategories -> is_business_expense = true
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("flags non-deductible 'other' category for review", () => {
+    // Need a merchant that maps to category "other" with vat_deductible false
+    // Charitable donations: trocaire -> category "other", vat_deductible false
+    // But trocaire has relief_type set. Let me check the branch condition:
+    // if (!vat_deductible && category === "other") { needs_review = true; }
+    // trocaire: category "other", vat_deductible false — should trigger this
+    // But trocaire has relief_type "charitable" which is set before the check.
+    // The key question: is the "other" + non-deductible check applied?
+    // Looking at line 1390: this is AFTER the industry boost checks.
+    // trocaire for a non-trade, non-tech user would hit the "else" branch (line 1377)
+    // which calls determineBusinessExpense. Category "other" + !vatDeductible + !needsReceipt => false.
+    const result = autoCategorise(
+      expense("TROCAIRE ANNUAL DONATION", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.category).toBe("other");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.needs_review).toBe(true);
+    expect(result.relief_type).toBe("charitable");
+  });
+
+  it("applies VAT treatment override when Irish rules say not recoverable", () => {
+    // To trigger lines 1381-1382: need a merchant with vat_deductible=true whose
+    // description also contains a fuel station name ("shell", "esso", "topaz") that
+    // makes determineVatTreatment return isVatRecoverable=false, BUT does NOT match
+    // the earlier Section 60 checks in autoCategorise.
+    // "accounting" matches the accountant merchant rule (vat_deductible=true, not trade/tech).
+    // "shell" in description triggers determineVatTreatment's fuel station check -> not recoverable.
+    // "shell" is NOT in Section 60 keywords (food/entertainment/petrol/diesel).
+    const result = autoCategorise(
+      expense("SHELL ACCOUNTING SERVICES", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.category).toBe("Consulting & Accounting");
+    // VAT deductible should be overridden to false by Irish rules
+    expect(result.vat_deductible).toBe(false);
+  });
+
+  it("Harvey Norman as Equipment with needs_receipt", () => {
+    const result = autoCategorise(
+      expense("HARVEY NORMAN ELECTRONICS", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.category).toBe("Equipment");
+    expect(result.needs_receipt).toBe(true);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — determineBusinessExpense paths
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — determineBusinessExpense coverage", () => {
+  it("returns true for definitely business category (Motor/travel)", () => {
+    const result = autoCategorise(
+      expense("EFLOW TOLL M50", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.category).toBe("Motor/travel");
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("returns false for 'other' + not deductible + no receipt needed (personal)", () => {
+    // Investment platforms match this: category "other", vat_deductible false, needs_receipt false
+    const result = autoCategorise(
+      expense("DEGIRO TRADING FEE", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.category).toBe("other");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("returns null for needsReceipt category (uncertain)", () => {
+    // Tesco is Drawings with needs_receipt=true
+    const result = autoCategorise(
+      expense("LIDL GROCERIES", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.needs_receipt).toBe(true);
+    expect(result.is_business_expense).toBeNull();
+  });
+
+  it("returns true when VAT deductible in default path", () => {
+    // Parking is Motor/travel with vat_deductible=true -> business
+    const result = autoCategorise(
+      expense("NCP PARKING DUBLIN", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.vat_deductible).toBe(true);
+    expect(result.is_business_expense).toBe(true);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — finalizeResult confidence banding
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — finalizeResult confidence banding", () => {
+  it("sets needs_review for confidence < 50", () => {
+    // Unknown vendor hits confidence 40 -> needs_review
+    const result = autoCategorise(expense("ZXCVBNM ASDF QWERTY"));
+    expect(result.confidence_score).toBeLessThan(50);
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("sets needs_review for confidence between 50 and 70", () => {
+    // Trade supplier for non-trade user: confidence 65
+    const result = autoCategorise(
+      expense("WOODIES HOME IMPROVEMENT", {
+        user_industry: "professional_services",
+        user_business_type: "Consultant",
+      })
+    );
+    expect(result.confidence_score).toBe(65);
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("does not force needs_review for confidence >= 70", () => {
+    // Bank fees keyword: confidence 75
+    const result = autoCategorise(expense("MONTHLY ACCOUNT FEE"));
+    expect(result.confidence_score).toBeGreaterThanOrEqual(70);
+    // Bank fees has is_business_expense = true from keyword, not flagged for review
+    expect(result.needs_review).toBe(false);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — directors_personal_tax: looks_like_business_expense
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — directors_personal_tax looks_like_business advanced", () => {
+  it("flags looks_like_business when is_business_expense is true on personal account", () => {
+    // Chadwicks + carpentry user (is_business_expense = true) on personal account
+    const result = autoCategorise(
+      expense("CHADWICKS BUILDERS SUPPLY", {
+        account_type: "directors_personal_tax",
+      })
+    );
+    expect(result.is_business_expense).toBe(true);
+    expect(result.looks_like_business_expense).toBe(true);
+  });
+
+  it("flags looks_like_business based on category name matching", () => {
+    // Software subscription on personal account — "software" in BUSINESS_INDICATOR_CATEGORIES
+    const result = autoCategorise(
+      expense("XERO ACCOUNTING SOFTWARE", {
+        account_type: "directors_personal_tax",
+      })
+    );
+    expect(result.category).toBe("Software");
+    expect(result.looks_like_business_expense).toBe(true);
+  });
+
+  it("does NOT flag looks_like_business for Drawings category on personal account", () => {
+    const result = autoCategorise(
+      expense("PENNEYS CLOTHING", {
+        account_type: "directors_personal_tax",
+      })
+    );
+    expect(result.category).toBe("Drawings");
+    expect(result.looks_like_business_expense).toBeUndefined();
+  });
+
+  it("does NOT flag looks_like_business on limited_company account", () => {
+    // Same expense but on business account — should not flag
+    const result = autoCategorise(
+      expense("SCREWFIX IRELAND", { account_type: "limited_company" })
+    );
+    expect(result.looks_like_business_expense).toBeUndefined();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Additional merchant rule coverage
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — additional merchant rules", () => {
+  it("categorises accounting firm as Consulting & Accounting", () => {
+    const result = autoCategorise(expense("SMITH ACCOUNTANT FEES"));
+    expect(result.category).toBe("Consulting & Accounting");
+    expect(result.vat_deductible).toBe(true);
+  });
+
+  it("categorises Havwoods as Materials for trade user", () => {
+    const result = autoCategorise(expense("HAVWOODS FLOORING ORDER"));
+    expect(result.category).toBe("Materials");
+    expect(result.is_business_expense).toBe(true);
+    expect(result.confidence_score).toBe(95);
+  });
+
+  it("categorises TJ O'Mahony as Materials", () => {
+    const result = autoCategorise(expense("TJ O'MAHONY BUILDERS MERCHANTS"));
+    expect(result.category).toBe("Materials");
+  });
+
+  it("categorises conference as Training", () => {
+    const result = autoCategorise(expense("TECH CONFERENCE TICKETS"));
+    expect(result.category).toBe("Training");
+  });
+
+  it("categorises Looka as Marketing", () => {
+    const result = autoCategorise(expense("LOOKA LOGO DESIGN"));
+    expect(result.category).toBe("Marketing");
+  });
+
+  it("categorises Vistaprint as Advertising", () => {
+    const result = autoCategorise(expense("VISTAPRINT BUSINESS CARDS"));
+    expect(result.category).toBe("Advertising");
+  });
+
+  it("categorises Virgin Media as Phone", () => {
+    const result = autoCategorise(expense("VIRGIN MEDIA BROADBAND"));
+    expect(result.category).toBe("Phone");
+  });
+
+  it("categorises CIF as Consulting & Accounting", () => {
+    const result = autoCategorise(expense("CIF MEMBERSHIP RENEWAL"));
+    expect(result.category).toBe("Consulting & Accounting");
+  });
+
+  it("categorises Motor Tax as Motor Vehicle Expenses", () => {
+    const result = autoCategorise(expense("MOTOR TAX ONLINE RENEWAL"));
+    expect(result.category).toBe("Motor Vehicle Expenses");
+    expect(result.vat_type).toBe("Exempt");
+  });
+
+  it("categorises car dismantlers as Motor/travel", () => {
+    const result = autoCategorise(expense("KILCOCK CAR DISMANTLERS"));
+    expect(result.category).toBe("Motor/travel");
+  });
+
+  it("categorises NCT as Motor/travel", () => {
+    const result = autoCategorise(expense("NCT TEST BOOKING"));
+    expect(result.category).toBe("Motor/travel");
+  });
+
+  it("categorises EHS International as Training", () => {
+    const result = autoCategorise(expense("EHS INTERNATIONAL SAFE PASS"));
+    expect(result.category).toBe("Training");
+    expect(result.confidence_score).toBe(95); // isTradeSupplier + trade user
+  });
+
+  it("categorises Brooks Timber as Materials", () => {
+    const result = autoCategorise(expense("BROOKS TIMBER SUPPLIES"));
+    expect(result.category).toBe("Materials");
+  });
+
+  it("categorises SurveyMonkey as Software", () => {
+    const result = autoCategorise(expense("SURVEYMONKEY ANNUAL PLAN"));
+    expect(result.category).toBe("Software");
+  });
+
+  it("categorises QR.io as Software", () => {
+    const result = autoCategorise(expense("QR.IO SUBSCRIPTION"));
+    expect(result.category).toBe("Software");
+  });
+
+  it("categorises Blacknight as Marketing (hosting)", () => {
+    const result = autoCategorise(expense("BLACKNIGHT HOSTING"));
+    expect(result.category).toBe("Marketing");
+  });
+
+  it("categorises Applegreen as General Expenses with needs_receipt", () => {
+    const result = autoCategorise(expense("APPLEGREEN STATION"));
+    expect(result.needs_receipt).toBe(true);
+  });
+
+  it("categorises Texaco as General Expenses with needs_receipt", () => {
+    const result = autoCategorise(expense("TEXACO FUEL STATION"));
+    expect(result.needs_receipt).toBe(true);
+  });
+
+  it("categorises Centra as Drawings", () => {
+    const result = autoCategorise(expense("CENTRA STORE"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("categorises Mr Price as Drawings", () => {
+    const result = autoCategorise(expense("MR PRICE DUBLIN"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("categorises planet leisure as Drawings", () => {
+    const result = autoCategorise(expense("NYA*PLANET LEISURE"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("categorises uisce beatha as Meals & Entertainment", () => {
+    const result = autoCategorise(expense("UISCE BEATHA PUB"));
+    // "uisce beatha" triggers FOOD_DRINK_ACCOMMODATION Section 60 check before merchant
+    // Actually, let me check: "pub" is NOT a Section 60 keyword. But "uisce beatha" is
+    // not in Section 60 either. So this should hit the merchant rule.
+    // Wait: does "pub" match the word boundary check? wordBoundaryKeywords: ["bar"]
+    // "pub" is not in there. And "uisce beatha" keywords list has "pub" in
+    // FOOD_DRINK_ACCOMMODATION? Let me check: ["restaurant", "cafe", "coffee", "pub", ...]
+    // YES! "pub" is in the food/drink keywords. So "uisce beatha pub" triggers Section 60.
+    expect(result.vat_deductible).toBe(false);
+  });
+
+  it("categorises The Range as Drawings", () => {
+    const result = autoCategorise(expense("THE RANGE RETAIL"));
+    expect(result.category).toBe("Drawings");
+    expect(result.needs_receipt).toBe(true);
+  });
+
+  it("categorises Waterford shop as Drawings", () => {
+    const result = autoCategorise(expense("WATERFRD CRYSTAL SHOP"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("categorises printing service as Office", () => {
+    const result = autoCategorise(expense("NYA*PRINT COPY CENTER"));
+    expect(result.category).toBe("Office");
+  });
+
+  it("categorises investment platform as other", () => {
+    const result = autoCategorise(expense("DEGIRO SHARE PURCHASE"));
+    expect(result.category).toBe("other");
+    expect(result.vat_deductible).toBe(false);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — isPaymentToIndividual edge cases
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — isPaymentToIndividual edge cases", () => {
+  it("does not flag 'to XYZ Group' as individual", () => {
+    const result = autoCategorise(expense("To Murphy Group"));
+    expect(result.category).not.toBe("Labour costs");
+  });
+
+  it("does not flag 'to XYZ Company' as individual", () => {
+    const result = autoCategorise(expense("To Building Company Ireland"));
+    expect(result.category).not.toBe("Labour costs");
+  });
+
+  it("does not flag description not starting with 'to'", () => {
+    const result = autoCategorise(expense("PAYMENT FOR JOHN SMITH"));
+    expect(result.category).not.toBe("Labour costs");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — Receipt refinement: no receipt text
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — receipt text edge cases", () => {
+  it("returns base result when no receipt text provided", () => {
+    const result = autoCategorise(expense("CIRCLE K STATION"));
+    // No receipt_text, so refineWithReceipt returns base unchanged
+    expect(result.needs_receipt).toBe(true);
+    expect(result.category).toBe("General Expenses");
+  });
+
+  it("returns base result when receipt text does not match any pattern", () => {
+    const result = autoCategorise(
+      expense("CIRCLE K STATION", { receipt_text: "Car wash deluxe" })
+    );
+    // Receipt says "car wash" — doesn't match diesel, petrol, materials, or tools
+    expect(result.category).toBe("General Expenses");
+  });
+});

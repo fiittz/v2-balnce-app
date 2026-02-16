@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { autoCategorise, findMatchingCategory } from "@/lib/autocat";
 import { findMatchingAccount, getDefaultAccount } from "@/lib/accountMapping";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
+import { useVendorCache } from "@/hooks/useVendorCache";
+import { useUserCorrections } from "@/hooks/useUserCorrections";
 import { useCreateJob } from "@/hooks/useProcessingJobs";
 import { detectTrips, classifyTripExpense, extractBaseLocation } from "@/lib/tripDetection";
 import type { DetectTripsInput } from "@/lib/tripDetection";
@@ -21,6 +23,8 @@ interface RecategorizeResult {
 export function useBulkRecategorize() {
   const { user, profile } = useAuth();
   const { data: onboarding } = useOnboardingSettings();
+  const { vendorCache } = useVendorCache();
+  const { userCorrections } = useUserCorrections();
   const queryClient = useQueryClient();
   
   const [isRunning, setIsRunning] = useState(false);
@@ -108,7 +112,7 @@ export function useBulkRecategorize() {
                 user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 receipt_text: undefined,
-              });
+              }, vendorCache, userCorrections);
 
               const matchedCategory = findMatchingCategory(
                 engineResult.category,
@@ -311,7 +315,7 @@ export function useBulkRecategorize() {
                 user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 receipt_text: undefined,
-              });
+              }, vendorCache, userCorrections);
 
               const matchedCategory = findMatchingCategory(
                 engineResult.category,
@@ -461,7 +465,7 @@ export function useBulkRecategorize() {
                 user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                 receipt_text: undefined,
-              });
+              }, vendorCache, userCorrections);
 
               const matchedCategory = findMatchingCategory(
                 engineResult.category,

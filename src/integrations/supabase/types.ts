@@ -705,6 +705,107 @@ export type Database = {
           },
         ]
       }
+      user_corrections: {
+        Row: {
+          id: string
+          user_id: string
+          vendor_pattern: string
+          original_category: string | null
+          corrected_category: string
+          corrected_category_id: string
+          corrected_vat_rate: number | null
+          transaction_count: number
+          promoted_to_cache: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          vendor_pattern: string
+          original_category?: string | null
+          corrected_category: string
+          corrected_category_id: string
+          corrected_vat_rate?: number | null
+          transaction_count?: number
+          promoted_to_cache?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          vendor_pattern?: string
+          original_category?: string | null
+          corrected_category?: string
+          corrected_category_id?: string
+          corrected_vat_rate?: number | null
+          transaction_count?: number
+          promoted_to_cache?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_corrections_corrected_category_id_fkey"
+            columns: ["corrected_category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_cache: {
+        Row: {
+          id: string
+          vendor_pattern: string
+          normalized_name: string
+          category: string
+          vat_type: string
+          vat_deductible: boolean
+          business_purpose: string | null
+          confidence: number
+          source: string
+          user_id: string | null
+          mcc_code: number | null
+          sector: string | null
+          hit_count: number
+          last_seen: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          vendor_pattern: string
+          normalized_name: string
+          category: string
+          vat_type: string
+          vat_deductible?: boolean
+          business_purpose?: string | null
+          confidence?: number
+          source?: string
+          user_id?: string | null
+          mcc_code?: number | null
+          sector?: string | null
+          hit_count?: number
+          last_seen?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          vendor_pattern?: string
+          normalized_name?: string
+          category?: string
+          vat_type?: string
+          vat_deductible?: boolean
+          business_purpose?: string | null
+          confidence?: number
+          source?: string
+          user_id?: string | null
+          mcc_code?: number | null
+          sector?: string | null
+          hit_count?: number
+          last_seen?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       vat_returns: {
         Row: {
           all_expenses_added: boolean | null
