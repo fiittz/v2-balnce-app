@@ -705,6 +705,36 @@ export type Database = {
           },
         ]
       }
+      vendor_aggregates: {
+        Row: {
+          id: string
+          vendor_pattern: string
+          top_category: string
+          top_category_percentage: number | null
+          total_users: number
+          total_transactions: number
+          last_aggregated: string
+        }
+        Insert: {
+          id?: string
+          vendor_pattern: string
+          top_category: string
+          top_category_percentage?: number | null
+          total_users?: number
+          total_transactions?: number
+          last_aggregated?: string
+        }
+        Update: {
+          id?: string
+          vendor_pattern?: string
+          top_category?: string
+          top_category_percentage?: number | null
+          total_users?: number
+          total_transactions?: number
+          last_aggregated?: string
+        }
+        Relationships: []
+      }
       user_corrections: {
         Row: {
           id: string
