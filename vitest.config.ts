@@ -16,7 +16,15 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/lib/**/*.ts", "supabase/functions/**/*.ts"],
-      exclude: ["src/lib/mockData.ts", "src/lib/seedAccounts.ts", "src/lib/seedCategories.ts", "src/lib/utils.ts"],
+      exclude: [
+          "src/lib/mockData.ts",
+          "src/lib/seedAccounts.ts",
+          "src/lib/seedCategories.ts",
+          "src/lib/utils.ts",
+          "src/lib/invoiceConstants.ts",
+          "src/lib/reports/index.ts",
+          "src/lib/reports/types.ts",
+        ],
       reporter: ["text", "text-summary", "html"],
     },
   },

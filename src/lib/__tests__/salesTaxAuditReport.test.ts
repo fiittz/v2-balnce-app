@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 
 // Mock vatDeductibility before importing the module under test
 vi.mock("../vatDeductibility", () => ({
@@ -53,6 +53,7 @@ vi.mock("../vatDeductibility", () => ({
 import {
   generateSalesTaxAuditReport,
   exportToCSV,
+  downloadCSV,
   type SalesTaxAuditReport,
 } from "../salesTaxAuditReport";
 
@@ -1280,5 +1281,82 @@ describe("uncategorised expense filtering", () => {
     // Uncategorised expenses should be filtered by isVATDeductible returning false
     const purchaseSections = report.sections.filter(s => s.type === "purchases");
     expect(purchaseSections).toHaveLength(0);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// downloadCSV — DOM-based download function (lines 382-395)
+// ══════════════════════════════════════════════════════════════
+describe("downloadCSV", () => {
+  const mockLink = {
+    setAttribute: vi.fn(),
+    style: { visibility: "" },
+    click: vi.fn(),
+  };
+
+  beforeAll(() => {
+    vi.stubGlobal("document", {
+      createElement: vi.fn(() => mockLink),
+      body: { appendChild: vi.fn(), removeChild: vi.fn() },
+    });
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn(() => "blob:mock-url"),
+      revokeObjectURL: vi.fn(),
+    });
+    vi.stubGlobal(
+      "Blob",
+      vi.fn(function (this: unknown, parts: unknown, opts?: { type?: string }) {
+        return { parts, type: opts?.type };
+      })
+    );
+  });
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function makeMockReport(overrides: Partial<SalesTaxAuditReport> = {}): SalesTaxAuditReport {
+    return {
+      businessName: "Test Ltd",
+      periodStart: "1 January 2025",
+      periodEnd: "31 March 2025",
+      sections: [],
+      grandTotalSalesGross: 0,
+      grandTotalSalesTax: 0,
+      grandTotalSalesNet: 0,
+      grandTotalPurchasesGross: 0,
+      grandTotalPurchasesTax: 0,
+      grandTotalPurchasesNet: 0,
+      netVatPayable: 0,
+      ...overrides,
+    };
+  }
+
+  it("creates a blob, link, and triggers download with default filename", () => {
+    const report = makeMockReport({
+      periodStart: "1 January 2025",
+      periodEnd: "31 March 2025",
+    });
+
+    downloadCSV(report);
+
+    expect(Blob).toHaveBeenCalled();
+    expect(document.createElement).toHaveBeenCalledWith("a");
+    expect(mockLink.setAttribute).toHaveBeenCalledWith("href", "blob:mock-url");
+    expect(mockLink.setAttribute).toHaveBeenCalledWith(
+      "download",
+      "Sales_Tax_Audit_Report_1_January_2025_to_31_March_2025.csv"
+    );
+    expect(mockLink.style.visibility).toBe("hidden");
+    expect(mockLink.click).toHaveBeenCalled();
+    expect(document.body.appendChild).toHaveBeenCalledWith(mockLink);
+    expect(document.body.removeChild).toHaveBeenCalledWith(mockLink);
+  });
+
+  it("uses custom filename when provided", () => {
+    const report = makeMockReport();
+    downloadCSV(report, "custom-report.csv");
+
+    expect(mockLink.setAttribute).toHaveBeenCalledWith("download", "custom-report.csv");
   });
 });

@@ -1475,3 +1475,21 @@ describe("autoCategorise — receipt text edge cases", () => {
     expect(result.category).toBe("General Expenses");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — keyword fallback: medical (no vendor match)
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — keyword fallback medical that bypasses vendor DB", () => {
+  it("hits medical keyword fallback when description has 'medical' but no vendor pattern match", () => {
+    // "PAYMENT FOR MEDICAL SUPPLIES" contains "medical" but does NOT match
+    // any vendor pattern (vendor DB has "medical centre" but not plain "medical").
+    // This ensures lines 655-662 of autocat.ts are exercised.
+    const result = autoCategorise(expense("PAYMENT FOR MEDICAL SUPPLIES"));
+    expect(result.category).toBe("Medical");
+    expect(result.vat_type).toBe("Exempt");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.is_business_expense).toBe(false);
+    expect(result.relief_type).toBe("medical");
+    expect(result.notes).toContain("Description suggests medical expense");
+  });
+});

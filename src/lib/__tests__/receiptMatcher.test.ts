@@ -60,7 +60,9 @@ vi.mock("@/integrations/supabase/client", () => {
   return {
     supabase: {
       from: (...args: unknown[]) => {
-        mockFrom(...args);
+        const result = mockFrom(...args);
+        // If mockFrom has a custom implementation that returns a chain, use it
+        if (result && typeof result === "object" && "then" in result) return result;
         return chainable();
       },
     },
@@ -904,11 +906,9 @@ describe("linkReceiptToTransaction", () => {
 
   it("throws when transaction update fails (line 201)", async () => {
     // First call (receipts) succeeds, second call (transactions) fails
-    // Since both use the same mockResolvedData chain in this mock setup,
-    // we need to simulate the error on the second from() call
-    let callCount = 0;
-    mockFrom.mockImplementation((...args: unknown[]) => {
-      callCount++;
+    // Use table name to differentiate the two supabase calls
+    mockFrom.mockImplementation((table: string) => {
+      const isReceipts = table === "receipts";
       const chain: Record<string, unknown> = {
         select: (...a: unknown[]) => { mockSelect(...a); return chain; },
         update: (...a: unknown[]) => { mockUpdate(...a); return chain; },
@@ -919,11 +919,9 @@ describe("linkReceiptToTransaction", () => {
         order: (...a: unknown[]) => { mockOrder(...a); return chain; },
         single: () => { mockSingle(); return chain; },
         then: (resolve: (value: unknown) => void) => {
-          if (callCount === 1) {
-            // receipts update succeeds
+          if (isReceipts) {
             resolve({ error: null });
           } else {
-            // transactions update fails
             resolve({ error: { message: "tx update failed" } });
           }
         },
