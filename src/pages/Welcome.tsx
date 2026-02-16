@@ -10,6 +10,7 @@ import { toast } from "sonner";
 const ALLOWED_EMAILS = [
   "jamie@oakmont.ie",
   "thomasvonteichman@nomadai.ie",
+  "fitzgerald7071jamie@gmail.com",
 ];
 
 const isEmailAllowed = (email: string) =>
