@@ -115,16 +115,22 @@ export function assembleCT1ReportData(
   }
 
   // ── Trading Profit Adjustment ─────────────────────────
-  const tradingProfit = totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal;
+  const travelDeduction = ct1.directorsLoanTravel;
+  const tradingProfit = totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - travelDeduction;
+
+  const tradingProfitRows = [
+    { label: "Total Income", value: fmtEuro(totalIncome) },
+    { label: "Less: Allowable Expenses", value: fmtEuro(ct1.expenseSummary.allowable) },
+    { label: "Less: Capital Allowances", value: fmtEuro(capitalAllowancesTotal) },
+  ];
+  if (travelDeduction > 0) {
+    tradingProfitRows.push({ label: "Less: Directors' Travel Allowance", value: fmtEuro(travelDeduction) });
+  }
+  tradingProfitRows.push({ label: "Adjusted Trading Profit", value: fmtEuro(Math.max(0, tradingProfit)) });
 
   sections.push({
     title: "Trading Profit Adjustment",
-    rows: [
-      { label: "Total Income", value: fmtEuro(totalIncome) },
-      { label: "Less: Allowable Expenses", value: fmtEuro(ct1.expenseSummary.allowable) },
-      { label: "Less: Capital Allowances", value: fmtEuro(capitalAllowancesTotal) },
-      { label: "Adjusted Trading Profit", value: fmtEuro(Math.max(0, tradingProfit)) },
-    ],
+    rows: tradingProfitRows,
   });
 
   // ── Losses Brought Forward ────────────────────────────
@@ -147,24 +153,30 @@ export function assembleCT1ReportData(
   const surcharge = questionnaire?.closeCompanySurcharge ?? 0;
   const totalCT = ctAt125 + surcharge;
   const prelimPaid = questionnaire?.preliminaryCTPaid ?? 0;
-  const balanceDue = totalCT - prelimPaid;
+  const rctCredit = ct1.rctPrepayment;
+  const balanceDue = totalCT - prelimPaid - rctCredit;
+
+  const ctRows = [
+    { label: "Taxable Profit", value: fmtEuro(taxableProfit) },
+    { label: "CT @ 12.5% (trading)", value: fmtEuro(ctAt125) },
+    ...(surcharge > 0
+      ? [{ label: "Close Company Surcharge", value: fmtEuro(surcharge) }]
+      : []),
+    { label: "Total CT Liability", value: fmtEuro(totalCT) },
+  ];
+  if (prelimPaid > 0) {
+    ctRows.push({ label: "Less: Preliminary CT Paid", value: fmtEuro(prelimPaid) });
+  }
+  if (rctCredit > 0) {
+    ctRows.push({ label: "Less: RCT Credit", value: fmtEuro(rctCredit) });
+  }
+  if (prelimPaid > 0 || rctCredit > 0) {
+    ctRows.push({ label: "Balance Due", value: fmtEuro(balanceDue) });
+  }
 
   sections.push({
     title: "Corporation Tax Computation",
-    rows: [
-      { label: "Taxable Profit", value: fmtEuro(taxableProfit) },
-      { label: "CT @ 12.5% (trading)", value: fmtEuro(ctAt125) },
-      ...(surcharge > 0
-        ? [{ label: "Close Company Surcharge", value: fmtEuro(surcharge) }]
-        : []),
-      { label: "Total CT Liability", value: fmtEuro(totalCT) },
-      ...(prelimPaid > 0
-        ? [
-            { label: "Less: Preliminary CT Paid", value: fmtEuro(prelimPaid) },
-            { label: "Balance Due", value: fmtEuro(balanceDue) },
-          ]
-        : []),
-    ],
+    rows: ctRows,
   });
 
   // ── VAT Position ──────────────────────────────────────
@@ -200,6 +212,6 @@ export function assembleCT1ReportData(
     totalCTLiability: totalCT,
     tradingProfit: Math.max(0, tradingProfit),
     totalIncome,
-    totalDeductions: ct1.expenseSummary.allowable + capitalAllowancesTotal,
+    totalDeductions: ct1.expenseSummary.allowable + capitalAllowancesTotal + travelDeduction,
   };
 }

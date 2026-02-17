@@ -74,7 +74,7 @@ const BalanceSheet = () => {
       : (savedCT1.capitalAllowancesMotorVehicles ?? 0);
     const capitalAllowancesTotal =
       (savedCT1.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
-    const tradingProfit = Math.max(0, totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal);
+    const tradingProfit = Math.max(0, totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel);
     const lossesForward = savedCT1.lossesForward ?? 0;
     const taxableProfit = Math.max(0, tradingProfit - lossesForward);
     const ctLiability = taxableProfit * 0.125 + (savedCT1.closeCompanySurcharge ?? 0);

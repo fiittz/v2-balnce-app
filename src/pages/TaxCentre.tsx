@@ -119,15 +119,20 @@ const TaxCentre = () => {
 
     // CT liability (12.5% of trading profit)
     const totalIncome = ct1.detectedIncome.reduce((s, i) => s + i.amount, 0);
+    // Motor vehicle allowance: prefer auto-calculated from vehicle asset, fallback to questionnaire
+    const motorVehicleAllowance = ct1.vehicleAsset
+      ? ct1.vehicleAsset.depreciation.annualAllowance
+      : (savedCT1?.capitalAllowancesMotorVehicles ?? 0);
     const capitalAllowancesTotal =
-      (savedCT1?.capitalAllowancesPlant ?? 0) + (savedCT1?.capitalAllowancesMotorVehicles ?? 0);
-    const tradingProfit = Math.max(0, totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal);
+      (savedCT1?.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
+    const tradingProfit = Math.max(0, totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel);
     const lossesForward = savedCT1?.lossesForward ?? 0;
     const taxableProfit = Math.max(0, tradingProfit - lossesForward);
     const ctLiability = taxableProfit * 0.125 + (savedCT1?.closeCompanySurcharge ?? 0);
 
-    // Retained profits = income - allowable expenses - CT
-    const retainedProfits = totalIncome - ct1.expenseSummary.allowable - ctLiability;
+    // Retained profits = income - ALL expenses (allowable + disallowed) - CT
+    const totalExpensesAll = ct1.expenseSummary.allowable + ct1.expenseSummary.disallowed;
+    const retainedProfits = totalIncome - totalExpensesAll - ctLiability;
 
     return {
       companyName: biz.company_name || profile?.business_name || "Company",
