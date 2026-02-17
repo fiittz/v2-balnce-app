@@ -5,7 +5,7 @@ import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
 import { useDirectorOnboarding } from "@/hooks/useDirectorOnboarding";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useInvoiceTripMatcher } from "@/hooks/useInvoiceTripMatcher";
-import { isVATDeductible } from "@/lib/vatDeductibility";
+import { isVATDeductible, isCTDeductible } from "@/lib/vatDeductibility";
 import { calculateVehicleDepreciation, type VehicleDepreciation } from "@/lib/vehicleDepreciation";
 
 export interface CT1ReEvalOptions {
@@ -147,7 +147,8 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
         totalDrawings += amt;
         continue;
       }
-      const result = isVATDeductible(t.description ?? "", catName);
+      // Use CT deductibility (not VAT) for add-backs — hotel/bank charges are CT-deductible
+      const result = isCTDeductible(t.description ?? "", catName);
       if (result.isDeductible) {
         origAllowable += amt;
       } else {

@@ -25,26 +25,6 @@ export function isVATDeductible(
   const accLower = (accountName || "").toLowerCase();
   const combined = `${descLower} ${catLower} ${accLower}`;
 
-  // ── CT-deductible categories (early return) ──────────────────────────
-  // These categories are allowable Corporation Tax deductions even though
-  // VAT may not be recoverable. They must NOT appear as CT1 add-backs.
-  const CT_DEDUCTIBLE_CATEGORIES = [
-    "travel", "accommodation", "vehicle", "motor", "fuel",
-    "bank charge", "bank fee", "insurance", "professional",
-    "accountancy", "legal", "rent", "utilities", "phone",
-    "broadband", "postage", "stationery", "cleaning",
-    "repairs", "maintenance", "training", "certification",
-    "subscription", "software", "office", "advertising",
-    "marketing", "tools", "equipment", "materials",
-    "subcontractor", "medical", "health",
-  ];
-  if (CT_DEDUCTIBLE_CATEGORIES.some(k => catLower.includes(k))) {
-    return {
-      isDeductible: true,
-      reason: "Allowable business expense for Corporation Tax"
-    };
-  }
-
   // ── Section 60 keyword checks (description-based) ──
 
   // Section 60(2)(a)(i) - Food, drink, accommodation
@@ -203,4 +183,51 @@ export function calculateVATFromGross(
   const netAmount = Number((grossAmount - vatAmount).toFixed(2));
   
   return { netAmount, vatAmount };
+}
+
+/**
+ * Determines if an expense is deductible for Corporation Tax purposes.
+ * Separate from VAT recoverability — many expenses are CT-deductible
+ * but have non-recoverable VAT (e.g. hotel, bank charges).
+ *
+ * Non-deductible for CT (add-backs):
+ * - Entertainment, fines, personal expenses, uncategorised, depreciation
+ *
+ * CT-deductible (NOT add-backs):
+ * - Bank charges, travel, accommodation, insurance, materials, tools, etc.
+ */
+export function isCTDeductible(
+  description: string,
+  categoryName?: string | null
+): { isDeductible: boolean; reason: string } {
+  const catLower = (categoryName || "").toLowerCase();
+  const descLower = (description || "").toLowerCase();
+
+  // ── Always non-deductible for CT ──
+  // Entertainment
+  if (catLower.includes("entertainment") || catLower.includes("meals")) {
+    return { isDeductible: false, reason: "Meals & Entertainment — not allowable for CT" };
+  }
+  // Fines & penalties
+  if (catLower.includes("fine") || catLower.includes("penalt") ||
+      /\bfines?\b/.test(descLower) || /\bpenalt(y|ies)\b/.test(descLower)) {
+    return { isDeductible: false, reason: "Fines & penalties — not allowable for CT" };
+  }
+  // Personal / non-business
+  if (catLower.includes("personal") || catLower.includes("private") || catLower.includes("non-business")) {
+    return { isDeductible: false, reason: "Non-business expense — not allowable for CT" };
+  }
+  // Depreciation (replaced by capital allowances)
+  if (catLower.includes("depreciation")) {
+    return { isDeductible: false, reason: "Depreciation — replaced by capital allowances" };
+  }
+  // Uncategorised — conservative, flag for review
+  if (!categoryName || catLower === "uncategorised" || catLower === "uncategorized") {
+    return { isDeductible: false, reason: "Uncategorised — needs review" };
+  }
+
+  // ── Everything else is CT-deductible ──
+  // Travel, accommodation, bank charges, insurance, vehicle expenses,
+  // materials, tools, subscriptions, training, etc.
+  return { isDeductible: true, reason: "Allowable business expense for CT" };
 }
