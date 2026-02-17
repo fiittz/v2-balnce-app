@@ -506,7 +506,15 @@ export function autoCategorise(
 
   const foodWordBoundary = (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION as any).wordBoundaryKeywords || [];
   const foodWordMatch = foodWordBoundary.some((k: string) => new RegExp(`\\b${k}\\b`).test(desc));
-  const isDisallowedFood = foodWordMatch || DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => desc.includes(k));
+  const allFoodAccomKeywords = DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords;
+
+  // Separate accommodation from food/drink — both have VAT blocked under Section 60,
+  // but accommodation is a legitimate business expense categorised as Travel & Subsistence,
+  // while food/drink falls under "other".
+  const ACCOMMODATION_KEYWORDS = ["hotel", "accommodation", "airbnb", "b&b", "guesthouse", "guest house", "hostel", "lodge", "booking.com"];
+  const isAccommodation = ACCOMMODATION_KEYWORDS.some(k => desc.includes(k));
+  const isFoodDrink = !isAccommodation && (foodWordMatch || allFoodAccomKeywords.some(k => desc.includes(k)));
+
   const isDisallowedEntertainment = DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some(k => desc.includes(k));
   const isDisallowedPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some(k => desc.includes(k));
   const isDiesel = ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => desc.includes(k));
@@ -526,14 +534,31 @@ export function autoCategorise(
     }, tx);
   }
 
-  if (isDisallowedFood) {
+  // Accommodation: categorise as Travel & Subsistence (maps to "Travel & Accommodation" in DB)
+  // VAT is still blocked per Section 60, but it IS a valid business expense
+  if (isAccommodation) {
+    return finalizeResult({
+      category: "Travel & Subsistence",
+      vat_type: "Standard 23%",
+      vat_deductible: false,
+      business_purpose: "Business accommodation - VAT not recoverable under Section 60(2)(a)(i).",
+      confidence_score: 90,
+      notes: "Section 60(2)(a)(i) - Accommodation VAT not recoverable. Expense is deductible for Corporation Tax / Income Tax.",
+      needs_review: false,
+      needs_receipt: true,
+      is_business_expense: true,
+    }, tx);
+  }
+
+  // Food & drink: not a business expense category, falls to "other"
+  if (isFoodDrink) {
     return finalizeResult({
       category: "other",
       vat_type: "Standard 23%",
       vat_deductible: false,
       business_purpose: vatTreatment.explanation,
       confidence_score: 90,
-      notes: "Section 60(2)(a)(i) - Food/drink/accommodation VAT not recoverable.",
+      notes: "Section 60(2)(a)(i) - Food/drink VAT not recoverable.",
       needs_review: false,
       needs_receipt: false,
       is_business_expense: false,
