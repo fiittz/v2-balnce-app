@@ -1759,14 +1759,14 @@ const BankFeed = () => {
                     const raw = localStorage.getItem(`ct1_questionnaire_${user?.id}_${ty}`);
                     const q = raw ? JSON.parse(raw) : null;
 
-                    const ct1Income = ct1.detectedIncome.reduce((s, i) => s + i.amount, 0);
-                    const allowableExpenses = ct1.expenseSummary.allowable;
+                    const disallowedTotal = ct1.disallowedByCategory.reduce((s, d) => s + d.amount, 0);
                     const motorAllowance = ct1.vehicleAsset
                       ? ct1.vehicleAsset.depreciation.annualAllowance
                       : (q?.capitalAllowancesMotorVehicles ?? 0);
                     const capitalAllowances = (q?.capitalAllowancesPlant ?? 0) + motorAllowance;
                     const travelDeduction = ct1.directorsLoanTravel;
-                    const tradingProfit = Math.max(0, ct1Income - allowableExpenses - capitalAllowances - travelDeduction);
+                    // CT1: Net Profit + add-backs (disallowed) - capital allowances - travel
+                    const tradingProfit = Math.max(0, netProfit + disallowedTotal - capitalAllowances - travelDeduction);
                     const lossesForward = q?.lossesForward ?? 0;
                     const taxableProfit = Math.max(0, tradingProfit - lossesForward);
                     const ctAt125 = taxableProfit * 0.125;
