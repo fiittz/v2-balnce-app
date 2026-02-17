@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Building2, Briefcase, CreditCard, Receipt, Wallet, Landmark, Banknote, Users, Check, ChevronDown, Search, HardHat, UserPlus, FileSpreadsheet, Globe } from "lucide-react";
+import { Building2, Briefcase, CreditCard, Receipt, Wallet, Landmark, Banknote, Users, Check, HardHat, UserPlus, FileSpreadsheet, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +13,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { isDemoMode } from "@/lib/mockData";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 type OnboardingStep =
   | "business_identity"
+  | "industry_select"
   | "business_activity"
   | "income_payments"
   | "vat_setup"
@@ -48,6 +46,7 @@ interface BusinessData {
   registered_address: string;
 
   // Activity
+  industry: string;
   primary_activity: string;
   secondary_activities: string[];
   business_description: string;
@@ -141,6 +140,7 @@ const createEmptyBusiness = (): BusinessData => ({
   cro_number: "",
   tax_reference: "",
   registered_address: "",
+  industry: "",
   primary_activity: "",
   secondary_activities: [],
   business_description: "",
@@ -208,6 +208,7 @@ const CONSTRUCTION_ACTIVITIES = [
 
 const ALL_STEPS: OnboardingStep[] = [
   "business_identity",
+  "industry_select",
   "business_activity",
   "income_payments",
   "vat_setup",
@@ -225,6 +226,7 @@ const ALL_STEPS: OnboardingStep[] = [
 
 const STEP_LABELS: Record<OnboardingStep, string> = {
   business_identity: "Business Identity",
+  industry_select: "Industry",
   business_activity: "Business Activity",
   income_payments: "Income & Payments",
   vat_setup: "VAT Setup",
@@ -242,6 +244,7 @@ const STEP_LABELS: Record<OnboardingStep, string> = {
 
 const STEP_ICONS: Record<OnboardingStep, React.ReactNode> = {
   business_identity: <Building2 className="w-4 h-4" />,
+  industry_select: <Briefcase className="w-4 h-4" />,
   business_activity: <Briefcase className="w-4 h-4" />,
   income_payments: <CreditCard className="w-4 h-4" />,
   vat_setup: <Receipt className="w-4 h-4" />,
@@ -375,8 +378,6 @@ export default function OnboardingWizard() {
   const [state, setState] = useState<OnboardingState>(initialState);
   const [stepIndex, setStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [activitySearchOpen, setActivitySearchOpen] = useState(false);
-  const [secondarySearchOpen, setSecondarySearchOpen] = useState(false);
   const [selectedBusinessIndex, setSelectedBusinessIndex] = useState(0);
 
   // Compute visible steps based on whether any business has a construction activity
@@ -402,6 +403,12 @@ export default function OnboardingWizard() {
   const updateBusiness = <K extends keyof BusinessData>(field: K, value: BusinessData[K]) => {
     const newBusinesses = [...state.businesses];
     const updated = { ...newBusinesses[selectedBusinessIndex], [field]: value };
+
+    // When industry changes, reset the sub-type so user must re-pick
+    if (field === "industry") {
+      updated.primary_activity = "";
+      updated.secondary_activities = [];
+    }
 
     // Mutual exclusivity: VAT and RCT disable each other
     if (field === "vat_registered" && value === true) {
@@ -431,6 +438,8 @@ export default function OnboardingWizard() {
           }
           return hasBasicInfo;
         });
+      case "industry_select":
+        return state.businesses.every(b => b.industry.trim() !== "");
       case "business_activity":
         // All businesses must have a primary activity (and description if "other")
         return state.businesses.every(b => b.primary_activity && (b.primary_activity !== "other" || (b as any).primary_activity_other));
@@ -483,15 +492,6 @@ export default function OnboardingWizard() {
       ? currentValues.filter(v => v !== value)
       : [...currentValues, value];
     updateBusiness(field, newValues);
-  };
-
-  const handleSecondaryActivity = (value: string) => {
-    const currentValues = currentBusiness.secondary_activities;
-    if (currentValues.includes(value)) {
-      updateBusiness("secondary_activities", currentValues.filter(v => v !== value));
-    } else if (currentValues.length < 3) {
-      updateBusiness("secondary_activities", [...currentValues, value]);
-    }
   };
 
   const handleSkip = async () => {
@@ -1075,146 +1075,115 @@ export default function OnboardingWizard() {
           </div>
         )}
 
-        {/* Step 2: Business Activity */}
+        {/* Step 2: Industry Select */}
+        {step === "industry_select" && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold mb-2">Pick Your Industry</h2>
+              <p className="text-muted-foreground">Select the industry that best describes your business.</p>
+            </div>
+
+            <BusinessTabs />
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {Object.keys(BUSINESS_ACTIVITIES).map((industryKey) => (
+                <button
+                  key={industryKey}
+                  type="button"
+                  onClick={() => updateBusiness("industry", industryKey)}
+                  className={cn(
+                    "rounded-xl border p-4 text-left transition-all",
+                    currentBusiness.industry === industryKey
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  )}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={cn(
+                      "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0",
+                      currentBusiness.industry === industryKey
+                        ? "border-primary bg-primary"
+                        : "border-muted-foreground"
+                    )}>
+                      {currentBusiness.industry === industryKey && (
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      )}
+                    </div>
+                    <span className="font-medium text-sm">{industryKey}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Business Activity */}
         {step === "business_activity" && (
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-2">Business Activity</h2>
-              <p className="text-muted-foreground">What does your business mainly do?</p>
+              <p className="text-muted-foreground">
+                {currentBusiness.industry
+                  ? `Select your specific activity within ${currentBusiness.industry}.`
+                  : "What does your business mainly do?"}
+              </p>
             </div>
 
             <BusinessTabs />
 
             <div className="bg-card rounded-2xl p-6 shadow-sm space-y-6">
-              <div>
-                <Label className="text-base font-medium">Primary business activity *</Label>
-                <Popover open={activitySearchOpen} onOpenChange={setActivitySearchOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={activitySearchOpen}
-                      className="w-full mt-2 h-14 justify-between text-base font-normal"
-                    >
-                      {currentBusiness.primary_activity
-                        ? getAllActivities().find(a => a.value === currentBusiness.primary_activity)?.label
-                        : "Type to search activities..."}
-                      <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder="Search activities..." />
-                      <CommandList>
-                        <CommandEmpty>No activity found.</CommandEmpty>
-                        {Object.entries(BUSINESS_ACTIVITIES).map(([category, activities]) => (
-                          <CommandGroup key={category} heading={category}>
-                            {activities.map((activity) => (
-                              <CommandItem
-                                key={activity.value}
-                                value={activity.label}
-                                onSelect={() => {
-                                  updateBusiness("primary_activity", activity.value);
-                                  setActivitySearchOpen(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    currentBusiness.primary_activity === activity.value ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                {activity.label}
-                              </CommandItem>
-                            ))}
-                          </CommandGroup>
-                        ))}
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              {currentBusiness.primary_activity && (
-                <div className="p-4 rounded-xl border border-primary/30 bg-primary/5">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                    <span className="font-medium">
-                      {currentBusiness.primary_activity === "other"
-                        ? "Other"
-                        : getAllActivities().find(a => a.value === currentBusiness.primary_activity)?.label}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {currentBusiness.primary_activity === "other" && (
+              {currentBusiness.industry === "Mixed / Other" ? (
                 <div>
                   <Label className="text-base font-medium">Describe your business activity *</Label>
                   <Input
                     className="mt-2 h-14 text-base"
                     placeholder="e.g. Consulting, IT services, coaching..."
-                    value={currentBusiness.primary_activity_other || ""}
-                    onChange={(e) => updateBusiness("primary_activity_other" as any, e.target.value)}
+                    value={(currentBusiness as any).primary_activity_other || ""}
+                    onChange={(e) => {
+                      const newBusinesses = [...state.businesses];
+                      newBusinesses[selectedBusinessIndex] = {
+                        ...newBusinesses[selectedBusinessIndex],
+                        primary_activity: "other",
+                        primary_activity_other: e.target.value,
+                      } as any;
+                      setState({ ...state, businesses: newBusinesses });
+                    }}
                   />
                 </div>
-              )}
-
-              <div>
-                <Label className="text-base font-medium">Secondary activities (optional)</Label>
-                <p className="text-sm text-muted-foreground mb-3">Add up to 3 additional activities if relevant</p>
-                <div className="flex flex-wrap gap-2">
-                  {currentBusiness.secondary_activities.map((actValue) => {
-                    const activity = getAllActivities().find(a => a.value === actValue);
-                    return (
+              ) : (
+                <div>
+                  <Label className="text-base font-medium">Primary business activity *</Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                    {(BUSINESS_ACTIVITIES[currentBusiness.industry as keyof typeof BUSINESS_ACTIVITIES] || []).map((activity) => (
                       <button
-                        key={actValue}
-                        onClick={() => handleSecondaryActivity(actValue)}
-                        className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-sm flex items-center gap-2"
+                        key={activity.value}
+                        type="button"
+                        onClick={() => updateBusiness("primary_activity", activity.value)}
+                        className={cn(
+                          "rounded-xl border p-4 text-left transition-all",
+                          currentBusiness.primary_activity === activity.value
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        )}
                       >
-                        {activity?.label}
-                        <span className="text-primary-foreground/70">x</span>
+                        <div className="flex items-start gap-3">
+                          <div className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0",
+                            currentBusiness.primary_activity === activity.value
+                              ? "border-primary bg-primary"
+                              : "border-muted-foreground"
+                          )}>
+                            {currentBusiness.primary_activity === activity.value && (
+                              <Check className="w-3 h-3 text-primary-foreground" />
+                            )}
+                          </div>
+                          <span className="font-medium text-sm">{activity.label}</span>
+                        </div>
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-                {currentBusiness.secondary_activities.length < 3 && (
-                  <Popover open={secondarySearchOpen} onOpenChange={setSecondarySearchOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="w-full mt-3 h-12 justify-between font-normal"
-                      >
-                        + Add secondary activity
-                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
-                      <Command>
-                        <CommandInput placeholder="Search activities..." />
-                        <CommandList>
-                          <CommandEmpty>No activity found.</CommandEmpty>
-                          {getAllActivities()
-                            .filter(a => a.value !== currentBusiness.primary_activity && !currentBusiness.secondary_activities.includes(a.value))
-                            .map((activity) => (
-                              <CommandItem
-                                key={activity.value}
-                                value={activity.label}
-                                onSelect={() => {
-                                  handleSecondaryActivity(activity.value);
-                                  setSecondarySearchOpen(false);
-                                }}
-                              >
-                                {activity.label}
-                              </CommandItem>
-                            ))}
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              </div>
+              )}
 
               <div>
                 <Label className="text-base font-medium">Describe what your business does (optional)</Label>
