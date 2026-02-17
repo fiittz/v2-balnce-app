@@ -424,7 +424,14 @@ const BankFeed = () => {
 
   // Group transactions by category for ledger display
   const groupedByCategory = useMemo(() => {
-    if (!accountFilteredTransactions) return { income: [], expense: [], incomeTotal: 0, expenseTotal: 0 };
+    if (!accountFilteredTransactions || !accounts) return { income: [], expense: [], incomeTotal: 0, expenseTotal: 0 };
+
+    // Skip internal transfers — same filter as the balance calculation
+    const internalTransferIds = new Set(
+      accounts
+        .filter(a => a.name.toLowerCase().includes('transfer') || a.name.toLowerCase().includes('internal'))
+        .map(a => a.id)
+    );
 
     type CategoryGroup = {
       categoryName: string;
@@ -436,6 +443,9 @@ const BankFeed = () => {
     const expenseGroups = new Map<string, CategoryGroup>();
 
     accountFilteredTransactions.forEach(t => {
+      // Skip internal transfers so totals match the running balance
+      if (t.account_id && internalTransferIds.has(t.account_id)) return;
+
       // Apply filters
       if (filter === "income" && t.type !== "income") return;
       if (filter === "expense" && t.type !== "expense") return;
@@ -469,7 +479,7 @@ const BankFeed = () => {
       incomeTotal,
       expenseTotal,
     };
-  }, [accountFilteredTransactions, filter]);
+  }, [accountFilteredTransactions, accounts, filter]);
 
   // Travel expense from trip matcher
   const travelTotal = useMemo(() => {
@@ -1411,7 +1421,7 @@ const BankFeed = () => {
                     <div className="flex items-center justify-between px-1">
                       <h2 className="text-lg font-bold text-red-600 dark:text-red-400">Expenses</h2>
                       <span className="text-lg font-bold text-red-600 dark:text-red-400">
-                        -€{(groupedByCategory.expenseTotal + travelTotal).toFixed(2)}
+                        -€{groupedByCategory.expenseTotal.toFixed(2)}
                       </span>
                     </div>
                     {groupedByCategory.expense.map((group) => (
