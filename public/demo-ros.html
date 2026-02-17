@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROS - CT1 Corporation Tax Return</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+  }
+
+  /* ROS Header */
+  .ros-header {
+    background: linear-gradient(135deg, #1a5632 0%, #1e7a45 100%);
+    color: white;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .ros-header .harp {
+    font-size: 32px;
+    filter: brightness(10);
+  }
+  .ros-header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .ros-header .subtitle {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-top: 2px;
+  }
+  .ros-nav {
+    background: #14432a;
+    padding: 8px 24px;
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+  }
+  .ros-nav span { cursor: pointer; }
+  .ros-nav span:hover { color: white; }
+  .ros-nav span.active { color: white; font-weight: 600; border-bottom: 2px solid #4ade80; padding-bottom: 4px; }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    padding: 12px 24px;
+    font-size: 12px;
+    color: #666;
+    background: #e8ebef;
+    border-bottom: 1px solid #d0d4da;
+  }
+  .breadcrumb a { color: #1a5632; text-decoration: none; }
+
+  /* Main content */
+  .main {
+    max-width: 960px;
+    margin: 20px auto;
+    padding: 0 24px;
+  }
+  .form-header {
+    background: white;
+    border: 1px solid #d0d4da;
+    border-radius: 4px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .form-header h2 {
+    font-size: 20px;
+    color: #1a5632;
+    margin-bottom: 8px;
+  }
+  .form-header .meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 13px;
+    color: #555;
+  }
+  .form-header .meta strong { color: #1a1a2e; }
+
+  /* Section */
+  .section {
+    background: white;
+    border: 1px solid #d0d4da;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .section-title {
+    background: #f7f8fa;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a5632;
+    border-bottom: 1px solid #d0d4da;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title .num {
+    background: #1a5632;
+    color: white;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+
+  /* Form rows */
+  .form-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    border-bottom: 1px solid #f0f1f3;
+    font-size: 13px;
+  }
+  .form-row:last-child { border-bottom: none; }
+  .form-row .label {
+    flex: 1;
+    color: #444;
+  }
+  .form-row .ref {
+    width: 60px;
+    color: #999;
+    font-size: 11px;
+    text-align: center;
+  }
+  .form-row input {
+    width: 160px;
+    text-align: right;
+    padding: 6px 10px;
+    border: 1px solid #ccd0d5;
+    border-radius: 3px;
+    font-size: 13px;
+    font-family: "Consolas", "Courier New", monospace;
+    background: #fafbfc;
+    color: #1a1a2e;
+    transition: border-color 0.2s, background 0.3s;
+  }
+  .form-row input:focus {
+    outline: none;
+    border-color: #1a5632;
+    background: #f0fdf4;
+  }
+  .form-row input.just-filled {
+    background: #dcfce7;
+    border-color: #4ade80;
+  }
+  .form-row.subtotal {
+    background: #f7f8fa;
+    font-weight: 600;
+  }
+  .form-row.subtotal input {
+    font-weight: 600;
+    background: #f0f2f5;
+    border-color: #b0b4ba;
+  }
+  .form-row.subtotal input.just-filled {
+    background: #bbf7d0;
+    border-color: #4ade80;
+  }
+  .form-row.highlight {
+    background: #f0fdf4;
+  }
+  .form-row.highlight input {
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  /* Result box */
+  .result-box {
+    margin: 16px 20px 20px;
+    padding: 16px 20px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    font-weight: 700;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.5s, transform 0.5s;
+  }
+  .result-box.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .result-box.refund {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color: #15803d;
+    border: 1px solid #86efac;
+  }
+  .result-box .amount {
+    font-size: 28px;
+    font-family: "Consolas", "Courier New", monospace;
+  }
+
+  /* Agent bar */
+  .agent-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #1a1a2e;
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    z-index: 100;
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+  }
+  .agent-bar .claw-icon {
+    font-size: 22px;
+  }
+  .agent-bar .status {
+    flex: 1;
+    font-family: "Consolas", monospace;
+    font-size: 13px;
+  }
+  .agent-bar .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 16px;
+    background: #4ade80;
+    margin-left: 4px;
+    animation: blink 0.8s infinite;
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .start-btn {
+    background: #4ade80;
+    color: #1a1a2e;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .start-btn:hover { background: #22c55e; }
+  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Typing animation for status */
+  .typing-text {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  /* Footer spacing for agent bar */
+  .spacer { height: 70px; }
+
+  /* Scroll highlight */
+  .section.active-section {
+    border-color: #4ade80;
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.25);
+  }
+</style>
+</head>
+<body>
+
+<!-- ROS Header -->
+<div class="ros-header">
+  <div class="harp">&#9765;</div>
+  <div>
+    <h1>Revenue Online Service</h1>
+    <div class="subtitle">An tSeirbhis ar Line do na Coimisineirí Ioncaim</div>
+  </div>
+</div>
+<div class="ros-nav">
+  <span>My Services</span>
+  <span>Payments</span>
+  <span class="active">File a Return</span>
+  <span>Manage Taxes</span>
+  <span>Admin</span>
+</div>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb">
+  <a href="#">Home</a> &rsaquo; <a href="#">File a Return</a> &rsaquo; <strong>CT1 — Corporation Tax Return 2025</strong>
+</div>
+
+<!-- Main Form -->
+<div class="main">
+  <div class="form-header">
+    <h2>CT1 Corporation Tax Return</h2>
+    <div class="meta">
+      <div>Company: <strong id="companyName">—</strong></div>
+      <div>Tax Ref: <strong id="taxRef">—</strong></div>
+      <div>Period: <strong id="period">—</strong></div>
+      <div>Status: <strong style="color:#b45309;">&#9679; Draft</strong></div>
+    </div>
+  </div>
+
+  <!-- Income & Trading -->
+  <div class="section" id="sec1">
+    <div class="section-title"><span class="num">1</span> Income &amp; Trading Results</div>
+    <div class="form-row">
+      <span class="label">Turnover / Revenue</span>
+      <span class="ref">300</span>
+      <input id="f_turnover" readonly />
+    </div>
+    <div class="form-row">
+      <span class="label">Cost of Sales</span>
+      <span class="ref">301</span>
+      <input id="f_cos" readonly />
+    </div>
+    <div class="form-row subtotal">
+      <span class="label">Gross Profit</span>
+      <span class="ref">302</span>
+      <input id="f_gross" readonly />
+    </div>
+    <div class="form-row">
+      <span class="label">Administrative Expenses</span>
+      <span class="ref">303</span>
+      <input id="f_admin" readonly />
+    </div>
+    <div class="form-row subtotal">
+      <span class="label">Net Profit per Accounts</span>
+      <span class="ref">304</span>
+      <input id="f_netprofit" readonly />
+    </div>
+  </div>
+
+  <!-- Adjustments -->
+  <div class="section" id="sec2">
+    <div class="section-title"><span class="num">2</span> Tax Adjustments (Add-Backs)</div>
+    <div class="form-row">
+      <span class="label">Meals &amp; Entertainment</span>
+      <span class="ref">310</span>
+      <input id="f_meals" readonly />
+    </div>
+    <div class="form-row">
+      <span class="label">Uncategorised Expenses</span>
+      <span class="ref">311</span>
+      <input id="f_uncat" readonly />
+    </div>
+    <div class="form-row subtotal">
+      <span class="label">Total Add-Backs</span>
+      <span class="ref">315</span>
+      <input id="f_addbacks" readonly />
+    </div>
+  </div>
+
+  <!-- Trading Profit -->
+  <div class="section" id="sec3">
+    <div class="section-title"><span class="num">3</span> Trading Profit</div>
+    <div class="form-row">
+      <span class="label">Net Profit + Add-Backs</span>
+      <span class="ref">320</span>
+      <input id="f_adjusted" readonly />
+    </div>
+    <div class="form-row">
+      <span class="label">Less: Capital Allowances</span>
+      <span class="ref">321</span>
+      <input id="f_capallow" readonly />
+    </div>
+    <div class="form-row subtotal highlight">
+      <span class="label">Trading Profit</span>
+      <span class="ref">325</span>
+      <input id="f_trading" readonly />
+    </div>
+    <div class="form-row subtotal highlight">
+      <span class="label">Taxable Profit</span>
+      <span class="ref">330</span>
+      <input id="f_taxable" readonly />
+    </div>
+  </div>
+
+  <!-- Tax Computation -->
+  <div class="section" id="sec4">
+    <div class="section-title"><span class="num">4</span> Corporation Tax Computation</div>
+    <div class="form-row">
+      <span class="label">CT @ 12.5% (Trading Income)</span>
+      <span class="ref">400</span>
+      <input id="f_ct125" readonly />
+    </div>
+    <div class="form-row subtotal">
+      <span class="label">Total CT Liability</span>
+      <span class="ref">410</span>
+      <input id="f_totalct" readonly />
+    </div>
+    <div class="form-row">
+      <span class="label">Less: RCT Credit (Relevant Contracts Tax)</span>
+      <span class="ref">420</span>
+      <input id="f_rct" readonly />
+    </div>
+    <div class="form-row">
+      <span class="label">Less: Preliminary Tax Paid</span>
+      <span class="ref">425</span>
+      <input id="f_prelim" readonly />
+    </div>
+
+    <div class="result-box refund" id="resultBox">
+      <span>CT Refund Due</span>
+      <span class="amount" id="resultAmount">€0.00</span>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+</div>
+
+<!-- Agent Bar -->
+<div class="agent-bar">
+  <span class="claw-icon">&#129438;</span>
+  <span class="status" id="agentStatus">Ready to file CT1 return<span class="cursor"></span></span>
+  <button class="start-btn" id="startBtn" onclick="startDemo()">&#9654; File CT1</button>
+</div>
+
+<script>
+// CT1 data from Balnce app
+const DATA = {
+  company: "Balnce Penguin Ltd",
+  taxRef: "12345678A",
+  period: "01/01/2025 — 31/12/2025",
+  turnover: 6655.10,
+  cos: 4644.43,
+  gross: 2010.67,
+  admin: 1203.82,
+  netProfit: 806.85,
+  meals: 55.29,
+  uncat: 215.57,
+  addbacks: 270.86,
+  adjusted: 1077.71,
+  capAllow: 0,
+  trading: 1077.71,
+  taxable: 1077.71,
+  ct125: 134.71,
+  totalCT: 134.71,
+  rct: 1499.00,
+  prelim: 0,
+  refund: 1364.29,
+};
+
+const fmt = (n) => n.toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Field fill sequence
+const STEPS = [
+  // [fieldId, value, statusMessage, sectionId]
+  ["companyName", DATA.company, "Reading company details from Balnce...", null],
+  ["taxRef", DATA.taxRef, null, null],
+  ["period", DATA.period, null, null],
+  ["f_turnover", fmt(DATA.turnover), "Pulling income data → Contract Work + Other Income...", "sec1"],
+  ["f_cos", fmt(DATA.cos), "Calculating cost of sales → Subcontractors + Materials...", "sec1"],
+  ["f_gross", fmt(DATA.gross), null, "sec1"],
+  ["f_admin", fmt(DATA.admin), "Calculating admin expenses → Vehicle, Travel, Subs, Bank...", "sec1"],
+  ["f_netprofit", fmt(DATA.netProfit), "Net Profit: €806.85 ✓", "sec1"],
+  ["f_meals", fmt(DATA.meals), "Identifying non-deductible expenses...", "sec2"],
+  ["f_uncat", fmt(DATA.uncat), "Flagging uncategorised for add-back...", "sec2"],
+  ["f_addbacks", fmt(DATA.addbacks), "Total add-backs: €270.86", "sec2"],
+  ["f_adjusted", fmt(DATA.adjusted), "Computing adjusted profit...", "sec3"],
+  ["f_capallow", fmt(DATA.capAllow), null, "sec3"],
+  ["f_trading", fmt(DATA.trading), "Trading profit: €1,077.87 ✓", "sec3"],
+  ["f_taxable", fmt(DATA.taxable), null, "sec3"],
+  ["f_ct125", fmt(DATA.ct125), "Applying 12.5% rate...", "sec4"],
+  ["f_totalct", fmt(DATA.totalCT), null, "sec4"],
+  ["f_rct", fmt(DATA.rct), "Applying RCT credit of €1,499.00...", "sec4"],
+  ["f_prelim", fmt(DATA.prelim), null, "sec4"],
+];
+
+let running = false;
+
+async function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+async function typeValue(el, value) {
+  el.value = "";
+  el.classList.remove("just-filled");
+  for (let i = 0; i <= value.length; i++) {
+    el.value = value.slice(0, i);
+    await sleep(30 + Math.random() * 40);
+  }
+  el.classList.add("just-filled");
+  await sleep(200);
+}
+
+async function setStatus(msg) {
+  const el = document.getElementById("agentStatus");
+  el.innerHTML = "";
+  for (let i = 0; i <= msg.length; i++) {
+    el.innerHTML = msg.slice(0, i) + '<span class="cursor"></span>';
+    await sleep(15 + Math.random() * 20);
+  }
+}
+
+async function startDemo() {
+  if (running) return;
+  running = true;
+  const btn = document.getElementById("startBtn");
+  btn.disabled = true;
+  btn.textContent = "Filing...";
+
+  await setStatus("Connecting to Balnce API...");
+  await sleep(800);
+  await setStatus("Authenticated. Fetching CT1 data for 2025...");
+  await sleep(1000);
+  await setStatus("Opening CT1 form on ROS...");
+  await sleep(600);
+
+  let lastSection = null;
+
+  for (const [fieldId, value, statusMsg, sectionId] of STEPS) {
+    // Highlight active section
+    if (sectionId && sectionId !== lastSection) {
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active-section"));
+      document.getElementById(sectionId)?.classList.add("active-section");
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      lastSection = sectionId;
+    }
+
+    if (statusMsg) {
+      await setStatus(statusMsg);
+      await sleep(300);
+    }
+
+    const el = document.getElementById(fieldId);
+    if (!el) continue;
+
+    if (el.tagName === "INPUT") {
+      await typeValue(el, value);
+    } else {
+      // Text element (company name, etc.)
+      el.textContent = "";
+      for (let i = 0; i <= value.length; i++) {
+        el.textContent = value.slice(0, i);
+        await sleep(20);
+      }
+    }
+    await sleep(150);
+  }
+
+  // Show result
+  await setStatus("CT1 computation complete. Refund of €1,364.29 due. ✓");
+  await sleep(500);
+
+  const resultBox = document.getElementById("resultBox");
+  document.getElementById("resultAmount").textContent = "€" + fmt(DATA.refund);
+  resultBox.classList.add("visible");
+  resultBox.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  document.querySelectorAll(".section").forEach(s => s.classList.remove("active-section"));
+
+  await sleep(1000);
+  await setStatus("CT1 return ready for review. Awaiting approval to submit.");
+
+  btn.textContent = "✓ Complete";
+}
+</script>
+
+</body>
+</html>
