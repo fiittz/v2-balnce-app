@@ -1,4 +1,14 @@
-project_id = "nenmzjxbroaedwrcpfwv"
+project_id = "ystgzxtxplhxuwsthmbj"
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
 
 [functions.lookup-vendor]
 verify_jwt = true

@@ -27,6 +27,7 @@ const ALLOWED_EMAILS = [
   "jamie@oakmont.ie",
   "thomasvonteichman@nomadai.ie",
   "fitzgerald7071jamie@gmail.com",
+  "kevin@workstuff.ai",
 ];
 
 const isEmailAllowed = (email: string) =>
@@ -146,8 +147,10 @@ const Welcome = () => {
 
         // Auth state change will trigger the useEffect redirect
       } else if (data.user && !data.session) {
-        // Email confirmation required
-        toast.success("Check your email to confirm your account!");
+        // No session means either email confirmation is required or
+        // the email is already registered (Supabase hides this for security).
+        // Since confirmations are disabled, this likely means existing account.
+        toast.error("This email may already be registered. Try logging in instead.");
         setIsLoading(false);
       }
     } catch (error: unknown) {
