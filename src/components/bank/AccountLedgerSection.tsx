@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, ArrowUpRight, ArrowDownLeft, Tag, CheckCircle2, Link2, Loader2, Briefcase, User, HelpCircle, Brain, MessageSquare, Pencil, Camera } from "lucide-react";
+import { useReceiptUrl } from "@/hooks/useReceiptUrl";
 import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -55,7 +56,8 @@ export default function AccountLedgerSection({
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [categorizingTxId, setCategorizingTxId] = useState<string | null>(null);
-  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
+  const [receiptPreviewPath, setReceiptPreviewPath] = useState<string | null>(null);
+  const receiptPreviewUrl = useReceiptUrl(receiptPreviewPath);
 
   // Calculate account totals
   const totalDebits = transactions
@@ -235,7 +237,7 @@ export default function AccountLedgerSection({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setReceiptPreviewUrl(transaction.receipt_url!);
+                            setReceiptPreviewPath(transaction.receipt_url!);
                           }}
                           className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-green-200 transition-colors"
                         >
@@ -279,15 +281,19 @@ export default function AccountLedgerSection({
       />
 
       {/* Receipt Preview Dialog */}
-      <Dialog open={!!receiptPreviewUrl} onOpenChange={(open) => !open && setReceiptPreviewUrl(null)}>
+      <Dialog open={!!receiptPreviewPath} onOpenChange={(open) => !open && setReceiptPreviewPath(null)}>
         <DialogContent className="sm:max-w-lg">
-          {receiptPreviewUrl && (
+          {receiptPreviewUrl ? (
             <img
               src={receiptPreviewUrl}
               alt="Receipt"
               className="w-full rounded-lg"
             />
-          )}
+          ) : receiptPreviewPath ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
     </div>

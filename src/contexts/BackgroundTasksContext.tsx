@@ -107,11 +107,8 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
 
     if (error) throw new Error(`Storage upload failed: ${error.message}`);
 
-    const { data: urlData } = supabase.storage
-      .from("receipts")
-      .getPublicUrl(data.path);
-
-    return urlData.publicUrl;
+    // Return storage path (private bucket — signed URLs generated at display time)
+    return data.path;
   }, []);
 
   const saveReceiptRecord = async (

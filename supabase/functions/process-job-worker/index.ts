@@ -143,7 +143,7 @@ async function processReceiptOCR(supabase: any, job: any) {
           .from("receipts")
           .insert([{
             user_id: job.user_id,
-            image_url: getPublicUrl(filePath),
+            image_url: filePath,
             vendor_name: ocrResult.data.supplier_name,
             amount: ocrResult.data.total_amount,
             vat_amount: ocrResult.data.vat_amount,

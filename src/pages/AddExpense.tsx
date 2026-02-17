@@ -175,8 +175,8 @@ const AddExpense = () => {
       return null;
     }
 
-    const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(data.path);
-    return urlData.publicUrl;
+    // Return storage path (private bucket — signed URLs generated at display time)
+    return data.path;
   };
 
   // Check if the selected category looks like a business expense on a personal account

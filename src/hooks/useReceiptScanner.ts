@@ -138,13 +138,9 @@ export const useReceiptScanner = (): UseReceiptScannerReturn => {
         console.error("Upload error:", uploadError);
         return null;
       }
-      
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from("receipts")
-        .getPublicUrl(data.path);
-      
-      return urlData.publicUrl;
+
+      // Return storage path (private bucket — signed URLs generated at display time)
+      return data.path;
     } catch (err) {
       console.error("Receipt upload error:", err);
       return null;

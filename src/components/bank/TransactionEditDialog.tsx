@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Loader2, MessageSquare, BookOpen, Camera } from "lucide-react";
+import { useReceiptUrl } from "@/hooks/useReceiptUrl";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export default function TransactionEditDialog({
   const [notes, setNotes] = useState("");
   const updateTransaction = useUpdateTransaction();
   const { data: accounts } = useAccounts();
+  const signedReceiptUrl = useReceiptUrl(transaction?.receipt_url ?? null);
 
   // Reset state when transaction changes
   useEffect(() => {
@@ -104,14 +106,20 @@ export default function TransactionEditDialog({
               Receipt
             </Label>
             {transaction.receipt_url ? (
-              <a href={transaction.receipt_url} target="_blank" rel="noopener noreferrer" className="block">
-                <img
-                  src={transaction.receipt_url}
-                  alt="Receipt"
-                  className="w-full max-h-48 object-contain rounded-lg border border-border cursor-pointer hover:opacity-90 transition-opacity"
-                />
-                <p className="text-xs text-green-600 mt-1 font-medium">Receipt matched</p>
-              </a>
+              signedReceiptUrl ? (
+                <a href={signedReceiptUrl} target="_blank" rel="noopener noreferrer" className="block">
+                  <img
+                    src={signedReceiptUrl}
+                    alt="Receipt"
+                    className="w-full max-h-48 object-contain rounded-lg border border-border cursor-pointer hover:opacity-90 transition-opacity"
+                  />
+                  <p className="text-xs text-green-600 mt-1 font-medium">Receipt matched</p>
+                </a>
+              ) : (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                </div>
+              )
             ) : (
               <p className="text-sm text-muted-foreground">No receipt attached</p>
             )}
