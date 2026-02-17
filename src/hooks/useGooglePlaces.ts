@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY ?? "";
 
@@ -7,24 +6,36 @@ const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY ?? "";
 let loadPromise: Promise<void> | null = null;
 let loadedFlag = false;
 let loadErrorFlag: string | null = null;
-let optionsSet = false;
 
 function ensureLoaded(): Promise<void> {
   if (loadPromise) return loadPromise;
 
-  if (!optionsSet) {
-    setOptions({ apiKey: API_KEY });
-    optionsSet = true;
-  }
-
-  loadPromise = importLibrary("places")
-    .then(() => {
+  loadPromise = new Promise<void>((resolve, reject) => {
+    // Already loaded (e.g. script tag in HTML)
+    if (window.google?.maps?.places) {
       loadedFlag = true;
-    })
-    .catch((err) => {
-      loadErrorFlag = (err as Error).message ?? "Failed to load Google Maps";
-      throw err;
-    });
+      resolve();
+      return;
+    }
+
+    const callbackName = "__googleMapsCallback_" + Date.now();
+    (window as unknown as Record<string, () => void>)[callbackName] = () => {
+      delete (window as unknown as Record<string, unknown>)[callbackName];
+      loadedFlag = true;
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.src =
+      `https://maps.googleapis.com/maps/api/js?key=${API_KEY}&libraries=places&callback=${callbackName}`;
+    script.async = true;
+    script.onerror = () => {
+      loadErrorFlag = "Failed to load Google Maps";
+      reject(new Error(loadErrorFlag));
+    };
+    document.head.appendChild(script);
+  });
+
   return loadPromise;
 }
 
