@@ -1316,7 +1316,7 @@ const BankFeed = () => {
 
 
             {/* Chart of Accounts */}
-            <ChartOfAccountsWidget />
+            <ChartOfAccountsWidget accountType={selectedAccount?.account_type} />
 
             {/* Single Process All Button */}
             <div className="flex justify-center">

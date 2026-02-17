@@ -8,9 +8,13 @@ import { AddCategoryDialog } from "./AddCategoryDialog";
 
 const MAX_BADGES = 8;
 
-export function ChartOfAccountsWidget() {
+interface ChartOfAccountsWidgetProps {
+  accountType?: string;
+}
+
+export function ChartOfAccountsWidget({ accountType }: ChartOfAccountsWidgetProps) {
   const navigate = useNavigate();
-  const { data: categories = [], isLoading } = useCategories();
+  const { data: categories = [], isLoading } = useCategories(undefined, accountType);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const incomeCategories = categories.filter((c) => c.type === "income");
@@ -107,7 +111,7 @@ export function ChartOfAccountsWidget() {
         </Button>
       </div>
 
-      <AddCategoryDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <AddCategoryDialog open={dialogOpen} onOpenChange={setDialogOpen} defaultAccountType={accountType} />
     </>
   );
 }

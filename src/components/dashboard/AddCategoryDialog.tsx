@@ -21,6 +21,7 @@ import { toast } from "sonner";
 interface AddCategoryDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultAccountType?: string;
 }
 
 const VAT_RATES = [
@@ -30,10 +31,11 @@ const VAT_RATES = [
   { label: "23%", value: "23" },
 ];
 
-export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps) {
+export function AddCategoryDialog({ open, onOpenChange, defaultAccountType }: AddCategoryDialogProps) {
+  const defaultAccType = defaultAccountType === "directors_personal_tax" ? "personal" : "business";
   const [name, setName] = useState("");
   const [type, setType] = useState<"income" | "expense">("expense");
-  const [accountType, setAccountType] = useState("business");
+  const [accountType, setAccountType] = useState(defaultAccType);
   const [vatRate, setVatRate] = useState("23");
   const [accountCode, setAccountCode] = useState("");
 
@@ -43,7 +45,7 @@ export function AddCategoryDialog({ open, onOpenChange }: AddCategoryDialogProps
   const resetForm = () => {
     setName("");
     setType("expense");
-    setAccountType("business");
+    setAccountType(defaultAccType);
     setVatRate("23");
     setAccountCode("");
   };
