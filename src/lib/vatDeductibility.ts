@@ -27,8 +27,13 @@ export function isVATDeductible(
 
   // ── Section 60 keyword checks (description-based, fire first) ──
 
+  // Travel & Accommodation is a legitimate CT-deductible business expense
+  // (only VAT is non-recoverable under Section 60). Do NOT flag as disallowed.
+  const isTravelCategory = catLower.includes("travel") || catLower.includes("accommodation");
+
   // Section 60(2)(a)(i) - Food, drink, accommodation
-  if (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => combined.includes(k))) {
+  // Skip if the category is Travel & Accommodation — it's CT-deductible
+  if (!isTravelCategory && DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => combined.includes(k))) {
     return {
       isDeductible: false,
       reason: "Food, drink or accommodation - VAT NOT recoverable",
