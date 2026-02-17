@@ -643,7 +643,7 @@ const Settings = () => {
         </div>
       </header>
 
-      <main className="px-4 md:px-6 py-6 max-w-4xl mx-auto md:mx-0 space-y-6">
+      <main className="px-4 md:px-6 py-6 max-w-4xl mx-auto space-y-6">
         {/* Profile Card */}
         <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
           <div className="flex items-center gap-4">
