@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { autoCategorise, findMatchingCategory } from "@/lib/autocat";
-import { findMatchingAccount, getDefaultAccount } from "@/lib/accountMapping";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
 import { useVendorCache } from "@/hooks/useVendorCache";
 import { useUserCorrections } from "@/hooks/useUserCorrections";
@@ -125,18 +124,12 @@ export function useBulkRecategorize() {
               }
 
               const vatRate = mapVatTypeToRate(engineResult.vat_type);
-              const matchedAccount = findMatchingAccount(
-                engineResult.category,
-                txnDirection,
-                engineResult.vat_type,
-                accounts || []
-              ) || getDefaultAccount(txnDirection, accounts || []);
 
               const { error: updateError } = await supabase
                 .from("transactions")
                 .update({
                   category_id: matchedCategory.id,
-                  account_id: matchedAccount?.id || null,
+                  // Do NOT overwrite account_id — it holds the bank account reference
                   vat_rate: vatRate,
                   notes: engineResult.notes || null,
                 })
@@ -329,18 +322,12 @@ export function useBulkRecategorize() {
               }
 
               const vatRate = mapVatTypeToRate(engineResult.vat_type);
-              const matchedAccount = findMatchingAccount(
-                engineResult.category,
-                txnDirection,
-                engineResult.vat_type,
-                accounts || []
-              ) || getDefaultAccount(txnDirection, accounts || []);
 
               const { error: updateError } = await supabase
                 .from("transactions")
                 .update({
                   category_id: matchedCategory.id,
-                  account_id: matchedAccount?.id || undefined,
+                  // Do NOT overwrite account_id — it holds the bank account reference
                   vat_rate: vatRate,
                   notes: engineResult.notes || null,
                 })
@@ -483,18 +470,12 @@ export function useBulkRecategorize() {
               }
 
               const vatRate = mapVatTypeToRate(engineResult.vat_type);
-              const matchedAccount = findMatchingAccount(
-                engineResult.category,
-                txnDirection,
-                engineResult.vat_type,
-                accounts || []
-              ) || getDefaultAccount(txnDirection, accounts || []);
 
               const { error: updateError } = await supabase
                 .from("transactions")
                 .update({
                   category_id: matchedCategory.id,
-                  account_id: matchedAccount?.id || null,
+                  // Do NOT overwrite account_id — it holds the bank account reference
                   vat_rate: vatRate,
                   notes: engineResult.notes || null,
                 })
@@ -553,18 +534,12 @@ export function useBulkRecategorize() {
             if (!cat) continue;
 
             const vatRate = isTransport ? 0 : expenseType === "accommodation" ? 13.5 : 23;
-            const matchedAccount = findMatchingAccount(
-              isTransport ? "Motor/travel" : "Travel & Subsistence",
-              "expense",
-              isTransport ? "Zero" : expenseType === "accommodation" ? "Reduced 13.5%" : "Standard 23%",
-              accounts || []
-            ) || getDefaultAccount("expense", accounts || []);
 
             const { error } = await supabase
               .from("transactions")
               .update({
                 category_id: cat.id,
-                account_id: matchedAccount?.id || null,
+                // Do NOT overwrite account_id — it holds the bank account reference
                 vat_rate: vatRate,
                 notes: `[Trip] Business trip to ${trip.location} (${trip.startDate}${trip.endDate !== trip.startDate ? " – " + trip.endDate : ""})`,
               })
