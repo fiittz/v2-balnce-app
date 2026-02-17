@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Balnce — Demo Night Playbook</title>
+<title>Balnce x OpenClaw — Founders Demo Night</title>
 <style>
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -15,405 +15,481 @@
     font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
     background: #fff;
     color: #1a1a2e;
-    line-height: 1.6;
+    line-height: 1.7;
     max-width: 800px;
     margin: 0 auto;
     padding: 40px 48px;
+    font-size: 15px;
   }
+
+  /* Print bar */
+  .print-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: #1a5632; color: white;
+    padding: 10px 24px; display: flex;
+    justify-content: space-between; align-items: center;
+    z-index: 100; font-size: 14px;
+  }
+  .print-bar button {
+    background: #4ade80; color: #1a1a2e; border: none;
+    padding: 8px 20px; border-radius: 6px;
+    font-weight: 700; cursor: pointer; font-size: 14px;
+  }
+  .print-spacer { height: 52px; }
 
   /* Cover */
   .cover {
     text-align: center;
-    padding: 80px 0 60px;
+    padding: 60px 0 48px;
     border-bottom: 3px solid #1a5632;
-    margin-bottom: 48px;
-  }
-  .cover .logo {
-    font-size: 48px;
-    margin-bottom: 12px;
+    margin-bottom: 40px;
   }
   .cover h1 {
-    font-size: 36px;
-    font-weight: 800;
-    color: #1a5632;
-    letter-spacing: -0.5px;
+    font-size: 38px; font-weight: 800;
+    color: #1a5632; letter-spacing: -0.5px;
   }
-  .cover .tagline {
-    font-size: 18px;
-    color: #666;
-    margin-top: 8px;
-    font-weight: 400;
+  .cover .subtitle {
+    font-size: 20px; color: #444; margin-top: 8px; font-weight: 500;
   }
-  .cover .date {
-    margin-top: 24px;
-    font-size: 14px;
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+  .cover .sub2 {
+    font-size: 16px; color: #666; margin-top: 4px; font-style: italic;
+  }
+  .cover .meta {
+    margin-top: 32px; font-size: 13px; color: #999;
+    text-transform: uppercase; letter-spacing: 2px;
   }
 
-  /* Section headers */
+  /* Slide headers */
   h2 {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1a5632;
-    margin: 40px 0 16px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #e8ebef;
-  }
-  h2 .num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    background: #1a5632;
-    color: white;
-    border-radius: 50%;
-    font-size: 14px;
-    margin-right: 10px;
-    vertical-align: middle;
+    font-size: 20px; font-weight: 700; color: #1a5632;
+    margin: 40px 0 12px; padding-bottom: 6px;
+    border-bottom: 2px solid #d0d4da;
   }
   h3 {
-    font-size: 16px;
-    font-weight: 700;
-    color: #333;
-    margin: 24px 0 8px;
+    font-size: 16px; font-weight: 700; color: #333;
+    margin: 20px 0 8px;
   }
+  p { margin: 8px 0; }
+  strong { color: #1a1a2e; }
 
-  p { margin: 8px 0; color: #444; font-size: 15px; }
-
-  /* Cards */
-  .card {
-    background: #f7f8fa;
-    border: 1px solid #e0e3e8;
-    border-radius: 8px;
-    padding: 20px 24px;
-    margin: 16px 0;
-  }
-  .card.green {
-    background: #f0fdf4;
-    border-color: #86efac;
-  }
-  .card.amber {
-    background: #fffbeb;
-    border-color: #fcd34d;
-  }
-  .card.red {
-    background: #fef2f2;
-    border-color: #fca5a5;
-  }
-  .card h4 {
-    font-size: 15px;
-    font-weight: 700;
+  /* Slide label */
+  .slide-label {
+    display: inline-block;
+    background: #1a5632; color: white;
+    font-size: 11px; font-weight: 700;
+    padding: 2px 10px; border-radius: 4px;
+    letter-spacing: 1px; text-transform: uppercase;
     margin-bottom: 8px;
-    color: #1a1a2e;
   }
-  .card p { font-size: 14px; margin: 4px 0; }
 
-  /* Script block */
+  /* Stage direction */
+  .stage {
+    background: #eff6ff; border-left: 4px solid #3b82f6;
+    padding: 10px 16px; margin: 12px 0;
+    font-size: 14px; border-radius: 0 6px 6px 0;
+    font-style: italic; color: #1e40af;
+  }
+
+  /* Script — what to say */
   .script {
-    background: #1a1a2e;
-    color: #e2e8f0;
-    border-radius: 8px;
-    padding: 20px 24px;
-    margin: 16px 0;
-    font-size: 15px;
-    line-height: 1.8;
-    position: relative;
+    background: #fafafa; border: 1px solid #e0e3e8;
+    border-radius: 8px; padding: 16px 20px; margin: 12px 0;
+    font-size: 15px; line-height: 1.8;
   }
-  .script::before {
-    content: "SAY THIS";
-    position: absolute;
-    top: -10px;
-    left: 16px;
-    background: #4ade80;
-    color: #1a1a2e;
-    font-size: 10px;
-    font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 4px;
-    letter-spacing: 1px;
-  }
-  .script em { color: #4ade80; font-style: normal; font-weight: 600; }
-  .script .pause { color: #fbbf24; font-style: italic; }
+  .script em { color: #1a5632; font-style: normal; font-weight: 600; }
 
-  /* Action block */
-  .action {
-    background: #eff6ff;
-    border-left: 4px solid #3b82f6;
-    padding: 12px 16px;
-    margin: 12px 0;
-    font-size: 14px;
-    border-radius: 0 6px 6px 0;
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse;
+    margin: 12px 0; font-size: 14px;
   }
-  .action::before {
-    content: "DO THIS ";
-    font-weight: 800;
-    color: #3b82f6;
-    font-size: 11px;
-    letter-spacing: 1px;
+  th {
+    background: #f7f8fa; text-align: left;
+    padding: 10px 12px; border-bottom: 2px solid #d0d4da;
+    font-weight: 700; font-size: 13px; color: #555;
   }
+  td {
+    padding: 8px 12px; border-bottom: 1px solid #e8ebef;
+    vertical-align: top;
+  }
+  td:last-child { text-align: right; }
+  tr.total td {
+    border-top: 2px solid #1a5632;
+    font-weight: 700; font-size: 15px;
+  }
+  tr.highlight td {
+    background: #f0fdf4; color: #15803d; font-weight: 700;
+  }
+  .mono { font-family: "Consolas", monospace; }
 
-  /* List */
-  ul, ol { margin: 8px 0 8px 24px; }
-  li { margin: 6px 0; font-size: 14px; color: #444; }
-  li strong { color: #1a1a2e; }
+  /* Callout boxes */
+  .callout {
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0;
+  }
+  .callout h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .callout p { font-size: 14px; margin: 4px 0; }
+  .callout.green { background: #f0fdf4; border: 1px solid #86efac; }
+  .callout.amber { background: #fffbeb; border: 1px solid #fcd34d; }
+  .callout.red { background: #fef2f2; border: 1px solid #fca5a5; }
+  .callout.blue { background: #eff6ff; border: 1px solid #93c5fd; }
+  .callout.dark { background: #1a1a2e; color: #e2e8f0; border: none; }
+  .callout.dark h4 { color: #4ade80; }
+  .callout.dark strong { color: #fbbf24; }
 
   /* Link box */
   .link-box {
-    background: #1a5632;
-    color: white;
-    border-radius: 8px;
-    padding: 16px 24px;
-    margin: 16px 0;
-    text-align: center;
+    background: #1a5632; color: white; border-radius: 8px;
+    padding: 14px 24px; margin: 12px 0; text-align: center;
   }
-  .link-box .label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; }
+  .link-box .label {
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 2px; opacity: 0.7;
+  }
   .link-box .url {
-    font-size: 18px;
-    font-weight: 700;
-    font-family: "Consolas", monospace;
-    margin-top: 4px;
-    word-break: break-all;
+    font-size: 16px; font-weight: 700;
+    font-family: "Consolas", monospace; margin-top: 2px;
   }
   .link-box a { color: #4ade80; text-decoration: none; }
 
-  /* Numbers table */
-  .numbers {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 14px;
-  }
-  .numbers td {
-    padding: 8px 12px;
-    border-bottom: 1px solid #e8ebef;
-  }
-  .numbers td:last-child {
-    text-align: right;
-    font-family: "Consolas", monospace;
-    font-weight: 600;
-  }
-  .numbers tr.total td {
-    border-top: 2px solid #1a5632;
-    font-weight: 700;
-    font-size: 15px;
-  }
-  .numbers tr.highlight td {
-    background: #f0fdf4;
-    color: #15803d;
-    font-weight: 700;
-  }
-
-  /* Timing */
-  .timing {
-    display: flex;
-    gap: 12px;
-    margin: 16px 0;
-  }
-  .timing .step {
-    flex: 1;
-    background: #f7f8fa;
-    border: 1px solid #e0e3e8;
-    border-radius: 8px;
-    padding: 12px;
-    text-align: center;
-  }
-  .timing .step .mins {
-    font-size: 24px;
-    font-weight: 800;
-    color: #1a5632;
-  }
-  .timing .step .desc {
-    font-size: 11px;
-    color: #666;
-    margin-top: 4px;
-  }
+  /* Bullet list */
+  ul { margin: 8px 0 8px 20px; }
+  li { margin: 6px 0; font-size: 14px; color: #444; }
 
   /* Footer */
   .footer {
-    margin-top: 48px;
-    padding-top: 16px;
+    margin-top: 48px; padding-top: 16px;
     border-top: 1px solid #e8ebef;
-    font-size: 12px;
-    color: #999;
-    text-align: center;
+    font-size: 12px; color: #999; text-align: center;
   }
-
-  /* Print button */
-  .print-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    background: #1a5632;
-    color: white;
-    padding: 10px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    z-index: 100;
-    font-size: 14px;
-  }
-  .print-bar button {
-    background: #4ade80;
-    color: #1a1a2e;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
-    font-weight: 700;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  .print-spacer { height: 52px; }
 </style>
 </head>
 <body>
 
 <div class="print-bar no-print">
-  <span>Balnce Demo Playbook</span>
+  <span>Balnce x OpenClaw &mdash; Demo Playbook</span>
   <button onclick="window.print()">Save as PDF</button>
 </div>
 <div class="print-spacer no-print"></div>
 
-<!-- COVER -->
+<!-- ================================================================ -->
+<!-- COVER                                                            -->
+<!-- ================================================================ -->
 <div class="cover">
-  <div class="logo">&#129427;</div>
-  <h1>Balnce</h1>
-  <div class="tagline">AI-Powered Accounting for Irish Small Business</div>
-  <div class="date">Founders Demo Night &bull; February 2026</div>
+  <h1>Balnce x OpenClaw</h1>
+  <div class="subtitle">Automating Irish Tax Compliance with AI Agents</div>
+  <div class="sub2">From Bank Statement to Filed CT1 &mdash; Zero Manual Entry</div>
+  <div class="meta">Founders Demo Night &bull; February 2026</div>
 </div>
 
-<!-- WHAT IS BALNCE -->
-<h2><span class="num">1</span> What is Balnce?</h2>
+<!-- ================================================================ -->
+<!-- SLIDE 1: THE PROBLEM                                             -->
+<!-- ================================================================ -->
+<div class="slide-label">Slide 1</div>
+<h2>The Problem: The Hidden Cost of Compliance</h2>
 
-<p>Balnce is an automated accounting system for Irish limited companies and their directors. It takes raw bank data and turns it into a complete set of accounts — P&L, Balance Sheet, VAT returns, and Corporation Tax (CT1) computation — with no manual bookkeeping.</p>
+<p>Every Irish limited company must file a CT1 Corporation Tax return annually. For the ~270,000 small companies in Ireland, this process typically involves:</p>
 
-<div class="card green">
-  <h4>The Problem</h4>
-  <p>Small Irish LLCs (construction, trades, SaaS) spend thousands on accountants for basic compliance. Most don't look at their numbers until year-end. By then it's too late to optimise.</p>
-</div>
+<ul>
+  <li><strong>Manual data entry</strong> &mdash; bank transactions transcribed into spreadsheets or legacy accounting software</li>
+  <li><strong>Accountant dependency</strong> &mdash; &euro;2,000&ndash;5,000/year for a basic compliance service</li>
+  <li><strong>Delayed visibility</strong> &mdash; most business owners don't see their tax position until 6&ndash;9 months after year-end</li>
+  <li><strong>Missed optimisations</strong> &mdash; complex rules (RCT credits, VAT Section 60, capital allowances) are routinely under-claimed</li>
+</ul>
 
-<div class="card green">
-  <h4>The Solution</h4>
-  <p>Upload a bank CSV. Balnce auto-categorises every transaction using Irish tax rules (VAT Section 59/60, CT deductibility, RCT). You get a live P&L, CT1 computation, and balance sheet — instantly.</p>
-</div>
+<p>The result: small businesses overpay on tax, underclaim on deductions, and fly blind on profitability.</p>
 
-<!-- LIVE NUMBERS -->
-<h2><span class="num">2</span> Live Numbers (Real Data)</h2>
+<!-- ================================================================ -->
+<!-- SLIDE 2: THE SOLUTION                                            -->
+<!-- ================================================================ -->
+<div class="page-break"></div>
+<div class="slide-label">Slide 2</div>
+<h2>Our Solution: Balnce &mdash; The Autonomous Tax Engine</h2>
 
-<p>These are real figures from a test company running through Balnce today:</p>
+<p><strong>Balnce</strong> is an AI-powered accounting system built specifically for Irish limited companies. Upload a bank CSV. Get a complete P&amp;L, Balance Sheet, VAT return, and CT1 Corporation Tax computation &mdash; instantly.</p>
 
-<table class="numbers">
-  <tr><td>Contract Work (Income)</td><td>&euro;6,644.00</td></tr>
-  <tr><td>Other Income</td><td>&euro;11.10</td></tr>
-  <tr><td><strong>Total Turnover</strong></td><td><strong>&euro;6,655.10</strong></td></tr>
-  <tr><td>Direct Costs (Subs + Materials)</td><td>&euro;4,644.43</td></tr>
-  <tr><td>Gross Profit</td><td>&euro;2,010.67</td></tr>
-  <tr><td>Net Expenses</td><td>&euro;1,203.82</td></tr>
-  <tr class="total"><td>Net Profit</td><td>&euro;806.85</td></tr>
+<table>
+  <tr>
+    <th>Feature</th>
+    <th>Traditional Accountant</th>
+    <th>Balnce</th>
+  </tr>
+  <tr>
+    <td>Data Input</td>
+    <td>Manual entry, bank recs</td>
+    <td>CSV upload, auto-parsed</td>
+  </tr>
+  <tr>
+    <td>Categorisation</td>
+    <td>Manual, prone to error</td>
+    <td>AI engine with Irish tax rules</td>
+  </tr>
+  <tr>
+    <td>VAT Treatment</td>
+    <td>Often approximated</td>
+    <td>Section 59/60 per transaction</td>
+  </tr>
+  <tr>
+    <td>CT1 Computation</td>
+    <td>Year-end, months delayed</td>
+    <td>Real-time, always current</td>
+  </tr>
+  <tr>
+    <td>Receipt Matching</td>
+    <td>Shoeboxes, lost receipts</td>
+    <td>OCR scan, auto-matched</td>
+  </tr>
+  <tr>
+    <td>Cost</td>
+    <td>&euro;2,000&ndash;5,000/year</td>
+    <td>SaaS subscription</td>
+  </tr>
 </table>
 
-<h3>CT1 Corporation Tax</h3>
-<table class="numbers">
-  <tr><td>Net Profit (per accounts)</td><td>&euro;806.85</td></tr>
-  <tr><td>Add back: Uncategorised</td><td>&euro;215.57</td></tr>
-  <tr><td>Add back: Meals &amp; Entertainment</td><td>&euro;55.29</td></tr>
-  <tr><td>Trading Profit</td><td>&euro;1,077.71</td></tr>
-  <tr><td>CT @ 12.5%</td><td>&euro;134.71</td></tr>
-  <tr><td>Less: RCT Credit</td><td>&euro;1,499.00</td></tr>
-  <tr class="highlight"><td>CT Refund Due</td><td>&euro;1,364.29</td></tr>
+<!-- ================================================================ -->
+<!-- SLIDE 3: LIVE DATA                                               -->
+<!-- ================================================================ -->
+<div class="slide-label">Slide 3</div>
+<h2>Live Data: Real Company, Real Numbers</h2>
+
+<p>These figures are from a live test company running through Balnce right now:</p>
+
+<h3>Profit &amp; Loss</h3>
+<table>
+  <tr><td>Contract Work (Income)</td><td class="mono">&euro;6,644.00</td></tr>
+  <tr><td>Other Income</td><td class="mono">&euro;11.10</td></tr>
+  <tr><td><strong>Total Turnover</strong></td><td class="mono"><strong>&euro;6,655.10</strong></td></tr>
+  <tr><td>Direct Costs (Subcontractors + Materials)</td><td class="mono">&euro;4,644.43</td></tr>
+  <tr><td>Gross Profit</td><td class="mono">&euro;2,010.67</td></tr>
+  <tr><td>Overheads &amp; Expenses (net of Revenue refund)</td><td class="mono">&euro;1,203.82</td></tr>
+  <tr class="total"><td>Net Profit</td><td class="mono">&euro;806.85</td></tr>
 </table>
 
-<div class="card green">
-  <h4>Profit After Tax: &euro;2,171.14 &mdash; 32.6% Effective Margin</h4>
-  <p>This is calculated automatically. The business owner sees their real position in real time, not 6 months after year-end.</p>
+<h3>CT1 Corporation Tax Computation</h3>
+<table>
+  <tr><td>Net Profit (per accounts)</td><td class="mono">&euro;806.85</td></tr>
+  <tr><td>Add back: Uncategorised (pending review)</td><td class="mono">&euro;215.57</td></tr>
+  <tr><td>Add back: Meals &amp; Entertainment (Section 60)</td><td class="mono">&euro;55.29</td></tr>
+  <tr><td><strong>Trading Profit</strong></td><td class="mono"><strong>&euro;1,077.71</strong></td></tr>
+  <tr><td>CT @ 12.5%</td><td class="mono">&euro;134.71</td></tr>
+  <tr><td>Less: RCT Credit (Relevant Contracts Tax)</td><td class="mono">(&euro;1,499.00)</td></tr>
+  <tr class="highlight"><td>CT Refund Due</td><td class="mono">&euro;1,364.29</td></tr>
+</table>
+
+<div class="callout green">
+  <h4>Profit After All Tax: &euro;2,171.14 &mdash; 32.6% Effective Margin</h4>
+  <p>Computed in real time. The business owner knows their exact position today &mdash; not six months from now.</p>
 </div>
 
-<!-- DEMO SCRIPT -->
+<!-- ================================================================ -->
+<!-- SLIDE 4: THE OPENCLAW DEMO                                       -->
+<!-- ================================================================ -->
 <div class="page-break"></div>
+<div class="slide-label">Slide 4</div>
+<h2>The OpenClaw Integration: From Computation to Filing</h2>
 
-<h2><span class="num">3</span> Demo Script (5 minutes)</h2>
+<p>Balnce computes the tax. But what if an AI agent could also <strong>file it</strong>?</p>
 
-<div class="timing">
-  <div class="step"><div class="mins">1:30</div><div class="desc">Show the App</div></div>
-  <div class="step"><div class="mins">1:30</div><div class="desc">AI Agent Demo</div></div>
-  <div class="step"><div class="mins">2:00</div><div class="desc">Vision + Q&A</div></div>
+<p>We built a prototype integration with <strong>OpenClaw</strong> &mdash; an open-source AI agent created by Peter Steinberger (recently acquired by OpenAI). OpenClaw can control a browser, read data from APIs, and perform multi-step tasks autonomously.</p>
+
+<h3>The Pipeline</h3>
+<table>
+  <tr>
+    <th style="text-align:center;">Step</th>
+    <th>Action</th>
+    <th style="text-align:left;">Technology</th>
+  </tr>
+  <tr>
+    <td style="text-align:center;">1</td>
+    <td>Upload bank CSV</td>
+    <td style="text-align:left;">Balnce web app</td>
+  </tr>
+  <tr>
+    <td style="text-align:center;">2</td>
+    <td>Auto-categorise all transactions</td>
+    <td style="text-align:left;">Balnce tax engine (VAT/CT rules)</td>
+  </tr>
+  <tr>
+    <td style="text-align:center;">3</td>
+    <td>Compute CT1 return</td>
+    <td style="text-align:left;">Balnce CT1 hook (real-time)</td>
+  </tr>
+  <tr>
+    <td style="text-align:center;">4</td>
+    <td>Open Revenue CT1 form</td>
+    <td style="text-align:left;">OpenClaw browser automation</td>
+  </tr>
+  <tr>
+    <td style="text-align:center;">5</td>
+    <td>Fill every field automatically</td>
+    <td style="text-align:left;">OpenClaw + Balnce API</td>
+  </tr>
+  <tr>
+    <td style="text-align:center;">6</td>
+    <td>Stop. Human reviews. Human submits.</td>
+    <td style="text-align:left;">The accountant (or you)</td>
+  </tr>
+</table>
+
+<div class="callout dark">
+  <h4>Live Demo</h4>
+  <p>Watch the AI agent read the data from Balnce, open the Revenue CT1 form, and fill every field &mdash; turnover, costs, add-backs, trading profit, tax liability, RCT credit &mdash; in under 60 seconds.</p>
+  <p><strong>Same numbers as the live app. Verified. Ready for review.</strong></p>
 </div>
 
-<h3>Part 1 — Show the App (90 seconds)</h3>
-
-<div class="action">Open Balnce in browser &rarr; navigate to Bank Feed &rarr; P&L tab</div>
-
-<div class="script">
-  <em>"This is Balnce."</em> It's an AI-powered accounting system built specifically for Irish small businesses.<br><br>
-  <em>"You upload a bank CSV — that's it."</em> Balnce auto-categorises every transaction using Irish tax law. VAT rates, Section 60 deductibility rules, RCT for construction — all built in.<br><br>
-  <span class="pause">[scroll through P&L]</span><br><br>
-  <em>"You get a live P&L, a CT1 corporation tax computation, and a balance sheet. No manual data entry. No waiting for your accountant."</em><br><br>
-  <span class="pause">[point to Profit After Tax: 32.6%]</span><br><br>
-  <em>"And most importantly — the business owner can see their actual profit after tax, in real time. Not six months after year-end."</em>
+<div class="link-box">
+  <div class="label">AI Agent Demo</div>
+  <div class="url"><a href="https://v2-balnce-app.vercel.app/demo-ros.html" target="_blank">v2-balnce-app.vercel.app/demo-ros.html</a></div>
 </div>
 
-<h3>Part 2 — AI Agent Demo (90 seconds)</h3>
-
-<div class="action">Open demo-ros.html in a new tab &rarr; hit "File CT1" button</div>
-
-<div class="script">
-  <em>"Now — here's where it gets interesting."</em><br><br>
-  <em>"What if the AI didn't just compute the tax — but actually filed it?"</em><br><br>
-  <span class="pause">[click "File CT1" — watch fields fill in one by one]</span><br><br>
-  <em>"This is a prototype using OpenClaw — an open-source AI agent. It reads the data from Balnce, opens the Revenue CT1 form, and fills every field automatically."</em><br><br>
-  <span class="pause">[wait for "CT Refund Due" result to appear]</span><br><br>
-  <em>"Same numbers. Verified. Ready for submission."</em>
-</div>
-
-<h3>Part 3 — The Honest Bit (60 seconds)</h3>
-
-<div class="script">
-  <em>"Now — would we ship this tomorrow? No."</em><br><br>
-  There are real questions we're working through:<br><br>
-  &bull; <em>Revenue's Terms of Service</em> — they haven't approved bot-driven submissions yet<br>
-  &bull; <em>Credential security</em> — the agent would need access to a digital certificate. That's the keys to someone's entire tax life<br>
-  &bull; <em>Liability</em> — if the AI fills a wrong number, who's responsible?<br>
-  &bull; <em>GDPR</em> — tax data is highly sensitive. Adding an AI agent adds another data processor<br><br>
-  <em>"But the hard part is already done."</em> The tax computation engine is live and accurate. Irish VAT rules, CT1 add-backs, RCT credits, capital allowances — all automated. The form-filling is just the last mile, and the regulatory framework will catch up.<br><br>
-  <em>"This is where accounting is going. And we're building it."</em>
-</div>
-
-<!-- SECURITY CONCERNS -->
+<!-- ================================================================ -->
+<!-- SLIDE 5: SECURITY & COMPLIANCE                                   -->
+<!-- ================================================================ -->
 <div class="page-break"></div>
+<div class="slide-label">Slide 5</div>
+<h2>The Honest Bit: Security &amp; Compliance Concerns</h2>
 
-<h2><span class="num">4</span> Security &amp; Compliance (Reference)</h2>
+<p>We built this to show what's possible. We're not shipping it blindly. There are four real concerns we're working through:</p>
 
-<p>If anyone asks deeper questions, here are the four key concerns and your position:</p>
+<table>
+  <tr>
+    <th>Concern</th>
+    <th style="text-align:left;">Risk</th>
+    <th style="text-align:left;">Our Position</th>
+  </tr>
+  <tr>
+    <td><strong>ROS Terms of Service</strong></td>
+    <td style="text-align:left;">Revenue hasn't approved bot-driven form submissions. Automating ROS may violate their ToS.</td>
+    <td style="text-align:left;">Demo shows capability only. Production requires Revenue approval or use of an official API.</td>
+  </tr>
+  <tr>
+    <td><strong>Credential Handling</strong></td>
+    <td style="text-align:left;">ROS uses digital certificate (.p12) auth. Giving an AI agent access to a cert = full access to someone's tax life.</td>
+    <td style="text-align:left;">We'd never store or transmit certs. Agent uses a sandboxed session on the user's own device.</td>
+  </tr>
+  <tr>
+    <td><strong>Liability</strong></td>
+    <td style="text-align:left;">If the AI enters a wrong number on a tax return, who is responsible? Software? Accountant? Business owner?</td>
+    <td style="text-align:left;">AI prepares, human files. Balnce always stops before submission. The liability chain stays clear.</td>
+  </tr>
+  <tr>
+    <td><strong>GDPR / Data Protection</strong></td>
+    <td style="text-align:left;">Tax data is sensitive. Routing it through an AI agent adds a data processor to the chain.</td>
+    <td style="text-align:left;">Balnce data stays in Supabase (EU-hosted). OpenClaw runs locally &mdash; no tax data leaves the device.</td>
+  </tr>
+</table>
 
-<div class="card red">
-  <h4>1. ROS Terms of Service</h4>
-  <p>Revenue Online Service (ROS) does not currently authorise automated/bot-driven form submissions. Any production integration would require explicit approval from Revenue or use of their official API (when available).</p>
-  <p><strong>Our position:</strong> The demo shows the <em>capability</em>. We would only go live with Revenue's blessing or through an approved integration path.</p>
+<div class="callout amber">
+  <h4>Key Takeaway</h4>
+  <p>The hard part is already done. The tax computation engine is live, accurate, and applying real Irish tax law &mdash; VAT Section 59/60, CT deductibility, RCT credits, capital allowances. The form-filling is the last mile. The regulatory framework will catch up.</p>
 </div>
 
-<div class="card red">
-  <h4>2. Credential Handling</h4>
-  <p>ROS authentication requires a digital certificate (.p12 file). Giving an AI agent access to this cert is a significant security decision — it's equivalent to handing over full access to file returns, view liabilities, and make payments.</p>
-  <p><strong>Our position:</strong> We'd never store or transmit certs. Any integration would use a sandboxed browser session with the user's own authenticated session, or a future OAuth-style delegation from Revenue.</p>
+<!-- ================================================================ -->
+<!-- SLIDE 6: DEMONSTRATED IMPROVEMENT                                -->
+<!-- ================================================================ -->
+<div class="slide-label">Slide 6</div>
+<h2>Demonstrated Improvement: What Balnce Gets Right</h2>
+
+<p>Balnce applies rules that generic AI and most accountants miss or approximate:</p>
+
+<table>
+  <tr>
+    <th>Rule</th>
+    <th style="text-align:left;">What Generic Systems Do</th>
+    <th style="text-align:left;">What Balnce Does</th>
+  </tr>
+  <tr>
+    <td><strong>VAT on Hotels</strong></td>
+    <td style="text-align:left;">Apply 23% standard rate</td>
+    <td style="text-align:left;">Apply 9% (second reduced rate). Flag VAT as non-recoverable under Section 60(2)(a)(i). Expense remains CT-deductible.</td>
+  </tr>
+  <tr>
+    <td><strong>Meals &amp; Entertainment</strong></td>
+    <td style="text-align:left;">Often missed as add-back</td>
+    <td style="text-align:left;">Auto-flagged as non-deductible for CT. Added back to trading profit.</td>
+  </tr>
+  <tr>
+    <td><strong>Diesel vs Petrol</strong></td>
+    <td style="text-align:left;">Treat all fuel the same</td>
+    <td style="text-align:left;">Diesel VAT is recoverable. Petrol is not. Balnce classifies per Section 60(2)(a)(v).</td>
+  </tr>
+  <tr>
+    <td><strong>RCT Credits</strong></td>
+    <td style="text-align:left;">Ignored or manual</td>
+    <td style="text-align:left;">Automatically deducted from CT liability. Shows as current asset on balance sheet.</td>
+  </tr>
+  <tr>
+    <td><strong>Bank Charges</strong></td>
+    <td style="text-align:left;">Sometimes treated as add-back</td>
+    <td style="text-align:left;">Correctly identified as CT-deductible (VAT exempt, but not an add-back).</td>
+  </tr>
+  <tr>
+    <td><strong>Director's Current A/C</strong></td>
+    <td style="text-align:left;">Manual tracking</td>
+    <td style="text-align:left;">Travel allowances vs drawings auto-calculated. Net balance flows to balance sheet.</td>
+  </tr>
+</table>
+
+<!-- ================================================================ -->
+<!-- SLIDE 7: FUTURE POTENTIAL                                        -->
+<!-- ================================================================ -->
+<div class="page-break"></div>
+<div class="slide-label">Slide 7</div>
+<h2>Future Potential &amp; Scalability</h2>
+
+<p>Balnce is not a demo project. It's a live product with a clear path to market:</p>
+
+<ul>
+  <li><strong>Phase 1 (Now):</strong> CSV bank feed &rarr; auto-categorisation &rarr; P&amp;L, Balance Sheet, CT1, VAT &mdash; live and working</li>
+  <li><strong>Phase 2 (Q2 2026):</strong> Open Banking integration (no more CSV uploads), receipt OCR matching, Form 11 for directors</li>
+  <li><strong>Phase 3 (Q3 2026):</strong> AI agent integration (OpenClaw) for form pre-filling, proactive tax alerts, WhatsApp-based queries</li>
+  <li><strong>Phase 4 (2027):</strong> Multi-client accountant dashboard, Revenue API integration (when available), audit trail &amp; compliance pack</li>
+</ul>
+
+<h3>Market Size</h3>
+<table>
+  <tr><td>Active Irish limited companies</td><td class="mono">~270,000</td></tr>
+  <tr><td>Average annual accountancy spend (small co.)</td><td class="mono">&euro;3,000</td></tr>
+  <tr><td>Total addressable market (Ireland)</td><td class="mono">&euro;810M</td></tr>
+  <tr><td>1% penetration = </td><td class="mono">&euro;8.1M ARR</td></tr>
+</table>
+
+<!-- ================================================================ -->
+<!-- SLIDE 8: Q&A PREP                                                -->
+<!-- ================================================================ -->
+<div class="slide-label">Slide 8</div>
+<h2>Anticipated Questions &amp; Answers</h2>
+
+<div class="callout blue">
+  <h4>"Who is this for?"</h4>
+  <p>Irish limited companies with 1&ndash;2 directors. Primarily trades (construction, electrical, plumbing) and small tech/SaaS companies. The ones paying &euro;3k/year for an accountant to do data entry.</p>
 </div>
 
-<div class="card amber">
-  <h4>3. Liability</h4>
-  <p>If an AI agent enters an incorrect figure on a tax return, liability is unclear. Is it the software provider? The accountant who approved it? The business owner?</p>
-  <p><strong>Our position:</strong> Balnce always stops before submission. A human reviews and approves. The AI prepares — the human files. This keeps the liability chain clear.</p>
+<div class="callout blue">
+  <h4>"How accurate is the auto-categorisation?"</h4>
+  <p>We use rule-based matching against Irish VAT and CT legislation &mdash; not a generic LLM guess. Vendor name recognition, receipt OCR, and Section 60 keyword analysis. Users can review and override. Anything uncategorised is conservatively flagged as a CT add-back until confirmed.</p>
 </div>
 
-<div class="card amber">
-  <h4>4. GDPR / Data Protection</h4>
-  <p>Tax data (income, expenses, PPS numbers, company details) is sensitive personal data under GDPR. Routing it through an AI agent (especially a cloud-hosted LLM) adds a data processor.</p>
-  <p><strong>Our position:</strong> Balnce processes data in Supabase (EU-hosted). The OpenClaw agent runs locally on the user's machine — no tax data leaves their device.</p>
+<div class="callout blue">
+  <h4>"Are you replacing accountants?"</h4>
+  <p>We're replacing the 80% that's manual grunt work &mdash; data entry, bank reconciliation, basic compliance filing. Complex tax planning, audits, and advisory still need a human. We make the human's job easier, not redundant.</p>
 </div>
 
-<!-- LINKS -->
-<h2><span class="num">5</span> Demo Links</h2>
+<div class="callout blue">
+  <h4>"What's the business model?"</h4>
+  <p>SaaS subscription. The accountant is a &euro;3,000/year cost that most small companies accept as unavoidable. We make it avoidable &mdash; or at least dramatically cheaper.</p>
+</div>
+
+<div class="callout blue">
+  <h4>"How is this different from Xero/QuickBooks?"</h4>
+  <p>Xero and QuickBooks are general-purpose tools that require manual categorisation and don't understand Irish tax rules. Balnce is purpose-built for Irish CT1/VAT/RCT compliance. It applies the rules automatically &mdash; Section 60 VAT, CT add-backs, two-thirds rule, capital allowances. No accountant in the loop for the basics.</p>
+</div>
+
+<!-- ================================================================ -->
+<!-- DEMO LINKS                                                       -->
+<!-- ================================================================ -->
+<div class="page-break"></div>
+<div class="slide-label">Reference</div>
+<h2>Demo Links</h2>
 
 <div class="link-box">
   <div class="label">Live App</div>
@@ -421,41 +497,53 @@
 </div>
 
 <div class="link-box">
-  <div class="label">AI Agent Demo (Mock ROS CT1)</div>
+  <div class="label">AI Agent Demo (Mock ROS CT1 Filing)</div>
   <div class="url"><a href="https://v2-balnce-app.vercel.app/demo-ros.html" target="_blank">v2-balnce-app.vercel.app/demo-ros.html</a></div>
 </div>
 
-<!-- QUICK Q&A -->
-<h2><span class="num">6</span> Likely Questions &amp; Answers</h2>
-
-<div class="card">
-  <h4>"How do you handle different business types?"</h4>
-  <p>We have trade profiles built in — construction (RCT, two-thirds rule), SaaS (reverse charge VAT, R&D credits), general trades. The categorisation engine adapts based on the business type selected during onboarding.</p>
+<div class="link-box">
+  <div class="label">This Playbook (Printable)</div>
+  <div class="url"><a href="https://v2-balnce-app.vercel.app/demo-playbook.html" target="_blank">v2-balnce-app.vercel.app/demo-playbook.html</a></div>
 </div>
 
-<div class="card">
-  <h4>"How accurate is the auto-categorisation?"</h4>
-  <p>We use keyword matching against Irish VAT and CT rules, vendor name recognition, and receipt OCR. The user can review and override any categorisation. Uncategorised items are flagged as add-backs until reviewed.</p>
+<!-- ================================================================ -->
+<!-- DEMO SCRIPT (CHEAT SHEET)                                        -->
+<!-- ================================================================ -->
+<div class="slide-label">Cheat Sheet</div>
+<h2>Demo Script &mdash; What to Say &amp; Do</h2>
+
+<h3>Part 1: Show the App (90 seconds)</h3>
+
+<div class="stage">Open Balnce &rarr; Bank Feed &rarr; P&L tab. Scroll slowly through the P&L and CT1 section.</div>
+
+<div class="script">
+  <em>"This is Balnce."</em> It's an AI-powered accounting system built for Irish small businesses.<br><br>
+  <em>"You upload a bank CSV &mdash; that's it."</em> Every transaction is auto-categorised using Irish tax law. VAT rates, Section 60 rules, RCT for construction &mdash; all built in.<br><br>
+  <em>"You get a live P&amp;L, a CT1 corporation tax computation, and a balance sheet. No data entry. No waiting for your accountant."</em><br><br>
+  <em>"And the business owner sees their actual profit after tax &mdash; 32.6% &mdash; in real time."</em>
 </div>
 
-<div class="card">
-  <h4>"Who is this for?"</h4>
-  <p>Irish limited companies with one or two directors. Primarily trades (construction, electrical, plumbing) and small tech/SaaS companies. These businesses typically pay &euro;2,000-5,000/year for a basic accountant to do exactly what Balnce does automatically.</p>
+<h3>Part 2: AI Agent Demo (90 seconds)</h3>
+
+<div class="stage">Open a new tab &rarr; demo-ros.html &rarr; Click the green "File CT1" button. Let it run.</div>
+
+<div class="script">
+  <em>"Now &mdash; what if the AI didn't just compute the tax, but actually filed it?"</em><br><br>
+  <em>"This is a prototype using OpenClaw &mdash; an open-source AI agent. It reads the data from Balnce, opens the Revenue CT1 form, and fills every field automatically."</em><br><br>
+  <em>"Same numbers. Verified. Under 60 seconds."</em>
 </div>
 
-<div class="card">
-  <h4>"What's the business model?"</h4>
-  <p>SaaS subscription. The accountant is a &euro;3,000/year cost that most small companies accept as unavoidable. We make it avoidable.</p>
-</div>
+<h3>Part 3: The Honest Bit (60 seconds)</h3>
 
-<div class="card">
-  <h4>"Are you replacing accountants?"</h4>
-  <p>We're replacing the manual data entry and compliance grunt work. Complex tax planning, audits, and advisory still need a human. But 80% of what a small-company accountant does is bookkeeping and filing — and that's what we automate.</p>
+<div class="script">
+  <em>"Would we ship this tomorrow? No."</em> There are real questions &mdash; Revenue's ToS, credential security, liability, GDPR.<br><br>
+  <em>"But the hard part is already done."</em> The tax computation engine is live and accurate. The form-filling is the last mile, and the regulatory framework will catch up.<br><br>
+  <em>"This is where accounting is going. And we're building it."</em>
 </div>
 
 <div class="footer">
   Balnce &bull; AI-Powered Accounting for Irish SMEs &bull; February 2026<br>
-  Built with React, TypeScript, Supabase &bull; Irish tax rules engine &bull; OpenClaw AI Agent integration
+  React &bull; TypeScript &bull; Supabase &bull; OpenClaw &bull; Irish Tax Rules Engine
 </div>
 
 </body>
