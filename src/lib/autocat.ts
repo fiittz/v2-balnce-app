@@ -535,13 +535,14 @@ export function autoCategorise(
   }
 
   // Accommodation: categorise as Travel & Subsistence (maps to "Travel & Accommodation" in DB)
-  // VAT is still blocked per Section 60, but it IS a valid business expense
+  // VAT rate is 9% (second reduced rate for accommodation in Ireland)
+  // VAT is blocked per Section 60, but the expense IS deductible for Corporation Tax
   if (isAccommodation) {
     return finalizeResult({
       category: "Travel & Subsistence",
-      vat_type: "Standard 23%",
+      vat_type: "Second Reduced 9%",
       vat_deductible: false,
-      business_purpose: "Business accommodation - VAT not recoverable under Section 60(2)(a)(i).",
+      business_purpose: "Business accommodation - 9% VAT rate, not recoverable under Section 60(2)(a)(i).",
       confidence_score: 90,
       notes: "Section 60(2)(a)(i) - Accommodation VAT not recoverable. Expense is deductible for Corporation Tax / Income Tax.",
       needs_review: false,

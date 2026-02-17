@@ -536,7 +536,7 @@ export function useBulkRecategorize() {
             const cat = travelCat;
             if (!cat) continue;
 
-            const vatRate = expenseType === "accommodation" ? 13.5 : 23;
+            const vatRate = expenseType === "accommodation" ? 9 : 23;
 
             const { error } = await supabase
               .from("transactions")
