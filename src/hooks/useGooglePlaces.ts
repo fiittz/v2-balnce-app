@@ -1,28 +1,23 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Loader } from "@googlemaps/js-api-loader";
+import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY ?? "";
 
-// Singleton loader — shared across all component instances
-let loaderInstance: Loader | null = null;
+// Singleton state — shared across all component instances
 let loadPromise: Promise<void> | null = null;
 let loadedFlag = false;
 let loadErrorFlag: string | null = null;
-
-function getLoader(): Loader {
-  if (!loaderInstance) {
-    loaderInstance = new Loader({
-      apiKey: API_KEY,
-      libraries: ["places"],
-    });
-  }
-  return loaderInstance;
-}
+let optionsSet = false;
 
 function ensureLoaded(): Promise<void> {
   if (loadPromise) return loadPromise;
-  loadPromise = getLoader()
-    .importLibrary("places")
+
+  if (!optionsSet) {
+    setOptions({ apiKey: API_KEY });
+    optionsSet = true;
+  }
+
+  loadPromise = importLibrary("places")
     .then(() => {
       loadedFlag = true;
     })
