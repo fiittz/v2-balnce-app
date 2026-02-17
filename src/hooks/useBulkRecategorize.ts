@@ -526,14 +526,17 @@ export function useBulkRecategorize() {
         let tripUpdated = 0;
         for (const trip of detectedTrips) {
           for (const txn of trip.transactions) {
-            let expenseType = classifyTripExpense(txn.description);
-            // During a trip, unclassified expenses default to subsistence
-            if (expenseType === "other") expenseType = "subsistence";
-            const isTransport = expenseType === "transport";
-            const cat = isTransport ? (motorCat || travelCat) : travelCat;
+            const expenseType = classifyTripExpense(txn.description);
+            const descLower = txn.description.toLowerCase();
+            const isParking = descLower.includes("parking") || descLower.includes("eflow") || descLower.includes("toll");
+            // Only include subsistence items: food, drink, hotel, parking
+            // Skip unrelated expenses (hardware, phone, etc.) that happen to be at the trip location
+            if (expenseType === "other") continue;
+            if (expenseType === "transport" && !isParking) continue;
+            const cat = travelCat;
             if (!cat) continue;
 
-            const vatRate = isTransport ? 0 : expenseType === "accommodation" ? 13.5 : 23;
+            const vatRate = expenseType === "accommodation" ? 13.5 : 23;
 
             const { error } = await supabase
               .from("transactions")
