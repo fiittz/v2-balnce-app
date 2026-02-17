@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { CheckCircle2, XCircle, Loader2, Search, Trash2, FileImage, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ReceiptImageViewer } from "@/components/receipt/ReceiptImageViewer";
 import { supabase } from "@/integrations/supabase/client";
 import type { BulkReceiptFile } from "@/hooks/useBulkReceiptUpload";
 
@@ -191,6 +192,23 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
   const [matchDialogOpen, setMatchDialogOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<BulkReceiptFile | null>(null);
   const [userId, setUserId] = useState<string>("");
+  const [viewerFile, setViewerFile] = useState<BulkReceiptFile | null>(null);
+
+  // Create stable object URLs for files without imageUrl (pre-upload)
+  const localUrls = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const f of files) {
+      if (!f.imageUrl && f.file.type.startsWith("image/")) {
+        map.set(f.id, URL.createObjectURL(f.file));
+      }
+    }
+    return map;
+  }, [files]);
+
+  const getViewableUrl = (f: BulkReceiptFile): string | null => {
+    if (f.file.type === "application/pdf") return null;
+    return f.imageUrl || localUrls.get(f.id) || null;
+  };
 
   // Grab user id from first file's receipt or from supabase
   const openManualMatch = async (file: BulkReceiptFile) => {
@@ -212,15 +230,31 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
           >
             {/* Thumbnail + filename */}
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
-                {f.imageUrl && f.file.type !== "application/pdf" ? (
-                  <img src={f.imageUrl} alt="" className="w-full h-full object-cover" />
+              {(() => {
+                const viewUrl = getViewableUrl(f);
+                const thumbContent = viewUrl ? (
+                  <img src={viewUrl} alt="" className="w-full h-full object-cover" />
                 ) : f.file.type === "application/pdf" ? (
                   <FileText className="w-6 h-6 text-red-500" />
                 ) : (
                   <FileImage className="w-6 h-6 text-muted-foreground" />
-                )}
-              </div>
+                );
+
+                return viewUrl ? (
+                  <button
+                    type="button"
+                    onClick={() => setViewerFile(f)}
+                    className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-primary transition-shadow"
+                  >
+                    {thumbContent}
+                  </button>
+                ) : (
+                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {thumbContent}
+                  </div>
+                );
+              })()}
+
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{f.file.name}</p>
                 {f.receiptData?.supplier_name && (
@@ -299,6 +333,18 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
           }
         }}
       />
+
+      {viewerFile && (() => {
+        const url = getViewableUrl(viewerFile);
+        return url ? (
+          <ReceiptImageViewer
+            open={true}
+            onOpenChange={(open) => { if (!open) setViewerFile(null); }}
+            imageUrl={url}
+            title={viewerFile.receiptData?.supplier_name || viewerFile.file.name}
+          />
+        ) : null;
+      })()}
     </>
   );
 }

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Camera, Upload, Loader2, RefreshCw, AlertCircle, Files } from "lucide-react";
+import { ArrowLeft, Camera, Upload, Loader2, RefreshCw, AlertCircle, Files, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CameraCapture } from "@/components/receipt/CameraCapture";
 import { ReceiptPreview } from "@/components/receipt/ReceiptPreview";
+import { ReceiptImageViewer } from "@/components/receipt/ReceiptImageViewer";
 import { useReceiptScanner } from "@/hooks/useReceiptScanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateExpense } from "@/hooks/useExpenses";
@@ -31,6 +32,7 @@ const ReceiptScanner = () => {
   const createExpense = useCreateExpense();
   const { data: categories } = useExpenseCategories();
   const [isSaving, setIsSaving] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   const {
     state,
@@ -239,9 +241,29 @@ const ReceiptScanner = () => {
       {state === "error" && (
         <main className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-destructive" />
-            </div>
+            {imageData ? (
+              <button
+                type="button"
+                onClick={() => setViewerOpen(true)}
+                className="relative w-48 h-64 mx-auto mb-4 rounded-xl overflow-hidden bg-muted group cursor-pointer"
+              >
+                <img
+                  src={imageData}
+                  alt="Receipt"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <ZoomIn className="w-8 h-8 text-white" />
+                </div>
+                <div className="absolute top-2 right-2 w-8 h-8 bg-destructive/90 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-4 h-4 text-white" />
+                </div>
+              </button>
+            ) : (
+              <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-destructive" />
+              </div>
+            )}
             <h2 className="text-xl font-semibold mb-2">Processing Failed</h2>
             <p className="text-muted-foreground mb-6">{error || "Something went wrong. Please try again."}</p>
             <Button onClick={reset} className="gap-2">
@@ -249,6 +271,14 @@ const ReceiptScanner = () => {
               Try Again
             </Button>
           </div>
+          {imageData && (
+            <ReceiptImageViewer
+              open={viewerOpen}
+              onOpenChange={setViewerOpen}
+              imageUrl={imageData}
+              title="Failed Receipt"
+            />
+          )}
         </main>
       )}
 
