@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Building2, FileText, Receipt, ChevronRight, CreditCard, User, Link2, Bell, Shield, LogOut, Loader2, Save, MapPin, Car } from "lucide-react";
+import { Building2, FileText, Receipt, ChevronRight, User, Link2, Shield, LogOut, Loader2, Save, MapPin, Sun, Moon, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/components/ThemeProvider";
 import PenguinIcon from "@/components/PenguinIcon";
 import Logo from "@/components/Logo";
 import AppLayout from "@/components/layout/AppLayout";
@@ -53,10 +55,20 @@ const Settings = () => {
   const { user, profile, signOut } = useAuth();
   const { data: onboarding } = useOnboardingSettings();
   
+  const { theme, toggleTheme } = useTheme();
   const { data: directorRows } = useDirectorOnboarding();
   const [showBusinessDialog, setShowBusinessDialog] = useState(false);
   const [showTravelDialog, setShowTravelDialog] = useState(false);
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
+  const [showSecurityDialog, setShowSecurityDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Profile dialog state
+  const [displayName, setDisplayName] = useState("");
+
+  // Security dialog state
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // Form state — Business Info
   const [businessName, setBusinessName] = useState("");
@@ -228,6 +240,58 @@ const Settings = () => {
     }
   };
 
+  const openProfileDialog = () => {
+    setDisplayName(user?.user_metadata?.full_name || "");
+    setShowProfileDialog(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { full_name: displayName },
+      });
+      if (error) throw error;
+      toast.success("Profile updated");
+      setShowProfileDialog(false);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const openSecurityDialog = () => {
+    setNewPassword("");
+    setConfirmPassword("");
+    setShowSecurityDialog(true);
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Password updated successfully");
+      setShowSecurityDialog(false);
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast.error("Failed to change password");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -248,28 +312,27 @@ const Settings = () => {
       items: [
         { icon: Building2, label: "Business Info", description: displayBusinessType, onClick: openBusinessDialog },
         { icon: MapPin, label: "Trip & Travel", description: currentTravel.workshopAddress || currentTravel.placeOfWork || "Set your place of work", onClick: openTravelDialog },
-        { icon: FileText, label: "VAT Settings", description: onboarding?.vat_registered ? `VAT: ${onboarding?.vat_number || "Registered"}` : "Not VAT registered" },
-        { icon: Receipt, label: "RCT Settings", description: onboarding?.rct_registered ? "RCT enabled" : "Not using RCT" },
+        { icon: FileText, label: "VAT Settings", description: onboarding?.vat_registered ? `VAT: ${onboarding?.vat_number || "Registered"}` : "Not VAT registered", onClick: () => navigate("/vat") },
+        { icon: Receipt, label: "RCT Settings", description: onboarding?.rct_registered ? "RCT enabled" : "Not using RCT", onClick: () => navigate("/rct") },
       ]
     },
     {
       title: "Connections",
       items: [
-        { icon: Link2, label: "Bank Connections", description: "Manage linked accounts" },
+        { icon: Link2, label: "Bank Connections", description: "Manage linked accounts", onClick: () => navigate("/bank") },
       ]
     },
     {
       title: "Account",
       items: [
-        { icon: User, label: "User Profile", description: user?.email || "Not signed in" },
-        { icon: Bell, label: "Notifications", description: "Email and push preferences" },
-        { icon: Shield, label: "Security", description: "Two-factor authentication" },
+        { icon: User, label: "User Profile", description: user?.email || "Not signed in", onClick: openProfileDialog },
+        { icon: Shield, label: "Security", description: "Change password", onClick: openSecurityDialog },
       ]
     },
     {
-      title: "Subscription",
+      title: "Appearance",
       items: [
-        { icon: CreditCard, label: "Plan & Billing", description: "Pro Plan - €29/month" },
+        { icon: Palette, label: "Dark Mode", description: theme === "dark" ? "On" : "Off", toggle: true },
       ]
     },
   ];
@@ -483,6 +546,92 @@ const Settings = () => {
         </DialogContent>
       </Dialog>
 
+      {/* User Profile Dialog */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>User Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="profileEmail">Email</Label>
+              <Input
+                id="profileEmail"
+                value={user?.email || ""}
+                disabled
+                className="opacity-60"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Full Name</Label>
+              <Input
+                id="displayName"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your full name"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowProfileDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Save
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Security / Change Password Dialog */}
+      <Dialog open={showSecurityDialog} onOpenChange={setShowSecurityDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New Password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm Password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowSecurityDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleChangePassword} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Shield className="w-4 h-4 mr-2" />
+              )}
+              Update Password
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
         <div className="flex items-center justify-between">
@@ -523,19 +672,31 @@ const Settings = () => {
               {section.items.map((item, index) => (
                 <button
                   key={item.label}
-                  onClick={item.onClick}
+                  onClick={"toggle" in item && item.toggle ? toggleTheme : item.onClick}
                   className={`w-full p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors ${
                     index !== section.items.length - 1 ? "border-b border-border" : ""
                   }`}
                 >
                   <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center">
-                    <item.icon className="w-5 h-5" />
+                    {"toggle" in item && item.toggle ? (
+                      theme === "dark" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />
+                    ) : (
+                      <item.icon className="w-5 h-5" />
+                    )}
                   </div>
                   <div className="flex-1 text-left">
                     <p className="font-medium">{item.label}</p>
                     <p className="text-sm text-muted-foreground">{item.description}</p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  {"toggle" in item && item.toggle ? (
+                    <Switch
+                      checked={theme === "dark"}
+                      onCheckedChange={toggleTheme}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
+                  )}
                 </button>
               ))}
             </div>
