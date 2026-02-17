@@ -224,6 +224,13 @@ export function AddressAutocomplete({
     setTimeout(() => inputRef.current?.focus(), 0);
   }
 
+  // Open/close popover when Google predictions change
+  useEffect(() => {
+    if (useGoogle) {
+      setOpen(predictions.length > 0);
+    }
+  }, [predictions, useGoogle]);
+
   // ---- Input change handler ----
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const newValue = e.target.value;
@@ -233,14 +240,12 @@ export function AddressAutocomplete({
       // Debounce Google requests (300ms)
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (newValue.length >= 3) {
-        setOpen(true);
         debounceRef.current = setTimeout(
           () => fetchPredictions(newValue),
           300
         );
       } else {
         setPredictions([]);
-        setOpen(false);
       }
     } else {
       // Static fallback
@@ -259,11 +264,6 @@ export function AddressAutocomplete({
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, []);
-
-  // ---- Determine dropdown items ----
-  const hasGoogleResults = useGoogle && predictions.length > 0;
-  const hasStaticResults = !useGoogle && filteredTowns.length > 0;
-  const showDropdown = hasGoogleResults || hasStaticResults;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -291,7 +291,7 @@ export function AddressAutocomplete({
           />
         </div>
       </PopoverTrigger>
-      {showDropdown && (
+      {open && (
         <PopoverContent
           className="p-0 w-[var(--radix-popover-trigger-width)]"
           align="start"
