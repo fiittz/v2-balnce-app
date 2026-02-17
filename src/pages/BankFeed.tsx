@@ -85,6 +85,7 @@ import { useInvoiceTripMatcher, type InvoiceTrip } from "@/hooks/useInvoiceTripM
 import { useInvoices } from "@/hooks/useInvoices";
 import { useCT1Data } from "@/hooks/useCT1Data";
 import { useAuth } from "@/hooks/useAuth";
+import { ChartOfAccountsWidget } from "@/components/dashboard/ChartOfAccountsWidget";
 
 type FilterType = "all" | "income" | "expense" | "uncategorized";
 type AccountType = "limited_company" | "sole_trader" | "directors_personal_tax";
@@ -1313,6 +1314,9 @@ const BankFeed = () => {
               </div>
             </div>
 
+
+            {/* Chart of Accounts */}
+            <ChartOfAccountsWidget />
 
             {/* Single Process All Button */}
             <div className="flex justify-center">

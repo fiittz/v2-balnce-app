@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { seedDefaultCategories, ensureNewCategories } from "@/lib/seedCategories";
@@ -106,6 +106,28 @@ export function useCategories(type?: "income" | "expense", accountType?: string)
       return data as Category[];
     },
     enabled: !!user,
+  });
+}
+
+export function useCreateCategory() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (
+      category: Omit<Category, "id" | "user_id" | "created_at" | "parent_id">
+    ) => {
+      const { data, error } = await supabase
+        .from("categories")
+        .insert({ ...category, user_id: user!.id })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+    },
   });
 }
 

@@ -42,6 +42,7 @@ export function WidgetCustomizeSheet({
   const categoryOrder: WidgetCategory[] = [
     "overview",
     "financial",
+    "bookkeeping",
     "tasks",
     "charts",
     "construction",

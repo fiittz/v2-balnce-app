@@ -12,9 +12,10 @@ export type WidgetId =
   | "rct_overview"
   | "construction_materials_labour"
   | "tax_deadlines"
-  | "eu_international_overview";
+  | "eu_international_overview"
+  | "chart_of_accounts";
 
-export type WidgetCategory = "overview" | "financial" | "tasks" | "charts" | "construction";
+export type WidgetCategory = "overview" | "financial" | "tasks" | "charts" | "construction" | "bookkeeping";
 
 export type WidgetPreferences = Partial<Record<WidgetId, boolean>>;
 
@@ -148,6 +149,13 @@ export const WIDGET_DEFINITIONS: WidgetDefinition[] = [
     defaultVisible: true,
     conditionalOn: { vatRegistered: true, euTradeEnabled: true },
   },
+  {
+    id: "chart_of_accounts",
+    label: "Chart of Accounts",
+    description: "View and manage your income and expense categories",
+    category: "bookkeeping",
+    defaultVisible: true,
+  },
 ];
 
 export const CATEGORY_LABELS: Record<WidgetCategory, string> = {
@@ -156,4 +164,5 @@ export const CATEGORY_LABELS: Record<WidgetCategory, string> = {
   tasks: "Tasks",
   charts: "Charts",
   construction: "Construction",
+  bookkeeping: "Bookkeeping",
 };
