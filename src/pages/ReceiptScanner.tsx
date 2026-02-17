@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCreateExpense } from "@/hooks/useExpenses";
 import { useExpenseCategories } from "@/hooks/useCategories";
 import { categorizeTransaction, calculateVat, VAT_RATES } from "@/services/categorization";
+import { useAccountLookup } from "@/hooks/useAccountLookup";
 import { toast } from "sonner";
 import AppLayout from "@/components/layout/AppLayout";
 
@@ -31,6 +32,7 @@ const ReceiptScanner = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createExpense = useCreateExpense();
   const { data: categories } = useExpenseCategories();
+  const { findForTransaction, getDefault } = useAccountLookup();
   const [isSaving, setIsSaving] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
 
@@ -39,6 +41,7 @@ const ReceiptScanner = () => {
     imageData,
     receiptData,
     confidence,
+    rawText,
     error,
     startCamera,
     captureImage,
@@ -79,6 +82,22 @@ const ReceiptScanner = () => {
       // Upload receipt image
       const receiptUrl = await uploadReceipt(user.id);
 
+      // Build receipt context for AI categorization
+      const lineItemText = receiptData.line_items?.length
+        ? receiptData.line_items.map(li => `${li.description} x${li.quantity} @ €${li.unit_price.toFixed(2)} = €${li.total.toFixed(2)}`).join("\n")
+        : "";
+      const receiptContext = [
+        receiptData.supplier_name && `Supplier: ${receiptData.supplier_name}`,
+        lineItemText && `Line items:\n${lineItemText}`,
+        receiptData.suggested_category && `OCR suggested category: ${receiptData.suggested_category}`,
+        rawText && `Full receipt text:\n${rawText}`,
+      ].filter(Boolean).join("\n\n");
+
+      // Build a richer description from line items
+      const description = receiptData.line_items?.length
+        ? `${receiptData.supplier_name || "Receipt"} — ${receiptData.line_items.map(li => li.description).join(", ")}`
+        : receiptData.supplier_name || "Expense";
+
       // AI categorization
       const vatRateStr = receiptData.vat_rate || "standard_23";
       let categoryId: string | null = null;
@@ -87,9 +106,10 @@ const ReceiptScanner = () => {
       if (categories && categories.length > 0) {
         try {
           const catResult = await categorizeTransaction(
-            { description: receiptData.supplier_name || "Expense", amount: receiptData.total_amount, date: receiptData.date || new Date().toISOString() },
+            { description, amount: receiptData.total_amount, date: receiptData.date || new Date().toISOString() },
             categories,
-            profile?.business_type
+            profile?.business_type,
+            receiptContext || undefined
           );
           if (catResult.category_id) {
             categoryId = catResult.category_id;
@@ -114,15 +134,28 @@ const ReceiptScanner = () => {
       const { vat: vatAmount } = calculateVat(total, finalVatRate);
       const numericVatRate = parseVatRateToNumeric(finalVatRate);
 
+      // Map category to Chart of Accounts entry
+      const categoryName = categoryId
+        ? categories?.find(c => c.id === categoryId)?.name
+        : receiptData.suggested_category;
+      const matchedAccount = categoryName
+        ? findForTransaction(categoryName, "expense", finalVatRate)
+        : null;
+      const accountId = matchedAccount?.id || getDefault("expense")?.id || null;
+
       await createExpense.mutateAsync({
         amount: total,
         vat_amount: receiptData.vat_amount ?? vatAmount,
         vat_rate: numericVatRate,
         category_id: categoryId,
-        description: receiptData.supplier_name || "Scanned Receipt",
+        account_id: accountId,
+        description: description.slice(0, 255),
         expense_date: receiptData.date || new Date().toISOString().split("T")[0],
         receipt_url: receiptUrl,
-        notes: receiptData.invoice_number ? `Invoice: ${receiptData.invoice_number}` : null,
+        notes: [
+          receiptData.invoice_number ? `Invoice: ${receiptData.invoice_number}` : null,
+          receiptData.line_items?.length ? `Items: ${receiptData.line_items.map(li => li.description).join(", ")}` : null,
+        ].filter(Boolean).join(" | ") || null,
       });
 
       reset();

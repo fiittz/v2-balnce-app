@@ -31,7 +31,8 @@ interface CategorizationResult {
 export async function categorizeTransaction(
   transaction: Transaction,
   categories: Category[],
-  businessType?: string
+  businessType?: string,
+  receiptText?: string
 ): Promise<CategorizationResult> {
   try {
     const { data, error } = await supabase.functions.invoke("categorize-transaction", {
@@ -40,6 +41,7 @@ export async function categorizeTransaction(
         categories,
         businessType,
         action: "categorize",
+        receiptText,
       },
     });
 

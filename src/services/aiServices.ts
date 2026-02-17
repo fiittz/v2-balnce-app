@@ -61,7 +61,8 @@ export interface Category {
 export async function categorizeTransaction(
   transaction: Transaction,
   categories: Category[],
-  businessType?: string
+  businessType?: string,
+  receiptText?: string
 ): Promise<CategorizeResult> {
   const { data, error } = await supabase.functions.invoke("categorize-transaction", {
     body: {
@@ -69,6 +70,7 @@ export async function categorizeTransaction(
       categories,
       businessType,
       action: "categorize",
+      receiptText,
     },
   });
 
