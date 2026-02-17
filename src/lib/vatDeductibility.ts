@@ -25,15 +25,30 @@ export function isVATDeductible(
   const accLower = (accountName || "").toLowerCase();
   const combined = `${descLower} ${catLower} ${accLower}`;
 
-  // ── Section 60 keyword checks (description-based, fire first) ──
+  // ── CT-deductible categories (early return) ──────────────────────────
+  // These categories are allowable Corporation Tax deductions even though
+  // VAT may not be recoverable. They must NOT appear as CT1 add-backs.
+  const CT_DEDUCTIBLE_CATEGORIES = [
+    "travel", "accommodation", "vehicle", "motor", "fuel",
+    "bank charge", "bank fee", "insurance", "professional",
+    "accountancy", "legal", "rent", "utilities", "phone",
+    "broadband", "postage", "stationery", "cleaning",
+    "repairs", "maintenance", "training", "certification",
+    "subscription", "software", "office", "advertising",
+    "marketing", "tools", "equipment", "materials",
+    "subcontractor", "medical", "health",
+  ];
+  if (CT_DEDUCTIBLE_CATEGORIES.some(k => catLower.includes(k))) {
+    return {
+      isDeductible: true,
+      reason: "Allowable business expense for Corporation Tax"
+    };
+  }
 
-  // Travel & Accommodation is a legitimate CT-deductible business expense
-  // (only VAT is non-recoverable under Section 60). Do NOT flag as disallowed.
-  const isTravelCategory = catLower.includes("travel") || catLower.includes("accommodation");
+  // ── Section 60 keyword checks (description-based) ──
 
   // Section 60(2)(a)(i) - Food, drink, accommodation
-  // Skip if the category is Travel & Accommodation — it's CT-deductible
-  if (!isTravelCategory && DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => combined.includes(k))) {
+  if (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => combined.includes(k))) {
     return {
       isDeductible: false,
       reason: "Food, drink or accommodation - VAT NOT recoverable",
