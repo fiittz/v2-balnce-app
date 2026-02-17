@@ -4,8 +4,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const INDUSTRY_OPTIONS = [
+  "Trades & Construction",
+  "Construction Support & Property",
+  "Transport & Logistics",
+  "Retail & Wholesale",
+  "Professional Services",
+  "Digital & Creative",
+  "Food & Hospitality",
+  "Agriculture & Environmental",
+  "Domestic & Local Services",
+  "Education & Training",
+  "Manufacturing & Production",
+  "Mixed / Other",
+];
 
 const ALLOWED_EMAILS = [
   "jamie@oakmont.ie",
@@ -395,15 +411,18 @@ const Welcome = () => {
                 <Label htmlFor="industry" className={labelClass}>
                   What type of business do you run?
                 </Label>
-                <Input
-                  id="industry"
-                  type="text"
-                  placeholder="e.g. Construction, Retail, Consulting..."
-                  value={industryType}
-                  onChange={(e) => setIndustryType(e.target.value)}
-                  className={inputClass}
-                  autoFocus
-                />
+                <Select value={industryType} onValueChange={setIndustryType}>
+                  <SelectTrigger className={`${inputClass} w-full`}>
+                    <SelectValue placeholder="Select your industry..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDUSTRY_OPTIONS.map((industry) => (
+                      <SelectItem key={industry} value={industry}>
+                        {industry}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="text-muted-foreground text-sm font-['IBM_Plex_Sans']">
                   This helps us tailor your experience
                 </p>
