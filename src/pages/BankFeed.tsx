@@ -1955,6 +1955,30 @@ const BankFeed = () => {
                                   </span>
                                 </div>
                               </div>
+
+                              {/* Profit After Tax Summary */}
+                              {(() => {
+                                const profitAfterTax = netProfit - totalCT + rctCredit;
+                                const effectiveMargin = totalIncome > 0 ? (profitAfterTax / totalIncome) * 100 : 0;
+                                return (
+                                  <div className="rounded-xl p-4 mt-3 bg-muted/50 border border-border">
+                                    <div className="flex items-center justify-between">
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">Profit After Tax</p>
+                                        <p className="text-2xl font-bold tabular-nums">
+                                          €{fmt(profitAfterTax)}
+                                        </p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-sm text-muted-foreground">Effective Margin</p>
+                                        <p className={`text-2xl font-bold tabular-nums ${effectiveMargin >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+                                          {effectiveMargin.toFixed(1)}%
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </>
                           )}
                         </div>
