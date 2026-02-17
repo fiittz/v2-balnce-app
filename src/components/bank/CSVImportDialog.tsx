@@ -24,6 +24,7 @@ import { useAccounts } from "@/hooks/useAccounts";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
 import { autoCategorise, findMatchingCategory } from "@/lib/autocat";
+import { calculateVATFromGross } from "@/lib/vatDeductibility";
 import { supabase } from "@/integrations/supabase/client";
 import { useCreateImportBatch } from "@/hooks/useImportBatches";
 import { useVendorCache } from "@/hooks/useVendorCache";
@@ -715,8 +716,20 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
 
                 const vatDeductible = (engineResult as Record<string, unknown>).vat_deductible ?? true;
                 const needsReceipt = (engineResult as Record<string, unknown>).needs_receipt ?? false;
-                
+
                 console.log(`[AutoCat] "${txn.description}" → ${engineResult.category} | VAT: ${vatDeductible ? "✓" : "✗"} | Conf: ${engineResult.confidence_score}% → DB: ${matchedCategory?.name || "NO MATCH"}`);
+
+                const vatRateStr = mapVatTypeToRate(engineResult.vat_type);
+                const vatRateMap: Record<string, number> = {
+                  standard_23: 23, reduced_13_5: 13.5, second_reduced_9: 9,
+                  livestock_4_8: 4.8, zero_rated: 0, exempt: 0,
+                };
+                const vatRateNum = vatRateMap[vatRateStr] ?? 0;
+
+                // Calculate vat_amount upfront so it's stored in the DB
+                const vatCalc = vatRateNum > 0
+                  ? calculateVATFromGross(Math.abs(txn.amount), vatRateNum)
+                  : { vatAmount: 0 };
 
                 if (matchedCategory && engineResult.confidence_score >= 50) {
                   // Build explanation with VAT info
@@ -728,18 +741,28 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                     explanation += ` ${engineResult.notes}`;
                   }
 
-                  const vatRateStr = mapVatTypeToRate(engineResult.vat_type);
-
                   // Only update category, VAT, and notes — do NOT overwrite account_id
                   // (account_id is the bank account set during import, not chart of accounts)
                   await updateTransaction.mutateAsync({
                     id: txn.id,
                     category_id: matchedCategory.id,
-                    vat_rate: parseFloat(vatRateStr.replace("standard_", "").replace("reduced_", "").replace("_", ".")) || 0,
+                    vat_rate: vatRateNum,
+                    vat_amount: vatCalc.vatAmount,
                     notes: explanation.trim(),
                     is_reconciled: false,
                   });
                   return true;
+                }
+
+                // Even without a category match, still set vat_rate and vat_amount
+                // so the VAT summary can pick up deductible transactions
+                if (vatRateNum > 0) {
+                  await updateTransaction.mutateAsync({
+                    id: txn.id,
+                    vat_rate: vatRateNum,
+                    vat_amount: vatCalc.vatAmount,
+                    is_reconciled: false,
+                  });
                 }
                 return false;
               } catch (error) {

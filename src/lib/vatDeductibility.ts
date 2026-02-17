@@ -151,11 +151,12 @@ export function isVATDeductible(
 }
 
 /**
- * Calculate VAT amount from a gross amount using reverse calculation
+ * Calculate VAT amount from a gross amount using reverse calculation.
+ * Accepts either a string key ("standard_23") or a numeric rate (23, 13.5, etc.).
  */
 export function calculateVATFromGross(
   grossAmount: number,
-  vatRateKey: string
+  vatRateKey: string | number
 ): { netAmount: number; vatAmount: number } {
   const rates: Record<string, number> = {
     standard_23: 0.23,
@@ -166,7 +167,13 @@ export function calculateVATFromGross(
     exempt: 0
   };
 
-  const rate = rates[vatRateKey] ?? 0.23;
+  let rate: number;
+  if (typeof vatRateKey === "number") {
+    // Numeric rate from DB (e.g. 23, 13.5, 9, 4.8, 0)
+    rate = vatRateKey / 100;
+  } else {
+    rate = rates[vatRateKey] ?? 0.23;
+  }
   
   if (rate === 0) {
     return { netAmount: grossAmount, vatAmount: 0 };
