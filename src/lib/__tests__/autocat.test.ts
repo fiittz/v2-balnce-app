@@ -6,6 +6,7 @@ import {
   type TransactionInput,
   type AutoCatResult,
 } from "../autocat";
+import type { VendorCacheEntry } from "@/services/vendorCacheService";
 
 // ── Helper: build a minimal expense transaction ─────────────
 function expense(
@@ -1491,5 +1492,60 @@ describe("autoCategorise — keyword fallback medical that bypasses vendor DB", 
     expect(result.is_business_expense).toBe(false);
     expect(result.relief_type).toBe("medical");
     expect(result.notes).toContain("Description suggests medical expense");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// autoCategorise — vendor cache lookup
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — vendor cache lookup", () => {
+  function makeCacheEntry(pattern: string, overrides?: Partial<VendorCacheEntry>): VendorCacheEntry {
+    return {
+      id: "cache-1",
+      vendor_pattern: pattern,
+      normalized_name: pattern,
+      category: "Software",
+      vat_type: "Standard 23%",
+      vat_deductible: true,
+      business_purpose: "Cached vendor purpose",
+      confidence: 90,
+      source: "rule",
+      mcc_code: null,
+      sector: null,
+      hit_count: 5,
+      last_seen: "2024-06-01",
+      ...overrides,
+    };
+  }
+
+  it("uses vendor cache entry when description matches a cached pattern", () => {
+    const cache = new Map<string, VendorCacheEntry>();
+    cache.set("acme software", makeCacheEntry("acme software"));
+
+    const result = autoCategorise(
+      expense("ACME SOFTWARE SUBSCRIPTION"),
+      cache
+    );
+    expect(result.category).toBe("Software");
+    expect(result.notes).toContain("Matched vendor");
+  });
+
+  it("matches n-gram tokens from vendor cache", () => {
+    const cache = new Map<string, VendorCacheEntry>();
+    cache.set("acme", makeCacheEntry("acme", { category: "Materials", vat_deductible: true }));
+
+    const result = autoCategorise(
+      expense("PAYMENT TO ACME LTD"),
+      cache
+    );
+    // "acme" is a single token that should match via n-gram search
+    expect(result.category).toBe("Materials");
+  });
+
+  it("skips vendor cache when cache is empty", () => {
+    const cache = new Map<string, VendorCacheEntry>();
+    // Empty cache — should fall through to normal vendor matching
+    const result = autoCategorise(expense("SCREWFIX PURCHASE"), cache);
+    expect(result.category).toBeDefined();
   });
 });
