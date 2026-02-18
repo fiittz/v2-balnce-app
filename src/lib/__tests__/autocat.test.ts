@@ -266,10 +266,11 @@ describe("autoCategorise — food/drink (Section 60(2)(a)(i))", () => {
   });
 
   it("blocks VAT on hotel/accommodation (Section 60 takes priority)", () => {
-    // "hotel" in DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION catches before merchant rules
+    // Hotels are legitimate business expenses categorised as Travel & Subsistence,
+    // but VAT is not recoverable under Section 60(2)(a)(i)
     const result = autoCategorise(expense("DOOLEYS HOTEL WATERFORD"));
     expect(result.vat_deductible).toBe(false);
-    expect(result.category).toBe("other");
+    expect(result.category).toBe("Travel & Subsistence");
   });
 });
 
