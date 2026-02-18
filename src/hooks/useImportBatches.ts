@@ -67,6 +67,19 @@ export const useDeleteImportBatch = () => {
 
   return useMutation({
     mutationFn: async (batchId: string) => {
+      // Unlink receipts from transactions in this batch
+      const { data: batchTxIds } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("import_batch_id", batchId);
+
+      if (batchTxIds?.length) {
+        await supabase
+          .from("receipts")
+          .update({ transaction_id: null })
+          .in("transaction_id", batchTxIds.map((t) => t.id));
+      }
+
       // Delete transactions first (they reference import_batches via FK)
       const { error: txError } = await supabase
         .from("transactions")
@@ -103,6 +116,19 @@ export const useBulkDeleteImportBatches = () => {
 
   return useMutation({
     mutationFn: async (batchIds: string[]) => {
+      // Unlink receipts from transactions in these batches
+      const { data: batchTxIds } = await supabase
+        .from("transactions")
+        .select("id")
+        .in("import_batch_id", batchIds);
+
+      if (batchTxIds?.length) {
+        await supabase
+          .from("receipts")
+          .update({ transaction_id: null })
+          .in("transaction_id", batchTxIds.map((t) => t.id));
+      }
+
       // Delete transactions first (they reference import_batches via FK)
       const { error: txError } = await supabase
         .from("transactions")

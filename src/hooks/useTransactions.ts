@@ -173,6 +173,12 @@ export const useDeleteTransaction = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      // Unlink any receipts referencing this transaction
+      await supabase
+        .from("receipts")
+        .update({ transaction_id: null })
+        .eq("transaction_id", id);
+
       const { error } = await supabase
         .from("transactions")
         .delete()
@@ -199,6 +205,12 @@ export const useBulkDeleteTransactions = () => {
 
   return useMutation({
     mutationFn: async (ids: string[]) => {
+      // Unlink any receipts referencing these transactions
+      await supabase
+        .from("receipts")
+        .update({ transaction_id: null })
+        .in("transaction_id", ids);
+
       const { error } = await supabase
         .from("transactions")
         .delete()
@@ -227,6 +239,19 @@ export const useDeleteAllTransactions = () => {
   return useMutation({
     mutationFn: async () => {
       if (!user?.id) throw new Error("Not authenticated");
+
+      // Unlink any receipts referencing user's transactions
+      const { data: userTxIds } = await supabase
+        .from("transactions")
+        .select("id")
+        .eq("user_id", user.id);
+
+      if (userTxIds?.length) {
+        await supabase
+          .from("receipts")
+          .update({ transaction_id: null })
+          .in("transaction_id", userTxIds.map((t) => t.id));
+      }
 
       // Delete transactions first (they reference import_batches via FK)
       const { error: txError } = await supabase
