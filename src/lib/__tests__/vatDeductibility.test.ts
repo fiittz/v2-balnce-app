@@ -118,9 +118,9 @@ describe("calculateVATFromGross", () => {
   });
 
   it("calculates 13.5% VAT from gross correctly", () => {
-    const result = calculateVATFromGross(113.50, "reduced_13_5");
+    const result = calculateVATFromGross(113.5, "reduced_13_5");
     // VAT = 113.50 * 0.135 / 1.135 ≈ 13.50
-    expect(result.vatAmount).toBeCloseTo(13.50, 1);
+    expect(result.vatAmount).toBeCloseTo(13.5, 1);
     expect(result.netAmount).toBeCloseTo(100, 0);
   });
 

@@ -81,7 +81,7 @@ function addTextSection(
   doc: ReturnType<typeof createPdfDoc>,
   title: string,
   paragraphs: { label: string; value: string }[],
-  startY: number
+  startY: number,
 ): number {
   let y = startY;
 
@@ -136,7 +136,7 @@ function addTextSection(
 function addSignatureLines(
   doc: ReturnType<typeof createPdfDoc>,
   data: AbridgedAccountsReportData,
-  startY: number
+  startY: number,
 ): number {
   let y = startY;
 
@@ -198,24 +198,12 @@ export function generateAbridgedAccountsPdf(data: AbridgedAccountsReportData) {
   let y = 20;
 
   // Find each section by title
-  const directorsStatement = data.sections.find(
-    (s) => s.title === "Directors' Responsibility Statement"
-  );
-  const accountingPolicies = data.sections.find(
-    (s) => s.title === "Accounting Policies"
-  );
-  const balanceSheet = data.sections.find(
-    (s) => s.title === "Abridged Balance Sheet"
-  );
-  const capitalReserves = data.sections.find(
-    (s) => s.title === "Capital and Reserves"
-  );
-  const notes = data.sections.find(
-    (s) => s.title === "Notes to the Financial Statements"
-  );
-  const auditExemption = data.sections.find(
-    (s) => s.title === "Audit Exemption Statement"
-  );
+  const directorsStatement = data.sections.find((s) => s.title === "Directors' Responsibility Statement");
+  const accountingPolicies = data.sections.find((s) => s.title === "Accounting Policies");
+  const balanceSheet = data.sections.find((s) => s.title === "Abridged Balance Sheet");
+  const capitalReserves = data.sections.find((s) => s.title === "Capital and Reserves");
+  const notes = data.sections.find((s) => s.title === "Notes to the Financial Statements");
+  const auditExemption = data.sections.find((s) => s.title === "Audit Exemption Statement");
 
   // Directors' Responsibility Statement
   if (directorsStatement) {

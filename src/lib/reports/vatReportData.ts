@@ -10,10 +10,7 @@ export interface VATInput {
   purchasesByRate: { rate: string; net: number; vat: number }[];
 }
 
-export function assembleVATReportData(
-  input: VATInput,
-  meta: ReportMeta
-): VATReportData {
+export function assembleVATReportData(input: VATInput, meta: ReportMeta): VATReportData {
   const sections: ReportSection[] = [];
   const tables: ReportTable[] = [];
 

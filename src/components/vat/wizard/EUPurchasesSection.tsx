@@ -24,15 +24,14 @@ interface EUPurchasesSectionProps {
   isLoading: boolean;
 }
 
-
 export function EUPurchasesSection({ data, onUpdate, expenses, isLoading }: EUPurchasesSectionProps) {
   const toggleExpense = (expenseId: string) => {
     const currentIds = data.eu_purchase_ids || [];
     if (currentIds.includes(expenseId)) {
       onUpdate({
-        eu_purchase_ids: currentIds.filter(id => id !== expenseId),
+        eu_purchase_ids: currentIds.filter((id) => id !== expenseId),
         eu_reverse_charge_flags: Object.fromEntries(
-          Object.entries(data.eu_reverse_charge_flags || {}).filter(([id]) => id !== expenseId)
+          Object.entries(data.eu_reverse_charge_flags || {}).filter(([id]) => id !== expenseId),
         ),
       });
     } else {
@@ -75,9 +74,7 @@ export function EUPurchasesSection({ data, onUpdate, expenses, isLoading }: EUPu
 
       {/* Question: Any EU purchases */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">
-          Did you make any purchases from EU suppliers this period?
-        </Label>
+        <Label className="text-base font-medium">Did you make any purchases from EU suppliers this period?</Label>
         <RadioGroup
           value={data.eu_purchases ? "yes" : "no"}
           onValueChange={(v) => onUpdate({ eu_purchases: v === "yes" })}
@@ -101,9 +98,7 @@ export function EUPurchasesSection({ data, onUpdate, expenses, isLoading }: EUPu
       {/* Transaction Selection */}
       {data.eu_purchases && (
         <div className="space-y-3">
-          <Label className="text-base font-medium">
-            Select the transactions that are EU purchases:
-          </Label>
+          <Label className="text-base font-medium">Select the transactions that are EU purchases:</Label>
 
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -131,24 +126,17 @@ export function EUPurchasesSection({ data, onUpdate, expenses, isLoading }: EUPu
                   {expenses.map((expense) => {
                     const isSelected = data.eu_purchase_ids?.includes(expense.id);
                     return (
-                      <tr 
-                        key={expense.id} 
+                      <tr
+                        key={expense.id}
                         className={`border-t hover:bg-muted/50 cursor-pointer ${isSelected ? "bg-primary/5" : ""}`}
                         onClick={() => toggleExpense(expense.id)}
                       >
                         <td className="p-3">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleExpense(expense.id)}
-                          />
+                          <Checkbox checked={isSelected} onCheckedChange={() => toggleExpense(expense.id)} />
                         </td>
-                        <td className="p-3">
-                          {format(parseISO(expense.expense_date), "dd/MM/yy")}
-                        </td>
+                        <td className="p-3">{format(parseISO(expense.expense_date), "dd/MM/yy")}</td>
                         <td className="p-3">{expense.supplier?.name || "-"}</td>
-                        <td className="p-3 max-w-[200px] truncate">
-                          {expense.description || "-"}
-                        </td>
+                        <td className="p-3 max-w-[200px] truncate">{expense.description || "-"}</td>
                         <td className="p-3 text-right">€{expense.amount.toFixed(2)}</td>
                         <td className="p-3 text-right">€{(expense.vat_amount || 0).toFixed(2)}</td>
                         <td className="p-3">{expense.category?.name || "-"}</td>
@@ -163,23 +151,17 @@ export function EUPurchasesSection({ data, onUpdate, expenses, isLoading }: EUPu
           {/* Selected EU Purchases Details */}
           {data.eu_purchase_ids && data.eu_purchase_ids.length > 0 && (
             <div className="space-y-3 mt-4">
-              <Label className="text-base font-medium">
-                Configure reverse charge for selected purchases:
-              </Label>
+              <Label className="text-base font-medium">Configure reverse charge for selected purchases:</Label>
               {data.eu_purchase_ids.map((id) => {
-                const expense = expenses.find(e => e.id === id);
+                const expense = expenses.find((e) => e.id === id);
                 if (!expense) return null;
                 const flags = data.eu_reverse_charge_flags[id] || { applies: true };
-                
+
                 return (
                   <div key={id} className="p-3 border rounded-lg space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">
-                        {expense.supplier?.name || expense.description || "Unknown"}
-                      </span>
-                      <span className="text-muted-foreground">
-                        €{expense.amount.toFixed(2)}
-                      </span>
+                      <span className="font-medium">{expense.supplier?.name || expense.description || "Unknown"}</span>
+                      <span className="text-muted-foreground">€{expense.amount.toFixed(2)}</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center space-x-2">
@@ -192,10 +174,7 @@ export function EUPurchasesSection({ data, onUpdate, expenses, isLoading }: EUPu
                           Reverse charge applies
                         </Label>
                       </div>
-                      <Select
-                        value={flags.country || ""}
-                        onValueChange={(v) => updateCountry(id, v)}
-                      >
+                      <Select value={flags.country || ""} onValueChange={(v) => updateCountry(id, v)}>
                         <SelectTrigger className="w-[180px]">
                           <SelectValue placeholder="Supplier country" />
                         </SelectTrigger>

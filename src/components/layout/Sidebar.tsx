@@ -18,9 +18,14 @@ const Sidebar = () => {
   const { data: onboarding } = useOnboardingSettings();
   const [isOpen, setIsOpen] = useState(false);
 
-  const isRctIndustry = ["construction", "forestry", "meat_processing", "carpentry_joinery", "electrical", "plumbing_heating"].includes(
-    onboarding?.business_type || "",
-  );
+  const isRctIndustry = [
+    "construction",
+    "forestry",
+    "meat_processing",
+    "carpentry_joinery",
+    "electrical",
+    "plumbing_heating",
+  ].includes(onboarding?.business_type || "");
   const showRct = isRctIndustry && onboarding?.rct_registered;
 
   const navItems: NavItem[] = [
@@ -59,18 +64,13 @@ const Sidebar = () => {
       </Button>
 
       {/* Overlay */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {isOpen && <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setIsOpen(false)} />}
 
       {/* Sidebar */}
-      <aside 
+      <aside
         className={cn(
           "fixed top-0 left-0 h-full w-60 bg-background border-r border-border px-4 py-6 flex-col gap-6 z-40 transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {/* Logo */}
@@ -94,7 +94,7 @@ const Sidebar = () => {
                     "w-full text-left px-3 py-2.5 rounded-xl transition-colors",
                     active
                       ? "bg-secondary font-medium text-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground",
                   )}
                 >
                   {item.label}

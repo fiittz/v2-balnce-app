@@ -52,11 +52,7 @@ export function addHeader(doc: jsPDF, meta: ReportMeta, reportTitle: string) {
   return y + 6;
 }
 
-export function addSection(
-  doc: jsPDF,
-  section: ReportSection,
-  startY: number
-): number {
+export function addSection(doc: jsPDF, section: ReportSection, startY: number): number {
   let y = startY;
 
   // Check if we need a new page
@@ -95,11 +91,7 @@ export function addSection(
   return y + 4;
 }
 
-export function addTable(
-  doc: jsPDF,
-  table: ReportTable,
-  startY: number
-): number {
+export function addTable(doc: jsPDF, table: ReportTable, startY: number): number {
   let y = startY;
 
   if (y > 250) {
@@ -127,8 +119,7 @@ export function addTable(
     alternateRowStyles: { fillColor: [248, 248, 248] },
   });
 
-  return (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable
-    .finalY + 8;
+  return (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
 }
 
 export function addFooter(doc: jsPDF) {
@@ -144,11 +135,7 @@ export function addFooter(doc: jsPDF) {
     });
 
     // Disclaimer
-    doc.text(
-      "AI-generated calculations require professional review. Verify current rates at Revenue.ie.",
-      MARGIN,
-      290
-    );
+    doc.text("AI-generated calculations require professional review. Verify current rates at Revenue.ie.", MARGIN, 290);
     doc.setTextColor(0);
   }
 }

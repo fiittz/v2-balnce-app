@@ -23,7 +23,9 @@ export interface VendorEntry {
   /** Form 11 relief type if applicable */
   relief_type?: "medical" | "pension" | "health_insurance" | "rent" | "charitable" | "tuition" | null;
   /** Optional amount-based logic override */
-  amountLogic?: (amount: number) => { category?: string; confidence?: number; purpose?: string; vat_deductible?: boolean } | null;
+  amountLogic?: (
+    amount: number,
+  ) => { category?: string; confidence?: number; purpose?: string; vat_deductible?: boolean } | null;
   /** Vendor sector for grouping */
   sector?: string;
   /** Optional MCC codes associated with this vendor */
@@ -35,13 +37,27 @@ export interface VendorEntry {
 // ═══════════════════════════════════════════════════════════════
 
 export const vendorDatabase: VendorEntry[] = [
-
   // ────────────────────────────────────────────────────────────
   // REVENUE COMMISSIONERS (Tax refunds - NOT taxable income)
   // ────────────────────────────────────────────────────────────
   {
     name: "Revenue Commissioners",
-    patterns: ["revenue", "revenue commissioners", "rev comm", "revenue comm", "collector general", "collector-general", "rev.ie", "ros refund", "revenue refund", "tax refund", "vat refund", "paye refund", "ct refund", "rct refund"],
+    patterns: [
+      "revenue",
+      "revenue commissioners",
+      "rev comm",
+      "revenue comm",
+      "collector general",
+      "collector-general",
+      "rev.ie",
+      "ros refund",
+      "revenue refund",
+      "tax refund",
+      "vat refund",
+      "paye refund",
+      "ct refund",
+      "rct refund",
+    ],
     category: "Tax Refund",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -54,7 +70,19 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Internal Transfer",
-    patterns: ["*mobi online saver", "*mobi current", "mobi online saver", "mobi current", "mobi saver", "online saver", "current account", "from current", "to current", "savings transfer", "internal transfer"],
+    patterns: [
+      "*mobi online saver",
+      "*mobi current",
+      "mobi online saver",
+      "mobi current",
+      "mobi saver",
+      "online saver",
+      "current account",
+      "from current",
+      "to current",
+      "savings transfer",
+      "internal transfer",
+    ],
     category: "Internal Transfer",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -1336,7 +1364,18 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Mobile Operators",
-    patterns: ["three ireland", "vodafone", "eir mobile", "eir broadband", "eir bill", "eir.ie", "eir account", "48", "gomo", "tesco mobile"],
+    patterns: [
+      "three ireland",
+      "vodafone",
+      "eir mobile",
+      "eir broadband",
+      "eir bill",
+      "eir.ie",
+      "eir account",
+      "48",
+      "gomo",
+      "tesco mobile",
+    ],
     category: "Phone",
     vat_type: "Standard 23%",
     vat_deductible: true,
@@ -1423,7 +1462,18 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Pharmacy / Chemist",
-    patterns: ["pharmacy", "chemist", "boots", "lloyds pharmacy", "mccabes", "hickeys", "sam mccauley", "cara pharmacy", "totalhealth", "allcare"],
+    patterns: [
+      "pharmacy",
+      "chemist",
+      "boots",
+      "lloyds pharmacy",
+      "mccabes",
+      "hickeys",
+      "sam mccauley",
+      "cara pharmacy",
+      "totalhealth",
+      "allcare",
+    ],
     category: "Medical",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -1437,7 +1487,25 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Medical / Hospital",
-    patterns: ["physio", "physiotherapy", "dental surgery", "orthodont", "oral surgery", "hospital", "consultant", "surgeon", "dermatolog", "fertility", "ivf", "mater private", "blackrock clinic", "beacon hospital", "st vincent", "galway clinic", "bon secours"],
+    patterns: [
+      "physio",
+      "physiotherapy",
+      "dental surgery",
+      "orthodont",
+      "oral surgery",
+      "hospital",
+      "consultant",
+      "surgeon",
+      "dermatolog",
+      "fertility",
+      "ivf",
+      "mater private",
+      "blackrock clinic",
+      "beacon hospital",
+      "st vincent",
+      "galway clinic",
+      "bon secours",
+    ],
     category: "Medical",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -1506,7 +1574,17 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Charities",
-    patterns: ["trocaire", "concern worldwide", "goal", "svp", "st vincent de paul", "unicef ireland", "irish cancer society", "pieta house", "barnardos"],
+    patterns: [
+      "trocaire",
+      "concern worldwide",
+      "goal",
+      "svp",
+      "st vincent de paul",
+      "unicef ireland",
+      "irish cancer society",
+      "pieta house",
+      "barnardos",
+    ],
     category: "other",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -1517,7 +1595,18 @@ export const vendorDatabase: VendorEntry[] = [
   // NEW: Additional charities
   {
     name: "Additional Charities",
-    patterns: ["oxfam", "amnesty", "irish heart", "irish red cross", "irish guide dogs", "focus ireland", "simon community", "alone", "temple street", "crumlin hospital"],
+    patterns: [
+      "oxfam",
+      "amnesty",
+      "irish heart",
+      "irish red cross",
+      "irish guide dogs",
+      "focus ireland",
+      "simon community",
+      "alone",
+      "temple street",
+      "crumlin hospital",
+    ],
     category: "other",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -1631,7 +1720,17 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Professional Bodies",
-    patterns: ["cif", "engineers ireland", "law society", "cpa ireland", "acca", "chartered accountants", "riai", "reci", "cro annual return"],
+    patterns: [
+      "cif",
+      "engineers ireland",
+      "law society",
+      "cpa ireland",
+      "acca",
+      "chartered accountants",
+      "riai",
+      "reci",
+      "cro annual return",
+    ],
     category: "Consulting & Accounting",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -1644,7 +1743,18 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Training / Certification",
-    patterns: ["safe pass", "solas", "cscs card", "qqi", "city & guilds", "fetac", "manual handling", "first aid course", "iosh", "citb"],
+    patterns: [
+      "safe pass",
+      "solas",
+      "cscs card",
+      "qqi",
+      "city & guilds",
+      "fetac",
+      "manual handling",
+      "first aid course",
+      "iosh",
+      "citb",
+    ],
     category: "Training",
     vat_type: "Standard 23%",
     vat_deductible: true,
@@ -1704,7 +1814,18 @@ export const vendorDatabase: VendorEntry[] = [
   },
   {
     name: "TJ O'Mahony",
-    patterns: ["tj o'mahony", "tj omahony", "tj o mahony", "o'mahony", "omahony", "tj o'mahoney", "tj omahoney", "tj o mahoney", "o'mahoney", "omahoney builders"],
+    patterns: [
+      "tj o'mahony",
+      "tj omahony",
+      "tj o mahony",
+      "o'mahony",
+      "omahony",
+      "tj o'mahoney",
+      "tj omahoney",
+      "tj o mahoney",
+      "o'mahoney",
+      "omahoney builders",
+    ],
     category: "Materials",
     vat_type: "Standard 23%",
     vat_deductible: true,
@@ -1744,7 +1865,17 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Waste Disposal",
-    patterns: ["barna recycling", "greenstar", "panda waste", "panda", "thorntons recycling", "country clean", "oxigen", "skip hire", "greyhound recycling"],
+    patterns: [
+      "barna recycling",
+      "greenstar",
+      "panda waste",
+      "panda",
+      "thorntons recycling",
+      "country clean",
+      "oxigen",
+      "skip hire",
+      "greyhound recycling",
+    ],
     category: "Waste",
     vat_type: "Standard 23%",
     vat_deductible: true,
@@ -1769,7 +1900,29 @@ export const vendorDatabase: VendorEntry[] = [
   // ────────────────────────────────────────────────────────────
   {
     name: "Universities / Colleges",
-    patterns: ["ucd", "tcd", "trinity college", "dcu", "nuig", "university of galway", "ucc", "maynooth university", "tu dublin", "technological university", "griffith college", "ncad", "rcsi", "dit", "athlone it", "waterford it", "letterkenny it", "sligo it", "carlow it", "dundalk it", "limerick it"],
+    patterns: [
+      "ucd",
+      "tcd",
+      "trinity college",
+      "dcu",
+      "nuig",
+      "university of galway",
+      "ucc",
+      "maynooth university",
+      "tu dublin",
+      "technological university",
+      "griffith college",
+      "ncad",
+      "rcsi",
+      "dit",
+      "athlone it",
+      "waterford it",
+      "letterkenny it",
+      "sligo it",
+      "carlow it",
+      "dundalk it",
+      "limerick it",
+    ],
     category: "other",
     vat_type: "Exempt",
     vat_deductible: false,
@@ -2119,7 +2272,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Standard 23%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Vehicle dealer. Review: purchase vs servicing. Note: VAT on vehicle purchase not deductible for most businesses.",
+    purpose:
+      "Vehicle dealer. Review: purchase vs servicing. Note: VAT on vehicle purchase not deductible for most businesses.",
     sector: "motor",
   },
   {
@@ -2303,7 +2457,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
   {
@@ -2313,7 +2468,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
   {
@@ -2323,7 +2479,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
   {
@@ -2333,7 +2490,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
   {
@@ -2343,7 +2501,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
   {
@@ -2353,7 +2512,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
   {
@@ -2363,7 +2523,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
   {
@@ -2373,7 +2534,8 @@ export const vendorDatabase: VendorEntry[] = [
     vat_type: "Reduced 13.5%",
     vat_deductible: false,
     needs_receipt: true,
-    purpose: "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
+    purpose:
+      "Hotel accommodation — deductible business expense for CT. VAT generally not reclaimable per S.12(3)(b) VATCA 2010, EXCEPT for conference-related accommodation where VAT IS reclaimable.",
     sector: "accommodation",
   },
 
@@ -2618,12 +2780,12 @@ export function getTotalPatternCount(): number {
 
 /** Get all unique categories used in the database */
 export function getUsedCategories(): string[] {
-  return [...new Set(vendorDatabase.map(v => v.category))];
+  return [...new Set(vendorDatabase.map((v) => v.category))];
 }
 
 /** Get all vendors for a given sector */
 export function getVendorsBySector(sector: string): VendorEntry[] {
-  return vendorDatabase.filter(v => v.sector === sector);
+  return vendorDatabase.filter((v) => v.sector === sector);
 }
 
 /** Validate that all vendor entries have required fields */

@@ -48,9 +48,7 @@ const Dashboard = () => {
         <div className="bg-gradient-to-br from-foreground to-foreground/90 text-background px-6 py-12 md:py-16">
           <div className="max-w-5xl mx-auto">
             <p className="text-background/70 text-sm font-medium mb-2">Welcome back</p>
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              {profile?.business_name || "Your Business"}
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">{profile?.business_name || "Your Business"}</h1>
             <p className="text-background/70">Here's what's happening with your finances</p>
           </div>
         </div>
@@ -68,7 +66,11 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <DashboardWidget widgetId="quick_actions" isVisible={isWidgetVisible("quick_actions")} isLoading={widgetsLoading}>
+        <DashboardWidget
+          widgetId="quick_actions"
+          isVisible={isWidgetVisible("quick_actions")}
+          isLoading={widgetsLoading}
+        >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             <Button
               onClick={() => navigate("/invoice")}
@@ -104,7 +106,11 @@ const Dashboard = () => {
         {/* Main Cards Grid */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 pb-12">
           {/* VAT Overview Card */}
-          <DashboardWidget widgetId="vat_overview" isVisible={isWidgetVisible("vat_overview")} isLoading={widgetsLoading}>
+          <DashboardWidget
+            widgetId="vat_overview"
+            isVisible={isWidgetVisible("vat_overview")}
+            isLoading={widgetsLoading}
+          >
             <Card
               onClick={() => navigate("/vat")}
               className="lg:col-span-2 cursor-pointer hover:shadow-xl transition-all duration-300 border-0 shadow-lg rounded-3xl overflow-hidden"
@@ -146,7 +152,9 @@ const Dashboard = () => {
                   {statsLoading ? (
                     <Skeleton className="h-11 w-36" />
                   ) : (
-                    <p className={`text-4xl font-bold ${(stats?.vat.net || 0) >= 0 ? "text-primary" : "text-green-600"}`}>
+                    <p
+                      className={`text-4xl font-bold ${(stats?.vat.net || 0) >= 0 ? "text-primary" : "text-green-600"}`}
+                    >
                       {formatCurrency(Math.abs(stats?.vat.net || 0))}
                     </p>
                   )}
@@ -156,7 +164,11 @@ const Dashboard = () => {
           </DashboardWidget>
 
           {/* Income Card */}
-          <DashboardWidget widgetId="income_summary" isVisible={isWidgetVisible("income_summary")} isLoading={widgetsLoading}>
+          <DashboardWidget
+            widgetId="income_summary"
+            isVisible={isWidgetVisible("income_summary")}
+            isLoading={widgetsLoading}
+          >
             <Card className="border-0 shadow-lg rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300">
               <CardContent className="p-6">
                 <h3 className="font-bold text-lg mb-1">Income</h3>
@@ -170,15 +182,17 @@ const Dashboard = () => {
                   color="hsl(142, 76%, 36%)"
                   className="w-full h-12"
                 />
-                <p className="text-sm text-muted-foreground mt-3">
-                  {stats?.income.count || 0} invoices this period
-                </p>
+                <p className="text-sm text-muted-foreground mt-3">{stats?.income.count || 0} invoices this period</p>
               </CardContent>
             </Card>
           </DashboardWidget>
 
           {/* Expenses Card */}
-          <DashboardWidget widgetId="expenses_summary" isVisible={isWidgetVisible("expenses_summary")} isLoading={widgetsLoading}>
+          <DashboardWidget
+            widgetId="expenses_summary"
+            isVisible={isWidgetVisible("expenses_summary")}
+            isLoading={widgetsLoading}
+          >
             <Card className="border-0 shadow-lg rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300">
               <CardContent className="p-6">
                 <h3 className="font-bold text-lg mb-1">Expenses</h3>
@@ -192,14 +206,16 @@ const Dashboard = () => {
                   color="hsl(0, 84%, 60%)"
                   className="w-full h-12"
                 />
-                <p className="text-sm text-muted-foreground mt-3">
-                  {stats?.expenses.count || 0} expenses this period
-                </p>
+                <p className="text-sm text-muted-foreground mt-3">{stats?.expenses.count || 0} expenses this period</p>
               </CardContent>
             </Card>
           </DashboardWidget>
           {/* Deadlines Widget */}
-          <DashboardWidget widgetId="tax_deadlines" isVisible={isWidgetVisible("tax_deadlines")} isLoading={widgetsLoading}>
+          <DashboardWidget
+            widgetId="tax_deadlines"
+            isVisible={isWidgetVisible("tax_deadlines")}
+            isLoading={widgetsLoading}
+          >
             <DeadlinesWidget />
           </DashboardWidget>
         </div>

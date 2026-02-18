@@ -11,11 +11,7 @@ export function createWorkbook(meta: ReportMeta): ExcelJS.Workbook {
   return wb;
 }
 
-export function addHeaderRows(
-  ws: ExcelJS.Worksheet,
-  meta: ReportMeta,
-  reportTitle: string
-): number {
+export function addHeaderRows(ws: ExcelJS.Worksheet, meta: ReportMeta, reportTitle: string): number {
   // Company name
   const titleRow = ws.addRow([meta.companyName]);
   titleRow.font = { bold: true, size: 16 };
@@ -41,10 +37,7 @@ export function addHeaderRows(
   return ws.rowCount;
 }
 
-export function addSectionRows(
-  ws: ExcelJS.Worksheet,
-  section: ReportSection
-): number {
+export function addSectionRows(ws: ExcelJS.Worksheet, section: ReportSection): number {
   // Section title
   const titleRow = ws.addRow([section.title]);
   titleRow.font = { bold: true, size: 11 };
@@ -66,10 +59,7 @@ export function addSectionRows(
   return ws.rowCount;
 }
 
-export function addTableRows(
-  ws: ExcelJS.Worksheet,
-  table: ReportTable
-): number {
+export function addTableRows(ws: ExcelJS.Worksheet, table: ReportTable): number {
   // Table title
   const titleRow = ws.addRow([table.title]);
   titleRow.font = { bold: true, size: 11 };

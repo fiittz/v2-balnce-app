@@ -15,10 +15,12 @@ export function useInvoices(options?: { limit?: number; status?: string; account
     queryFn: async () => {
       let query = supabase
         .from("invoices")
-        .select(`
+        .select(
+          `
           *,
           customer:customers(id, name, email, phone, address, vat_number)
-        `)
+        `,
+        )
         .eq("user_id", user!.id)
         .order("invoice_date", { ascending: false });
 
@@ -45,11 +47,7 @@ export function useCreateInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      invoice,
-    }: {
-      invoice: Omit<InvoiceInsert, "user_id" | "invoice_number">;
-    }) => {
+    mutationFn: async ({ invoice }: { invoice: Omit<InvoiceInsert, "user_id" | "invoice_number"> }) => {
       if (!user) throw new Error("Not authenticated");
 
       // Generate simple invoice number
@@ -104,16 +102,8 @@ export function useUpdateInvoice() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      ...updates
-    }: Partial<Invoice> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("invoices")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
+    mutationFn: async ({ id, ...updates }: Partial<Invoice> & { id: string }) => {
+      const { data, error } = await supabase.from("invoices").update(updates).eq("id", id).select().single();
       if (error) throw error;
       return data;
     },
@@ -133,10 +123,7 @@ export function useDeleteInvoice() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("invoices")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("invoices").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -155,10 +142,7 @@ export function useInvoiceStats(periodStart?: string, periodEnd?: string) {
   return useQuery({
     queryKey: ["invoice-stats", user?.id, periodStart, periodEnd],
     queryFn: async () => {
-      let query = supabase
-        .from("invoices")
-        .select("total, vat_amount, status")
-        .eq("user_id", user!.id);
+      let query = supabase.from("invoices").select("total, vat_amount, status").eq("user_id", user!.id);
 
       if (periodStart) {
         query = query.gte("issue_date", periodStart);

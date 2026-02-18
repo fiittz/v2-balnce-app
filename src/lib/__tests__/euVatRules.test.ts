@@ -32,12 +32,12 @@ describe("EU_COUNTRIES", () => {
   });
 
   it("does not include Ireland", () => {
-    const codes = EU_COUNTRIES.map(c => c.code);
+    const codes = EU_COUNTRIES.map((c) => c.code);
     expect(codes).not.toContain("IE");
   });
 
   it("includes key trading partners", () => {
-    const codes = EU_COUNTRIES.map(c => c.code);
+    const codes = EU_COUNTRIES.map((c) => c.code);
     expect(codes).toContain("DE");
     expect(codes).toContain("FR");
     expect(codes).toContain("NL");
@@ -45,7 +45,7 @@ describe("EU_COUNTRIES", () => {
   });
 
   it("Greece uses EL prefix (not GR)", () => {
-    const greece = EU_COUNTRIES.find(c => c.code === "GR");
+    const greece = EU_COUNTRIES.find((c) => c.code === "GR");
     expect(greece?.vatPrefix).toBe("EL");
   });
 });

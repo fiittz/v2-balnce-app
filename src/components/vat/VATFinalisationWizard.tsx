@@ -1,18 +1,15 @@
 import { useState, useEffect } from "react";
-import {
-  ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, 
-  Loader2, X, FileText, ShieldCheck
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Loader2, X, FileText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { 
-  VATWizardData, 
-  initialWizardData, 
-  useVATWizardData, 
-  useSaveVATWizard, 
+import {
+  VATWizardData,
+  initialWizardData,
+  useVATWizardData,
+  useSaveVATWizard,
   useFinaliseVATReturn,
-  useExpensesForPeriod
+  useExpensesForPeriod,
 } from "@/hooks/useVATWizard";
 import { SalesSection } from "./wizard/SalesSection";
 import { PurchasesSection } from "./wizard/PurchasesSection";
@@ -42,14 +39,14 @@ const STEPS = [
   { id: 7, title: "Compliance", description: "Final declarations" },
 ];
 
-export function VATFinalisationWizard({ 
-  open, 
-  onClose, 
+export function VATFinalisationWizard({
+  open,
+  onClose,
   onReportGenerated,
-  vatReturnId, 
-  periodStart, 
+  vatReturnId,
+  periodStart,
   periodEnd,
-  periodLabel 
+  periodLabel,
 }: VATFinalisationWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [wizardData, setWizardData] = useState<VATWizardData>({
@@ -83,9 +80,11 @@ export function VATFinalisationWizard({
         remove_non_allowed_reason: existingData.remove_non_allowed_reason || "",
         eu_purchases: existingData.eu_purchases || false,
         eu_purchase_ids: existingData.eu_purchase_ids || [],
-        eu_reverse_charge_flags: (existingData.eu_reverse_charge_flags as VATWizardData["eu_reverse_charge_flags"]) || {},
+        eu_reverse_charge_flags:
+          (existingData.eu_reverse_charge_flags as VATWizardData["eu_reverse_charge_flags"]) || {},
         non_eu_purchases: existingData.non_eu_purchases || false,
-        non_eu_purchase_details: (existingData.non_eu_purchase_details as VATWizardData["non_eu_purchase_details"]) || [],
+        non_eu_purchase_details:
+          (existingData.non_eu_purchase_details as VATWizardData["non_eu_purchase_details"]) || [],
         credit_notes: existingData.credit_notes || false,
         credit_notes_details: (existingData.credit_notes_details as VATWizardData["credit_notes_details"]) || [],
         manual_adjustments: existingData.manual_adjustments || false,
@@ -106,7 +105,7 @@ export function VATFinalisationWizard({
   }, [existingData, vatReturnId]);
 
   const updateData = (updates: Partial<VATWizardData>) => {
-    setWizardData(prev => ({ ...prev, ...updates }));
+    setWizardData((prev) => ({ ...prev, ...updates }));
     setBlockingError(null);
   };
 
@@ -175,19 +174,19 @@ export function VATFinalisationWizard({
 
   const handleNext = async () => {
     if (!validateAndProceed()) return;
-    
+
     // Save progress
     await saveWizard.mutateAsync(wizardData);
-    
+
     if (currentStep < STEPS.length) {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
       setBlockingError(null);
     }
   };
 
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
+      setCurrentStep((prev) => prev - 1);
       setBlockingError(null);
     }
   };
@@ -196,11 +195,11 @@ export function VATFinalisationWizard({
     if (!validateAndProceed()) return;
 
     await saveWizard.mutateAsync(wizardData);
-    await finaliseReturn.mutateAsync({ 
-      vatReturnId, 
-      lockPeriod: wizardData.lock_period 
+    await finaliseReturn.mutateAsync({
+      vatReturnId,
+      lockPeriod: wizardData.lock_period,
     });
-    
+
     onClose();
     onReportGenerated?.();
   };
@@ -232,11 +231,13 @@ export function VATFinalisationWizard({
               <X className="w-4 h-4" />
             </Button>
           </div>
-          
+
           {/* Progress */}
           <div className="space-y-2 pt-4">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Step {currentStep} of {STEPS.length}</span>
+              <span className="font-medium">
+                Step {currentStep} of {STEPS.length}
+              </span>
               <span className="text-muted-foreground">{STEPS[currentStep - 1].title}</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -252,58 +253,39 @@ export function VATFinalisationWizard({
             </div>
           )}
 
-          {currentStep === 1 && (
-            <SalesSection data={wizardData} onUpdate={updateData} />
-          )}
-          {currentStep === 2 && (
-            <PurchasesSection data={wizardData} onUpdate={updateData} />
-          )}
-          {currentStep === 3 && (
-            <HighRiskVATSection data={wizardData} onUpdate={updateData} />
-          )}
+          {currentStep === 1 && <SalesSection data={wizardData} onUpdate={updateData} />}
+          {currentStep === 2 && <PurchasesSection data={wizardData} onUpdate={updateData} />}
+          {currentStep === 3 && <HighRiskVATSection data={wizardData} onUpdate={updateData} />}
           {currentStep === 4 && (
-            <EUPurchasesSection 
-              data={wizardData} 
-              onUpdate={updateData} 
-              expenses={expenses || []}
-              isLoading={loadingExpenses}
-            />
-          )}
-          {currentStep === 5 && (
-            <NonEUPurchasesSection 
-              data={wizardData} 
+            <EUPurchasesSection
+              data={wizardData}
               onUpdate={updateData}
               expenses={expenses || []}
               isLoading={loadingExpenses}
             />
           )}
-          {currentStep === 6 && (
-            <AdjustmentsSection data={wizardData} onUpdate={updateData} />
+          {currentStep === 5 && (
+            <NonEUPurchasesSection
+              data={wizardData}
+              onUpdate={updateData}
+              expenses={expenses || []}
+              isLoading={loadingExpenses}
+            />
           )}
-          {currentStep === 7 && (
-            <ComplianceSection data={wizardData} onUpdate={updateData} />
-          )}
+          {currentStep === 6 && <AdjustmentsSection data={wizardData} onUpdate={updateData} />}
+          {currentStep === 7 && <ComplianceSection data={wizardData} onUpdate={updateData} />}
         </div>
 
         {/* Footer Navigation */}
         <div className="flex-shrink-0 flex items-center justify-between pt-4 border-t">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentStep === 1}
-          >
+          <Button variant="outline" onClick={handleBack} disabled={currentStep === 1}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
 
           {currentStep < STEPS.length ? (
-            <Button
-              onClick={handleNext}
-              disabled={saveWizard.isPending}
-            >
-              {saveWizard.isPending ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : null}
+            <Button onClick={handleNext} disabled={saveWizard.isPending}>
+              {saveWizard.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Next
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>

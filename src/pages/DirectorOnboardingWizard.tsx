@@ -1,6 +1,21 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, User, Briefcase, Link2, Gift, Calculator, Globe, Check, Plus, X, Banknote, Car, MapPin } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  User,
+  Briefcase,
+  Link2,
+  Gift,
+  Calculator,
+  Globe,
+  Check,
+  Plus,
+  X,
+  Banknote,
+  Car,
+  MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,13 +29,7 @@ import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
 
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type OnboardingStep =
   | "personal_tax_profile"
@@ -231,7 +240,8 @@ const BIK_TYPES = [
 
 export default function DirectorOnboardingWizard() {
   const navigate = useNavigate();
-  const { user, directorCount, directorsCompleted, incrementDirectorCompleted, refreshDirectorOnboardingStatus } = useAuth();
+  const { user, directorCount, directorsCompleted, incrementDirectorCompleted, refreshDirectorOnboardingStatus } =
+    useAuth();
   const { getDirector, isLoading: directorDataLoading, invalidate: invalidateDirectorCache } = useDirectorOnboarding();
   const [state, setState] = useState<OnboardingState>(initialState);
   const [stepIndex, setStepIndex] = useState(0);
@@ -293,7 +303,7 @@ export default function DirectorOnboardingWizard() {
       declaration_confirmed: false, // always require re-confirmation
     });
   }, [directorDataLoading, currentDirectorNumber, getDirector]);
-  
+
   const step = STEPS[stepIndex];
   const progress = ((stepIndex + 1) / STEPS.length) * 100;
 
@@ -322,7 +332,7 @@ export default function DirectorOnboardingWizard() {
 
   const handleMultiSelect = (field: keyof OnboardingState, value: string) => {
     const currentValues = state[field] as string[];
-    
+
     // Handle "none" selection for foreign_cgt_options
     if (field === "foreign_cgt_options") {
       if (value === "none") {
@@ -330,23 +340,21 @@ export default function DirectorOnboardingWizard() {
         return;
       }
       // If selecting something else, remove "none"
-      const withoutNone = currentValues.filter(v => v !== "none");
-      const newValues = withoutNone.includes(value)
-        ? withoutNone.filter(v => v !== value)
-        : [...withoutNone, value];
+      const withoutNone = currentValues.filter((v) => v !== "none");
+      const newValues = withoutNone.includes(value) ? withoutNone.filter((v) => v !== value) : [...withoutNone, value];
       setState({ ...state, [field]: newValues });
       return;
     }
-    
+
     const newValues = currentValues.includes(value)
-      ? currentValues.filter(v => v !== value)
+      ? currentValues.filter((v) => v !== value)
       : [...currentValues, value];
     setState({ ...state, [field]: newValues });
   };
 
   const handleFinish = async () => {
     if (!user) return;
-    
+
     setSaving(true);
     try {
       // Store director onboarding settings in localStorage with director number
@@ -383,7 +391,7 @@ export default function DirectorOnboardingWizard() {
         income_sources: state.income_sources,
         social_welfare_types: state.social_welfare_types,
         is_director_owner: state.is_director_owner,
-        linked_businesses: state.linked_businesses.filter(b => b.trim()),
+        linked_businesses: state.linked_businesses.filter((b) => b.trim()),
         reliefs: state.reliefs,
         has_dependent_children: state.has_dependent_children,
         dependent_children_count: state.dependent_children_count,
@@ -401,9 +409,8 @@ export default function DirectorOnboardingWizard() {
       };
 
       // Save to Supabase instead of localStorage
-      const { error: upsertError } = await supabase
-        .from("director_onboarding")
-        .upsert({
+      const { error: upsertError } = await supabase.from("director_onboarding").upsert(
+        {
           user_id: user.id,
           director_number: currentDirectorNumber,
           director_name: state.director_name || null,
@@ -416,9 +423,11 @@ export default function DirectorOnboardingWizard() {
           estimated_dividends: state.estimated_dividends || 0,
           onboarding_completed: true,
           onboarding_data: directorSettings,
-        }, {
-          onConflict: 'user_id,director_number'
-        });
+        },
+        {
+          onConflict: "user_id,director_number",
+        },
+      );
 
       if (upsertError) {
         console.error("Error saving director onboarding to Supabase:", upsertError);
@@ -437,7 +446,9 @@ export default function DirectorOnboardingWizard() {
 
       // Check if there are more directors to onboard
       if (currentDirectorNumber < directorCount) {
-        toast.success(`Director ${currentDirectorNumber} setup complete! Now set up Director ${currentDirectorNumber + 1}.`);
+        toast.success(
+          `Director ${currentDirectorNumber} setup complete! Now set up Director ${currentDirectorNumber + 1}.`,
+        );
         // Reset state for next director
         setState(initialState);
         setStepIndex(0);
@@ -465,7 +476,8 @@ export default function DirectorOnboardingWizard() {
             </button>
             <div>
               <h1 className="font-semibold text-xl">
-                Director {currentDirectorNumber}{directorCount > 1 ? ` of ${directorCount}` : ''} – Personal Account
+                Director {currentDirectorNumber}
+                {directorCount > 1 ? ` of ${directorCount}` : ""} – Personal Account
               </h1>
               <p className="text-sm text-muted-foreground">
                 Step {stepIndex + 1} of {STEPS.length}: {STEP_LABELS[step]}
@@ -475,10 +487,7 @@ export default function DirectorOnboardingWizard() {
 
           {/* Progress bar */}
           <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
           </div>
 
           {/* Step indicators - scrollable on mobile */}
@@ -496,14 +505,10 @@ export default function DirectorOnboardingWizard() {
                       "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs whitespace-nowrap transition-colors",
                       isActive && "bg-primary text-primary-foreground",
                       isComplete && "text-primary hover:bg-primary/10",
-                      !isActive && !isComplete && "text-muted-foreground"
+                      !isActive && !isComplete && "text-muted-foreground",
                     )}
                   >
-                    {isComplete ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : (
-                      STEP_ICONS[s]
-                    )}
+                    {isComplete ? <CheckCircle2 className="w-4 h-4" /> : STEP_ICONS[s]}
                     <span className="hidden md:inline">{STEP_LABELS[s]}</span>
                   </button>
                 );
@@ -560,13 +565,15 @@ export default function DirectorOnboardingWizard() {
               <div>
                 <Label className="text-base font-medium">Marital status</Label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
-                  {([
-                    { value: "single", label: "Single" },
-                    { value: "married", label: "Married" },
-                    { value: "civil_partner", label: "Civil partner" },
-                    { value: "widowed", label: "Widowed" },
-                    { value: "separated", label: "Separated" },
-                  ] as const).map((option) => (
+                  {(
+                    [
+                      { value: "single", label: "Single" },
+                      { value: "married", label: "Married" },
+                      { value: "civil_partner", label: "Civil partner" },
+                      { value: "widowed", label: "Widowed" },
+                      { value: "separated", label: "Separated" },
+                    ] as const
+                  ).map((option) => (
                     <button
                       key={option.value}
                       onClick={() => setState({ ...state, marital_status: option.value })}
@@ -574,14 +581,20 @@ export default function DirectorOnboardingWizard() {
                         "p-3 rounded-xl border text-left transition-all flex items-center gap-2 text-sm",
                         state.marital_status === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                        state.marital_status === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {state.marital_status === option.value && <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                          state.marital_status === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {state.marital_status === option.value && (
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -593,7 +606,9 @@ export default function DirectorOnboardingWizard() {
                 <Label>Tax year</Label>
                 <div className="mt-1.5 p-3 bg-muted/50 rounded-lg border border-border">
                   <p className="font-medium">1st January – 31st December</p>
-                  <p className="text-sm text-muted-foreground mt-1">Irish personal tax year is fixed to the calendar year.</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Irish personal tax year is fixed to the calendar year.
+                  </p>
                 </div>
               </div>
 
@@ -607,19 +622,27 @@ export default function DirectorOnboardingWizard() {
                   ].map((option) => (
                     <button
                       key={option.value}
-                      onClick={() => setState({ ...state, assessment_basis: option.value as "single" | "joint" | "separate" })}
+                      onClick={() =>
+                        setState({ ...state, assessment_basis: option.value as "single" | "joint" | "separate" })
+                      }
                       className={cn(
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.assessment_basis === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        state.assessment_basis === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {state.assessment_basis === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          state.assessment_basis === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {state.assessment_basis === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -635,7 +658,9 @@ export default function DirectorOnboardingWizard() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-2">Employment & Salary</h2>
-              <p className="text-muted-foreground">Details about your directorship and remuneration from the company.</p>
+              <p className="text-muted-foreground">
+                Details about your directorship and remuneration from the company.
+              </p>
             </div>
 
             <div className="bg-card rounded-2xl p-6 shadow-sm space-y-5">
@@ -668,11 +693,13 @@ export default function DirectorOnboardingWizard() {
               <div>
                 <Label className="text-base font-medium">How is salary paid?</Label>
                 <div className="grid grid-cols-3 gap-3 mt-2">
-                  {([
-                    { value: "weekly", label: "Weekly" },
-                    { value: "fortnightly", label: "Fortnightly" },
-                    { value: "monthly", label: "Monthly" },
-                  ] as const).map((option) => (
+                  {(
+                    [
+                      { value: "weekly", label: "Weekly" },
+                      { value: "fortnightly", label: "Fortnightly" },
+                      { value: "monthly", label: "Monthly" },
+                    ] as const
+                  ).map((option) => (
                     <button
                       key={option.value}
                       onClick={() => setState({ ...state, salary_frequency: option.value })}
@@ -680,14 +707,20 @@ export default function DirectorOnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.salary_frequency === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        state.salary_frequency === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {state.salary_frequency === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          state.salary_frequency === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {state.salary_frequency === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -709,14 +742,20 @@ export default function DirectorOnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.receives_dividends === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        state.receives_dividends === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {state.receives_dividends === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          state.receives_dividends === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {state.receives_dividends === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -749,7 +788,9 @@ export default function DirectorOnboardingWizard() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-2">Work Location & Commute</h2>
-              <p className="text-muted-foreground">Where you live and work affects mileage claims and BIK calculations.</p>
+              <p className="text-muted-foreground">
+                Where you live and work affects mileage claims and BIK calculations.
+              </p>
             </div>
 
             <div className="bg-card rounded-2xl p-6 shadow-sm space-y-5">
@@ -800,12 +841,14 @@ export default function DirectorOnboardingWizard() {
               <div>
                 <Label className="text-base font-medium">How do you usually get from home to your place of work?</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                  {([
-                    { value: "company_vehicle", label: "Company vehicle", desc: "Triggers BIK calculation" },
-                    { value: "personal_vehicle", label: "Personal vehicle", desc: "Eligible for mileage rates" },
-                    { value: "public_transport", label: "Public transport", desc: "No mileage claim" },
-                    { value: "walk_cycle", label: "Walk / cycle", desc: "No mileage claim" },
-                  ] as const).map((option) => (
+                  {(
+                    [
+                      { value: "company_vehicle", label: "Company vehicle", desc: "Triggers BIK calculation" },
+                      { value: "personal_vehicle", label: "Personal vehicle", desc: "Eligible for mileage rates" },
+                      { value: "public_transport", label: "Public transport", desc: "No mileage claim" },
+                      { value: "walk_cycle", label: "Walk / cycle", desc: "No mileage claim" },
+                    ] as const
+                  ).map((option) => (
                     <button
                       key={option.value}
                       onClick={() => setState({ ...state, commute_method: option.value })}
@@ -813,14 +856,20 @@ export default function DirectorOnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.commute_method === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                        state.commute_method === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {state.commute_method === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                          state.commute_method === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {state.commute_method === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <div>
                         <span className="font-medium block">{option.label}</span>
@@ -846,14 +895,20 @@ export default function DirectorOnboardingWizard() {
                           "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                           state.vehicle_owned_by_director === option.value
                             ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            : "border-border hover:border-primary/50",
                         )}
                       >
-                        <div className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
-                          state.vehicle_owned_by_director === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                        )}>
-                          {state.vehicle_owned_by_director === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                        <div
+                          className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0",
+                            state.vehicle_owned_by_director === option.value
+                              ? "border-primary bg-primary"
+                              : "border-muted-foreground",
+                          )}
+                        >
+                          {state.vehicle_owned_by_director === option.value && (
+                            <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                          )}
                         </div>
                         <div>
                           <span className="font-medium block">{option.label}</span>
@@ -863,7 +918,8 @@ export default function DirectorOnboardingWizard() {
                     ))}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1.5">
-                    Mileage allowance at Revenue civil service rates only applies when the director personally owns the vehicle used for business travel.
+                    Mileage allowance at Revenue civil service rates only applies when the director personally owns the
+                    vehicle used for business travel.
                   </p>
                 </div>
               )}
@@ -892,7 +948,8 @@ export default function DirectorOnboardingWizard() {
                   <div>
                     <h3 className="font-semibold text-base mb-1">Vehicle Asset Details</h3>
                     <p className="text-sm text-muted-foreground">
-                      Your vehicle is a fixed asset on the company balance sheet. Capital allowances (12.5% p.a. over 8 years, capped at &euro;24,000) reduce taxable profit.
+                      Your vehicle is a fixed asset on the company balance sheet. Capital allowances (12.5% p.a. over 8
+                      years, capped at &euro;24,000) reduce taxable profit.
                     </p>
                   </div>
 
@@ -934,13 +991,17 @@ export default function DirectorOnboardingWizard() {
                     <div>
                       <Label htmlFor="vehicle_purchase_cost">Purchase cost (ex-VAT)</Label>
                       <div className="relative mt-1.5">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">&euro;</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                          &euro;
+                        </span>
                         <Input
                           id="vehicle_purchase_cost"
                           type="number"
                           min={0}
                           value={state.vehicle_purchase_cost || ""}
-                          onChange={(e) => setState({ ...state, vehicle_purchase_cost: parseFloat(e.target.value) || 0 })}
+                          onChange={(e) =>
+                            setState({ ...state, vehicle_purchase_cost: parseFloat(e.target.value) || 0 })
+                          }
                           className="pl-8"
                           placeholder="0"
                         />
@@ -960,11 +1021,15 @@ export default function DirectorOnboardingWizard() {
                           min={0}
                           max={100}
                           value={state.vehicle_business_use_pct || ""}
-                          onChange={(e) => setState({ ...state, vehicle_business_use_pct: parseInt(e.target.value) || 0 })}
+                          onChange={(e) =>
+                            setState({ ...state, vehicle_business_use_pct: parseInt(e.target.value) || 0 })
+                          }
                           className="pr-8"
                           placeholder="100"
                         />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">%</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                          %
+                        </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         Capital allowances are apportioned by business use percentage.
@@ -1000,14 +1065,18 @@ export default function DirectorOnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.has_bik === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        state.has_bik === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {state.has_bik === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          state.has_bik === option.value ? "border-primary bg-primary" : "border-muted-foreground",
+                        )}
+                      >
+                        {state.has_bik === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1026,7 +1095,7 @@ export default function DirectorOnboardingWizard() {
                           onClick={() => {
                             const current = state.bik_types;
                             const newTypes = current.includes(bik.value)
-                              ? current.filter(v => v !== bik.value)
+                              ? current.filter((v) => v !== bik.value)
                               : [...current, bik.value];
                             setState({ ...state, bik_types: newTypes });
                           }}
@@ -1034,7 +1103,7 @@ export default function DirectorOnboardingWizard() {
                             "w-full p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                             state.bik_types.includes(bik.value)
                               ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
+                              : "border-border hover:border-primary/50",
                           )}
                         >
                           <Checkbox checked={state.bik_types.includes(bik.value)} />
@@ -1054,7 +1123,9 @@ export default function DirectorOnboardingWizard() {
                             id="company_vehicle_value"
                             type="number"
                             value={state.company_vehicle_value || ""}
-                            onChange={(e) => setState({ ...state, company_vehicle_value: parseFloat(e.target.value) || 0 })}
+                            onChange={(e) =>
+                              setState({ ...state, company_vehicle_value: parseFloat(e.target.value) || 0 })
+                            }
                             className="pl-12"
                             min={0}
                           />
@@ -1067,7 +1138,9 @@ export default function DirectorOnboardingWizard() {
                           id="company_vehicle_business_km"
                           type="number"
                           value={state.company_vehicle_business_km || ""}
-                          onChange={(e) => setState({ ...state, company_vehicle_business_km: parseInt(e.target.value) || 0 })}
+                          onChange={(e) =>
+                            setState({ ...state, company_vehicle_business_km: parseInt(e.target.value) || 0 })
+                          }
                           className="mt-1.5"
                           min={0}
                           placeholder="e.g. 24000"
@@ -1099,13 +1172,13 @@ export default function DirectorOnboardingWizard() {
                         "w-full p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.income_sources.includes(source.value)
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
                       <Checkbox checked={state.income_sources.includes(source.value)} />
                       <span className="font-medium">{source.label}</span>
                     </button>
-                    
+
                     {/* Social Welfare categories */}
                     {source.value === "social_welfare" && state.income_sources.includes("social_welfare") && (
                       <div className="mt-3 ml-8 space-y-2">
@@ -1120,7 +1193,7 @@ export default function DirectorOnboardingWizard() {
                               onClick={() => {
                                 const current = state.social_welfare_types;
                                 const newTypes = current.includes(category.value)
-                                  ? current.filter(v => v !== category.value)
+                                  ? current.filter((v) => v !== category.value)
                                   : [...current, category.value];
                                 setState({ ...state, social_welfare_types: newTypes });
                               }}
@@ -1128,7 +1201,7 @@ export default function DirectorOnboardingWizard() {
                                 "w-full p-3 rounded-lg border text-left transition-all flex items-center gap-2 text-sm",
                                 state.social_welfare_types.includes(category.value)
                                   ? "border-primary bg-primary/5"
-                                  : "border-border hover:border-primary/50"
+                                  : "border-border hover:border-primary/50",
                               )}
                             >
                               <Checkbox checked={state.social_welfare_types.includes(category.value)} />
@@ -1168,14 +1241,20 @@ export default function DirectorOnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         state.is_director_owner === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        state.is_director_owner === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {state.is_director_owner === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          state.is_director_owner === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {state.is_director_owner === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1186,7 +1265,7 @@ export default function DirectorOnboardingWizard() {
               {state.is_director_owner && (
                 <div className="space-y-3">
                   <Label>Business name(s)</Label>
-                  
+
                   {state.linked_businesses.map((business, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input
@@ -1213,7 +1292,7 @@ export default function DirectorOnboardingWizard() {
                       </Button>
                     </div>
                   ))}
-                  
+
                   <Button
                     type="button"
                     variant="outline"
@@ -1247,7 +1326,7 @@ export default function DirectorOnboardingWizard() {
                       "w-full p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                       state.reliefs.includes(relief.value)
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
                     <Checkbox checked={state.reliefs.includes(relief.value)} />
@@ -1263,7 +1342,13 @@ export default function DirectorOnboardingWizard() {
                   <Checkbox
                     id="has_dependent_children"
                     checked={state.has_dependent_children}
-                    onCheckedChange={(checked) => setState({ ...state, has_dependent_children: checked === true, dependent_children_count: checked ? state.dependent_children_count : 0 })}
+                    onCheckedChange={(checked) =>
+                      setState({
+                        ...state,
+                        has_dependent_children: checked === true,
+                        dependent_children_count: checked ? state.dependent_children_count : 0,
+                      })
+                    }
                   />
                   <Label htmlFor="has_dependent_children">Dependent children</Label>
                 </div>
@@ -1339,19 +1424,27 @@ export default function DirectorOnboardingWizard() {
                 ].map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setState({ ...state, pays_preliminary_tax: option.value as "yes" | "no" | "unsure" })}
+                    onClick={() =>
+                      setState({ ...state, pays_preliminary_tax: option.value as "yes" | "no" | "unsure" })
+                    }
                     className={cn(
                       "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                       state.pays_preliminary_tax === option.value
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
-                    <div className={cn(
-                      "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                      state.pays_preliminary_tax === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                    )}>
-                      {state.pays_preliminary_tax === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                    <div
+                      className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                        state.pays_preliminary_tax === option.value
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground",
+                      )}
+                    >
+                      {state.pays_preliminary_tax === option.value && (
+                        <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                      )}
                     </div>
                     <span className="font-medium">{option.label}</span>
                   </button>
@@ -1391,7 +1484,7 @@ export default function DirectorOnboardingWizard() {
                       "w-full p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                       state.foreign_cgt_options.includes(option.value)
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
                     <Checkbox checked={state.foreign_cgt_options.includes(option.value)} />
@@ -1499,13 +1592,21 @@ export default function DirectorOnboardingWizard() {
                 )}
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Benefits in kind</span>
-                  <span className="font-medium">{state.has_bik ? BIK_TYPES.filter(b => state.bik_types.includes(b.value)).map(b => b.label).join(", ") : "None"}</span>
+                  <span className="font-medium">
+                    {state.has_bik
+                      ? BIK_TYPES.filter((b) => state.bik_types.includes(b.value))
+                          .map((b) => b.label)
+                          .join(", ")
+                      : "None"}
+                  </span>
                 </div>
                 <div className="flex justify-between py-2 border-b">
                   <span className="text-muted-foreground">Income sources</span>
                   <span className="font-medium text-right max-w-[200px]">
                     {state.income_sources.length > 0
-                      ? INCOME_SOURCES.filter(s => state.income_sources.includes(s.value)).map(s => s.label).join(", ")
+                      ? INCOME_SOURCES.filter((s) => state.income_sources.includes(s.value))
+                          .map((s) => s.label)
+                          .join(", ")
                       : "None selected"}
                   </span>
                 </div>
@@ -1513,10 +1614,10 @@ export default function DirectorOnboardingWizard() {
                   <span className="text-muted-foreground">Director/Owner</span>
                   <span className="font-medium">{state.is_director_owner ? "Yes" : "No"}</span>
                 </div>
-                {state.is_director_owner && state.linked_businesses.filter(b => b.trim()).length > 0 && (
+                {state.is_director_owner && state.linked_businesses.filter((b) => b.trim()).length > 0 && (
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">Linked businesses</span>
-                    <span className="font-medium">{state.linked_businesses.filter(b => b.trim()).join(", ")}</span>
+                    <span className="font-medium">{state.linked_businesses.filter((b) => b.trim()).join(", ")}</span>
                   </div>
                 )}
                 <div className="flex justify-between py-2 border-b">
@@ -1530,14 +1631,13 @@ export default function DirectorOnboardingWizard() {
                 onClick={() => setState({ ...state, declaration_confirmed: !state.declaration_confirmed })}
                 className={cn(
                   "w-full p-4 rounded-xl border text-left transition-all flex items-start gap-3",
-                  state.declaration_confirmed
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
+                  state.declaration_confirmed ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
                 )}
               >
                 <Checkbox checked={state.declaration_confirmed} className="mt-0.5" />
                 <span className="text-sm">
-                  I confirm this information is accurate and will be used to automate my personal tax calculations and Form 11 reporting.
+                  I confirm this information is accurate and will be used to automate my personal tax calculations and
+                  Form 11 reporting.
                 </span>
               </button>
             </div>
@@ -1546,26 +1646,16 @@ export default function DirectorOnboardingWizard() {
 
         {/* Navigation buttons */}
         <div className="flex justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={goBack}
-            disabled={stepIndex === 0}
-          >
+          <Button variant="outline" onClick={goBack} disabled={stepIndex === 0}>
             Back
           </Button>
 
           {step === "declaration" ? (
-            <Button
-              onClick={handleFinish}
-              disabled={!canProceed || saving}
-            >
+            <Button onClick={handleFinish} disabled={!canProceed || saving}>
               {saving ? "Saving..." : "Complete Setup"}
             </Button>
           ) : (
-            <Button
-              onClick={goNext}
-              disabled={!canProceed}
-            >
+            <Button onClick={goNext} disabled={!canProceed}>
               Continue
             </Button>
           )}

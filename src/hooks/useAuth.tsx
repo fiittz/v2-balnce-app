@@ -48,7 +48,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const init = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!isMounted) return;
 
       // If a real session exists, it must take precedence over demo mode.
@@ -73,37 +75,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void init();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
-        // Real session always wins.
-        if (nextSession?.user) {
-          if (isDemoMode()) disableDemoMode();
-          setSession(nextSession);
-          setUser(nextSession.user);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      // Real session always wins.
+      if (nextSession?.user) {
+        if (isDemoMode()) disableDemoMode();
+        setSession(nextSession);
+        setUser(nextSession.user);
 
-          // CRITICAL: Defer backend calls to prevent deadlock
-          setTimeout(() => {
-            fetchProfile(nextSession.user.id);
-            fetchOnboardingStatus(nextSession.user.id);
-            checkDirectorOnboarding(nextSession.user.id);
-          }, 0);
-          return;
-        }
-
-        // No real session.
-        if (isDemoMode()) {
-          applyDemoState();
-          return;
-        }
-
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-        setOnboardingComplete(null);
-        setDirectorOnboardingComplete(null);
-        setIsLoading(false);
+        // CRITICAL: Defer backend calls to prevent deadlock
+        setTimeout(() => {
+          fetchProfile(nextSession.user.id);
+          fetchOnboardingStatus(nextSession.user.id);
+          checkDirectorOnboarding(nextSession.user.id);
+        }, 0);
+        return;
       }
-    );
+
+      // No real session.
+      if (isDemoMode()) {
+        applyDemoState();
+        return;
+      }
+
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setOnboardingComplete(null);
+      setDirectorOnboardingComplete(null);
+      setIsLoading(false);
+    });
 
     return () => {
       isMounted = false;
@@ -113,14 +115,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
+      const { data, error } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
 
       if (error) throw error;
-      
+
       if (data) {
         setProfile(data);
       } else {
@@ -132,13 +130,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           business_name: null,
           business_type: null,
         };
-        
+
         const { data: createdProfile, error: createError } = await supabase
           .from("profiles")
           .insert(newProfile)
           .select()
           .single();
-          
+
         if (createError) {
           console.error("Error creating profile:", createError);
         } else {
@@ -171,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkDirectorOnboarding = async (userId: string) => {
     try {
       // Get director count from business onboarding (still from localStorage as it's set during business onboarding)
-      const businessExtra = localStorage.getItem('business_onboarding_extra');
+      const businessExtra = localStorage.getItem("business_onboarding_extra");
       let totalDirectors = 1;
       if (businessExtra) {
         const parsed = JSON.parse(businessExtra);
@@ -188,7 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       // Count completed director onboardings
-      const completed = data?.filter(d => d.onboarding_completed).length || 0;
+      const completed = data?.filter((d) => d.onboarding_completed).length || 0;
       setDirectorsCompleted(completed);
       setDirectorOnboardingComplete(completed >= totalDirectors);
     } catch (error) {
@@ -239,21 +237,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      session, 
-      profile, 
-      isLoading, 
-      onboardingComplete, 
-      directorOnboardingComplete,
-      directorCount,
-      directorsCompleted,
-      signOut,
-      refreshOnboardingStatus,
-      refreshDirectorOnboardingStatus,
-      setDirectorOnboardingComplete: updateDirectorOnboardingComplete,
-      incrementDirectorCompleted
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        profile,
+        isLoading,
+        onboardingComplete,
+        directorOnboardingComplete,
+        directorCount,
+        directorsCompleted,
+        signOut,
+        refreshOnboardingStatus,
+        refreshDirectorOnboardingStatus,
+        setDirectorOnboardingComplete: updateDirectorOnboardingComplete,
+        incrementDirectorCompleted,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -288,7 +288,13 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     }
 
     // Redirect to director onboarding if business is done but director is not
-    if (!isLoading && user && onboardingComplete === true && directorOnboardingComplete === false && location.pathname !== "/onboarding/director") {
+    if (
+      !isLoading &&
+      user &&
+      onboardingComplete === true &&
+      directorOnboardingComplete === false &&
+      location.pathname !== "/onboarding/director"
+    ) {
       navigate("/onboarding/director");
       return;
     }

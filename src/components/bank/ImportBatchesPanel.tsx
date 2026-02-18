@@ -13,7 +13,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useImportBatches, useDeleteImportBatch, useBulkDeleteImportBatches, ImportBatch } from "@/hooks/useImportBatches";
+import {
+  useImportBatches,
+  useDeleteImportBatch,
+  useBulkDeleteImportBatches,
+  ImportBatch,
+} from "@/hooks/useImportBatches";
 
 interface ImportBatchesPanelProps {
   onSelectBatch?: (batchId: string) => void;
@@ -23,14 +28,14 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
   const { data: batches, isLoading } = useImportBatches();
   const deleteBatch = useDeleteImportBatch();
   const bulkDelete = useBulkDeleteImportBatches();
-  
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<"single" | "selected">("selected");
   const [singleDeleteId, setSingleDeleteId] = useState<string | null>(null);
 
   const toggleSelection = (id: string) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -43,7 +48,7 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
 
   const selectAll = () => {
     if (batches) {
-      setSelectedIds(new Set(batches.map(b => b.id)));
+      setSelectedIds(new Set(batches.map((b) => b.id)));
     }
   };
 
@@ -88,9 +93,7 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
       <div className="bg-card rounded-2xl p-8 card-shadow text-center">
         <FileSpreadsheet className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
         <p className="font-medium">No imports yet</p>
-        <p className="text-sm text-muted-foreground">
-          Upload a CSV file to see your import history here
-        </p>
+        <p className="text-sm text-muted-foreground">Upload a CSV file to see your import history here</p>
       </div>
     );
   }
@@ -101,10 +104,15 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {deleteTarget === "single" ? "this import" : `${selectedIds.size} import${selectedIds.size !== 1 ? "s" : ""}`}?
+              Delete{" "}
+              {deleteTarget === "single"
+                ? "this import"
+                : `${selectedIds.size} import${selectedIds.size !== 1 ? "s" : ""}`}
+              ?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all transactions from {deleteTarget === "single" ? "this" : "the selected"} import{deleteTarget === "selected" && selectedIds.size !== 1 ? "s" : ""}. This action cannot be undone.
+              This will permanently delete all transactions from {deleteTarget === "single" ? "this" : "the selected"}{" "}
+              import{deleteTarget === "selected" && selectedIds.size !== 1 ? "s" : ""}. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -113,7 +121,7 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {(deleteBatch.isPending || bulkDelete.isPending) ? (
+              {deleteBatch.isPending || bulkDelete.isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
                 <Trash2 className="w-4 h-4 mr-2" />
@@ -132,16 +140,14 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
               <BarChart3 className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="font-semibold">{batches.length} import{batches.length !== 1 ? "s" : ""}</p>
+              <p className="font-semibold">
+                {batches.length} import{batches.length !== 1 ? "s" : ""}
+              </p>
               <p className="text-sm text-muted-foreground">{totalTransactions} total transactions</p>
             </div>
           </div>
           {selectedIds.size > 0 && (
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={handleDeleteSelected}
-            >
+            <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
               <Trash2 className="w-4 h-4 mr-2" />
               Delete {selectedIds.size}
             </Button>
@@ -154,7 +160,7 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
         <div className="flex items-center gap-2">
           <Checkbox
             checked={selectedIds.size === batches.length && batches.length > 0}
-            onCheckedChange={(checked) => checked ? selectAll() : clearSelection()}
+            onCheckedChange={(checked) => (checked ? selectAll() : clearSelection())}
           />
           <span className="text-sm text-muted-foreground">
             {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select all"}
@@ -185,9 +191,7 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
               <FileSpreadsheet className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">
-                {batch.filename || "CSV Import"}
-              </p>
+              <p className="font-medium truncate">{batch.filename || "CSV Import"}</p>
               <div className="flex items-center gap-2 mt-0.5 text-sm text-muted-foreground">
                 <span>{format(parseISO(batch.created_at || new Date().toISOString()), "d MMM yyyy, HH:mm")}</span>
                 <span>•</span>
@@ -204,11 +208,7 @@ const ImportBatchesPanel = ({ onSelectBatch }: ImportBatchesPanelProps) => {
                 <Trash2 className="w-4 h-4" />
               </Button>
               {onSelectBatch && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onSelectBatch(batch.id)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => onSelectBatch(batch.id)}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               )}

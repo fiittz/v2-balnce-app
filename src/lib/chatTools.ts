@@ -8,41 +8,41 @@ import type { TrialBalanceResult } from "@/hooks/useTrialBalance";
 
 // ── Route map ──────────────────────────────────────────────
 export const PAGE_ROUTES: Record<string, { path: string; label: string }> = {
-  dashboard:      { path: "/dashboard",          label: "Dashboard" },
-  bank:           { path: "/bank",               label: "Bank Feed" },
-  invoices:       { path: "/invoices",           label: "Invoices" },
-  vat:            { path: "/vat",                label: "VAT Centre" },
-  rct:            { path: "/rct",                label: "RCT Centre" },
-  tax:            { path: "/tax",                label: "Tax Centre" },
-  ct1:            { path: "/tax/ct1",            label: "CT1 Corporation Tax Return" },
-  form11:         { path: "/tax/form11/1",       label: "Form 11 Income Tax Return" },
-  balance_sheet:  { path: "/tax/balance-sheet",  label: "Balance Sheet" },
-  reliefs:        { path: "/tax/reliefs",        label: "Relief Scanner" },
-  trips:          { path: "/tax/trips",          label: "Trip Claims" },
-  pnl:            { path: "/reports/pnl",        label: "Profit & Loss" },
-  aged_debtors:   { path: "/reports/aged-debtors", label: "Aged Debtors" },
-  reports:        { path: "/reports",            label: "Reports & Exports" },
-  accounts:       { path: "/accounts",           label: "Chart of Accounts" },
-  settings:       { path: "/settings",           label: "Settings" },
+  dashboard: { path: "/dashboard", label: "Dashboard" },
+  bank: { path: "/bank", label: "Bank Feed" },
+  invoices: { path: "/invoices", label: "Invoices" },
+  vat: { path: "/vat", label: "VAT Centre" },
+  rct: { path: "/rct", label: "RCT Centre" },
+  tax: { path: "/tax", label: "Tax Centre" },
+  ct1: { path: "/tax/ct1", label: "CT1 Corporation Tax Return" },
+  form11: { path: "/tax/form11/1", label: "Form 11 Income Tax Return" },
+  balance_sheet: { path: "/tax/balance-sheet", label: "Balance Sheet" },
+  reliefs: { path: "/tax/reliefs", label: "Relief Scanner" },
+  trips: { path: "/tax/trips", label: "Trip Claims" },
+  pnl: { path: "/reports/pnl", label: "Profit & Loss" },
+  aged_debtors: { path: "/reports/aged-debtors", label: "Aged Debtors" },
+  reports: { path: "/reports", label: "Reports & Exports" },
+  accounts: { path: "/accounts", label: "Chart of Accounts" },
+  settings: { path: "/settings", label: "Settings" },
 };
 
 // ── Route → label (for page awareness) ─────────────────────
 export const ROUTE_LABELS: Record<string, string> = {
-  "/dashboard":          "Dashboard",
-  "/bank":               "Bank Feed — imported transactions",
-  "/invoices":           "Invoices",
-  "/vat":                "VAT Centre",
-  "/rct":                "RCT Centre",
-  "/tax":                "Tax Centre",
-  "/tax/ct1":            "CT1 Corporation Tax Return",
-  "/tax/balance-sheet":  "Balance Sheet",
-  "/tax/reliefs":        "Relief Scanner",
-  "/tax/trips":          "Trip Claims Manager",
-  "/reports/pnl":        "Profit & Loss Statement",
+  "/dashboard": "Dashboard",
+  "/bank": "Bank Feed — imported transactions",
+  "/invoices": "Invoices",
+  "/vat": "VAT Centre",
+  "/rct": "RCT Centre",
+  "/tax": "Tax Centre",
+  "/tax/ct1": "CT1 Corporation Tax Return",
+  "/tax/balance-sheet": "Balance Sheet",
+  "/tax/reliefs": "Relief Scanner",
+  "/tax/trips": "Trip Claims Manager",
+  "/reports/pnl": "Profit & Loss Statement",
   "/reports/aged-debtors": "Aged Debtors Report",
-  "/reports":            "Reports & Exports",
-  "/accounts":           "Chart of Accounts",
-  "/settings":           "Settings",
+  "/reports": "Reports & Exports",
+  "/accounts": "Chart of Accounts",
+  "/settings": "Settings",
 };
 
 export function getPageLabel(pathname: string): string {
@@ -61,7 +61,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "navigate_to_page",
-      description: "Navigate the user to a specific page in the Balnce app. Use this when the user asks to see or go to a particular section.",
+      description:
+        "Navigate the user to a specific page in the Balnce app. Use this when the user asks to see or go to a particular section.",
       parameters: {
         type: "object",
         properties: {
@@ -75,7 +76,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "show_tax_summary",
-      description: "Show the user's CT1 corporation tax computation as a formatted summary. Use when they ask about their tax bill, CT liability, or how much tax they owe.",
+      description:
+        "Show the user's CT1 corporation tax computation as a formatted summary. Use when they ask about their tax bill, CT liability, or how much tax they owe.",
       parameters: { type: "object", properties: {} },
     },
   },
@@ -96,7 +98,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "calculate_pension_savings",
-      description: "Calculate how much tax the user would save if the company made an employer pension contribution of the given amount.",
+      description:
+        "Calculate how much tax the user would save if the company made an employer pension contribution of the given amount.",
       parameters: {
         type: "object",
         properties: {
@@ -118,7 +121,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "run_company_health_check",
-      description: "Run a company (Ltd) tax health check. Reviews the CT1 corporation tax return, capital allowances, RCT credits, start-up relief, expense anomalies, and business deadlines. Use when the user asks about their company tax position, CT1 health check, or business tax overview.",
+      description:
+        "Run a company (Ltd) tax health check. Reviews the CT1 corporation tax return, capital allowances, RCT credits, start-up relief, expense anomalies, and business deadlines. Use when the user asks about their company tax position, CT1 health check, or business tax overview.",
       parameters: { type: "object", properties: {} },
     },
   },
@@ -126,7 +130,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "run_director_health_check",
-      description: "Run a personal director tax health check. Reviews Form 11 income tax, pension contributions, salary vs dividend optimisation, small benefit exemption, mileage & subsistence claims, and personal tax credits. Use when the user asks about their personal tax, director's tax position, Form 11 health check, or personal tax planning.",
+      description:
+        "Run a personal director tax health check. Reviews Form 11 income tax, pension contributions, salary vs dividend optimisation, small benefit exemption, mileage & subsistence claims, and personal tax credits. Use when the user asks about their personal tax, director's tax position, Form 11 health check, or personal tax planning.",
       parameters: { type: "object", properties: {} },
     },
   },
@@ -134,7 +139,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "what_if_buy_van",
-      description: "Calculate the tax impact of the company buying a van or commercial vehicle. Shows capital allowances (12.5% over 8 years), CT saving, and net cost after tax relief.",
+      description:
+        "Calculate the tax impact of the company buying a van or commercial vehicle. Shows capital allowances (12.5% over 8 years), CT saving, and net cost after tax relief.",
       parameters: {
         type: "object",
         properties: {
@@ -148,7 +154,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "what_if_hire_employee",
-      description: "Calculate the total cost of hiring an employee at the given salary, including employer PRSI, and check if start-up company relief applies.",
+      description:
+        "Calculate the total cost of hiring an employee at the given salary, including employer PRSI, and check if start-up company relief applies.",
       parameters: {
         type: "object",
         properties: {
@@ -162,7 +169,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "what_if_salary_vs_dividend",
-      description: "Compare the tax efficiency of extracting a given amount from the company as salary vs dividend. Shows total tax paid under each method.",
+      description:
+        "Compare the tax efficiency of extracting a given amount from the company as salary vs dividend. Shows total tax paid under each method.",
       parameters: {
         type: "object",
         properties: {
@@ -176,11 +184,15 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "search_transactions",
-      description: "Search the user's bank transactions by keyword, category, or vendor name. Use when the user asks to find specific transactions, payments, or wants to see spending on a particular thing.",
+      description:
+        "Search the user's bank transactions by keyword, category, or vendor name. Use when the user asks to find specific transactions, payments, or wants to see spending on a particular thing.",
       parameters: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Search term to match against transaction descriptions, categories, or vendors" },
+          query: {
+            type: "string",
+            description: "Search term to match against transaction descriptions, categories, or vendors",
+          },
           limit: { type: "number", description: "Max results to return (default 15)" },
         },
         required: ["query"],
@@ -191,11 +203,16 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "show_chart",
-      description: "Show a visual chart of the user's financial data. Use when the user asks to see expenses, income, or any data as a chart, graph, or visual breakdown.",
+      description:
+        "Show a visual chart of the user's financial data. Use when the user asks to see expenses, income, or any data as a chart, graph, or visual breakdown.",
       parameters: {
         type: "object",
         properties: {
-          chart_type: { type: "string", enum: ["expenses_pie", "expenses_bar", "income_vs_expenses", "monthly_spending"], description: "Type of chart to show" },
+          chart_type: {
+            type: "string",
+            enum: ["expenses_pie", "expenses_bar", "income_vs_expenses", "monthly_spending"],
+            description: "Type of chart to show",
+          },
         },
         required: ["chart_type"],
       },
@@ -205,7 +222,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "show_trial_balance",
-      description: "Show the user's trial balance — a double-entry summary of all accounts with debit and credit totals, plus any bookkeeping issues. Use when the user asks to check their accounts, trial balance, bookkeeping accuracy, or whether their books balance.",
+      description:
+        "Show the user's trial balance — a double-entry summary of all accounts with debit and credit totals, plus any bookkeeping issues. Use when the user asks to check their accounts, trial balance, bookkeeping accuracy, or whether their books balance.",
       parameters: { type: "object", properties: {} },
     },
   },
@@ -213,7 +231,8 @@ export const TOOL_DEFINITIONS = [
     type: "function" as const,
     function: {
       name: "explain_eu_vat",
-      description: "Explain EU and international VAT rules — intra-community supplies, reverse charge, OSS, imports/exports, place of supply, VIES/Intrastat, UK post-Brexit, postponed accounting, Section 56. Use when the user asks about EU VAT, cross-border trade, reverse charge, exports, imports, or international VAT treatment.",
+      description:
+        "Explain EU and international VAT rules — intra-community supplies, reverse charge, OSS, imports/exports, place of supply, VIES/Intrastat, UK post-Brexit, postponed accounting, Section 56. Use when the user asks about EU VAT, cross-border trade, reverse charge, exports, imports, or international VAT treatment.",
       parameters: {
         type: "object",
         properties: {
@@ -310,16 +329,26 @@ function computeCT1(ctx: ToolContext) {
   const rctCredit = ct1.rctPrepayment;
   const balanceDue = totalCT - prelimPaid - rctCredit;
   return {
-    totalIncome, motorVehicleAllowance, capitalAllowancesTotal,
-    expensesBase, tradingProfit, lossesForward, taxableProfit,
-    ctAt125, surcharge, totalCT, prelimPaid, rctCredit, balanceDue,
+    totalIncome,
+    motorVehicleAllowance,
+    capitalAllowancesTotal,
+    expensesBase,
+    tradingProfit,
+    lossesForward,
+    taxableProfit,
+    ctAt125,
+    surcharge,
+    totalCT,
+    prelimPaid,
+    rctCredit,
+    balanceDue,
   };
 }
 
 export function executeToolCall(
   name: string,
   args: Record<string, unknown>,
-  ctx: ToolContext
+  ctx: ToolContext,
 ): { result: string; navigated?: boolean } {
   switch (name) {
     // ── Navigate ──────────────────────────────────────────
@@ -364,7 +393,9 @@ export function executeToolCall(
       const lines = [
         `| Category | Amount | % |`,
         `|----------|--------|---|`,
-        ...sorted.map(e => `| ${e.category} | ${eur(e.amount)} | ${total > 0 ? ((e.amount / total) * 100).toFixed(1) : 0}% |`),
+        ...sorted.map(
+          (e) => `| ${e.category} | ${eur(e.amount)} | ${total > 0 ? ((e.amount / total) * 100).toFixed(1) : 0}% |`,
+        ),
         `| **Total** | **${eur(total)}** | **100%** |`,
         buildSources(ctx),
       ];
@@ -413,20 +444,27 @@ export function executeToolCall(
       const year = ctx.taxYear;
       const today = new Date();
       const deadlines = [
-        { name: "CT1 preliminary tax (small co.)", date: new Date(year + 1, 5, 23), desc: "Month 6 of accounting period" },
-        { name: "CT1 preliminary tax (large co.)", date: new Date(year, 10, 23), desc: "Month 11 of accounting period" },
+        {
+          name: "CT1 preliminary tax (small co.)",
+          date: new Date(year + 1, 5, 23),
+          desc: "Month 6 of accounting period",
+        },
+        {
+          name: "CT1 preliminary tax (large co.)",
+          date: new Date(year, 10, 23),
+          desc: "Month 11 of accounting period",
+        },
         { name: "CT1 filing deadline", date: new Date(year + 1, 8, 23), desc: "9 months after year-end" },
         { name: "Form 11 preliminary tax", date: new Date(year, 9, 31), desc: "Pay & file for current year" },
         { name: "Form 11 filing deadline", date: new Date(year + 1, 9, 31), desc: "(mid-Nov if ROS)" },
         { name: "VAT3 returns", date: null, desc: "Bi-monthly — 19th of month following period" },
         { name: "RCT returns", date: null, desc: "Monthly — 23rd of following month" },
       ];
-      const lines = [
-        `| Deadline | Date | Status | Description |`,
-        `|----------|------|--------|-------------|`,
-      ];
+      const lines = [`| Deadline | Date | Status | Description |`, `|----------|------|--------|-------------|`];
       for (const d of deadlines) {
-        const dateStr = d.date ? d.date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" }) : "Recurring";
+        const dateStr = d.date
+          ? d.date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })
+          : "Recurring";
         let status = "";
         if (d.date) {
           const daysLeft = Math.ceil((d.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -473,7 +511,9 @@ export function executeToolCall(
         if (yearsTrading <= 3 && n.totalCT > 0) {
           const saving = Math.min(n.totalCT, 40000);
           potentialSavings += saving;
-          reliefs.push(`| Start-up Relief (s.486C) | Year ${yearsTrading} of 3 | Up to ${eur(saving)} | Check eligibility |`);
+          reliefs.push(
+            `| Start-up Relief (s.486C) | Year ${yearsTrading} of 3 | Up to ${eur(saving)} | Check eligibility |`,
+          );
           wins.push(`Start-up relief available (year ${yearsTrading})`);
         }
       }
@@ -485,18 +525,22 @@ export function executeToolCall(
         const flaggedTotal = ct1.flaggedCapitalItems.reduce((s, i) => s + i.amount, 0);
         const saving = flaggedTotal * 0.125 * 0.125;
         potentialSavings += saving;
-        reliefs.push(`| Capital Allowances | ${ct1.flaggedCapitalItems.length} flagged items (${eur(flaggedTotal)}) | ~${eur(saving)}/yr | Review items |`);
+        reliefs.push(
+          `| Capital Allowances | ${ct1.flaggedCapitalItems.length} flagged items (${eur(flaggedTotal)}) | ~${eur(saving)}/yr | Review items |`,
+        );
         score -= 5;
         issues.push("Capital items flagged but no allowances claimed — review for plant & machinery write-down");
       }
 
       // Employer pension as CT deduction
-      const anyPension = ctx.allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
+      const anyPension = ctx.allForm11Data?.some((f) => Number(f.data?.pensionContributions) > 0);
       if (!anyPension && n.tradingProfit > 10000) {
         const pensionSuggestion = Math.min(n.tradingProfit * 0.3, 50000);
         const ctSaving = pensionSuggestion * 0.125;
         potentialSavings += ctSaving;
-        reliefs.push(`| Employer Pension (CT deduction) | ${eur(pensionSuggestion)} contribution | ~${eur(ctSaving)} CT saved | Not claimed |`);
+        reliefs.push(
+          `| Employer Pension (CT deduction) | ${eur(pensionSuggestion)} contribution | ~${eur(ctSaving)} CT saved | Not claimed |`,
+        );
         score -= 10;
         issues.push("No employer pension contributions — reduces taxable trading profit");
       } else if (anyPension) {
@@ -531,7 +575,8 @@ export function executeToolCall(
             a.amount === b.amount &&
             Math.abs(a.amount) >= 100 &&
             a.description === b.description &&
-            a.date && b.date &&
+            a.date &&
+            b.date &&
             Math.abs(new Date(a.date).getTime() - new Date(b.date).getTime()) < 7 * 24 * 60 * 60 * 1000
           ) {
             dupes.push(`${a.description} (${eur(Math.abs(a.amount))} on ${a.date} & ${b.date})`);
@@ -547,15 +592,20 @@ export function executeToolCall(
       // Large single expenses (>€5000)
       const largeExpenses = expenseTxs.filter((t: Record<string, unknown>) => Math.abs(Number(t.amount)) >= 5000);
       if (largeExpenses.length > 0) {
-        anomalies.push(`| Large Expenses (>€5k) | ${largeExpenses.length} | Review for capitalisation (capital allowances) |`);
+        anomalies.push(
+          `| Large Expenses (>€5k) | ${largeExpenses.length} | Review for capitalisation (capital allowances) |`,
+        );
       }
 
       // Disallowed expenses ratio
       if (ct1.expenseSummary.disallowed > 0) {
-        const ratio = ct1.expenseSummary.disallowed / (ct1.expenseSummary.allowable + ct1.expenseSummary.disallowed) * 100;
+        const ratio =
+          (ct1.expenseSummary.disallowed / (ct1.expenseSummary.allowable + ct1.expenseSummary.disallowed)) * 100;
         if (ratio > 10) {
           score -= 5;
-          anomalies.push(`| High Disallowed Rate | ${ratio.toFixed(1)}% | ${eur(ct1.expenseSummary.disallowed)} non-deductible |`);
+          anomalies.push(
+            `| High Disallowed Rate | ${ratio.toFixed(1)}% | ${eur(ct1.expenseSummary.disallowed)} non-deductible |`,
+          );
           issues.push(`${ratio.toFixed(1)}% of expenses are disallowed for CT purposes`);
         }
       }
@@ -573,8 +623,13 @@ export function executeToolCall(
         if (d.date) {
           const daysLeft = Math.ceil((d.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           if (daysLeft > 0 && daysLeft <= 120) {
-            upcomingDeadlines.push(`- **${d.name}**: ${d.date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })} (${daysLeft} days)`);
-            if (daysLeft <= 30) { score -= 10; issues.push(`${d.name} due in ${daysLeft} days`); }
+            upcomingDeadlines.push(
+              `- **${d.name}**: ${d.date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })} (${daysLeft} days)`,
+            );
+            if (daysLeft <= 30) {
+              score -= 10;
+              issues.push(`${d.name} due in ${daysLeft} days`);
+            }
           }
         } else {
           upcomingDeadlines.push(`- **${d.name}**: ${d.desc}`);
@@ -603,7 +658,7 @@ export function executeToolCall(
 
       if (wins.length > 0) {
         report.push(`## What the Company Is Doing Right`);
-        wins.forEach(w => report.push(`- ${w}`));
+        wins.forEach((w) => report.push(`- ${w}`));
         report.push(``);
       }
 
@@ -639,7 +694,9 @@ export function executeToolCall(
         report.push(``);
       }
 
-      report.push(`> *Tip: Run a **Director Health Check** for personal tax advice (Form 11, pension, salary vs dividend).*`);
+      report.push(
+        `> *Tip: Run a **Director Health Check** for personal tax advice (Form 11, pension, salary vs dividend).*`,
+      );
       report.push(buildSources(ctx, ["TCA 1997", "Revenue.ie Corporation Tax rates 2026"]));
 
       return { result: report.join("\n") };
@@ -661,9 +718,13 @@ export function executeToolCall(
       const salarySummary: string[] = [];
       if (directorSalary > 0) {
         const employerPRSI = directorSalary <= 496 * 52 ? directorSalary * 0.09 : directorSalary * 0.1125;
-        const paye = Math.min(directorSalary, 44000) * 0.20 + Math.max(0, directorSalary - 44000) * 0.40;
+        const paye = Math.min(directorSalary, 44000) * 0.2 + Math.max(0, directorSalary - 44000) * 0.4;
         const empPRSI = directorSalary > 352 * 52 ? directorSalary * 0.042 : 0;
-        const usc = Math.min(directorSalary, 12012) * 0.005 + Math.min(Math.max(0, directorSalary - 12012), 16688) * 0.02 + Math.min(Math.max(0, directorSalary - 28700), 41344) * 0.03 + Math.max(0, directorSalary - 70044) * 0.08;
+        const usc =
+          Math.min(directorSalary, 12012) * 0.005 +
+          Math.min(Math.max(0, directorSalary - 12012), 16688) * 0.02 +
+          Math.min(Math.max(0, directorSalary - 28700), 41344) * 0.03 +
+          Math.max(0, directorSalary - 70044) * 0.08;
         const credits = 4000; // personal + employee
         const netPay = directorSalary - paye - empPRSI - usc + credits;
 
@@ -695,15 +756,19 @@ export function executeToolCall(
       const reliefs: string[] = [];
       let potentialSavings = 0;
 
-      const anyPension = ctx.allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
+      const anyPension = ctx.allForm11Data?.some((f) => Number(f.data?.pensionContributions) > 0);
       if (!anyPension && n.tradingProfit > 10000) {
         const pensionSuggestion = Math.min(n.tradingProfit * 0.3, 50000);
         const personalSaving = pensionSuggestion * 0.492;
         const ctSaving = pensionSuggestion * 0.125;
         potentialSavings += personalSaving + ctSaving;
-        reliefs.push(`| Employer Pension | ${eur(pensionSuggestion)} contribution | ~${eur(personalSaving)} personal tax + ~${eur(ctSaving)} CT | Not claimed |`);
+        reliefs.push(
+          `| Employer Pension | ${eur(pensionSuggestion)} contribution | ~${eur(personalSaving)} personal tax + ~${eur(ctSaving)} CT | Not claimed |`,
+        );
         score -= 15;
-        issues.push("No pension contributions — biggest personal tax-saving opportunity. The company pays into your pension, you avoid PAYE/PRSI/USC on the full amount");
+        issues.push(
+          "No pension contributions — biggest personal tax-saving opportunity. The company pays into your pension, you avoid PAYE/PRSI/USC on the full amount",
+        );
       } else if (anyPension) {
         const pensionAmt = ctx.allForm11Data?.reduce((s, f) => s + Number(f.data?.pensionContributions || 0), 0) ?? 0;
         wins.push(`Pension contributions active: ${eur(pensionAmt)}`);
@@ -722,11 +787,14 @@ export function executeToolCall(
         const surplus = n.tradingProfit - directorSalary;
         if (surplus > 5000) {
           // Quick comparison
-          const divTax = surplus * 0.125 + (surplus * 0.875) * 0.492; // CT + personal
+          const divTax = surplus * 0.125 + surplus * 0.875 * 0.492; // CT + personal
           const salTax = surplus * 0.492 + surplus * 0.1125; // PAYE+PRSI+USC + employer PRSI
           const pensionTax = 0;
-          const bestMethod = pensionTax < salTax && pensionTax < divTax ? "pension" : salTax < divTax ? "salary" : "dividend";
-          reliefs.push(`| Salary vs Dividend | ${eur(surplus)} surplus profit | Salary: ~${eur(salTax)} tax, Dividend: ~${eur(divTax)} tax | ${bestMethod === "pension" ? "**Pension best**" : bestMethod === "salary" ? "Salary more efficient" : "Dividend more efficient"} |`);
+          const bestMethod =
+            pensionTax < salTax && pensionTax < divTax ? "pension" : salTax < divTax ? "salary" : "dividend";
+          reliefs.push(
+            `| Salary vs Dividend | ${eur(surplus)} surplus profit | Salary: ~${eur(salTax)} tax, Dividend: ~${eur(divTax)} tax | ${bestMethod === "pension" ? "**Pension best**" : bestMethod === "salary" ? "Salary more efficient" : "Dividend more efficient"} |`,
+          );
         }
       }
 
@@ -740,14 +808,18 @@ export function executeToolCall(
           const mileageRate = 0.4107; // civil service rate
           const potentialClaim = annualMileage * mileageRate;
           score -= 5;
-          issues.push(`You commute ${commuteKm}km each way but have no mileage claims. Potential tax-free reimbursement: ~${eur(potentialClaim)}/yr`);
-          reliefs.push(`| Mileage Allowance | ${commuteKm}km commute × 220 days | ~${eur(potentialClaim)}/yr tax-free | Not claimed |`);
+          issues.push(
+            `You commute ${commuteKm}km each way but have no mileage claims. Potential tax-free reimbursement: ~${eur(potentialClaim)}/yr`,
+          );
+          reliefs.push(
+            `| Mileage Allowance | ${commuteKm}km commute × 220 days | ~${eur(potentialClaim)}/yr tax-free | Not claimed |`,
+          );
           potentialSavings += potentialClaim;
         }
       }
 
       // --- Form 11 director data checks ---
-      for (const f of (ctx.allForm11Data || [])) {
+      for (const f of ctx.allForm11Data || []) {
         const data = f.data || {};
         // Check for rental income
         if (Number(data.rentalIncome) > 0) {
@@ -769,8 +841,13 @@ export function executeToolCall(
       for (const d of dList) {
         const daysLeft = Math.ceil((d.date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         if (daysLeft > 0 && daysLeft <= 120) {
-          upcomingDeadlines.push(`- **${d.name}**: ${d.date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })} (${daysLeft} days)`);
-          if (daysLeft <= 30) { score -= 10; issues.push(`${d.name} due in ${daysLeft} days`); }
+          upcomingDeadlines.push(
+            `- **${d.name}**: ${d.date.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })} (${daysLeft} days)`,
+          );
+          if (daysLeft <= 30) {
+            score -= 10;
+            issues.push(`${d.name} due in ${daysLeft} days`);
+          }
         }
       }
 
@@ -795,7 +872,7 @@ export function executeToolCall(
 
       if (wins.length > 0) {
         report.push(`## What You're Doing Right`);
-        wins.forEach(w => report.push(`- ${w}`));
+        wins.forEach((w) => report.push(`- ${w}`));
         report.push(``);
       }
 
@@ -846,7 +923,7 @@ export function executeToolCall(
         `|------|-----------|----------|----------------|`,
       ];
       for (let y = 1; y <= 8; y++) {
-        const nbv = cost - (annualAllowance * y);
+        const nbv = cost - annualAllowance * y;
         lines.push(`| Year ${y} | ${eur(annualAllowance)} | ${eur(ctSavingPerYear)} | ${eur(Math.max(0, nbv))} |`);
       }
       lines.push(`| **Total** | **${eur(cost)}** | **${eur(totalCTSaving)}** | **${eur(0)}** |`);
@@ -859,7 +936,9 @@ export function executeToolCall(
       lines.push(`- Trading profit: ${eur(n.tradingProfit)} → ${eur(newProfit)} (−${eur(annualAllowance)})`);
       lines.push(`- CT: ${eur(n.totalCT)} → ~${eur(newCT)} (**saves ${eur(n.totalCT - newCT)} this year**)`);
       lines.push(``);
-      lines.push(`**Effective cost after full tax relief: ${eur(cost - totalCTSaving)}** (${((1 - 0.125) * 100).toFixed(1)}% of purchase price)`);
+      lines.push(
+        `**Effective cost after full tax relief: ${eur(cost - totalCTSaving)}** (${((1 - 0.125) * 100).toFixed(1)}% of purchase price)`,
+      );
       lines.push(buildSources(ctx, ["TCA 1997 s.284 — Plant & machinery allowances"]));
 
       return { result: lines.join("\n") };
@@ -884,10 +963,14 @@ export function executeToolCall(
       }
 
       // Employee taxes breakdown
-      const paye20 = Math.min(salary, 44000) * 0.20;
-      const paye40 = Math.max(0, salary - 44000) * 0.40;
+      const paye20 = Math.min(salary, 44000) * 0.2;
+      const paye40 = Math.max(0, salary - 44000) * 0.4;
       const employeePRSI = salary > 352 * 52 ? salary * 0.042 : 0;
-      const usc = Math.min(salary, 12012) * 0.005 + Math.min(Math.max(0, salary - 12012), 16688) * 0.02 + Math.min(Math.max(0, salary - 28700), 41344) * 0.03 + Math.max(0, salary - 70044) * 0.08;
+      const usc =
+        Math.min(salary, 12012) * 0.005 +
+        Math.min(Math.max(0, salary - 12012), 16688) * 0.02 +
+        Math.min(Math.max(0, salary - 28700), 41344) * 0.03 +
+        Math.max(0, salary - 70044) * 0.08;
       const netPay = salary - paye20 - paye40 - employeePRSI - usc + 2000 + 2000; // basic credits
 
       const lines = [
@@ -924,9 +1007,13 @@ export function executeToolCall(
       // --- Salary route ---
       const employerPRSI = amount * 0.1125;
       const grossCost = amount + employerPRSI;
-      const paye = Math.min(amount, 44000) * 0.20 + Math.max(0, amount - 44000) * 0.40;
+      const paye = Math.min(amount, 44000) * 0.2 + Math.max(0, amount - 44000) * 0.4;
       const empPRSI = amount > 352 * 52 ? amount * 0.042 : 0;
-      const usc = Math.min(amount, 12012) * 0.005 + Math.min(Math.max(0, amount - 12012), 16688) * 0.02 + Math.min(Math.max(0, amount - 28700), 41344) * 0.03 + Math.max(0, amount - 70044) * 0.08;
+      const usc =
+        Math.min(amount, 12012) * 0.005 +
+        Math.min(Math.max(0, amount - 12012), 16688) * 0.02 +
+        Math.min(Math.max(0, amount - 28700), 41344) * 0.03 +
+        Math.max(0, amount - 70044) * 0.08;
       const credits = 4000; // personal + employee
       const salaryTax = paye + empPRSI + usc - credits + employerPRSI;
       const salaryNet = amount - paye - empPRSI - usc + credits;
@@ -939,9 +1026,13 @@ export function executeToolCall(
       const afterCT = amount - ctOnProfit;
       // Dividend = income for director — taxed at marginal rate, but dividend withholding tax (DWT) = 25%
       // For close company director: Schedule F income, taxed at marginal rate
-      const divPaye = Math.min(afterCT, 44000) * 0.20 + Math.max(0, afterCT - 44000) * 0.40;
+      const divPaye = Math.min(afterCT, 44000) * 0.2 + Math.max(0, afterCT - 44000) * 0.4;
       const divPRSI = afterCT * 0.042;
-      const divUSC = Math.min(afterCT, 12012) * 0.005 + Math.min(Math.max(0, afterCT - 12012), 16688) * 0.02 + Math.min(Math.max(0, afterCT - 28700), 41344) * 0.03 + Math.max(0, afterCT - 70044) * 0.08;
+      const divUSC =
+        Math.min(afterCT, 12012) * 0.005 +
+        Math.min(Math.max(0, afterCT - 12012), 16688) * 0.02 +
+        Math.min(Math.max(0, afterCT - 28700), 41344) * 0.03 +
+        Math.max(0, afterCT - 70044) * 0.08;
       const divCredits = 2000; // personal only (no employee credit for dividends)
       const divPersonalTax = divPaye + divPRSI + divUSC - divCredits;
       const divTotalTax = ctOnProfit + Math.max(0, divPersonalTax);
@@ -973,16 +1064,18 @@ export function executeToolCall(
 
     // ── SEARCH TRANSACTIONS ──────────────────────────────
     case "search_transactions": {
-      const query = (args.query as string || "").toLowerCase();
+      const query = ((args.query as string) || "").toLowerCase();
       const limit = (args.limit as number) || 15;
       const txs = ctx.transactions || [];
 
-      const matches = txs.filter((t: Record<string, unknown>) => {
-        const desc = (String(t.description || "")).toLowerCase();
-        const cat = (String(t.category || "")).toLowerCase();
-        const vendor = (String(t.vendor_name || "")).toLowerCase();
-        return desc.includes(query) || cat.includes(query) || vendor.includes(query);
-      }).slice(0, limit);
+      const matches = txs
+        .filter((t: Record<string, unknown>) => {
+          const desc = String(t.description || "").toLowerCase();
+          const cat = String(t.category || "").toLowerCase();
+          const vendor = String(t.vendor_name || "").toLowerCase();
+          return desc.includes(query) || cat.includes(query) || vendor.includes(query);
+        })
+        .slice(0, limit);
 
       if (matches.length === 0) {
         return { result: `No transactions found matching "${args.query}".${buildSources(ctx)}` };
@@ -1014,7 +1107,10 @@ export function executeToolCall(
 
       if (chartType === "expenses_pie" || chartType === "expenses_bar") {
         const sorted = [...ct1.expenseByCategory].sort((a, b) => b.amount - a.amount).slice(0, 8);
-        const chartData = sorted.map(e => ({ name: e.category.replace(/ & /g, "/").slice(0, 18), value: Math.round(e.amount) }));
+        const chartData = sorted.map((e) => ({
+          name: e.category.replace(/ & /g, "/").slice(0, 18),
+          value: Math.round(e.amount),
+        }));
         const type = chartType === "expenses_pie" ? "pie" : "bar";
         const chart = JSON.stringify({ type, data: chartData, title: "Expenses by Category" });
         return { result: `\`\`\`chart\n${chart}\n\`\`\`\n${buildSources(ctx)}` };
@@ -1053,7 +1149,9 @@ export function executeToolCall(
         return { result: `\`\`\`chart\n${chart}\n\`\`\`\n${buildSources(ctx)}` };
       }
 
-      return { result: "Unknown chart type. Try: expenses_pie, expenses_bar, income_vs_expenses, or monthly_spending." };
+      return {
+        result: "Unknown chart type. Try: expenses_pie, expenses_bar, income_vs_expenses, or monthly_spending.",
+      };
     }
 
     // ── TRIAL BALANCE ──────────────────────────────────────
@@ -1077,12 +1175,12 @@ export function executeToolCall(
         const balance = a.debit - a.credit;
         const balStr = balance >= 0 ? eur(balance) : `(${eur(Math.abs(balance))})`;
         lines.push(
-          `| ${a.accountName} | ${a.accountType} | ${a.debit > 0 ? eur(a.debit) : "—"} | ${a.credit > 0 ? eur(a.credit) : "—"} | ${balStr} |`
+          `| ${a.accountName} | ${a.accountType} | ${a.debit > 0 ? eur(a.debit) : "—"} | ${a.credit > 0 ? eur(a.credit) : "—"} | ${balStr} |`,
         );
       }
 
       lines.push(
-        `| **TOTALS** | | **${eur(tb.totalDebits)}** | **${eur(tb.totalCredits)}** | **${eur(tb.imbalanceAmount)}** |`
+        `| **TOTALS** | | **${eur(tb.totalDebits)}** | **${eur(tb.totalCredits)}** | **${eur(tb.imbalanceAmount)}** |`,
       );
       lines.push(``);
 
@@ -1094,7 +1192,9 @@ export function executeToolCall(
       }
 
       if (tb.orphanedTransactions > 0) {
-        lines.push(`${tb.orphanedTransactions} uncategorized transactions (${eur(tb.uncategorizedAmount)}) sitting in suspense.`);
+        lines.push(
+          `${tb.orphanedTransactions} uncategorized transactions (${eur(tb.uncategorizedAmount)}) sitting in suspense.`,
+        );
       }
       lines.push(``);
 
@@ -1115,7 +1215,7 @@ export function executeToolCall(
 
     // ── EU VAT KNOWLEDGE ─────────────────────────────────────
     case "explain_eu_vat": {
-      const topic = args.topic as string || "general";
+      const topic = (args.topic as string) || "general";
       const scenario = args.scenario as string | undefined;
       const eu = ctx.euTradeSettings;
 
@@ -1230,7 +1330,10 @@ export function executeToolCall(
       }
 
       if (scenario) {
-        sections.push(``, `*Scenario context: "${scenario}" — apply the rules above to determine the correct VAT treatment.*`);
+        sections.push(
+          ``,
+          `*Scenario context: "${scenario}" — apply the rules above to determine the correct VAT treatment.*`,
+        );
       }
 
       sections.push(buildSources(ctx, ["EU VAT Directive 2006/112/EC", "Revenue.ie cross-border VAT guidance"]));

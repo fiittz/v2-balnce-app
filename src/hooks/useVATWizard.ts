@@ -100,7 +100,7 @@ export function useVATWizardData(vatReturnId: string | undefined) {
     queryKey: ["vat-wizard-data", user?.id, vatReturnId],
     queryFn: async (): Promise<VATWizardData | null> => {
       if (!vatReturnId) return null;
-      
+
       // Note: vat_finalisation_data table doesn't exist yet
       // Return null until the table is created
       return null;
@@ -143,9 +143,9 @@ export function useFinaliseVATReturn() {
       // Update VAT return status
       const { error: returnError } = await supabase
         .from("vat_returns")
-        .update({ 
+        .update({
           status: "ready",
-          lock_period: lockPeriod 
+          lock_period: lockPeriod,
         })
         .eq("id", vatReturnId);
 

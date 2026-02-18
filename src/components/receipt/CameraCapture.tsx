@@ -19,10 +19,10 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps) => {
     try {
       setError(null);
       setIsReady(false);
-      
+
       // Stop any existing stream
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -34,7 +34,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps) => {
       });
 
       setStream(mediaStream);
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
         videoRef.current.onloadedmetadata = () => {
@@ -60,7 +60,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps) => {
 
     return () => {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach((track) => track.stop());
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,27 +71,27 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps) => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    
+
     ctx.drawImage(video, 0, 0);
-    
+
     // Get base64 image data (JPEG for smaller size)
     const imageData = canvas.toDataURL("image/jpeg", 0.85);
     onCapture(imageData);
-    
+
     // Stop camera
     if (stream) {
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
     }
   }, [stream, onCapture]);
 
   const toggleCamera = useCallback(() => {
-    setFacingMode(prev => prev === "environment" ? "user" : "environment");
+    setFacingMode((prev) => (prev === "environment" ? "user" : "environment"));
   }, []);
 
   if (error) {
@@ -113,30 +113,18 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps) => {
     <div className="fixed inset-0 bg-foreground z-50 flex flex-col">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 z-10 px-4 py-4 flex items-center justify-between">
-        <button 
-          onClick={onClose}
-          className="p-2 rounded-full bg-foreground/50 text-background"
-        >
+        <button onClick={onClose} className="p-2 rounded-full bg-foreground/50 text-background">
           <X className="w-6 h-6" />
         </button>
-        <button 
-          onClick={toggleCamera}
-          className="p-2 rounded-full bg-foreground/50 text-background"
-        >
+        <button onClick={toggleCamera} className="p-2 rounded-full bg-foreground/50 text-background">
           <SwitchCamera className="w-6 h-6" />
         </button>
       </div>
 
       {/* Camera View */}
       <div className="flex-1 relative">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        
+        <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+
         {/* Loading overlay */}
         {!isReady && (
           <div className="absolute inset-0 flex items-center justify-center bg-foreground">
@@ -146,7 +134,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps) => {
             </div>
           </div>
         )}
-        
+
         {/* Receipt guide overlay */}
         <div className="absolute inset-8 pointer-events-none">
           <div className="relative w-full h-full border-2 border-primary/50 rounded-xl">
@@ -161,9 +149,7 @@ export const CameraCapture = ({ onCapture, onClose }: CameraCaptureProps) => {
         {/* Instructions */}
         <div className="absolute bottom-24 left-0 right-0 flex justify-center">
           <div className="bg-primary px-4 py-2 rounded-full">
-            <span className="text-sm font-medium text-primary-foreground">
-              Align receipt within frame
-            </span>
+            <span className="text-sm font-medium text-primary-foreground">Align receipt within frame</span>
           </div>
         </div>
       </div>

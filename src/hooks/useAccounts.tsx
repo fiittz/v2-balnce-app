@@ -17,12 +17,7 @@ export function useAccounts(typeFilter?: string) {
       // One-time migration from localStorage accounts
       await migrateLocalAccounts(user!.id);
 
-      let query = supabase
-        .from("accounts")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("account_type")
-        .order("name");
+      let query = supabase.from("accounts").select("*").eq("user_id", user!.id).order("account_type").order("name");
 
       if (typeFilter) {
         query = query.eq("account_type", typeFilter);
@@ -86,12 +81,7 @@ export function useUpdateAccount() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Account> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("accounts")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
+      const { data, error } = await supabase.from("accounts").update(updates).eq("id", id).select().single();
       if (error) throw error;
       return data;
     },
@@ -113,10 +103,7 @@ export function useDeleteAccount() {
         .eq("account_id", id);
       if (unlinkError) throw unlinkError;
 
-      const { error } = await supabase
-        .from("accounts")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("accounts").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

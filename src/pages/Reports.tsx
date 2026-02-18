@@ -40,12 +40,7 @@ const Reports = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <h1 className="font-semibold text-xl">Reports</h1>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate("/tax")}
-              className="rounded-full"
-            >
+            <Button variant="outline" size="sm" onClick={() => navigate("/tax")} className="rounded-full">
               Tax Centre
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
@@ -69,7 +64,7 @@ const Reports = () => {
                 <p className="text-sm text-muted-foreground">
                   Complete finalisation questionnaires to prepare your CT1 and Form 11 tax returns for {taxYear}.
                 </p>
-                
+
                 <div className="grid md:grid-cols-2 gap-4">
                   {/* CT1 Export */}
                   <div className="p-4 bg-primary/5 rounded-xl">
@@ -85,10 +80,7 @@ const Reports = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       Complete the business questionnaire to finalise your CT1 return.
                     </p>
-                    <Button 
-                      className="w-full rounded-xl"
-                      onClick={() => setShowCT1Questionnaire(true)}
-                    >
+                    <Button className="w-full rounded-xl" onClick={() => setShowCT1Questionnaire(true)}>
                       Start CT1 Questionnaire
                     </Button>
                   </div>
@@ -105,38 +97,37 @@ const Reports = () => {
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Complete questionnaires for each director ({directorCount} director{directorCount !== 1 ? "s" : ""}).
+                      Complete questionnaires for each director ({directorCount} director
+                      {directorCount !== 1 ? "s" : ""}).
                     </p>
                     {directorOnboardingComplete ? (
                       <div className="space-y-2">
-                        {directorsLoading ? (
-                          Array.from({ length: directorCount }, (_, i) => (
-                            <Skeleton key={i} className="h-10 w-full rounded-xl" />
-                          ))
-                        ) : (
-                          Array.from({ length: directorCount }, (_, i) => i + 1).map((num) => {
-                            const parsed = getDirector(num);
-                            const name = parsed?.director_name || `Director ${num}`;
+                        {directorsLoading
+                          ? Array.from({ length: directorCount }, (_, i) => (
+                              <Skeleton key={i} className="h-10 w-full rounded-xl" />
+                            ))
+                          : Array.from({ length: directorCount }, (_, i) => i + 1).map((num) => {
+                              const parsed = getDirector(num);
+                              const name = parsed?.director_name || `Director ${num}`;
 
-                            return (
-                              <Button
-                                key={num}
-                                variant="outline"
-                                className="w-full justify-between rounded-xl"
-                                onClick={() => handleOpenForm11(num)}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <User className="w-4 h-4" />
-                                  {name}
-                                </span>
-                                <ChevronRight className="w-4 h-4" />
-                              </Button>
-                            );
-                          })
-                        )}
+                              return (
+                                <Button
+                                  key={num}
+                                  variant="outline"
+                                  className="w-full justify-between rounded-xl"
+                                  onClick={() => handleOpenForm11(num)}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <User className="w-4 h-4" />
+                                    {name}
+                                  </span>
+                                  <ChevronRight className="w-4 h-4" />
+                                </Button>
+                              );
+                            })}
                       </div>
                     ) : (
-                      <Button 
+                      <Button
                         variant="outline"
                         className="w-full rounded-xl"
                         onClick={() => navigate("/onboarding/director")}
@@ -167,9 +158,7 @@ const Reports = () => {
                     <span className="font-medium">Profit & Loss</span>
                     <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Income vs expenses breakdown by category
-                  </p>
+                  <p className="text-sm text-muted-foreground">Income vs expenses breakdown by category</p>
                 </button>
                 <button
                   className="p-4 bg-muted rounded-xl text-left hover:bg-muted/80 transition-colors cursor-pointer"
@@ -180,9 +169,7 @@ const Reports = () => {
                     <span className="font-medium">Aged Debtors</span>
                     <ChevronRight className="w-4 h-4 ml-auto text-muted-foreground" />
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Outstanding invoices by age
-                  </p>
+                  <p className="text-sm text-muted-foreground">Outstanding invoices by age</p>
                 </button>
               </div>
             </div>

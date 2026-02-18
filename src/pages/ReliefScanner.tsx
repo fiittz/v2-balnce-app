@@ -45,7 +45,7 @@ const ReliefScanner = () => {
   const { data: personalAccounts } = useAccounts("directors_personal_tax");
   const hasPersonalAccounts = (personalAccounts?.length ?? 0) > 0;
   const { reliefs, isLoading, taxYear } = useReliefScan(
-    hasPersonalAccounts ? { accountType: "directors_personal_tax" } : undefined
+    hasPersonalAccounts ? { accountType: "directors_personal_tax" } : undefined,
   );
 
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
@@ -77,9 +77,7 @@ const ReliefScanner = () => {
       <AppLayout>
         <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <AlertTriangle className="w-10 h-10 text-muted-foreground" />
-          <p className="text-muted-foreground">
-            No transaction data available. Please import bank feeds first.
-          </p>
+          <p className="text-muted-foreground">No transaction data available. Please import bank feeds first.</p>
           <Button variant="outline" onClick={() => navigate("/tax")}>
             Back to Tax Centre
           </Button>
@@ -159,10 +157,7 @@ const ReliefScanner = () => {
 
   const activeCategories = categories.filter((c) => c.total > 0);
   const totalReliefs = activeCategories.reduce((s, c) => s + c.total, 0);
-  const estimatedSavings = activeCategories.reduce(
-    (s, c) => s + c.total * (c.rate > 0 ? c.rate : 0),
-    0
-  );
+  const estimatedSavings = activeCategories.reduce((s, c) => s + c.total * (c.rate > 0 ? c.rate : 0), 0);
 
   return (
     <AppLayout>
@@ -171,19 +166,12 @@ const ReliefScanner = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/tax")}
-                className="shrink-0"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/tax")} className="shrink-0">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
                 <h1 className="font-semibold text-xl">Relief Scanner</h1>
-                <p className="text-sm text-muted-foreground">
-                  Tax Year {taxYear} &bull; Auto-detected Form 11 reliefs
-                </p>
+                <p className="text-sm text-muted-foreground">Tax Year {taxYear} &bull; Auto-detected Form 11 reliefs</p>
               </div>
               <Search className="w-5 h-5 text-muted-foreground" />
             </div>
@@ -191,7 +179,6 @@ const ReliefScanner = () => {
         </header>
 
         <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
           {/* Summary */}
           <Card className="border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ring-primary/20">
             <CardContent className="pt-6">
@@ -216,9 +203,7 @@ const ReliefScanner = () => {
             <Card className="border-0 shadow-lg rounded-3xl overflow-hidden">
               <CardContent className="pt-6 text-center">
                 <Search className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">
-                  No qualifying reliefs detected in your transactions.
-                </p>
+                <p className="text-muted-foreground">No qualifying reliefs detected in your transactions.</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Import personal account transactions to enable relief scanning.
                 </p>
@@ -238,13 +223,11 @@ const ReliefScanner = () => {
                         <span className={cat.colorClass}>{cat.icon}</span>
                         <span className="flex-1 text-left">{cat.label}</span>
                         <span className="font-mono tabular-nums text-base">{eur(cat.total)}</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${
-                          openCategories.has(cat.key) ? "rotate-180" : ""
-                        }`} />
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform ${openCategories.has(cat.key) ? "rotate-180" : ""}`}
+                        />
                       </CardTitle>
-                      <p className="text-xs text-muted-foreground text-left">
-                        {cat.rateLabel}
-                      </p>
+                      <p className="text-xs text-muted-foreground text-left">{cat.rateLabel}</p>
                     </CardHeader>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
@@ -262,9 +245,7 @@ const ReliefScanner = () => {
                         <div className="border-t mt-2 pt-2">
                           <div className="flex items-center justify-between text-sm font-semibold">
                             <span>Estimated relief ({(cat.rate * 100).toFixed(0)}%)</span>
-                            <span className="font-mono tabular-nums text-green-600">
-                              {eur(cat.total * cat.rate)}
-                            </span>
+                            <span className="font-mono tabular-nums text-green-600">{eur(cat.total * cat.rate)}</span>
                           </div>
                         </div>
                       )}

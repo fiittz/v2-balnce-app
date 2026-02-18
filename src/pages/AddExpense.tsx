@@ -8,7 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useExpenseCategories } from "@/hooks/useCategories";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useSuppliers, useCreateSupplier } from "@/hooks/useSuppliers";
@@ -36,7 +43,7 @@ const AddExpense = () => {
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
 
   // Derive account type from selected account for category filtering
-  const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
+  const selectedAccount = accounts?.find((a) => a.id === selectedAccountId);
   const accountType = selectedAccount?.account_type;
 
   const { data: categories, isLoading: categoriesLoading } = useExpenseCategories(accountType);
@@ -47,7 +54,7 @@ const AddExpense = () => {
   // Auto-select default account when accounts load
   useEffect(() => {
     if (accounts && accounts.length > 0 && !selectedAccountId) {
-      const defaultAccount = accounts.find(a => a.is_default) || accounts[0];
+      const defaultAccount = accounts.find((a) => a.is_default) || accounts[0];
       setSelectedAccountId(defaultAccount.id);
     }
   }, [accounts, selectedAccountId]);
@@ -80,11 +87,11 @@ const AddExpense = () => {
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
   const [showBusinessExpenseDialog, setShowBusinessExpenseDialog] = useState(false);
   const [isOnBehalfOfBusiness, setIsOnBehalfOfBusiness] = useState<boolean | null>(null);
-  
+
   // Clear selected category when account type changes (categories reload)
   useEffect(() => {
     if (selectedCategory && categories) {
-      const stillValid = categories.find(c => c.id === selectedCategory);
+      const stillValid = categories.find((c) => c.id === selectedCategory);
       if (!stillValid) setSelectedCategory(null);
     }
   }, [categories, selectedCategory]);
@@ -92,9 +99,7 @@ const AddExpense = () => {
   // Initialize from prefill data
   useEffect(() => {
     if (prefillCategory && categories) {
-      const match = categories.find(c =>
-        c.name.toLowerCase().includes(prefillCategory.toLowerCase())
-      );
+      const match = categories.find((c) => c.name.toLowerCase().includes(prefillCategory.toLowerCase()));
       if (match) setSelectedCategory(match.id);
     }
   }, [prefillCategory, categories]);
@@ -104,7 +109,7 @@ const AddExpense = () => {
   const { net: netAmount, vat: vatAmount } = calculateVat(total, selectedVat);
 
   // Get selected category details
-  const selectedCategoryData = categories?.find(c => c.id === selectedCategory);
+  const selectedCategoryData = categories?.find((c) => c.id === selectedCategory);
 
   // Auto-categorize when description changes
   useEffect(() => {
@@ -112,26 +117,24 @@ const AddExpense = () => {
       if (description.length > 3 && categories && categories.length > 0) {
         setIsAiCategorizing(true);
         try {
-        const result = await categorizeTransaction(
+          const result = await categorizeTransaction(
             { description, amount: total, date: new Date().toISOString() },
             categories,
-            profile?.business_type
+            profile?.business_type,
           );
-          
+
           if (result.category_id) {
             setSelectedCategory(result.category_id);
           } else if (result.category_name) {
             // Find by name if ID not provided
-            const match = categories.find(c => 
-              c.name.toLowerCase() === result.category_name.toLowerCase()
-            );
+            const match = categories.find((c) => c.name.toLowerCase() === result.category_name.toLowerCase());
             if (match) setSelectedCategory(match.id);
           }
-          
+
           if (result.vat_rate) {
             setSelectedVat(result.vat_rate as VatRate);
           }
-          
+
           setAiExplanation(result.explanation);
           setAiConfidence(result.confidence);
         } catch (error) {
@@ -159,7 +162,9 @@ const AddExpense = () => {
   }, [selectedCategoryData]);
 
   const handleProofUpload = async (file: File): Promise<string | null> => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session?.user) return null;
 
     const timestamp = Date.now();
@@ -185,13 +190,26 @@ const AddExpense = () => {
     // Check if category's account_type is "business" — it would only show via "both"
     // but also check the category name against known business patterns
     const businessPatterns = [
-      "materials", "tools", "subcontractor", "vehicle", "fuel",
-      "office", "telephone", "training", "advertising", "travel",
-      "subsistence", "repairs", "protective", "ppe", "software",
-      "subscriptions", "equipment"
+      "materials",
+      "tools",
+      "subcontractor",
+      "vehicle",
+      "fuel",
+      "office",
+      "telephone",
+      "training",
+      "advertising",
+      "travel",
+      "subsistence",
+      "repairs",
+      "protective",
+      "ppe",
+      "software",
+      "subscriptions",
+      "equipment",
     ];
     const catLower = selectedCategoryData.name.toLowerCase();
-    return businessPatterns.some(p => catLower.includes(p));
+    return businessPatterns.some((p) => catLower.includes(p));
   })();
 
   const doSave = async () => {
@@ -226,7 +244,15 @@ const AddExpense = () => {
       await createExpense.mutateAsync({
         amount: total,
         vat_amount: vatAmount,
-        vat_rate: parseFloat(selectedVat.replace("standard_", "").replace("reduced_", "").replace("second_reduced_", "").replace("livestock_", "").replace("_", ".")) || 0,
+        vat_rate:
+          parseFloat(
+            selectedVat
+              .replace("standard_", "")
+              .replace("reduced_", "")
+              .replace("second_reduced_", "")
+              .replace("livestock_", "")
+              .replace("_", "."),
+          ) || 0,
         category_id: selectedCategory,
         supplier_id: finalSupplierId,
         description: description || "Expense",
@@ -261,7 +287,10 @@ const AddExpense = () => {
   // Get icon component dynamically
   const getIconComponent = (iconName: string | null) => {
     if (!iconName) return LucideIcons.Folder;
-    const pascalCase = iconName.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join("");
+    const pascalCase = iconName
+      .split("-")
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      .join("");
     return (LucideIcons as unknown as Record<string, React.ComponentType>)[pascalCase] || LucideIcons.Folder;
   };
 
@@ -280,306 +309,308 @@ const AddExpense = () => {
         </header>
 
         <main className="px-6 py-6 pb-32 max-w-2xl mx-auto space-y-6">
-        {/* Account Selector */}
-        {accounts && accounts.length > 1 && (
+          {/* Account Selector */}
+          {accounts && accounts.length > 1 && (
+            <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
+              <div className="space-y-2">
+                <Label className="font-medium">Account</Label>
+                <Select value={selectedAccountId || ""} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger className="h-14 rounded-xl text-base">
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Description (for AI categorization) */}
           <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
             <div className="space-y-2">
-              <Label className="font-medium">Account</Label>
-              <Select value={selectedAccountId || ""} onValueChange={setSelectedAccountId}>
-                <SelectTrigger className="h-14 rounded-xl text-base">
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-
-        {/* Description (for AI categorization) */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="font-medium">Description</Label>
-              {isAiCategorizing && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>AI categorizing...</span>
+              <div className="flex items-center justify-between">
+                <Label className="font-medium">Description</Label>
+                {isAiCategorizing && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>AI categorizing...</span>
+                  </div>
+                )}
+              </div>
+              <Input
+                placeholder="e.g., Timber from Woodies, Fuel at Circle K"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="h-14 rounded-xl text-base"
+              />
+              {aiExplanation && aiConfidence !== null && (
+                <div className="flex items-start gap-2 p-3 bg-primary/10 rounded-lg mt-2">
+                  <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <div className="text-sm">
+                    <p className="text-foreground">{aiExplanation}</p>
+                    <p className="text-muted-foreground mt-1">Confidence: {Math.round(aiConfidence * 100)}%</p>
+                  </div>
                 </div>
               )}
             </div>
-            <Input
-              placeholder="e.g., Timber from Woodies, Fuel at Circle K"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="h-14 rounded-xl text-base"
-            />
-            {aiExplanation && aiConfidence !== null && (
-              <div className="flex items-start gap-2 p-3 bg-primary/10 rounded-lg mt-2">
-                <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <div className="text-sm">
-                  <p className="text-foreground">{aiExplanation}</p>
-                  <p className="text-muted-foreground mt-1">
-                    Confidence: {Math.round(aiConfidence * 100)}%
-                  </p>
-                </div>
+          </div>
+
+          {/* Supplier */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
+            <div className="space-y-2">
+              <Label className="font-medium">Supplier</Label>
+              <Select
+                value={supplierId || ""}
+                onValueChange={(val) => {
+                  setSupplierId(val);
+                  if (val !== "new") setNewSupplierName("");
+                }}
+              >
+                <SelectTrigger className="h-14 rounded-xl text-base">
+                  <SelectValue placeholder="Select supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers?.map((supplier) => (
+                    <SelectItem key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="new">+ Add new supplier</SelectItem>
+                </SelectContent>
+              </Select>
+              {supplierId === "new" && (
+                <Input
+                  placeholder="Enter supplier name"
+                  value={newSupplierName}
+                  onChange={(e) => setNewSupplierName(e.target.value)}
+                  className="h-14 rounded-xl text-base mt-2"
+                  autoFocus
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Category Selection */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.05s" }}>
+            <Label className="font-medium mb-4 block">Category</Label>
+            {categoriesLoading ? (
+              <div className="grid grid-cols-3 gap-3">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="p-4 rounded-xl bg-muted animate-pulse h-20" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                {categories?.map((cat) => {
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                        selectedCategory === cat.id
+                          ? "bg-foreground text-background border-foreground"
+                          : "bg-muted border-transparent hover:border-border"
+                      }`}
+                    >
+                      <span className="text-xs font-medium text-center leading-tight">{cat.name}</span>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Supplier */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
-          <div className="space-y-2">
-            <Label className="font-medium">Supplier</Label>
-            <Select value={supplierId || ""} onValueChange={(val) => {
-              setSupplierId(val);
-              if (val !== "new") setNewSupplierName("");
-            }}>
-              <SelectTrigger className="h-14 rounded-xl text-base">
-                <SelectValue placeholder="Select supplier" />
-              </SelectTrigger>
-              <SelectContent>
-                {suppliers?.map((supplier) => (
-                  <SelectItem key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </SelectItem>
-                ))}
-                <SelectItem value="new">+ Add new supplier</SelectItem>
-              </SelectContent>
-            </Select>
-            {supplierId === "new" && (
+          {/* Amount */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <Label className="font-medium mb-4 block">Total Amount (incl. VAT)</Label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground">
+                €
+              </span>
               <Input
-                placeholder="Enter supplier name"
-                value={newSupplierName}
-                onChange={(e) => setNewSupplierName(e.target.value)}
-                className="h-14 rounded-xl text-base mt-2"
-                autoFocus
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="h-20 pl-10 text-4xl font-bold rounded-xl text-center"
               />
-            )}
+            </div>
           </div>
-        </div>
 
-        {/* Category Selection */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.05s" }}>
-          <Label className="font-medium mb-4 block">Category</Label>
-          {categoriesLoading ? (
-            <div className="grid grid-cols-3 gap-3">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="p-4 rounded-xl bg-muted animate-pulse h-20" />
+          {/* VAT Category */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
+            <Label className="font-medium mb-4 block">VAT Rate</Label>
+            <div className="flex flex-wrap gap-2">
+              {(Object.entries(vatRateLabels) as [VatRate, string][]).map(([rate, label]) => (
+                <button
+                  key={rate}
+                  onClick={() => setSelectedVat(rate)}
+                  className={`px-5 py-3 rounded-full border-2 font-medium transition-all ${
+                    selectedVat === rate
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-transparent border-foreground/20 hover:border-foreground/40"
+                  }`}
+                >
+                  {label}
+                </button>
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-3 max-h-64 overflow-y-auto">
-              {categories?.map((cat) => {
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
-                      selectedCategory === cat.id
-                        ? "bg-foreground text-background border-foreground"
-                        : "bg-muted border-transparent hover:border-border"
-                    }`}
-                  >
-                    <span className="text-xs font-medium text-center leading-tight">{cat.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+          </div>
 
-        {/* Amount */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <Label className="font-medium mb-4 block">Total Amount (incl. VAT)</Label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-muted-foreground">€</span>
-            <Input 
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className="h-20 pl-10 text-4xl font-bold rounded-xl text-center"
+          {/* Receipt Upload */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <Label className="font-medium mb-4 block">Receipt</Label>
+            <div
+              className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-foreground/40 transition-colors"
+              onClick={() => navigate("/scanner")}
+            >
+              <Upload className="w-10 h-10 text-muted-foreground mb-3" />
+              <p className="font-medium">Upload or scan receipt</p>
+              <p className="text-sm text-muted-foreground">Tap to capture or select file</p>
+            </div>
+          </div>
+
+          {/* Notes / Business Purpose */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.22s" }}>
+            <Label className="font-medium mb-2 block">Notes / Business Purpose</Label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Record who you met, the purpose, or any details for Revenue audit trail
+            </p>
+            <Textarea
+              placeholder="e.g. Client meeting with John at Site A, discussed project scope..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="min-h-[100px] rounded-xl resize-none"
             />
           </div>
-        </div>
 
-        {/* VAT Category */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
-          <Label className="font-medium mb-4 block">VAT Rate</Label>
-          <div className="flex flex-wrap gap-2">
-            {(Object.entries(vatRateLabels) as [VatRate, string][]).map(([rate, label]) => (
-              <button
-                key={rate}
-                onClick={() => setSelectedVat(rate)}
-                className={`px-5 py-3 rounded-full border-2 font-medium transition-all ${
-                  selectedVat === rate
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-transparent border-foreground/20 hover:border-foreground/40"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Receipt Upload */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          <Label className="font-medium mb-4 block">Receipt</Label>
-          <div
-            className="border-2 border-dashed border-border rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:border-foreground/40 transition-colors"
-            onClick={() => navigate("/scanner")}
-          >
-            <Upload className="w-10 h-10 text-muted-foreground mb-3" />
-            <p className="font-medium">Upload or scan receipt</p>
-            <p className="text-sm text-muted-foreground">Tap to capture or select file</p>
-          </div>
-        </div>
-
-        {/* Notes / Business Purpose */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.22s" }}>
-          <Label className="font-medium mb-2 block">Notes / Business Purpose</Label>
-          <p className="text-xs text-muted-foreground mb-3">Record who you met, the purpose, or any details for Revenue audit trail</p>
-          <Textarea
-            placeholder="e.g. Client meeting with John at Site A, discussed project scope..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="min-h-[100px] rounded-xl resize-none"
-          />
-        </div>
-
-        {/* Proof / Supporting Document */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.24s" }}>
-          <Label className="font-medium mb-2 block">Supporting Proof</Label>
-          <p className="text-xs text-muted-foreground mb-3">Attach meeting invite, calendar screenshot, or other evidence</p>
-          {proofFile ? (
-            <div className="flex items-center gap-3 p-3 bg-muted rounded-xl">
-              <Paperclip className="w-5 h-5 text-muted-foreground shrink-0" />
-              <span className="text-sm truncate flex-1">{proofFile.name}</span>
-              <button
-                onClick={() => setProofFile(null)}
-                className="text-destructive text-sm font-medium shrink-0"
-              >
-                Remove
-              </button>
-            </div>
-          ) : (
-            <label className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-foreground/40 transition-colors">
-              <Paperclip className="w-8 h-8 text-muted-foreground mb-2" />
-              <p className="font-medium text-sm">Attach file</p>
-              <p className="text-xs text-muted-foreground">PDF, image, or screenshot</p>
-              <input
-                type="file"
-                accept="image/*,.pdf"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    if (file.size > 5 * 1024 * 1024) {
-                      toast.error("File must be less than 5MB");
-                      return;
+          {/* Proof / Supporting Document */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.24s" }}>
+            <Label className="font-medium mb-2 block">Supporting Proof</Label>
+            <p className="text-xs text-muted-foreground mb-3">
+              Attach meeting invite, calendar screenshot, or other evidence
+            </p>
+            {proofFile ? (
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-xl">
+                <Paperclip className="w-5 h-5 text-muted-foreground shrink-0" />
+                <span className="text-sm truncate flex-1">{proofFile.name}</span>
+                <button onClick={() => setProofFile(null)} className="text-destructive text-sm font-medium shrink-0">
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <label className="border-2 border-dashed border-border rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-foreground/40 transition-colors">
+                <Paperclip className="w-8 h-8 text-muted-foreground mb-2" />
+                <p className="font-medium text-sm">Attach file</p>
+                <p className="text-xs text-muted-foreground">PDF, image, or screenshot</p>
+                <input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error("File must be less than 5MB");
+                        return;
+                      }
+                      setProofFile(file);
                     }
-                    setProofFile(file);
-                  }
-                }}
-                className="hidden"
-              />
-            </label>
-          )}
-        </div>
+                  }}
+                  className="hidden"
+                />
+              </label>
+            )}
+          </div>
 
-        {/* Summary */}
-        {amount && parseFloat(amount) > 0 && (
-          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
-            <h2 className="font-semibold text-lg mb-4">Summary</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Net Amount</span>
-                <span className="font-medium">€{netAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">VAT</span>
-                <span className="font-medium">€{vatAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between pt-3 border-t border-border">
-                <span className="font-semibold">Total</span>
-                <span className="font-bold text-xl">€{total.toFixed(2)}</span>
+          {/* Summary */}
+          {amount && parseFloat(amount) > 0 && (
+            <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
+              <h2 className="font-semibold text-lg mb-4">Summary</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Net Amount</span>
+                  <span className="font-medium">€{netAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">VAT</span>
+                  <span className="font-medium">€{vatAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between pt-3 border-t border-border">
+                  <span className="font-semibold">Total</span>
+                  <span className="font-bold text-xl">€{total.toFixed(2)}</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </main>
+          )}
+        </main>
 
-      {/* Save Button */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4">
-        <div className="max-w-2xl mx-auto">
-          <Button 
-            onClick={handleSave}
-            disabled={createExpense.isPending || proofUploading || !amount}
-            className="w-full h-14 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-lg font-semibold disabled:opacity-50"
-          >
-            {proofUploading ? "Uploading proof..." : createExpense.isPending ? "Saving..." : "Save Expense"}
-          </Button>
-        </div>
-      </div>
-      {/* Business Expense Detection Dialog */}
-      <Dialog open={showBusinessExpenseDialog} onOpenChange={setShowBusinessExpenseDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              Business Expense Detected
-            </DialogTitle>
-            <DialogDescription>
-              This transaction appears to be a business expense recorded on your personal account.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-foreground">
-              <strong>{description || "This expense"}</strong> ({selectedCategoryData?.name}) looks like it may have been incurred on behalf of the business.
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Did you pay for this business expense personally? If so, it should be added to the director's current account (the company owes you).
-            </p>
+        {/* Save Button */}
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4">
+          <div className="max-w-2xl mx-auto">
+            <Button
+              onClick={handleSave}
+              disabled={createExpense.isPending || proofUploading || !amount}
+              className="w-full h-14 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-lg font-semibold disabled:opacity-50"
+            >
+              {proofUploading ? "Uploading proof..." : createExpense.isPending ? "Saving..." : "Save Expense"}
+            </Button>
           </div>
-          <DialogFooter className="flex-col gap-2 sm:flex-col">
-            <Button
-              className="w-full"
-              onClick={() => {
-                setIsOnBehalfOfBusiness(true);
-                setShowBusinessExpenseDialog(false);
-                doSave();
-              }}
-            >
-              Yes, on behalf of the business (add to director's account)
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => {
-                setIsOnBehalfOfBusiness(false);
-                setShowBusinessExpenseDialog(false);
-                doSave();
-              }}
-            >
-              No, this is a personal expense
-            </Button>
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => setShowBusinessExpenseDialog(false)}
-            >
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
+        {/* Business Expense Detection Dialog */}
+        <Dialog open={showBusinessExpenseDialog} onOpenChange={setShowBusinessExpenseDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Business Expense Detected
+              </DialogTitle>
+              <DialogDescription>
+                This transaction appears to be a business expense recorded on your personal account.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-foreground">
+                <strong>{description || "This expense"}</strong> ({selectedCategoryData?.name}) looks like it may have
+                been incurred on behalf of the business.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Did you pay for this business expense personally? If so, it should be added to the director's current
+                account (the company owes you).
+              </p>
+            </div>
+            <DialogFooter className="flex-col gap-2 sm:flex-col">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setIsOnBehalfOfBusiness(true);
+                  setShowBusinessExpenseDialog(false);
+                  doSave();
+                }}
+              >
+                Yes, on behalf of the business (add to director's account)
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setIsOnBehalfOfBusiness(false);
+                  setShowBusinessExpenseDialog(false);
+                  doSave();
+                }}
+              >
+                No, this is a personal expense
+              </Button>
+              <Button variant="ghost" className="w-full" onClick={() => setShowBusinessExpenseDialog(false)}>
+                Cancel
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );

@@ -44,7 +44,8 @@ export const EU_COUNTRIES: EUCountry[] = [
 
 // =================== UK POST-BREXIT RULES ===================
 export const UK_RULES = {
-  description: "Post-Brexit, GB is a third country. Northern Ireland remains in EU single market for goods under the Windsor Framework.",
+  description:
+    "Post-Brexit, GB is a third country. Northern Ireland remains in EU single market for goods under the Windsor Framework.",
   gb: {
     goods: "non_eu" as const,
     services: "non_eu" as const,
@@ -79,13 +80,15 @@ export const INTRA_COMMUNITY_SUPPLIES = {
   ica: {
     title: "Intra-Community Acquisitions (ICA) — Buying goods from EU",
     treatment: "self_accounting",
-    description: "Irish purchaser self-accounts for VAT on the acquisition. VAT is both charged and deducted on the same return (net zero if fully deductible).",
+    description:
+      "Irish purchaser self-accounts for VAT on the acquisition. VAT is both charged and deducted on the same return (net zero if fully deductible).",
     vat3Boxes: { output: "T1", input: "T2" },
     note: "The EU supplier invoices at 0% (zero-rated ICS from their side). You declare Irish VAT at the applicable rate on your VAT3.",
   },
   triangulation: {
     title: "Triangulation (ABC supplies)",
-    description: "Simplification for three-party transactions across three EU states. The intermediary (B) avoids VAT registration in the destination state.",
+    description:
+      "Simplification for three-party transactions across three EU states. The intermediary (B) avoids VAT registration in the destination state.",
     conditions: [
       "Three parties in three different EU member states",
       "Goods shipped directly from A's state to C's state",
@@ -101,7 +104,8 @@ export const REPORTING_OBLIGATIONS = {
     title: "VIES Return (VAT Information Exchange System)",
     threshold: 0,
     frequency: "quarterly",
-    description: "Must report all intra-community supplies of goods and services to VAT-registered customers in other EU states.",
+    description:
+      "Must report all intra-community supplies of goods and services to VAT-registered customers in other EU states.",
     deadline: "By the 23rd of the month following the quarter-end",
     note: "No minimum threshold — all qualifying supplies must be reported.",
     penalty: "€4,000 per return for late/non-filing.",
@@ -110,7 +114,8 @@ export const REPORTING_OBLIGATIONS = {
     title: "Intrastat Returns",
     arrivals_threshold: 750000,
     dispatches_threshold: 750000,
-    description: "Statistical return for movement of goods between EU states. Required when annual arrivals or dispatches exceed €750,000.",
+    description:
+      "Statistical return for movement of goods between EU states. Required when annual arrivals or dispatches exceed €750,000.",
     frequency: "monthly",
     deadline: "By the 23rd of the month following the reference period",
   },
@@ -120,7 +125,8 @@ export const REPORTING_OBLIGATIONS = {
 export const OSS_RULES = {
   threshold: 10000,
   title: "One Stop Shop (OSS) — Distance selling to EU consumers",
-  description: "When B2C sales of goods or digital services to other EU states exceed €10,000/year (combined across all EU states), you must charge VAT at the destination country's rate.",
+  description:
+    "When B2C sales of goods or digital services to other EU states exceed €10,000/year (combined across all EU states), you must charge VAT at the destination country's rate.",
   schemes: {
     union: {
       name: "Union OSS",
@@ -136,11 +142,13 @@ export const OSS_RULES = {
     ioss: {
       name: "Import One Stop Shop (IOSS)",
       scope: "Distance sales of imported goods valued ≤€150 to EU consumers",
-      description: "Allows charging and collecting VAT at point of sale instead of import. Goods clear customs VAT-free.",
+      description:
+        "Allows charging and collecting VAT at point of sale instead of import. Goods clear customs VAT-free.",
     },
   },
   deemed_supplier: {
-    description: "Electronic interfaces (marketplaces) facilitating B2C sales may be deemed the supplier and responsible for collecting VAT.",
+    description:
+      "Electronic interfaces (marketplaces) facilitating B2C sales may be deemed the supplier and responsible for collecting VAT.",
     applies_to: ["Online marketplaces", "Platform operators"],
   },
   below_threshold: "If total EU B2C sales below €10,000, you may charge Irish VAT rates instead of destination rates.",
@@ -151,7 +159,8 @@ export const PLACE_OF_SUPPLY_SERVICES = {
   general_rule: {
     b2b: {
       rule: "Where the customer is established (reverse charge applies)",
-      description: "For B2B services, the customer self-accounts for VAT in their country. Irish supplier invoices without VAT and notes 'Reverse charge — Article 196 EU VAT Directive'.",
+      description:
+        "For B2B services, the customer self-accounts for VAT in their country. Irish supplier invoices without VAT and notes 'Reverse charge — Article 196 EU VAT Directive'.",
     },
     b2c: {
       rule: "Where the supplier is established",
@@ -226,14 +235,16 @@ export const IMPORTS_EXPORTS = {
   },
   postponed_accounting: {
     title: "Postponed Accounting (PA1)",
-    description: "Allows registered traders to account for import VAT on their VAT3 return instead of paying at the point of import. Both output and input VAT declared on the same return.",
+    description:
+      "Allows registered traders to account for import VAT on their VAT3 return instead of paying at the point of import. Both output and input VAT declared on the same return.",
     eligibility: "Must be VAT-registered and hold a Customs & Excise (C&E) number. Apply via Revenue's online system.",
     vat3Box: "PA1",
     benefit: "No cash-flow impact — VAT is self-accounted (charged and reclaimed on the same return).",
   },
   section_56: {
     title: "Section 56 Authorisation",
-    description: "Allows qualifying persons to receive goods and services without VAT being charged. Primarily used by exporters whose inputs mainly relate to zero-rated exports.",
+    description:
+      "Allows qualifying persons to receive goods and services without VAT being charged. Primarily used by exporters whose inputs mainly relate to zero-rated exports.",
     eligibility: "At least 75% of taxable supplies must be zero-rated (exports or ICS).",
     note: "Apply to Revenue for a Section 56 authorisation number. Suppliers invoice at 0% quoting the authorisation.",
   },
@@ -291,7 +302,13 @@ export type CounterpartyLocation = "eu" | "non_eu" | "gb" | "ni";
 export type Direction = "sale" | "purchase";
 
 export interface CrossBorderVATResult {
-  treatment: "zero_rated" | "reverse_charge" | "standard_rated" | "self_accounting" | "postponed_accounting" | "oss_destination";
+  treatment:
+    | "zero_rated"
+    | "reverse_charge"
+    | "standard_rated"
+    | "self_accounting"
+    | "postponed_accounting"
+    | "oss_destination";
   explanation: string;
   vat3Boxes: string[];
   reportingObligations: string[];
@@ -315,7 +332,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "eu" && supplyType === "goods" && customerType === "b2b") {
       return {
         treatment: "zero_rated",
-        explanation: "Intra-Community Supply (ICS) — zero-rated. Customer must provide valid EU VAT number, verified via VIES. Retain proof of transport.",
+        explanation:
+          "Intra-Community Supply (ICS) — zero-rated. Customer must provide valid EU VAT number, verified via VIES. Retain proof of transport.",
         vat3Boxes: ["E1"],
         reportingObligations: ["VIES return (quarterly)"],
         warnings: ["Verify customer's VAT number on VIES before zero-rating"],
@@ -326,7 +344,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "eu" && supplyType === "goods" && customerType === "b2c") {
       return {
         treatment: "oss_destination",
-        explanation: "Distance selling to EU consumers — if total EU B2C sales exceed €10,000, charge destination country VAT via OSS. Below threshold, Irish VAT may apply.",
+        explanation:
+          "Distance selling to EU consumers — if total EU B2C sales exceed €10,000, charge destination country VAT via OSS. Below threshold, Irish VAT may apply.",
         vat3Boxes: [],
         reportingObligations: ["OSS return (quarterly) if above threshold"],
         warnings: ["Check if total EU B2C sales exceed €10,000 threshold"],
@@ -337,7 +356,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "eu" && supplyType === "services" && customerType === "b2b") {
       return {
         treatment: "zero_rated",
-        explanation: "B2B services to EU — reverse charge applies. Invoice without VAT, noting 'Reverse charge — Article 196'. Customer self-accounts in their country.",
+        explanation:
+          "B2B services to EU — reverse charge applies. Invoice without VAT, noting 'Reverse charge — Article 196'. Customer self-accounts in their country.",
         vat3Boxes: ["ES1"],
         reportingObligations: ["VIES return (quarterly)"],
         warnings: [],
@@ -348,7 +368,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "eu" && supplyType === "services" && customerType === "b2c") {
       return {
         treatment: "standard_rated",
-        explanation: "B2C services — generally subject to Irish VAT (supplier's country). Exception: digital/electronic services use destination country rate via OSS if above €10,000.",
+        explanation:
+          "B2C services — generally subject to Irish VAT (supplier's country). Exception: digital/electronic services use destination country rate via OSS if above €10,000.",
         vat3Boxes: [],
         reportingObligations: [],
         warnings: ["Check if this is a digital/electronic service — different rules apply"],
@@ -359,7 +380,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "ni" && supplyType === "goods") {
       return {
         treatment: "zero_rated",
-        explanation: "Northern Ireland — EU single market for goods. Intra-community supply rules apply. Customer uses XI-prefixed VAT number.",
+        explanation:
+          "Northern Ireland — EU single market for goods. Intra-community supply rules apply. Customer uses XI-prefixed VAT number.",
         vat3Boxes: ["E1"],
         reportingObligations: ["VIES return (quarterly)"],
         warnings: ["Verify XI-prefixed VAT number via VIES"],
@@ -367,13 +389,17 @@ export function determineCrossBorderVAT(params: {
     }
 
     // Selling to GB or non-EU (exports)
-    if (counterpartyLocation === "non_eu" || counterpartyLocation === "gb" ||
-        (counterpartyLocation === "ni" && supplyType === "services")) {
+    if (
+      counterpartyLocation === "non_eu" ||
+      counterpartyLocation === "gb" ||
+      (counterpartyLocation === "ni" && supplyType === "services")
+    ) {
       return {
         treatment: "zero_rated",
-        explanation: supplyType === "goods"
-          ? "Export to non-EU country — zero-rated. Retain proof of export (customs declaration, shipping documentation)."
-          : "Services to non-EU business — outside scope of Irish VAT. Invoice without VAT.",
+        explanation:
+          supplyType === "goods"
+            ? "Export to non-EU country — zero-rated. Retain proof of export (customs declaration, shipping documentation)."
+            : "Services to non-EU business — outside scope of Irish VAT. Invoice without VAT.",
         vat3Boxes: supplyType === "goods" ? ["E2"] : [],
         reportingObligations: [],
         warnings: supplyType === "goods" ? ["Retain customs export documentation"] : [],
@@ -387,7 +413,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "eu" && supplyType === "goods") {
       return {
         treatment: "self_accounting",
-        explanation: "Intra-Community Acquisition (ICA) — self-account for Irish VAT. EU supplier invoices at 0%. Declare both output (T1) and input (T2) VAT on your VAT3 (net zero if fully deductible).",
+        explanation:
+          "Intra-Community Acquisition (ICA) — self-account for Irish VAT. EU supplier invoices at 0%. Declare both output (T1) and input (T2) VAT on your VAT3 (net zero if fully deductible).",
         vat3Boxes: ["T1", "T2"],
         reportingObligations: [],
         warnings: [],
@@ -398,7 +425,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "eu" && supplyType === "services") {
       return {
         treatment: "reverse_charge",
-        explanation: "Reverse charge on EU services received — self-account for Irish VAT. Declare as both output (ES2) and input on your VAT3.",
+        explanation:
+          "Reverse charge on EU services received — self-account for Irish VAT. Declare as both output (ES2) and input on your VAT3.",
         vat3Boxes: ["ES2"],
         reportingObligations: [],
         warnings: [],
@@ -409,7 +437,8 @@ export function determineCrossBorderVAT(params: {
     if (counterpartyLocation === "ni" && supplyType === "goods") {
       return {
         treatment: "self_accounting",
-        explanation: "Northern Ireland goods — intra-community acquisition rules apply (same as EU). Self-account for VAT on your VAT3.",
+        explanation:
+          "Northern Ireland goods — intra-community acquisition rules apply (same as EU). Self-account for VAT on your VAT3.",
         vat3Boxes: ["T1", "T2"],
         reportingObligations: [],
         warnings: [],
@@ -417,11 +446,14 @@ export function determineCrossBorderVAT(params: {
     }
 
     // Buying services from GB, non-EU, or NI (reverse charge — same as EU services)
-    if ((counterpartyLocation === "non_eu" || counterpartyLocation === "gb" ||
-        (counterpartyLocation === "ni")) && supplyType === "services") {
+    if (
+      (counterpartyLocation === "non_eu" || counterpartyLocation === "gb" || counterpartyLocation === "ni") &&
+      supplyType === "services"
+    ) {
       return {
         treatment: "reverse_charge",
-        explanation: "Services from non-EU supplier — self-account for Irish VAT at the applicable rate. Same reverse charge mechanism as EU services. Declare output VAT (T1) and input credit (T2) on your VAT3.",
+        explanation:
+          "Services from non-EU supplier — self-account for Irish VAT at the applicable rate. Same reverse charge mechanism as EU services. Declare output VAT (T1) and input credit (T2) on your VAT3.",
         vat3Boxes: ["T1", "T2"],
         reportingObligations: [],
         warnings: [],
@@ -432,7 +464,8 @@ export function determineCrossBorderVAT(params: {
     if ((counterpartyLocation === "non_eu" || counterpartyLocation === "gb") && supplyType === "goods") {
       return {
         treatment: "postponed_accounting",
-        explanation: "Import from non-EU — import VAT applies on CIF + duties. Use postponed accounting (PA1) to avoid cash-flow impact.",
+        explanation:
+          "Import from non-EU — import VAT applies on CIF + duties. Use postponed accounting (PA1) to avoid cash-flow impact.",
         vat3Boxes: ["PA1"],
         reportingObligations: [],
         warnings: ["Consider applying for postponed accounting if not already authorised"],
@@ -452,7 +485,10 @@ export function determineCrossBorderVAT(params: {
 /**
  * Validate an EU VAT number format for a given country code
  */
-export function validateEUVATFormat(vatNumber: string, countryCode: string): {
+export function validateEUVATFormat(
+  vatNumber: string,
+  countryCode: string,
+): {
   valid: boolean;
   message: string;
 } {
@@ -466,7 +502,7 @@ export function validateEUVATFormat(vatNumber: string, countryCode: string): {
     return { valid: true, message: `Valid ${countryCode} VAT number format` };
   }
 
-  const country = EU_COUNTRIES.find(c => c.code === countryCode);
+  const country = EU_COUNTRIES.find((c) => c.code === countryCode);
   return {
     valid: false,
     message: `Invalid format for ${country?.name || countryCode}. Expected pattern: ${country?.vatPrefix || countryCode} followed by the required digits.`,
@@ -517,10 +553,7 @@ export function checkOSSThreshold(euB2CSalesTotal: number): {
 /**
  * Check if Intrastat filing is required
  */
-export function checkIntrastatThreshold(params: {
-  arrivalsTotal: number;
-  dispatchesTotal: number;
-}): {
+export function checkIntrastatThreshold(params: { arrivalsTotal: number; dispatchesTotal: number }): {
   arrivalsRequired: boolean;
   dispatchesRequired: boolean;
   recommendation: string;
@@ -535,10 +568,14 @@ export function checkIntrastatThreshold(params: {
     parts.push(`Arrivals (€${arrivalsTotal.toLocaleString()}) exceed Intrastat threshold — monthly filing required.`);
   }
   if (dispatchesRequired) {
-    parts.push(`Dispatches (€${dispatchesTotal.toLocaleString()}) exceed Intrastat threshold — monthly filing required.`);
+    parts.push(
+      `Dispatches (€${dispatchesTotal.toLocaleString()}) exceed Intrastat threshold — monthly filing required.`,
+    );
   }
   if (parts.length === 0) {
-    parts.push(`Both arrivals (€${arrivalsTotal.toLocaleString()}) and dispatches (€${dispatchesTotal.toLocaleString()}) are below the €${threshold.toLocaleString()} Intrastat threshold. No filing required.`);
+    parts.push(
+      `Both arrivals (€${arrivalsTotal.toLocaleString()}) and dispatches (€${dispatchesTotal.toLocaleString()}) are below the €${threshold.toLocaleString()} Intrastat threshold. No filing required.`,
+    );
   }
 
   return {

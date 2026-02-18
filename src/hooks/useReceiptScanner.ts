@@ -29,7 +29,7 @@ export const useReceiptScanner = (): UseReceiptScannerReturn => {
   const [confidence, setConfidence] = useState(0);
   const [rawText, setRawText] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   const { data: categories } = useExpenseCategories();
 
   const startCamera = useCallback(() => {
@@ -45,7 +45,7 @@ export const useReceiptScanner = (): UseReceiptScannerReturn => {
   const uploadFile = useCallback((file: File) => {
     setState("uploading");
     setError(null);
-    
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
@@ -68,19 +68,19 @@ export const useReceiptScanner = (): UseReceiptScannerReturn => {
 
     try {
       setState("processing");
-      
+
       // Extract base64 data and MIME type (remove data:image/...;base64, prefix)
       const base64Data = imageData.split(",")[1];
       const mimeType = imageData.split(",")[0]?.match(/:(.*?);/)?.[1] || "image/jpeg";
 
       const result: ReceiptResult = await processReceipt(base64Data, categories || undefined, mimeType);
-      
+
       if (result.success && result.data) {
         setReceiptData(result.data);
         setConfidence(result.data.confidence);
         setRawText(result.raw_text);
         setState("preview");
-        
+
         if (result.data.confidence < 0.75) {
           toast.warning("Low confidence extraction. Please verify the details.");
         }
@@ -109,43 +109,44 @@ export const useReceiptScanner = (): UseReceiptScannerReturn => {
     setError(null);
   }, []);
 
-  const uploadReceipt = useCallback(async (userId: string): Promise<string | null> => {
-    if (!imageData) return null;
-    
-    try {
-      // Convert base64 to blob
-      const base64Data = imageData.split(",")[1];
-      const byteCharacters = atob(base64Data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: "image/jpeg" });
-      
-      // Generate unique filename
-      const timestamp = Date.now();
-      const filename = `${userId}/${timestamp}-receipt.jpg`;
-      
-      const { data, error: uploadError } = await supabase.storage
-        .from("receipts")
-        .upload(filename, blob, {
+  const uploadReceipt = useCallback(
+    async (userId: string): Promise<string | null> => {
+      if (!imageData) return null;
+
+      try {
+        // Convert base64 to blob
+        const base64Data = imageData.split(",")[1];
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "image/jpeg" });
+
+        // Generate unique filename
+        const timestamp = Date.now();
+        const filename = `${userId}/${timestamp}-receipt.jpg`;
+
+        const { data, error: uploadError } = await supabase.storage.from("receipts").upload(filename, blob, {
           contentType: "image/jpeg",
           upsert: false,
         });
-      
-      if (uploadError) {
-        console.error("Upload error:", uploadError);
+
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          return null;
+        }
+
+        // Return storage path (private bucket — signed URLs generated at display time)
+        return data.path;
+      } catch (err) {
+        console.error("Receipt upload error:", err);
         return null;
       }
-
-      // Return storage path (private bucket — signed URLs generated at display time)
-      return data.path;
-    } catch (err) {
-      console.error("Receipt upload error:", err);
-      return null;
-    }
-  }, [imageData]);
+    },
+    [imageData],
+  );
 
   return {
     state,

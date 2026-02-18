@@ -61,30 +61,24 @@ describe("basic company overview", () => {
   });
 
   it("shows CRO number when businessExtra provides it", () => {
-    const result = buildFinancialContext(
-      makeInput({ businessExtra: { businesses: [{ cro_number: "654321" }] } })
-    );
+    const result = buildFinancialContext(makeInput({ businessExtra: { businesses: [{ cro_number: "654321" }] } }));
     expect(result).toContain("CRO Number: 654321");
   });
 
   it("shows structure as Limited Company when structure is limited_company", () => {
     const result = buildFinancialContext(
-      makeInput({ businessExtra: { businesses: [{ structure: "limited_company" }] } })
+      makeInput({ businessExtra: { businesses: [{ structure: "limited_company" }] } }),
     );
     expect(result).toContain("Structure: Limited Company");
   });
 
   it("shows incorporation date when profile provides it", () => {
-    const result = buildFinancialContext(
-      makeInput({ profile: { incorporation_date: "2023-01-15" } })
-    );
+    const result = buildFinancialContext(makeInput({ profile: { incorporation_date: "2023-01-15" } }));
     expect(result).toContain("Incorporation Date: 2023-01-15");
   });
 
   it("shows contact email from profile", () => {
-    const result = buildFinancialContext(
-      makeInput({ profile: { email: "info@testco.ie" } })
-    );
+    const result = buildFinancialContext(makeInput({ profile: { email: "info@testco.ie" } }));
     expect(result).toContain("Contact Email: info@testco.ie");
   });
 });
@@ -109,7 +103,7 @@ describe("income section", () => {
             { category: "Other Income", amount: 5000 },
           ],
         },
-      })
+      }),
     );
     expect(result).toContain(`Sales: ${eur(80000)}`);
     expect(result).toContain(`Other Income: ${eur(5000)}`);
@@ -158,7 +152,7 @@ describe("expense section", () => {
             { category: "Phone", amount: 1200 },
           ],
         },
-      })
+      }),
     );
     expect(result).toContain(`Materials: ${eur(20000)}`);
     expect(result).toContain(`Insurance: ${eur(5000)}`);
@@ -209,9 +203,7 @@ describe("CT1 computation section", () => {
   });
 
   it("deducts losses brought forward", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { lossesForward: 20000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { lossesForward: 20000 } }));
     expect(result).toContain(`Less: Losses Brought Forward: ${eur(20000)}`);
     // Trading profit = 70,000; Taxable = 70,000 - 20,000 = 50,000
     expect(result).toContain(`Taxable Profit: ${eur(50000)}`);
@@ -220,18 +212,14 @@ describe("CT1 computation section", () => {
   });
 
   it("includes close company surcharge when present", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { closeCompanySurcharge: 3000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { closeCompanySurcharge: 3000 } }));
     expect(result).toContain(`Close Company Surcharge: ${eur(3000)}`);
     // Total CT = 8,750 + 3,000 = 11,750
     expect(result).toContain(`Total CT Liability: ${eur(11750)}`);
   });
 
   it("deducts preliminary CT paid", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { preliminaryCTPaid: 5000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { preliminaryCTPaid: 5000 } }));
     expect(result).toContain(`Less: Preliminary CT Paid: ${eur(5000)}`);
   });
 
@@ -239,15 +227,13 @@ describe("CT1 computation section", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, rctPrepayment: 2000 },
-      })
+      }),
     );
     expect(result).toContain(`Less: RCT Credit: ${eur(2000)}`);
   });
 
   it("deducts capital allowances from trading profit", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { capitalAllowancesPlant: 5000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { capitalAllowancesPlant: 5000 } }));
     expect(result).toContain(`Less: Capital Allowances: ${eur(5000)}`);
     // Trading profit = 100,000 - 30,000 - 5,000 = 65,000
     expect(result).toContain(`Trading Profit: ${eur(65000)}`);
@@ -257,7 +243,7 @@ describe("CT1 computation section", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, directorsLoanTravel: 4000, travelAllowance: 4000 },
-      })
+      }),
     );
     expect(result).toContain(`Less: Travel & Accommodation (owed to director): ${eur(4000)}`);
     // Trading profit = 100,000 - 30,000 - 4,000 = 66,000
@@ -272,15 +258,13 @@ describe("CT1 computation section", () => {
           detectedIncome: [{ category: "Sales", amount: 10000 }],
           expenseSummary: { allowable: 50000, disallowed: 0, total: 50000 },
         },
-      })
+      }),
     );
     expect(result).toContain(`Trading Profit: ${eur(0)}`);
   });
 
   it("taxable profit floors at zero when losses exceed trading profit", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { lossesForward: 999999 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { lossesForward: 999999 } }));
     expect(result).toContain(`Taxable Profit: ${eur(0)}`);
     expect(result).toContain(`CT @ 12.5%: ${eur(0)}`);
   });
@@ -302,7 +286,7 @@ describe("VAT registration section", () => {
 
   it("shows VAT Registered: Yes when onboardingSettings has vat_registered true", () => {
     const result = buildFinancialContext(
-      makeInput({ onboardingSettings: { vat_registered: true, vat_number: "IE123456" } })
+      makeInput({ onboardingSettings: { vat_registered: true, vat_number: "IE123456" } }),
     );
     expect(result).toContain("VAT Registered: Yes");
     expect(result).toContain("VAT Number: IE123456");
@@ -312,14 +296,16 @@ describe("VAT registration section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            vat_registered: true,
-            vat_number: "IE999888",
-            vat_registration_date: "2023-01-01",
-            vat_basis: "Invoice",
-          }],
+          businesses: [
+            {
+              vat_registered: true,
+              vat_number: "IE999888",
+              vat_registration_date: "2023-01-01",
+              vat_basis: "Invoice",
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain("VAT Registered: Yes");
     expect(result).toContain("VAT Number: IE999888");
@@ -331,12 +317,14 @@ describe("VAT registration section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            vat_status_change_expected: true,
-            vat_change_date: "2025-06-01",
-          }],
+          businesses: [
+            {
+              vat_status_change_expected: true,
+              vat_change_date: "2025-06-01",
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain("VAT Status Change Expected: Yes");
     expect(result).toContain("VAT Change Date: 2025-06-01");
@@ -356,7 +344,7 @@ describe("RCT / subcontracting section", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, isConstructionTrade: true },
-      })
+      }),
     );
     expect(result).toContain("=== RCT / SUBCONTRACTING ===");
     expect(result).toContain("Construction Trade: Yes");
@@ -366,7 +354,7 @@ describe("RCT / subcontracting section", () => {
     const result = buildFinancialContext(
       makeInput({
         onboardingSettings: { rct_registered: true },
-      })
+      }),
     );
     expect(result).toContain("=== RCT / SUBCONTRACTING ===");
   });
@@ -377,7 +365,7 @@ describe("RCT / subcontracting section", () => {
         businessExtra: {
           businesses: [{ rct_status: "active", rct_rate: 20 }],
         },
-      })
+      }),
     );
     expect(result).toContain("=== RCT / SUBCONTRACTING ===");
     expect(result).toContain("RCT Status: active");
@@ -388,7 +376,7 @@ describe("RCT / subcontracting section", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, isConstructionTrade: true, rctPrepayment: 8500 },
-      })
+      }),
     );
     expect(result).toContain(`RCT Deducted (current year): ${eur(8500)}`);
   });
@@ -398,7 +386,7 @@ describe("RCT / subcontracting section", () => {
       makeInput({
         ct1: { ...makeInput().ct1, isConstructionTrade: true },
         businessExtra: { businesses: [{ has_subcontractors: true }] },
-      })
+      }),
     );
     expect(result).toContain("Has Subcontractors: Yes");
   });
@@ -414,18 +402,14 @@ describe("capital allowances section", () => {
   });
 
   it("appears when plant allowances exist", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { capitalAllowancesPlant: 4000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { capitalAllowancesPlant: 4000 } }));
     expect(result).toContain("=== CAPITAL ALLOWANCES ===");
     expect(result).toContain(`Plant & Machinery: ${eur(4000)}`);
     expect(result).toContain(`TOTAL CAPITAL ALLOWANCES: ${eur(4000)}`);
   });
 
   it("appears when motor vehicle allowances exist from savedCT1", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { capitalAllowancesMotorVehicles: 3000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { capitalAllowancesMotorVehicles: 3000 } }));
     expect(result).toContain("=== CAPITAL ALLOWANCES ===");
     expect(result).toContain(`Motor Vehicles: ${eur(3000)}`);
     expect(result).toContain(`TOTAL CAPITAL ALLOWANCES: ${eur(3000)}`);
@@ -438,7 +422,7 @@ describe("capital allowances section", () => {
           capitalAllowancesPlant: 4000,
           capitalAllowancesMotorVehicles: 2500,
         },
-      })
+      }),
     );
     expect(result).toContain(`Plant & Machinery: ${eur(4000)}`);
     expect(result).toContain(`Motor Vehicles: ${eur(2500)}`);
@@ -463,23 +447,17 @@ describe("vehicle asset details", () => {
   };
 
   it("shows vehicle description and registration", () => {
-    const result = buildFinancialContext(
-      makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } })
-    );
+    const result = buildFinancialContext(makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } }));
     expect(result).toContain("Vehicle: Ford Transit (241-D-54321)");
   });
 
   it("shows qualifying cost and year of ownership", () => {
-    const result = buildFinancialContext(
-      makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } })
-    );
+    const result = buildFinancialContext(makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } }));
     expect(result).toContain(`12.5% of ${eur(20000)} — Year 2 of 8`);
   });
 
   it("shows business use percentage when less than 100%", () => {
-    const result = buildFinancialContext(
-      makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } })
-    );
+    const result = buildFinancialContext(makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } }));
     expect(result).toContain("Business use: 80%");
   });
 
@@ -488,23 +466,17 @@ describe("vehicle asset details", () => {
       ...vehicleAsset,
       depreciation: { ...vehicleAsset.depreciation, businessUsePct: 100 },
     };
-    const result = buildFinancialContext(
-      makeInput({ ct1: { ...makeInput().ct1, vehicleAsset: veh100 } })
-    );
+    const result = buildFinancialContext(makeInput({ ct1: { ...makeInput().ct1, vehicleAsset: veh100 } }));
     expect(result).not.toContain("Business use:");
   });
 
   it("shows net book value", () => {
-    const result = buildFinancialContext(
-      makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } })
-    );
+    const result = buildFinancialContext(makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } }));
     expect(result).toContain(`Net Book Value: ${eur(15000)}`);
   });
 
   it("uses vehicleAsset annual allowance for motor vehicle capital allowance total", () => {
-    const result = buildFinancialContext(
-      makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } })
-    );
+    const result = buildFinancialContext(makeInput({ ct1: { ...makeInput().ct1, vehicleAsset } }));
     expect(result).toContain(`Motor Vehicles: ${eur(2500)}`);
     expect(result).toContain(`TOTAL CAPITAL ALLOWANCES: ${eur(2500)}`);
   });
@@ -527,7 +499,7 @@ describe("directors section", () => {
           pps_number: "1234567T",
           salary: 50000,
         },
-      })
+      }),
     );
     expect(result).toContain("=== DIRECTORS ===");
     expect(result).toContain("Number of Directors: 1");
@@ -543,7 +515,7 @@ describe("directors section", () => {
           { director_name: "John Murphy", salary: 50000 },
           { director_name: "Mary Murphy", salary: 40000 },
         ],
-      })
+      }),
     );
     expect(result).toContain("Number of Directors: 2");
     expect(result).toContain("--- Director 1 ---");
@@ -557,7 +529,7 @@ describe("directors section", () => {
       makeInput({
         directorData: { director_name: "Should Not Appear" },
         allDirectorData: [{ director_name: "Preferred Director" }],
-      })
+      }),
     );
     expect(result).toContain("Name: Preferred Director");
     expect(result).not.toContain("Should Not Appear");
@@ -567,7 +539,7 @@ describe("directors section", () => {
     const result = buildFinancialContext(
       makeInput({
         directorData: { director_name: "John", marital_status: "Married" },
-      })
+      }),
     );
     expect(result).toContain("Marital Status: Married");
   });
@@ -580,7 +552,7 @@ describe("directors section", () => {
           receives_dividends: true,
           estimated_dividends: 10000,
         },
-      })
+      }),
     );
     expect(result).toContain("Receives Dividends: Yes");
     expect(result).toContain(`Estimated Dividends: ${eur(10000)}`);
@@ -597,7 +569,7 @@ describe("directors section", () => {
           vehicle_purchase_cost: 35000,
           vehicle_business_use_pct: 70,
         },
-      })
+      }),
     );
     expect(result).toContain("Vehicle Owned by Director: Yes");
     expect(result).toContain("Vehicle: BMW 320d (231-D-99999)");
@@ -615,7 +587,7 @@ describe("directors section", () => {
           company_vehicle_value: 45000,
           company_vehicle_business_km: 25000,
         },
-      })
+      }),
     );
     expect(result).toContain("Benefits in Kind: company_car, health_insurance");
     expect(result).toContain(`Company Vehicle OMV: ${eur(45000)}`);
@@ -630,7 +602,7 @@ describe("directors section", () => {
           income_sources: ["employment", "rental"],
           reliefs: ["medical_expenses", "pension"],
         },
-      })
+      }),
     );
     expect(result).toContain("Income Sources: employment, rental");
     expect(result).toContain("Tax Reliefs Claimed: medical_expenses, pension");
@@ -643,7 +615,7 @@ describe("directors section", () => {
           director_name: "John",
           foreign_cgt_options: ["share_disposals", "foreign_income"],
         },
-      })
+      }),
     );
     expect(result).toContain("Foreign/CGT: share_disposals, foreign_income");
   });
@@ -655,7 +627,7 @@ describe("directors section", () => {
           director_name: "John",
           foreign_cgt_options: ["none"],
         },
-      })
+      }),
     );
     expect(result).not.toContain("Foreign/CGT:");
   });
@@ -668,7 +640,7 @@ describe("directors section", () => {
           commute_distance_km: 35,
           commute_method: "car",
         },
-      })
+      }),
     );
     expect(result).toContain("Commute: 35km (car)");
   });
@@ -680,7 +652,7 @@ describe("directors section", () => {
           first_name: "Jane",
           last_name: "Doe",
         },
-      })
+      }),
     );
     expect(result).toContain("Name: Jane Doe");
   });
@@ -690,7 +662,7 @@ describe("directors section", () => {
       makeInput({
         allDirectorData: [{ salary: 30000 }],
         directorRows: [{ director_name: "From DB Row" }],
-      })
+      }),
     );
     expect(result).toContain("Name: From DB Row");
   });
@@ -721,16 +693,12 @@ describe("tax planning opportunities section", () => {
   });
 
   it("confirms capital allowances when already claimed", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { capitalAllowancesPlant: 5000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { capitalAllowancesPlant: 5000 } }));
     expect(result).toContain(`Already claiming ${eur(5000)}`);
   });
 
   it("shows small benefit exemption when directors exist", () => {
-    const result = buildFinancialContext(
-      makeInput({ directorData: { director_name: "John" } })
-    );
+    const result = buildFinancialContext(makeInput({ directorData: { director_name: "John" } }));
     expect(result).toContain("SMALL BENEFIT EXEMPTION");
   });
 
@@ -738,7 +706,7 @@ describe("tax planning opportunities section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: { businesses: [{ has_employees: true }] },
-      })
+      }),
     );
     expect(result).toContain("SMALL BENEFIT EXEMPTION");
   });
@@ -749,33 +717,25 @@ describe("tax planning opportunities section", () => {
 // ══════════════════════════════════════════════════════════════
 describe("start-up relief", () => {
   it("shows start-up relief for company in year 1", () => {
-    const result = buildFinancialContext(
-      makeInput({ profile: { incorporation_date: "2025-03-01" } })
-    );
+    const result = buildFinancialContext(makeInput({ profile: { incorporation_date: "2025-03-01" } }));
     expect(result).toContain("START-UP COMPANY RELIEF");
     expect(result).toContain("year 0 of 3");
   });
 
   it("shows start-up relief for company in year 2", () => {
-    const result = buildFinancialContext(
-      makeInput({ profile: { incorporation_date: "2023-06-01" } })
-    );
+    const result = buildFinancialContext(makeInput({ profile: { incorporation_date: "2023-06-01" } }));
     expect(result).toContain("START-UP COMPANY RELIEF");
     expect(result).toContain("year 2 of 3");
   });
 
   it("shows start-up relief for company in year 3", () => {
-    const result = buildFinancialContext(
-      makeInput({ profile: { incorporation_date: "2022-01-15" } })
-    );
+    const result = buildFinancialContext(makeInput({ profile: { incorporation_date: "2022-01-15" } }));
     expect(result).toContain("START-UP COMPANY RELIEF");
     expect(result).toContain("year 3 of 3");
   });
 
   it("shows ineligible for companies older than 3 years", () => {
-    const result = buildFinancialContext(
-      makeInput({ profile: { incorporation_date: "2020-01-01" } })
-    );
+    const result = buildFinancialContext(makeInput({ profile: { incorporation_date: "2020-01-01" } }));
     expect(result).toContain("Not eligible");
     expect(result).toContain("more than 3 years ago");
   });
@@ -800,10 +760,8 @@ describe("pension suggestion", () => {
   it("confirms pension when Form 11 data shows contributions", () => {
     const result = buildFinancialContext(
       makeInput({
-        allForm11Data: [
-          { directorNumber: 1, data: { pensionContributions: 5000 } },
-        ],
-      })
+        allForm11Data: [{ directorNumber: 1, data: { pensionContributions: 5000 } }],
+      }),
     );
     expect(result).toContain("Director is contributing to a pension");
     expect(result).not.toContain("No pension contributions detected");
@@ -812,10 +770,8 @@ describe("pension suggestion", () => {
   it("still suggests pension when Form 11 shows zero contributions", () => {
     const result = buildFinancialContext(
       makeInput({
-        allForm11Data: [
-          { directorNumber: 1, data: { pensionContributions: 0 } },
-        ],
-      })
+        allForm11Data: [{ directorNumber: 1, data: { pensionContributions: 0 } }],
+      }),
     );
     expect(result).toContain("No pension contributions detected");
   });
@@ -839,10 +795,24 @@ describe("invoices section", () => {
     const result = buildFinancialContext(
       makeInput({
         invoices: [
-          { invoice_number: "INV-001", total: 5000, vat_amount: 1150, status: "paid", customer: { name: "ABC Ltd" }, invoice_date: "2025-03-15" },
-          { invoice_number: "INV-002", total: 3000, vat_amount: 690, status: "unpaid", customer: { name: "XYZ Ltd" }, invoice_date: "2025-04-01" },
+          {
+            invoice_number: "INV-001",
+            total: 5000,
+            vat_amount: 1150,
+            status: "paid",
+            customer: { name: "ABC Ltd" },
+            invoice_date: "2025-03-15",
+          },
+          {
+            invoice_number: "INV-002",
+            total: 3000,
+            vat_amount: 690,
+            status: "unpaid",
+            customer: { name: "XYZ Ltd" },
+            invoice_date: "2025-04-01",
+          },
         ],
-      })
+      }),
     );
     expect(result).toContain("=== INVOICES ===");
     expect(result).toContain("Total Invoices: 2");
@@ -855,9 +825,16 @@ describe("invoices section", () => {
     const result = buildFinancialContext(
       makeInput({
         invoices: [
-          { invoice_number: "INV-001", total: 5000, vat_amount: 1150, status: "paid", customer: { name: "ABC Ltd" }, invoice_date: "2025-03-15" },
+          {
+            invoice_number: "INV-001",
+            total: 5000,
+            vat_amount: 1150,
+            status: "paid",
+            customer: { name: "ABC Ltd" },
+            invoice_date: "2025-03-15",
+          },
         ],
-      })
+      }),
     );
     expect(result).toContain("INV-001");
     expect(result).toContain("ABC Ltd");
@@ -868,10 +845,8 @@ describe("invoices section", () => {
   it("shows 'Unknown' when customer name missing", () => {
     const result = buildFinancialContext(
       makeInput({
-        invoices: [
-          { invoice_number: "INV-001", total: 1000, vat_amount: 0, status: "draft" },
-        ],
-      })
+        invoices: [{ invoice_number: "INV-001", total: 1000, vat_amount: 0, status: "draft" }],
+      }),
     );
     expect(result).toContain("Unknown");
   });
@@ -908,15 +883,17 @@ describe("opening balances section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            has_opening_balances: true,
-            opening_bank_balance: 25000,
-            opening_debtors: 10000,
-            opening_creditors: 8000,
-            opening_vat_liability: 3000,
-          }],
+          businesses: [
+            {
+              has_opening_balances: true,
+              opening_bank_balance: 25000,
+              opening_debtors: 10000,
+              opening_creditors: 8000,
+              opening_vat_liability: 3000,
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain("=== OPENING BALANCES ===");
     expect(result).toContain(`Bank Balance: ${eur(25000)}`);
@@ -929,12 +906,14 @@ describe("opening balances section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            has_opening_balances: true,
-            opening_bank_balance: 15000,
-          }],
+          businesses: [
+            {
+              has_opening_balances: true,
+              opening_bank_balance: 15000,
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain(`Bank Balance: ${eur(15000)}`);
     expect(result).not.toContain("Debtors:");
@@ -955,18 +934,14 @@ describe("balance due vs refund due", () => {
 
   it("shows REFUND DUE when payments exceed CT", () => {
     // CT = 8,750 but prelim paid = 15,000 => refund of 6,250
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { preliminaryCTPaid: 15000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { preliminaryCTPaid: 15000 } }));
     expect(result).toContain("REFUND DUE");
     expect(result).toContain(eur(6250));
   });
 
   it("shows REFUND DUE of zero when CT exactly equals payments", () => {
     // CT = 8,750, prelim = 8,750 => balance = 0, which is <= 0
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { preliminaryCTPaid: 8750 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { preliminaryCTPaid: 8750 } }));
     expect(result).toContain("REFUND DUE");
     expect(result).toContain(eur(0));
   });
@@ -976,7 +951,7 @@ describe("balance due vs refund due", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, rctPrepayment: 3000 },
-      })
+      }),
     );
     expect(result).toContain("BALANCE DUE");
     expect(result).toContain(eur(5750));
@@ -987,7 +962,7 @@ describe("balance due vs refund due", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, rctPrepayment: 10000 },
-      })
+      }),
     );
     expect(result).toContain("REFUND DUE");
     expect(result).toContain(eur(1250));
@@ -1011,7 +986,7 @@ describe("travel & accommodation section", () => {
           directorsLoanTravel: 6000,
           travelAllowance: 7500,
         },
-      })
+      }),
     );
     expect(result).toContain("=== TRAVEL & ACCOMMODATION ===");
     expect(result).toContain(`Travel allowance (Revenue mileage + subsistence rates): ${eur(7500)}`);
@@ -1024,7 +999,7 @@ describe("travel & accommodation section", () => {
       makeInput({
         ct1: { ...makeInput().ct1, directorsLoanTravel: 1000, travelAllowance: 1000 },
         businessExtra: { businesses: [{ place_of_work: "Dublin" }] },
-      })
+      }),
     );
     expect(result).toContain("Normal place of work county: Dublin");
   });
@@ -1033,7 +1008,7 @@ describe("travel & accommodation section", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, directorsLoanTravel: 3000, travelAllowance: 3500 },
-      })
+      }),
     );
     expect(result).toContain(`MILEAGE & SUBSISTENCE: Claiming ${eur(3500)}`);
   });
@@ -1042,7 +1017,7 @@ describe("travel & accommodation section", () => {
     const result = buildFinancialContext(
       makeInput({
         directorData: { director_name: "John", commute_distance_km: 40 },
-      })
+      }),
     );
     expect(result).toContain("MILEAGE: Director has a commute but no travel claims detected");
   });
@@ -1068,7 +1043,7 @@ describe("empty and minimal input", () => {
         directorRows: undefined,
         allForm11Data: undefined,
         invoices: undefined,
-      })
+      }),
     );
     expect(typeof result).toBe("string");
     expect(result).toContain("Test Co Ltd");
@@ -1084,7 +1059,7 @@ describe("empty and minimal input", () => {
         directorRows: undefined,
         allForm11Data: undefined,
         invoices: undefined,
-      })
+      }),
     );
     expect(typeof result).toBe("string");
   });
@@ -1104,7 +1079,7 @@ describe("empty and minimal input", () => {
           vatPosition: null,
           flaggedCapitalItems: [],
         },
-      })
+      }),
     );
     expect(result).toContain(`TOTAL INCOME: ${eur(0)}`);
     expect(result).toContain(`TOTAL EXPENSES: ${eur(0)}`);
@@ -1140,7 +1115,7 @@ describe("VAT position section", () => {
           ...makeInput().ct1,
           vatPosition: { type: "payable", amount: 12000 },
         },
-      })
+      }),
     );
     expect(result).toContain("=== VAT POSITION ===");
     expect(result).toContain(`VAT Payable: ${eur(12000)}`);
@@ -1153,7 +1128,7 @@ describe("VAT position section", () => {
           ...makeInput().ct1,
           vatPosition: { type: "refundable", amount: 3000 },
         },
-      })
+      }),
     );
     expect(result).toContain(`VAT Refundable: ${eur(3000)}`);
   });
@@ -1175,7 +1150,7 @@ describe("flagged capital items section", () => {
             { description: "Scaffold Tower", date: "2025-06-22", amount: 1800 },
           ],
         },
-      })
+      }),
     );
     expect(result).toContain("=== FLAGGED CAPITAL ITEMS");
     expect(result).toContain(`Compressor — 2025-04-10 — ${eur(2500)}`);
@@ -1193,14 +1168,16 @@ describe("employees & payroll section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            has_employees: true,
-            employee_count: 5,
-            paye_registered: true,
-            paye_number: "1234567TH",
-          }],
+          businesses: [
+            {
+              has_employees: true,
+              employee_count: 5,
+              paye_registered: true,
+              paye_number: "1234567TH",
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain("=== EMPLOYEES & PAYROLL ===");
     expect(result).toContain("Has Employees: Yes");
@@ -1231,7 +1208,7 @@ describe("Form 11 questionnaire data section", () => {
             },
           },
         ],
-      })
+      }),
     );
     expect(result).toContain("=== FORM 11 QUESTIONNAIRE DATA ===");
     expect(result).toContain("--- Director 1 Form 11 ---");
@@ -1250,9 +1227,7 @@ describe("balance sheet from CT1 questionnaire", () => {
   });
 
   it("does not appear when savedCT1 has no balance sheet fields", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { lossesForward: 0 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { lossesForward: 0 } }));
     expect(result).not.toContain("=== BALANCE SHEET (from CT1 questionnaire) ===");
   });
 
@@ -1267,7 +1242,7 @@ describe("balance sheet from CT1 questionnaire", () => {
           shareCapitalIssued: 100,
           retainedProfitsBroughtForward: 42000,
         },
-      })
+      }),
     );
     expect(result).toContain("=== BALANCE SHEET (from CT1 questionnaire) ===");
     expect(result).toContain(`Fixed Assets - Plant & Machinery: ${eur(50000)}`);
@@ -1289,12 +1264,14 @@ describe("expense behaviour section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            has_home_office: true,
-            business_use_percentage: 25,
-          }],
+          businesses: [
+            {
+              has_home_office: true,
+              business_use_percentage: 25,
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain("=== EXPENSE BEHAVIOUR ===");
     expect(result).toContain("Home Office: Yes (business use 25%)");
@@ -1304,7 +1281,7 @@ describe("expense behaviour section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: { businesses: [{ mixed_use_spending: true }] },
-      })
+      }),
     );
     expect(result).toContain("Mixed-use Spending: Yes");
   });
@@ -1320,14 +1297,16 @@ describe("loans & finance section", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            has_loans: true,
-            loan_type: "term_loan",
-            loan_start_date: "2024-01-01",
-            directors_loan_movements: true,
-          }],
+          businesses: [
+            {
+              has_loans: true,
+              loan_type: "term_loan",
+              loan_start_date: "2024-01-01",
+              directors_loan_movements: true,
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain("=== LOANS & FINANCE ===");
     expect(result).toContain("Loan Type: term_loan");
@@ -1349,9 +1328,7 @@ describe("data sources section", () => {
 // ══════════════════════════════════════════════════════════════
 describe("tax planning — loss relief", () => {
   it("shows loss relief when lossesForward > 0", () => {
-    const result = buildFinancialContext(
-      makeInput({ savedCT1: { lossesForward: 15000 } })
-    );
+    const result = buildFinancialContext(makeInput({ savedCT1: { lossesForward: 15000 } }));
     expect(result).toContain(`LOSS RELIEF: Carrying forward ${eur(15000)}`);
   });
 
@@ -1366,7 +1343,7 @@ describe("tax planning — RCT credit", () => {
     const result = buildFinancialContext(
       makeInput({
         ct1: { ...makeInput().ct1, rctPrepayment: 6000 },
-      })
+      }),
     );
     expect(result).toContain(`RCT CREDIT: ${eur(6000)} deducted at source`);
   });
@@ -1376,10 +1353,8 @@ describe("tax planning — rent credit", () => {
   it("shows rent credit when director pays rent", () => {
     const result = buildFinancialContext(
       makeInput({
-        allForm11Data: [
-          { directorNumber: 1, data: { rentPaid: 12000 } },
-        ],
-      })
+        allForm11Data: [{ directorNumber: 1, data: { rentPaid: 12000 } }],
+      }),
     );
     expect(result).toContain("RENT TAX CREDIT");
   });
@@ -1394,10 +1369,8 @@ describe("tax planning — medical expenses", () => {
   it("shows medical relief when director has medical expenses", () => {
     const result = buildFinancialContext(
       makeInput({
-        allForm11Data: [
-          { directorNumber: 1, data: { medicalExpenses: 3000 } },
-        ],
-      })
+        allForm11Data: [{ directorNumber: 1, data: { medicalExpenses: 3000 } }],
+      }),
     );
     expect(result).toContain("MEDICAL EXPENSES");
     expect(result).toContain("20% tax relief");
@@ -1409,12 +1382,14 @@ describe("tax planning — home office", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: {
-          businesses: [{
-            has_home_office: true,
-            business_use_percentage: 30,
-          }],
+          businesses: [
+            {
+              has_home_office: true,
+              business_use_percentage: 30,
+            },
+          ],
         },
-      })
+      }),
     );
     expect(result).toContain("HOME OFFICE: Claiming 30%");
   });
@@ -1444,11 +1419,9 @@ describe("trial balance section", () => {
           imbalanceAmount: -30000,
           orphanedTransactions: 3,
           uncategorizedAmount: 1500,
-          issues: [
-            { severity: "error", title: "Imbalanced", description: "Debits do not equal credits" },
-          ],
+          issues: [{ severity: "error", title: "Imbalanced", description: "Debits do not equal credits" }],
         },
-      })
+      }),
     );
     expect(result).toContain("=== TRIAL BALANCE STATUS ===");
     expect(result).toContain(`Total Debits: ${eur(20000)}`);
@@ -1465,9 +1438,7 @@ describe("trial balance section", () => {
       makeInput({
         trialBalance: {
           isLoading: false,
-          accounts: [
-            { accountName: "Sales", accountType: "Income", debit: 0, credit: 10000 },
-          ],
+          accounts: [{ accountName: "Sales", accountType: "Income", debit: 0, credit: 10000 }],
           totalDebits: 10000,
           totalCredits: 10000,
           isBalanced: true,
@@ -1476,7 +1447,7 @@ describe("trial balance section", () => {
           uncategorizedAmount: 0,
           issues: [],
         },
-      })
+      }),
     );
     expect(result).toContain("Balanced: Yes");
   });
@@ -1495,7 +1466,7 @@ describe("trial balance section", () => {
           uncategorizedAmount: 0,
           issues: [],
         },
-      })
+      }),
     );
     expect(result).not.toContain("=== TRIAL BALANCE STATUS ===");
   });
@@ -1512,7 +1483,7 @@ describe("industry category group mapping", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: { businesses: [{ primary_activity: "general_construction" }] },
-      })
+      }),
     );
     expect(result).toContain("Industry Category Group: Construction & Trades");
   });
@@ -1521,7 +1492,7 @@ describe("industry category group mapping", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: { businesses: [{ primary_activity: "software_development" }] },
-      })
+      }),
     );
     expect(result).toContain("Industry Category Group: Software Development");
   });
@@ -1530,7 +1501,7 @@ describe("industry category group mapping", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: { businesses: [{ primary_activity: "cafe_restaurant" }] },
-      })
+      }),
     );
     expect(result).toContain("Industry Category Group: Hospitality & Food");
   });
@@ -1539,7 +1510,7 @@ describe("industry category group mapping", () => {
     const result = buildFinancialContext(
       makeInput({
         businessExtra: { businesses: [{ primary_activity: "unknown_activity_xyz" }] },
-      })
+      }),
     );
     expect(result).toContain("Industry Category Group: Professional Services");
   });
@@ -1548,7 +1519,7 @@ describe("industry category group mapping", () => {
     const result = buildFinancialContext(
       makeInput({
         onboardingSettings: { business_type: "taxi_private_hire" },
-      })
+      }),
     );
     expect(result).toContain("Industry Category Group: Transport & Logistics");
   });
@@ -1570,7 +1541,7 @@ describe("EU & international trade section", () => {
           uses_postponed_accounting: true,
           has_section_56_authorisation: true,
         },
-      })
+      }),
     );
     expect(result).toContain("=== EU & INTERNATIONAL TRADE ===");
     expect(result).toContain("EU/International Trade: Enabled");

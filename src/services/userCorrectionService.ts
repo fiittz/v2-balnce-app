@@ -21,7 +21,7 @@ export async function recordCorrection(
   originalCategory: string | null,
   correctedCategory: string,
   correctedCategoryId: string,
-  correctedVatRate: number | null
+  correctedVatRate: number | null,
 ): Promise<void> {
   const vendorPattern = extractVendorPattern(description);
   if (!vendorPattern) return;
@@ -50,10 +50,7 @@ export async function recordCorrection(
       if (newCount >= PROMOTION_THRESHOLD && !existing.promoted_to_cache) {
         await promoteToVendorCache(userId, vendorPattern, correctedCategory, correctedVatRate);
 
-        await supabase
-          .from("user_corrections")
-          .update({ promoted_to_cache: true })
-          .eq("id", existing.id);
+        await supabase.from("user_corrections").update({ promoted_to_cache: true }).eq("id", existing.id);
 
         console.log(`[UserCorrections] Promoted "${vendorPattern}" to vendor cache (${newCount} corrections)`);
       }
@@ -77,9 +74,7 @@ export async function recordCorrection(
  * Load all user corrections as a Map keyed by vendor_pattern.
  * Only returns corrections with transaction_count >= 2 (minimum to be actionable).
  */
-export async function loadUserCorrections(
-  userId: string
-): Promise<Map<string, UserCorrection>> {
+export async function loadUserCorrections(userId: string): Promise<Map<string, UserCorrection>> {
   try {
     const { data, error } = await supabase
       .from("user_corrections")
@@ -112,7 +107,7 @@ async function promoteToVendorCache(
   userId: string,
   vendorPattern: string,
   category: string,
-  vatRate: number | null
+  vatRate: number | null,
 ): Promise<void> {
   let vatType = "Standard 23%";
   if (vatRate === 13.5) vatType = "Reduced 13.5%";

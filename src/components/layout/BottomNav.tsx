@@ -38,19 +38,16 @@ const BottomNav = () => {
               onClick={() => navigate(item.path)}
               className={cn(
                 "flex flex-col items-center justify-center w-16 py-2 rounded-2xl transition-all duration-200",
-                active
-                  ? ""
-                  : "active:scale-95"
+                active ? "" : "active:scale-95",
               )}
             >
-              <Icon className={cn(
-                "w-5 h-5 transition-colors",
-                active ? "text-foreground" : "text-muted-foreground"
-              )} />
-              <span className={cn(
-                "text-[10px] mt-1 font-medium transition-colors",
-                active ? "text-foreground" : "text-muted-foreground"
-              )}>
+              <Icon className={cn("w-5 h-5 transition-colors", active ? "text-foreground" : "text-muted-foreground")} />
+              <span
+                className={cn(
+                  "text-[10px] mt-1 font-medium transition-colors",
+                  active ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
                 {item.label}
               </span>
             </button>

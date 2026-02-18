@@ -279,9 +279,7 @@ describe("distance values", () => {
   });
 
   it("only Dublin city has distance 0", () => {
-    const zeroDistanceTowns = IRISH_TOWNS.filter(
-      (t) => t.distanceFromDublin === 0
-    );
+    const zeroDistanceTowns = IRISH_TOWNS.filter((t) => t.distanceFromDublin === 0);
     expect(zeroDistanceTowns).toHaveLength(1);
     expect(zeroDistanceTowns[0].name).toBe("Dublin");
     expect(zeroDistanceTowns[0].county).toBe("Dublin");

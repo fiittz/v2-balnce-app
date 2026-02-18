@@ -1,10 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  calculateForm11,
-  calculateVehicleBIK,
-  TAX_CONSTANTS,
-  type Form11Input,
-} from "../form11Calculator";
+import { calculateForm11, calculateVehicleBIK, TAX_CONSTANTS, type Form11Input } from "../form11Calculator";
 
 // ── Helper: minimal valid input ──────────────────────────────
 function baseInput(overrides: Partial<Form11Input> = {}): Form11Input {
@@ -126,9 +121,7 @@ describe("calculateForm11 — zero income", () => {
 // ══════════════════════════════════════════════════════════════
 describe("calculateForm11 — income aggregation", () => {
   it("correctly aggregates Schedule E (salary + dividends + BIK)", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 50_000, dividends: 5_000, bik: 3_000 })
-    );
+    const result = calculateForm11(baseInput({ salary: 50_000, dividends: 5_000, bik: 3_000 }));
     expect(result.scheduleE).toBe(58_000);
   });
 
@@ -138,7 +131,7 @@ describe("calculateForm11 — income aggregation", () => {
         businessIncome: 100_000,
         businessExpenses: 30_000,
         capitalAllowances: 10_000,
-      })
+      }),
     );
     expect(result.scheduleD).toBe(60_000);
   });
@@ -148,36 +141,28 @@ describe("calculateForm11 — income aggregation", () => {
       baseInput({
         businessIncome: 10_000,
         businessExpenses: 50_000,
-      })
+      }),
     );
     expect(result.scheduleD).toBe(0);
   });
 
   it("calculates rental profit correctly", () => {
-    const result = calculateForm11(
-      baseInput({ rentalIncome: 20_000, rentalExpenses: 8_000 })
-    );
+    const result = calculateForm11(baseInput({ rentalIncome: 20_000, rentalExpenses: 8_000 }));
     expect(result.rentalProfit).toBe(12_000);
   });
 
   it("does not allow negative rental profit", () => {
-    const result = calculateForm11(
-      baseInput({ rentalIncome: 5_000, rentalExpenses: 10_000 })
-    );
+    const result = calculateForm11(baseInput({ rentalIncome: 5_000, rentalExpenses: 10_000 }));
     expect(result.rentalProfit).toBe(0);
   });
 
   it("reduces Schedule E by mileage allowance", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 50_000, mileageAllowance: 5_000 })
-    );
+    const result = calculateForm11(baseInput({ salary: 50_000, mileageAllowance: 5_000 }));
     expect(result.scheduleE).toBe(45_000);
   });
 
   it("does not allow negative Schedule E from mileage", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 3_000, mileageAllowance: 5_000 })
-    );
+    const result = calculateForm11(baseInput({ salary: 3_000, mileageAllowance: 5_000 }));
     expect(result.scheduleE).toBe(0);
   });
 
@@ -188,7 +173,7 @@ describe("calculateForm11 — income aggregation", () => {
         spouseIncome: 30_000,
         maritalStatus: "married",
         assessmentBasis: "joint",
-      })
+      }),
     );
     expect(result.totalGrossIncome).toBe(70_000);
     expect(result.spouseIncome).toBe(30_000);
@@ -224,7 +209,7 @@ describe("calculateForm11 — income tax bands", () => {
         spouseIncome: 20_000,
         maritalStatus: "married",
         assessmentBasis: "joint",
-      })
+      }),
     );
     // Cutoff: 44,000 + min(20,000, 33,000) = 64,000
     // Total income: 90,000. Standard: 64,000. Higher: 26,000.
@@ -239,7 +224,7 @@ describe("calculateForm11 — income tax bands", () => {
         spouseIncome: 50_000,
         maritalStatus: "married",
         assessmentBasis: "joint",
-      })
+      }),
     );
     // Cutoff: 44,000 + 44,000 = 88,000 (spouse income capped at second_earner_max)
     expect(result.incomeTaxBands[0].amount).toBe(88_000);
@@ -252,7 +237,7 @@ describe("calculateForm11 — income tax bands", () => {
         spouseIncome: 20_000,
         maritalStatus: "married",
         assessmentBasis: "separate",
-      })
+      }),
     );
     // Separate = single cutoff of 44,000
     expect(result.incomeTaxBands[0].amount).toBe(44_000);
@@ -271,9 +256,7 @@ describe("calculateForm11 — credits", () => {
   });
 
   it("gives married credit to married person", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 50_000, maritalStatus: "married", assessmentBasis: "joint" })
-    );
+    const result = calculateForm11(baseInput({ salary: 50_000, maritalStatus: "married", assessmentBasis: "joint" }));
     const marriedCredit = result.credits.find((c) => c.label.includes("Married"));
     expect(marriedCredit).toBeDefined();
     expect(marriedCredit!.amount).toBe(4_000);
@@ -322,9 +305,7 @@ describe("calculateForm11 — credits", () => {
   });
 
   it("caps rent credit at €2,000 for married", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 50_000, rentPaid: 5_000, maritalStatus: "married" })
-    );
+    const result = calculateForm11(baseInput({ salary: 50_000, rentPaid: 5_000, maritalStatus: "married" }));
     const rentCredit = result.credits.find((c) => c.label.includes("Rent"));
     expect(rentCredit!.amount).toBe(2_000);
   });
@@ -368,7 +349,7 @@ describe("calculateForm11 — USC", () => {
     expect(result.uscBands).toHaveLength(3);
     expect(result.uscBands[0].tax).toBeCloseTo(60.06, 1);
     expect(result.uscBands[1].tax).toBeCloseTo(333.76, 1);
-    expect(result.uscBands[2].tax).toBeCloseTo(639.00, 1);
+    expect(result.uscBands[2].tax).toBeCloseTo(639.0, 1);
   });
 
   it("applies 11% surcharge band for income > €100,000", () => {
@@ -407,34 +388,26 @@ describe("calculateForm11 — PRSI", () => {
 // ══════════════════════════════════════════════════════════════
 describe("calculateForm11 — CGT", () => {
   it("charges no CGT when gains <= losses", () => {
-    const result = calculateForm11(
-      baseInput({ capitalGains: 5_000, capitalLosses: 6_000 })
-    );
+    const result = calculateForm11(baseInput({ capitalGains: 5_000, capitalLosses: 6_000 }));
     expect(result.cgtApplicable).toBe(false);
     expect(result.cgtPayable).toBe(0);
   });
 
   it("applies €1,270 annual exemption", () => {
-    const result = calculateForm11(
-      baseInput({ capitalGains: 2_000, capitalLosses: 0 })
-    );
+    const result = calculateForm11(baseInput({ capitalGains: 2_000, capitalLosses: 0 }));
     // Taxable: 2000 - 1270 = 730. CGT: 730 * 0.33 = 240.90
     expect(result.cgtApplicable).toBe(true);
     expect(result.cgtPayable).toBeCloseTo(240.9, 1);
   });
 
   it("charges no CGT when net gains within exemption", () => {
-    const result = calculateForm11(
-      baseInput({ capitalGains: 1_270, capitalLosses: 0 })
-    );
+    const result = calculateForm11(baseInput({ capitalGains: 1_270, capitalLosses: 0 }));
     expect(result.cgtApplicable).toBe(false);
     expect(result.cgtPayable).toBe(0);
   });
 
   it("charges 33% CGT on gains above exemption", () => {
-    const result = calculateForm11(
-      baseInput({ capitalGains: 11_270, capitalLosses: 0 })
-    );
+    const result = calculateForm11(baseInput({ capitalGains: 11_270, capitalLosses: 0 }));
     // Taxable: 11270 - 1270 = 10000. CGT: 10000 * 0.33 = 3300
     expect(result.cgtPayable).toBe(3300);
   });
@@ -450,7 +423,7 @@ describe("calculateForm11 — pension relief", () => {
         dateOfBirth: "1990-01-01", // ~36 in 2026 → 30-39 band = 20%
         salary: 80_000,
         pensionContributions: 20_000,
-      })
+      }),
     );
     // Max: 80000 * 0.20 = 16000
     expect(result.pensionRelief).toBe(16_000);
@@ -462,7 +435,7 @@ describe("calculateForm11 — pension relief", () => {
         dateOfBirth: "1960-01-01", // 60+ → 40%
         salary: 200_000,
         pensionContributions: 100_000,
-      })
+      }),
     );
     // Relevant earnings capped at 115,000. Max: 115000 * 0.40 = 46000
     expect(result.pensionRelief).toBe(46_000);
@@ -474,7 +447,7 @@ describe("calculateForm11 — pension relief", () => {
         dateOfBirth: "1990-01-01",
         salary: 50_000,
         pensionContributions: 15_000,
-      })
+      }),
     );
     // Max: 50000 * 0.20 = 10000, contributed 15000
     expect(result.pensionRelief).toBe(10_000);
@@ -487,33 +460,24 @@ describe("calculateForm11 — pension relief", () => {
 // ══════════════════════════════════════════════════════════════
 describe("calculateForm11 — summary", () => {
   it("calculates total liability as income tax + USC + PRSI + CGT", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 60_000, capitalGains: 5_000 })
-    );
-    const expectedLiability =
-      result.netIncomeTax + result.totalUSC + result.prsiPayable + result.cgtPayable;
+    const result = calculateForm11(baseInput({ salary: 60_000, capitalGains: 5_000 }));
+    const expectedLiability = result.netIncomeTax + result.totalUSC + result.prsiPayable + result.cgtPayable;
     expect(result.totalLiability).toBeCloseTo(expectedLiability, 2);
   });
 
   it("calculates balance due as liability minus preliminary tax paid", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 60_000, preliminaryTaxPaid: 5_000 })
-    );
+    const result = calculateForm11(baseInput({ salary: 60_000, preliminaryTaxPaid: 5_000 }));
     expect(result.balanceDue).toBeCloseTo(result.totalLiability - 5_000, 2);
   });
 
   it("notes overpayment when preliminary tax exceeds liability", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 10_000, preliminaryTaxPaid: 50_000 })
-    );
+    const result = calculateForm11(baseInput({ salary: 10_000, preliminaryTaxPaid: 50_000 }));
     expect(result.balanceDue).toBeLessThan(0);
     expect(result.notes.some((n) => n.includes("Overpayment"))).toBe(true);
   });
 
   it("warns about charitable donations below €250", () => {
-    const result = calculateForm11(
-      baseInput({ salary: 50_000, charitableDonations: 100 })
-    );
+    const result = calculateForm11(baseInput({ salary: 50_000, charitableDonations: 100 }));
     expect(result.warnings.some((w) => w.includes("€250"))).toBe(true);
   });
 });
@@ -531,7 +495,7 @@ describe("calculateForm11 — split-year", () => {
         spouseIncome: 30_000,
         changeEffectiveDate: "2024-07-01",
         preChangeAssessmentBasis: "single",
-      })
+      }),
     );
     expect(result.splitYearApplied).toBe(true);
     expect(result.splitYearNote).toContain("Assessment basis changed");
@@ -559,7 +523,7 @@ describe("calculateForm11 — integration: typical director", () => {
         hasPAYEIncome: true,
         pensionContributions: 5_000,
         medicalExpenses: 1_000,
-      })
+      }),
     );
 
     // Income
@@ -602,7 +566,7 @@ describe("calculateForm11 — empty dateOfBirth fallback", () => {
         dateOfBirth: "",
         salary: 80_000,
         pensionContributions: 20_000,
-      })
+      }),
     );
     // Age defaults to 35 → falls in 30-39 band = 20%
     // Max pension: 80000 * 0.20 = 16000
@@ -623,7 +587,7 @@ describe("calculateForm11 — getAge birthday later in year", () => {
         dateOfBirth: "1986-12-25",
         salary: 80_000,
         pensionContributions: 20_000,
-      })
+      }),
     );
     // Age = 39 → 30-39 band = 20%, Max: 80000 * 0.20 = 16000
     expect(result.pensionRelief).toBe(16_000);

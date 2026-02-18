@@ -21,7 +21,7 @@ const parseVatRateToNumeric = (vatRateStr: string): number => {
       .replace("reduced_", "")
       .replace("second_reduced_", "")
       .replace("livestock_", "")
-      .replace("_", ".")
+      .replace("_", "."),
   );
   return isNaN(num) ? 0 : num;
 };
@@ -84,18 +84,22 @@ const ReceiptScanner = () => {
 
       // Build receipt context for AI categorization
       const lineItemText = receiptData.line_items?.length
-        ? receiptData.line_items.map(li => `${li.description} x${li.quantity} @ €${li.unit_price.toFixed(2)} = €${li.total.toFixed(2)}`).join("\n")
+        ? receiptData.line_items
+            .map((li) => `${li.description} x${li.quantity} @ €${li.unit_price.toFixed(2)} = €${li.total.toFixed(2)}`)
+            .join("\n")
         : "";
       const receiptContext = [
         receiptData.supplier_name && `Supplier: ${receiptData.supplier_name}`,
         lineItemText && `Line items:\n${lineItemText}`,
         receiptData.suggested_category && `OCR suggested category: ${receiptData.suggested_category}`,
         rawText && `Full receipt text:\n${rawText}`,
-      ].filter(Boolean).join("\n\n");
+      ]
+        .filter(Boolean)
+        .join("\n\n");
 
       // Build a richer description from line items
       const description = receiptData.line_items?.length
-        ? `${receiptData.supplier_name || "Receipt"} — ${receiptData.line_items.map(li => li.description).join(", ")}`
+        ? `${receiptData.supplier_name || "Receipt"} — ${receiptData.line_items.map((li) => li.description).join(", ")}`
         : receiptData.supplier_name || "Expense";
 
       // AI categorization
@@ -109,12 +113,12 @@ const ReceiptScanner = () => {
             { description, amount: receiptData.total_amount, date: receiptData.date || new Date().toISOString() },
             categories,
             profile?.business_type,
-            receiptContext || undefined
+            receiptContext || undefined,
           );
           if (catResult.category_id) {
             categoryId = catResult.category_id;
           } else if (catResult.category_name) {
-            const match = categories.find(c => c.name.toLowerCase() === catResult.category_name.toLowerCase());
+            const match = categories.find((c) => c.name.toLowerCase() === catResult.category_name.toLowerCase());
             if (match) categoryId = match.id;
           }
           if (catResult.vat_rate) finalVatRate = catResult.vat_rate;
@@ -125,7 +129,9 @@ const ReceiptScanner = () => {
 
       // If OCR suggested a category and AI didn't find one, try matching by name
       if (!categoryId && receiptData.suggested_category && categories) {
-        const match = categories.find(c => c.name.toLowerCase().includes(receiptData.suggested_category!.toLowerCase()));
+        const match = categories.find((c) =>
+          c.name.toLowerCase().includes(receiptData.suggested_category!.toLowerCase()),
+        );
         if (match) categoryId = match.id;
       }
 
@@ -136,11 +142,9 @@ const ReceiptScanner = () => {
 
       // Map category to Chart of Accounts entry
       const categoryName = categoryId
-        ? categories?.find(c => c.id === categoryId)?.name
+        ? categories?.find((c) => c.id === categoryId)?.name
         : receiptData.suggested_category;
-      const matchedAccount = categoryName
-        ? findForTransaction(categoryName, "expense", finalVatRate)
-        : null;
+      const matchedAccount = categoryName ? findForTransaction(categoryName, "expense", finalVatRate) : null;
       const accountId = matchedAccount?.id || getDefault("expense")?.id || null;
 
       await createExpense.mutateAsync({
@@ -152,10 +156,15 @@ const ReceiptScanner = () => {
         description: description.slice(0, 255),
         expense_date: receiptData.date || new Date().toISOString().split("T")[0],
         receipt_url: receiptUrl,
-        notes: [
-          receiptData.invoice_number ? `Invoice: ${receiptData.invoice_number}` : null,
-          receiptData.line_items?.length ? `Items: ${receiptData.line_items.map(li => li.description).join(", ")}` : null,
-        ].filter(Boolean).join(" | ") || null,
+        notes:
+          [
+            receiptData.invoice_number ? `Invoice: ${receiptData.invoice_number}` : null,
+            receiptData.line_items?.length
+              ? `Items: ${receiptData.line_items.map((li) => li.description).join(", ")}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" | ") || null,
       });
 
       reset();
@@ -170,12 +179,7 @@ const ReceiptScanner = () => {
 
   // Camera view - full screen without layout
   if (state === "camera") {
-    return (
-      <CameraCapture
-        onCapture={captureImage}
-        onClose={() => reset()}
-      />
-    );
+    return <CameraCapture onCapture={captureImage} onClose={() => reset()} />;
   }
 
   return (
@@ -252,20 +256,14 @@ const ReceiptScanner = () => {
           <div className="text-center">
             {imageData && (
               <div className="w-48 h-64 mx-auto mb-6 rounded-xl overflow-hidden bg-muted">
-                <img 
-                  src={imageData} 
-                  alt="Receipt" 
-                  className="w-full h-full object-cover opacity-50"
-                />
+                <img src={imageData} alt="Receipt" className="w-full h-full object-cover opacity-50" />
               </div>
             )}
             <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">
               {state === "uploading" ? "Uploading..." : "Processing Receipt"}
             </h2>
-            <p className="text-muted-foreground">
-              {state === "processing" && "AI is extracting details..."}
-            </p>
+            <p className="text-muted-foreground">{state === "processing" && "AI is extracting details..."}</p>
           </div>
         </main>
       )}
@@ -280,11 +278,7 @@ const ReceiptScanner = () => {
                 onClick={() => setViewerOpen(true)}
                 className="relative w-48 h-64 mx-auto mb-4 rounded-xl overflow-hidden bg-muted group cursor-pointer"
               >
-                <img
-                  src={imageData}
-                  alt="Receipt"
-                  className="w-full h-full object-cover"
-                />
+                <img src={imageData} alt="Receipt" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <ZoomIn className="w-8 h-8 text-white" />
                 </div>

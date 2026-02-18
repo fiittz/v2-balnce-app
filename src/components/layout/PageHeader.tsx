@@ -28,15 +28,11 @@ const PageHeader = ({ title, subtitle, showBack = false, backPath = "/dashboard"
         {/* Center - title */}
         <div className="flex-1 text-center">
           <h1 className="font-semibold text-xl">{title}</h1>
-          {subtitle && (
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </div>
 
         {/* Right side - action buttons */}
-        <div className="w-24 flex items-center justify-end">
-          {rightContent}
-        </div>
+        <div className="w-24 flex items-center justify-end">{rightContent}</div>
       </div>
     </header>
   );

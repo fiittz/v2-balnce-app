@@ -22,9 +22,7 @@ const { mockDoc, mockAutoTable, mockLink } = vi.hoisted(() => {
 
 // ── Mock DOM APIs ────────────────────────────────────────────
 vi.stubGlobal("document", {
-  createElement: vi.fn((tag: string) =>
-    tag === "a" ? mockLink : { textContent: "", innerHTML: "" }
-  ),
+  createElement: vi.fn((tag: string) => (tag === "a" ? mockLink : { textContent: "", innerHTML: "" })),
   body: { appendChild: vi.fn(), removeChild: vi.fn() },
 });
 vi.stubGlobal("URL", {
@@ -40,7 +38,7 @@ vi.stubGlobal(
     const instance = { parts, type: opts?.type };
     blobInstances.push(instance);
     return instance;
-  })
+  }),
 );
 
 // ── Mock jsPDF ───────────────────────────────────────────────
@@ -70,12 +68,7 @@ vi.mock("date-fns", () => ({
 vi.mock("@/components/export/BusinessBankExportQuestionnaire", () => ({}));
 vi.mock("@/components/export/DirectorExportQuestionnaire", () => ({}));
 
-import {
-  exportToExcel,
-  exportToPDF,
-  exportDirectorToExcel,
-  exportDirectorToPDF,
-} from "@/lib/exportTransactions";
+import { exportToExcel, exportToPDF, exportDirectorToExcel, exportDirectorToPDF } from "@/lib/exportTransactions";
 import type { PnlCt1Summary, CompanyInfo } from "@/lib/exportTransactions";
 
 // ── Transaction factory ──────────────────────────────────────
@@ -303,7 +296,7 @@ describe("exportToExcel", () => {
 
   it("triggers download via anchor element", () => {
     exportToExcel([makeTx()]);
-    expect((document.createElement as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith("a");
+    expect(document.createElement as ReturnType<typeof vi.fn>).toHaveBeenCalledWith("a");
     expect(document.body.appendChild).toHaveBeenCalled();
     expect(document.body.removeChild).toHaveBeenCalled();
   });
@@ -339,12 +332,7 @@ describe("exportToPDF", () => {
 
   it("renders Transaction Report title", () => {
     exportToPDF([makeTx()]);
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Transaction Report",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Transaction Report", 14, expect.any(Number), expect.anything());
   });
 
   it("calls autoTable for Sales Tax Audit groups", () => {
@@ -354,47 +342,22 @@ describe("exportToPDF", () => {
 
   it("renders company header when companyInfo provided", () => {
     exportToPDF([makeTx()], undefined, undefined, undefined, makeCompanyInfo());
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Test Company Ltd",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Test Company Ltd", 14, expect.any(Number), expect.anything());
   });
 
   it("renders registered address when companyInfo has it", () => {
     exportToPDF([makeTx()], undefined, undefined, undefined, makeCompanyInfo());
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "123 Main St, Dublin",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("123 Main St, Dublin", 14, expect.any(Number), expect.anything());
   });
 
   it("renders P&L section when pnlCt1 provided", () => {
     exportToPDF([makeTx()], undefined, undefined, makePnlCt1());
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Profit & Loss",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Profit & Loss", 14, expect.any(Number), expect.anything());
   });
 
   it("renders CT1 section when pnlCt1 has taxableProfit", () => {
-    exportToPDF(
-      [makeTx()],
-      undefined,
-      undefined,
-      makePnlCt1({ taxableProfit: 70000, ctAt125: 8750, totalCT: 8750 })
-    );
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Corporation Tax (CT1)",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    exportToPDF([makeTx()], undefined, undefined, makePnlCt1({ taxableProfit: 70000, ctAt125: 8750, totalCT: 8750 }));
+    expect(mockDoc.text).toHaveBeenCalledWith("Corporation Tax (CT1)", 14, expect.any(Number), expect.anything());
   });
 
   it("renders questionnaire section when provided", () => {
@@ -403,28 +366,14 @@ describe("exportToPDF", () => {
       "Business Bank Account Finalisation",
       14,
       expect.any(Number),
-      expect.anything()
+      expect.anything(),
     );
   });
 
   it("renders single director + secretary signatures", () => {
-    exportToPDF(
-      [makeTx()],
-      undefined,
-      undefined,
-      undefined,
-      makeCompanyInfo({ directorNames: ["Alice Murphy"] })
-    );
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Director",
-      14,
-      expect.any(Number)
-    );
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Secretary",
-      expect.any(Number),
-      expect.any(Number)
-    );
+    exportToPDF([makeTx()], undefined, undefined, undefined, makeCompanyInfo({ directorNames: ["Alice Murphy"] }));
+    expect(mockDoc.text).toHaveBeenCalledWith("Director", 14, expect.any(Number));
+    expect(mockDoc.text).toHaveBeenCalledWith("Secretary", expect.any(Number), expect.any(Number));
   });
 
   it("renders multiple director signatures without secretary", () => {
@@ -433,15 +382,11 @@ describe("exportToPDF", () => {
       undefined,
       undefined,
       undefined,
-      makeCompanyInfo({ directorNames: ["Alice Murphy", "Bob Smith"] })
+      makeCompanyInfo({ directorNames: ["Alice Murphy", "Bob Smith"] }),
     );
-    const directorCalls = mockDoc.text.mock.calls.filter(
-      (call: unknown[]) => call[0] === "Director"
-    );
+    const directorCalls = mockDoc.text.mock.calls.filter((call: unknown[]) => call[0] === "Director");
     expect(directorCalls.length).toBe(2);
-    const secretaryCalls = mockDoc.text.mock.calls.filter(
-      (call: unknown[]) => call[0] === "Secretary"
-    );
+    const secretaryCalls = mockDoc.text.mock.calls.filter((call: unknown[]) => call[0] === "Secretary");
     expect(secretaryCalls.length).toBe(0);
   });
 
@@ -470,18 +415,8 @@ describe("exportToPDF", () => {
   });
 
   it("renders Directors Current Account when pnlCt1 has drawings", () => {
-    exportToPDF(
-      [makeTx()],
-      undefined,
-      undefined,
-      makePnlCt1({ directorsDrawings: 5000, netDirectorsLoan: -3000 })
-    );
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Directors Current Account",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    exportToPDF([makeTx()], undefined, undefined, makePnlCt1({ directorsDrawings: 5000, netDirectorsLoan: -3000 }));
+    expect(mockDoc.text).toHaveBeenCalledWith("Directors Current Account", 14, expect.any(Number), expect.anything());
   });
 
   it("excludes Revenue Refund transactions from audit groups", () => {
@@ -559,18 +494,13 @@ describe("exportDirectorToPDF", () => {
       "Director Personal Account Report",
       14,
       expect.any(Number),
-      expect.anything()
+      expect.anything(),
     );
   });
 
   it("renders company header when companyInfo provided", () => {
     exportDirectorToPDF([makeTx()], undefined, undefined, makeCompanyInfo());
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Test Company Ltd",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Test Company Ltd", 14, expect.any(Number), expect.anything());
   });
 
   it("renders questionnaire section when provided", () => {
@@ -579,7 +509,7 @@ describe("exportDirectorToPDF", () => {
       "Personal Account Finalisation (Form 11)",
       14,
       expect.any(Number),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -600,12 +530,7 @@ describe("exportDirectorToPDF", () => {
 
   it("renders transaction count", () => {
     exportDirectorToPDF([makeTx(), makeTx({ id: "tx-2" })]);
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "2 transactions",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("2 transactions", 14, expect.any(Number), expect.anything());
   });
 });
 
@@ -1072,24 +997,14 @@ describe("exportToPDF — expanded branch coverage", () => {
 
   it("renders CT1 PDF section with all optional fields populated", () => {
     exportToPDF([makeTx()], undefined, undefined, makeFullPnlCt1());
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Corporation Tax (CT1)",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Corporation Tax (CT1)", 14, expect.any(Number), expect.anything());
     // autoTable called multiple times for P&L, CT1, DCA, audit, summary, receipt
     expect(mockAutoTable.mock.calls.length).toBeGreaterThanOrEqual(4);
   });
 
   it("renders Directors Current Account with subsistence and mileage in PDF", () => {
     exportToPDF([makeTx()], undefined, undefined, makeFullPnlCt1());
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Directors Current Account",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Directors Current Account", 14, expect.any(Number), expect.anything());
   });
 
   it("renders Direct Costs in P&L PDF when totalDirectCosts > 0", () => {
@@ -1098,9 +1013,7 @@ describe("exportToPDF — expanded branch coverage", () => {
     // Direct costs rows are part of the P&L autoTable call
     const pnlCall = mockAutoTable.mock.calls[0];
     const body = pnlCall[1].body;
-    const hasDirectCosts = body.some(
-      (row: string[]) => row[0] === "Total Direct Costs"
-    );
+    const hasDirectCosts = body.some((row: string[]) => row[0] === "Total Direct Costs");
     expect(hasDirectCosts).toBe(true);
   });
 
@@ -1109,9 +1022,7 @@ describe("exportToPDF — expanded branch coverage", () => {
     exportToPDF([makeTx()], undefined, undefined, pnl);
     const pnlCall = mockAutoTable.mock.calls[0];
     const body = pnlCall[1].body;
-    const hasRefund = body.some(
-      (row: string[]) => row[0] === "  Less: Revenue Refund"
-    );
+    const hasRefund = body.some((row: string[]) => row[0] === "  Less: Revenue Refund");
     expect(hasRefund).toBe(true);
   });
 
@@ -1125,12 +1036,7 @@ describe("exportToPDF — expanded branch coverage", () => {
       category: { name: "Sales" },
     });
     exportToPDF([incomeTx]);
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Sales Tax Audit Report",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Sales Tax Audit Report", 14, expect.any(Number), expect.anything());
   });
 
   it("excludes revenue refund income from sales audit groups", () => {
@@ -1205,24 +1111,14 @@ describe("exportToPDF — expanded branch coverage", () => {
       incorporationDate: "2019-05-01",
     });
     exportToPDF([makeTx()], undefined, undefined, undefined, info);
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Acme Ltd",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "456 Oak St, Cork",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Acme Ltd", 14, expect.any(Number), expect.anything());
+    expect(mockDoc.text).toHaveBeenCalledWith("456 Oak St, Cork", 14, expect.any(Number), expect.anything());
     // Info line with CRO, Tax Ref, Incorporated joined by |
     expect(mockDoc.text).toHaveBeenCalledWith(
       expect.stringContaining("CRO: 654321"),
       14,
       expect.any(Number),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -1239,7 +1135,7 @@ describe("exportToPDF — expanded branch coverage", () => {
     exportToPDF([makeTx()], undefined, q);
     // Questionnaire autoTable call
     const qCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section"
+      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section",
     );
     expect(qCall).toBeDefined();
     const body = (qCall![1] as { body: string[][] }).body;
@@ -1301,18 +1197,14 @@ describe("exportToPDF — expanded branch coverage", () => {
   it("handles no directors in companyInfo (no signature section)", () => {
     exportToPDF([makeTx()], undefined, undefined, undefined, makeCompanyInfo({ directorNames: [] }));
     const signCalls = mockDoc.text.mock.calls.filter(
-      (call: unknown[]) => call[0] === "Signed on behalf of the company"
+      (call: unknown[]) => call[0] === "Signed on behalf of the company",
     );
     expect(signCalls.length).toBe(0);
   });
 
   it("renders date line after director signatures", () => {
     exportToPDF([makeTx()], undefined, undefined, undefined, makeCompanyInfo({ directorNames: ["Alice"] }));
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Date",
-      14,
-      expect.any(Number)
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Date", 14, expect.any(Number));
   });
 
   it("handles CT1 balance due = 0 (refund due)", () => {
@@ -1450,18 +1342,13 @@ describe("exportDirectorToPDF — expanded branch coverage", () => {
       incorporationDate: "2021-03-10",
     });
     exportDirectorToPDF([makeTx()], undefined, undefined, info);
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Director Co Ltd",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Director Co Ltd", 14, expect.any(Number), expect.anything());
     // Info lines joined with |
     expect(mockDoc.text).toHaveBeenCalledWith(
       expect.stringContaining("789 Elm St, Galway"),
       14,
       expect.any(Number),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -1471,7 +1358,7 @@ describe("exportDirectorToPDF — expanded branch coverage", () => {
       "Director Personal Account Report",
       14,
       expect.any(Number),
-      expect.anything()
+      expect.anything(),
     );
   });
 
@@ -1498,7 +1385,7 @@ describe("exportDirectorToPDF — expanded branch coverage", () => {
     q.finalDeclaration = false;
     exportDirectorToPDF([makeTx()], undefined, q);
     const qCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section"
+      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section",
     );
     expect(qCall).toBeDefined();
     const body = (qCall![1] as { body: string[][] }).body;
@@ -1547,7 +1434,7 @@ describe("exportDirectorToPDF — expanded branch coverage", () => {
     q.preliminaryTaxPaid = "unsure" as const;
     exportDirectorToPDF([makeTx()], undefined, q);
     const qCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section"
+      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section",
     );
     expect(qCall).toBeDefined();
     const body = (qCall![1] as { body: string[][] }).body;
@@ -1564,7 +1451,7 @@ describe("exportDirectorToPDF — expanded branch coverage", () => {
     };
     exportDirectorToPDF([makeTx()], undefined, q);
     const qCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section"
+      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section",
     );
     expect(qCall).toBeDefined();
     const body = (qCall![1] as { body: string[][] }).body;
@@ -1575,12 +1462,7 @@ describe("exportDirectorToPDF — expanded branch coverage", () => {
     const txWithReceipt = makeTx({ id: "dir-r1", receipt_url: "https://example.com/r.pdf" });
     const txNoReceipt = makeTx({ id: "dir-r2", receipt_url: null });
     exportDirectorToPDF([txWithReceipt, txNoReceipt]);
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Receipt Matching Summary",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Receipt Matching Summary", 14, expect.any(Number), expect.anything());
   });
 });
 
@@ -1622,12 +1504,10 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
   it("invokes P&L didParseCell callback for bold labels and right-align", () => {
     exportToPDF([makeTx()], undefined, undefined, makeFullPnlCt1ForCallbacks());
     // Find the P&L autoTable call (first one with didParseCell)
-    const pnlCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => {
-        const opts = call[1] as { didParseCell?: unknown; head?: string[][] };
-        return opts.didParseCell && opts.head?.[0]?.[0] === "" && opts.head?.[0]?.[1] === "Amount";
-      }
-    );
+    const pnlCall = mockAutoTable.mock.calls.find((call: unknown[]) => {
+      const opts = call[1] as { didParseCell?: unknown; head?: string[][] };
+      return opts.didParseCell && opts.head?.[0]?.[0] === "" && opts.head?.[0]?.[1] === "Amount";
+    });
     expect(pnlCall).toBeDefined();
     const opts = pnlCall![1] as { didParseCell: (data: unknown) => void };
     // Test with "Total Income" label (should make bold)
@@ -1652,12 +1532,10 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
   it("invokes CT1 didParseCell callback for bold, italic, and amber styles", () => {
     exportToPDF([makeTx()], undefined, undefined, makeFullPnlCt1ForCallbacks());
     // Find CT1 autoTable call (second call with didParseCell and head Amount)
-    const allCalls = mockAutoTable.mock.calls.filter(
-      (call: unknown[]) => {
-        const opts = call[1] as { didParseCell?: unknown; head?: string[][] };
-        return opts.didParseCell && opts.head?.[0]?.[0] === "" && opts.head?.[0]?.[1] === "Amount";
-      }
-    );
+    const allCalls = mockAutoTable.mock.calls.filter((call: unknown[]) => {
+      const opts = call[1] as { didParseCell?: unknown; head?: string[][] };
+      return opts.didParseCell && opts.head?.[0]?.[0] === "" && opts.head?.[0]?.[1] === "Amount";
+    });
     // CT1 should be the second such call
     expect(allCalls.length).toBeGreaterThanOrEqual(2);
     const ctCall = allCalls[1];
@@ -1675,7 +1553,11 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
 
     // Test "Add back: Non-deductible expenses" — italic + amber
     const styles2 = { fontStyle: "normal", halign: "left", textColor: [0, 0, 0], fontSize: 8 };
-    opts.didParseCell({ cell: { raw: "Add back: Non-deductible expenses", styles: styles2 }, column: { index: 0 }, row: { index: 0 } });
+    opts.didParseCell({
+      cell: { raw: "Add back: Non-deductible expenses", styles: styles2 },
+      column: { index: 0 },
+      row: { index: 0 },
+    });
     expect(styles2.fontStyle).toBe("italic");
     expect(styles2.textColor).toEqual([180, 83, 9]);
 
@@ -1694,12 +1576,10 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
   it("invokes DCA didParseCell callback for right-align and bold", () => {
     exportToPDF([makeTx()], undefined, undefined, makeFullPnlCt1ForCallbacks());
     // Find DCA autoTable call (third call with didParseCell and head Amount)
-    const allCalls = mockAutoTable.mock.calls.filter(
-      (call: unknown[]) => {
-        const opts = call[1] as { didParseCell?: unknown; head?: string[][] };
-        return opts.didParseCell && opts.head?.[0]?.[0] === "" && opts.head?.[0]?.[1] === "Amount";
-      }
-    );
+    const allCalls = mockAutoTable.mock.calls.filter((call: unknown[]) => {
+      const opts = call[1] as { didParseCell?: unknown; head?: string[][] };
+      return opts.didParseCell && opts.head?.[0]?.[0] === "" && opts.head?.[0]?.[1] === "Amount";
+    });
     expect(allCalls.length).toBeGreaterThanOrEqual(3);
     const dcaCall = allCalls[2];
     const opts = dcaCall[1] as { didParseCell: (data: unknown) => void };
@@ -1711,7 +1591,11 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
 
     // Test "Directors Current A/C" — bold
     const styles2 = { fontStyle: "normal", halign: "left" };
-    opts.didParseCell({ cell: { raw: "Directors Current A/C (Dr)", styles: styles2 }, column: { index: 0 }, row: { index: 0 } });
+    opts.didParseCell({
+      cell: { raw: "Directors Current A/C (Dr)", styles: styles2 },
+      column: { index: 0 },
+      row: { index: 0 },
+    });
     expect(styles2.fontStyle).toBe("bold");
   });
 
@@ -1737,12 +1621,10 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
     exportToPDF([tx1, tx2]);
 
     // Find an audit group autoTable call (has head with "Date", "Account", "Ref", etc.)
-    const auditCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => {
-        const opts = call[1] as { head?: string[][] };
-        return opts.head?.[0]?.[0] === "Date" && opts.head?.[0]?.[1] === "Account";
-      }
-    );
+    const auditCall = mockAutoTable.mock.calls.find((call: unknown[]) => {
+      const opts = call[1] as { head?: string[][] };
+      return opts.head?.[0]?.[0] === "Date" && opts.head?.[0]?.[1] === "Account";
+    });
     expect(auditCall).toBeDefined();
     const opts = auditCall![1] as { didParseCell: (data: unknown) => void; body: string[][] };
 
@@ -1781,12 +1663,10 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
     exportToPDF([expTx, incTx]);
 
     // Find summary autoTable call (head with "Gross", "Tax", "Net")
-    const summaryCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => {
-        const opts = call[1] as { head?: string[][] };
-        return opts.head?.[0]?.includes("Gross");
-      }
-    );
+    const summaryCall = mockAutoTable.mock.calls.find((call: unknown[]) => {
+      const opts = call[1] as { head?: string[][] };
+      return opts.head?.[0]?.includes("Gross");
+    });
     expect(summaryCall).toBeDefined();
     const opts = summaryCall![1] as { didParseCell: (data: unknown) => void; body: string[][] };
 
@@ -1798,9 +1678,7 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
     expect(styles1.fillColor).toEqual([245, 245, 245]);
 
     // Separator row (empty row)
-    const sepIdx = opts.body.findIndex(
-      (r: string[]) => r[0] === "" && r[1] === "" && r[2] === "" && r[3] === ""
-    );
+    const sepIdx = opts.body.findIndex((r: string[]) => r[0] === "" && r[1] === "" && r[2] === "" && r[3] === "");
     if (sepIdx >= 0) {
       const styles2 = { minCellHeight: 10, fontSize: 8 };
       opts.didParseCell({ cell: { raw: "", styles: styles2 }, column: { index: 0 }, row: { index: sepIdx } });
@@ -1836,12 +1714,10 @@ describe("exportDirectorToPDF — didParseCell callbacks coverage", () => {
     exportDirectorToPDF([tx1, tx2]);
 
     // Find director audit group autoTable call
-    const auditCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => {
-        const opts = call[1] as { head?: string[][] };
-        return opts.head?.[0]?.[0] === "Date" && opts.head?.[0]?.[1] === "Account";
-      }
-    );
+    const auditCall = mockAutoTable.mock.calls.find((call: unknown[]) => {
+      const opts = call[1] as { head?: string[][] };
+      return opts.head?.[0]?.[0] === "Date" && opts.head?.[0]?.[1] === "Account";
+    });
     expect(auditCall).toBeDefined();
     const opts = auditCall![1] as { didParseCell: (data: unknown) => void; body: string[][] };
 
@@ -2215,27 +2091,27 @@ describe("exportToPDF — summary didParseCell callback", () => {
     exportToPDF([expTx, incTx]);
 
     // Find the summary autoTable call (head has "Gross")
-    const summaryCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => {
-        const opts = call[1] as { head?: string[][]; didParseCell?: unknown };
-        return opts.didParseCell && opts.head?.[0]?.[1] === "Gross";
-      }
-    );
+    const summaryCall = mockAutoTable.mock.calls.find((call: unknown[]) => {
+      const opts = call[1] as { head?: string[][]; didParseCell?: unknown };
+      return opts.didParseCell && opts.head?.[0]?.[1] === "Gross";
+    });
     expect(summaryCall).toBeDefined();
     const opts = summaryCall![1] as { didParseCell: (data: unknown) => void; body: string[][] };
     expect(opts.body.length).toBeGreaterThan(2);
 
     // Find the separator row (all empty strings)
-    const sepIdx = opts.body.findIndex(
-      (r: string[]) => r.every(c => c === "")
-    );
+    const sepIdx = opts.body.findIndex((r: string[]) => r.every((c) => c === ""));
 
     // Find the VAT summary row (last row)
     const vatSumIdx = opts.body.length - 1;
 
     // Invoke callback for VAT summary row
     const styles1 = { fontStyle: "normal", fillColor: [255, 255, 255] };
-    opts.didParseCell({ cell: { raw: "VAT Payable", styles: styles1 }, column: { index: 0 }, row: { index: vatSumIdx } });
+    opts.didParseCell({
+      cell: { raw: "VAT Payable", styles: styles1 },
+      column: { index: 0 },
+      row: { index: vatSumIdx },
+    });
     expect(styles1.fontStyle).toBe("bold");
     expect(styles1.fillColor).toEqual([245, 245, 245]);
 
@@ -2324,7 +2200,7 @@ describe("exportToPDF — signature section page break", () => {
       undefined,
       undefined,
       undefined,
-      makeCompanyInfo({ directorNames: ["Alice Murphy", "Bob Smith"] })
+      makeCompanyInfo({ directorNames: ["Alice Murphy", "Bob Smith"] }),
     );
     expect(mockDoc.addPage).toHaveBeenCalled();
   });
@@ -2477,12 +2353,7 @@ describe("exportToPDF — CT1 fields undefined branches", () => {
       totalMileageAllowance: 2000,
     };
     exportToPDF([makeTx()], undefined, undefined, pnl);
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      "Directors Current Account",
-      14,
-      expect.any(Number),
-      expect.anything()
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith("Directors Current Account", 14, expect.any(Number), expect.anything());
   });
 
   it("renders questionnaire with vatStatus not_registered in PDF", () => {
@@ -2490,7 +2361,7 @@ describe("exportToPDF — CT1 fields undefined branches", () => {
     q.vatStatus = "not_registered" as const;
     exportToPDF([makeTx()], undefined, q);
     const qCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section"
+      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section",
     );
     expect(qCall).toBeDefined();
     const body = (qCall![1] as { body: string[][] }).body;
@@ -2542,7 +2413,7 @@ describe("exportDirectorToPDF — questionnaire 'unsure' for business link", () 
     q.businessLinksStatus = "unsure" as const;
     exportDirectorToPDF([makeTx()], undefined, q);
     const qCall = mockAutoTable.mock.calls.find(
-      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section"
+      (call: unknown[]) => (call[1] as { head: string[][] }).head?.[0]?.[0] === "Section",
     );
     expect(qCall).toBeDefined();
     const body = (qCall![1] as { body: string[][] }).body;

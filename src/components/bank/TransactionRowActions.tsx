@@ -7,11 +7,7 @@ interface TransactionRowActionsProps {
   onDelete: (id: string) => void;
 }
 
-export default function TransactionRowActions({
-  transactionId,
-  onCategorize,
-  onDelete,
-}: TransactionRowActionsProps) {
+export default function TransactionRowActions({ transactionId, onCategorize, onDelete }: TransactionRowActionsProps) {
   return (
     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
       <button

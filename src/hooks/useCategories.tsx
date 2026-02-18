@@ -29,11 +29,7 @@ export function useCategories(type?: "income" | "expense", accountType?: string)
     queryKey: ["categories", user?.id, type, accountType],
     queryFn: async () => {
       // First, check if categories exist
-      let query = supabase
-        .from("categories")
-        .select("*")
-        .eq("user_id", user!.id)
-        .order("name");
+      let query = supabase.from("categories").select("*").eq("user_id", user!.id).order("name");
 
       if (type) {
         query = query.eq("type", type);
@@ -62,11 +58,7 @@ export function useCategories(type?: "income" | "expense", accountType?: string)
         const seeded = await seedDefaultCategories(user.id, settings?.business_type || undefined);
         if (seeded) {
           // Refetch after seeding
-          let refetchQuery = supabase
-            .from("categories")
-            .select("*")
-            .eq("user_id", user!.id)
-            .order("name");
+          let refetchQuery = supabase.from("categories").select("*").eq("user_id", user!.id).order("name");
 
           if (type) {
             refetchQuery = refetchQuery.eq("type", type);
@@ -86,11 +78,7 @@ export function useCategories(type?: "income" | "expense", accountType?: string)
         // Ensure newer categories (Subsistence, personal categories, etc.) exist for existing users
         await ensureNewCategories(user.id);
         // Re-fetch in case new categories were added
-        let refetchQuery = supabase
-          .from("categories")
-          .select("*")
-          .eq("user_id", user!.id)
-          .order("name");
+        let refetchQuery = supabase.from("categories").select("*").eq("user_id", user!.id).order("name");
         if (type) {
           refetchQuery = refetchQuery.eq("type", type);
         }
@@ -114,9 +102,7 @@ export function useCreateCategory() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (
-      category: Omit<Category, "id" | "user_id" | "created_at" | "parent_id">
-    ) => {
+    mutationFn: async (category: Omit<Category, "id" | "user_id" | "created_at" | "parent_id">) => {
       const { data, error } = await supabase
         .from("categories")
         .insert({ ...category, user_id: user!.id })

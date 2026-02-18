@@ -11,9 +11,7 @@ export async function generateAbridgedAccountsExcel(data: AbridgedAccountsReport
   const companyInfo = data.sections.find((s) => s.title === "Company Information");
   if (companyInfo) addSectionRows(cover, companyInfo);
 
-  const directorsStatement = data.sections.find(
-    (s) => s.title === "Directors' Responsibility Statement"
-  );
+  const directorsStatement = data.sections.find((s) => s.title === "Directors' Responsibility Statement");
   if (directorsStatement) addSectionRows(cover, directorsStatement);
 
   styleSheet(cover);

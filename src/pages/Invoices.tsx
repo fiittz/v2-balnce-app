@@ -22,18 +22,24 @@ import { VAT_RATES } from "@/services/categorization";
 const statusConfig = {
   draft: { label: "Draft", color: "bg-muted text-muted-foreground", icon: FileText },
   sent: { label: "Sent", color: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400", icon: Clock },
-  paid: { label: "Paid", color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400", icon: CheckCircle },
+  paid: {
+    label: "Paid",
+    color: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    icon: CheckCircle,
+  },
   overdue: { label: "Overdue", color: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400", icon: Clock },
-  cancelled: { label: "Cancelled", color: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400", icon: FileText },
+  cancelled: {
+    label: "Cancelled",
+    color: "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400",
+    icon: FileText,
+  },
 };
 
 const Invoices = () => {
   const navigate = useNavigate();
   const { data: accounts } = useAccounts();
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
-  const { data: invoices, isLoading } = useInvoices(
-    selectedAccountId ? { account_id: selectedAccountId } : undefined
-  );
+  const { data: invoices, isLoading } = useInvoices(selectedAccountId ? { account_id: selectedAccountId } : undefined);
   const { data: onboarding } = useOnboardingSettings();
   const { data: bankAccounts } = useAccounts("bank");
   const { profile } = useAuth();
@@ -45,11 +51,7 @@ const Invoices = () => {
     // Fetch customer details
     let customer = { name: "Customer", email: "", phone: "", address: "", vat_number: "" };
     if (invoice.customer_id) {
-      const { data: cust } = await supabase
-        .from("customers")
-        .select("*")
-        .eq("id", invoice.customer_id)
-        .single();
+      const { data: cust } = await supabase.from("customers").select("*").eq("id", invoice.customer_id).single();
       if (cust) customer = cust as typeof customer;
     }
 
@@ -192,11 +194,7 @@ const Invoices = () => {
         <PageHeader
           title="Invoices"
           rightContent={
-            <Button
-              onClick={() => navigate("/invoice")}
-              className="rounded-xl"
-              size="sm"
-            >
+            <Button onClick={() => navigate("/invoice")} className="rounded-xl" size="sm">
               <Plus className="w-4 h-4 mr-1" />
               Create Invoice
             </Button>
@@ -267,9 +265,7 @@ const Invoices = () => {
                             {status.label}
                           </Badge>
                         </div>
-                        <p className="text-muted-foreground">
-                          {invoice.customer?.name || "Unknown Customer"}
-                        </p>
+                        <p className="text-muted-foreground">{invoice.customer?.name || "Unknown Customer"}</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           {invoice.invoice_date ? format(new Date(invoice.invoice_date), "d MMM yyyy") : "No date"}
                         </p>

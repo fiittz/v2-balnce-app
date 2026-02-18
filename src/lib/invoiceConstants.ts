@@ -1,11 +1,24 @@
 /** Activities where job start/end dates are relevant (site-based work) */
 export const SITE_BASED_ACTIVITIES = [
-  "carpentry_joinery", "general_construction", "electrical_contracting",
-  "plumbing_heating", "bricklaying_masonry", "plastering_drylining",
-  "painting_decorating", "roofing", "groundworks_civil", "landscaping",
-  "tiling_stonework", "steel_fabrication_welding", "quantity_surveying",
-  "project_management", "site_supervision", "property_maintenance",
-  "property_development", "haulage_transport", "courier_delivery",
+  "carpentry_joinery",
+  "general_construction",
+  "electrical_contracting",
+  "plumbing_heating",
+  "bricklaying_masonry",
+  "plastering_drylining",
+  "painting_decorating",
+  "roofing",
+  "groundworks_civil",
+  "landscaping",
+  "tiling_stonework",
+  "steel_fabrication_welding",
+  "quantity_surveying",
+  "project_management",
+  "site_supervision",
+  "property_maintenance",
+  "property_development",
+  "haulage_transport",
+  "courier_delivery",
 ] as const;
 
 export const PAYMENT_TERMS = [
@@ -29,5 +42,5 @@ export const UNIT_TYPES = [
   { value: "fixed", label: "Fixed price" },
 ] as const;
 
-export type PaymentTerm = typeof PAYMENT_TERMS[number]["value"];
-export type UnitType = typeof UNIT_TYPES[number]["value"];
+export type PaymentTerm = (typeof PAYMENT_TERMS)[number]["value"];
+export type UnitType = (typeof UNIT_TYPES)[number]["value"];

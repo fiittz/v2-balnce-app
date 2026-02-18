@@ -9,9 +9,9 @@ import { isVATDeductible, isCTDeductible } from "@/lib/vatDeductibility";
 import { calculateVehicleDepreciation, type VehicleDepreciation } from "@/lib/vehicleDepreciation";
 
 export interface CT1ReEvalOptions {
-  vatChangeDate?: string;      // ISO date from questionnaire Section 4
-  vatStatusBefore?: string;    // e.g., "not_registered"
-  vatStatusAfter?: string;     // e.g., "cash_basis"
+  vatChangeDate?: string; // ISO date from questionnaire Section 4
+  vatStatusBefore?: string; // e.g., "not_registered"
+  vatStatusAfter?: string; // e.g., "cash_basis"
 }
 
 export interface CT1Data {
@@ -56,8 +56,7 @@ function classifyPaymentType(description: string): string {
   const d = (description || "").toLowerCase();
   if (d.includes("salary") || d.includes("wages")) return "Wages";
   if (d.includes("sepa")) return "SEPA Transfer";
-  if (d.includes("direct debit") || d.includes(" dd ") || d.startsWith("dd "))
-    return "Direct Debit";
+  if (d.includes("direct debit") || d.includes(" dd ") || d.startsWith("dd ")) return "Direct Debit";
   if (d.includes("pos") || d.includes("card")) return "Card Payment";
   if (d.includes("standing order") || d.includes("s/o")) return "Standing Order";
   if (d.includes("cheque") || d.includes("chq")) return "Cheque";
@@ -107,7 +106,15 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
   const { invoiceTrips, isLoading: tripsLoading } = useInvoiceTripMatcher();
 
   const hasVATSplit = !!options?.vatChangeDate;
-  const isLoading = incomeLoading || expenseLoading || vatPreLoading || vatPostLoading || onboardingLoading || directorLoading || invoicesLoading || tripsLoading;
+  const isLoading =
+    incomeLoading ||
+    expenseLoading ||
+    vatPreLoading ||
+    vatPostLoading ||
+    onboardingLoading ||
+    directorLoading ||
+    invoicesLoading ||
+    tripsLoading;
 
   return useMemo(() => {
     // 1. Detected income — group by category name
@@ -115,24 +122,24 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
     const NON_TAXABLE_CATEGORIES = ["Tax Refund"];
     const incomeByCategory = new Map<string, number>();
     for (const t of incomeTransactions ?? []) {
-      const catName =
-        (t.category as { id: string; name: string } | null)?.name ?? "Uncategorised";
+      const catName = (t.category as { id: string; name: string } | null)?.name ?? "Uncategorised";
       // Skip non-taxable categories (e.g. Revenue refunds)
       if (NON_TAXABLE_CATEGORIES.includes(catName)) continue;
       // Also skip if description contains Revenue indicators and not yet recategorised
       const desc = (t.description ?? "").toLowerCase();
-      if (catName === "Uncategorised" && (desc.includes("revenue") || desc.includes("collector general") || desc.includes("tax refund"))) continue;
+      if (
+        catName === "Uncategorised" &&
+        (desc.includes("revenue") || desc.includes("collector general") || desc.includes("tax refund"))
+      )
+        continue;
       const prev = incomeByCategory.get(catName) ?? 0;
       incomeByCategory.set(catName, prev + Math.abs(Number(t.amount) || 0));
     }
-    const detectedIncome = Array.from(incomeByCategory.entries()).map(
-      ([category, amount]) => ({ category, amount })
-    );
+    const detectedIncome = Array.from(incomeByCategory.entries()).map(([category, amount]) => ({ category, amount }));
 
     // 2. Expense summary — allowable vs disallowed using VAT deductibility rules
     // Director's Drawings are capital withdrawals, not business expenses — tracked separately
-    const isDrawings = (catName: string | null) =>
-      catName ? catName.toLowerCase().includes("drawing") : false;
+    const isDrawings = (catName: string | null) => (catName ? catName.toLowerCase().includes("drawing") : false);
 
     let origAllowable = 0;
     let origDisallowed = 0;
@@ -140,8 +147,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
     const disallowedByCategoryMap = new Map<string, number>();
     for (const t of expenseTransactions ?? []) {
       const amt = Math.abs(Number(t.amount) || 0);
-      const catName =
-        (t.category as { id: string; name: string } | null)?.name ?? null;
+      const catName = (t.category as { id: string; name: string } | null)?.name ?? null;
       // Director's Drawings excluded from P&L — they're balance sheet items
       if (isDrawings(catName)) {
         totalDrawings += amt;
@@ -166,8 +172,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
     const expenseByCategoryMap = new Map<string, number>();
     for (const t of expenseTransactions ?? []) {
       const amt = Math.abs(Number(t.amount) || 0);
-      const catName =
-        (t.category as { id: string; name: string } | null)?.name ?? "Uncategorised";
+      const catName = (t.category as { id: string; name: string } | null)?.name ?? "Uncategorised";
       const prev = expenseByCategoryMap.get(catName) ?? 0;
       expenseByCategoryMap.set(catName, prev + amt);
     }
@@ -202,34 +207,23 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
       expenseSummary = { allowable: splitAllowable, disallowed: splitDisallowed };
       reEvaluationApplied = true;
       reEvaluationWarnings.push(
-        `Expenses re-evaluated based on VAT registration from ${changeDate}. Pre-registration expenses have no recoverable VAT input.`
+        `Expenses re-evaluated based on VAT registration from ${changeDate}. Pre-registration expenses have no recoverable VAT input.`,
       );
     }
 
     // 3. Detected payments — classify by description
     const paymentsByType = new Map<string, number>();
-    const allTransactions = [
-      ...(incomeTransactions ?? []),
-      ...(expenseTransactions ?? []),
-    ];
+    const allTransactions = [...(incomeTransactions ?? []), ...(expenseTransactions ?? [])];
     for (const t of allTransactions) {
       const paymentType = classifyPaymentType(t.description ?? "");
       const prev = paymentsByType.get(paymentType) ?? 0;
       paymentsByType.set(paymentType, prev + Math.abs(Number(t.amount) || 0));
     }
-    const detectedPayments = Array.from(paymentsByType.entries()).map(
-      ([type, amount]) => ({ type, amount })
-    );
+    const detectedPayments = Array.from(paymentsByType.entries()).map(([type, amount]) => ({ type, amount }));
 
     // 4. Closing balance — income minus expenses
-    const totalIncome = (incomeTransactions ?? []).reduce(
-      (sum, t) => sum + Math.abs(Number(t.amount) || 0),
-      0
-    );
-    const totalExpenses = (expenseTransactions ?? []).reduce(
-      (sum, t) => sum + Math.abs(Number(t.amount) || 0),
-      0
-    );
+    const totalIncome = (incomeTransactions ?? []).reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
+    const totalExpenses = (expenseTransactions ?? []).reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
     const closingBalance = totalIncome - totalExpenses;
 
     // 5. VAT position — use post-change period only when split applies
@@ -241,9 +235,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
         type: netVat >= 0 ? "payable" : "refundable",
         amount: Math.abs(netVat),
       };
-      reEvaluationWarnings.push(
-        "VAT position reflects the registered period only (post-change)."
-      );
+      reEvaluationWarnings.push("VAT position reflects the registered period only (post-change).");
     } else if (vatSummaryPre) {
       const netVat = vatSummaryPre.netVat;
       vatPosition = {
@@ -257,8 +249,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
     const flaggedCapitalItems: CT1Data["flaggedCapitalItems"] = [];
     for (const t of expenseTransactions ?? []) {
       const amt = Math.abs(Number(t.amount) || 0);
-      const catName =
-        (t.category as { id: string; name: string } | null)?.name?.toLowerCase() ?? "";
+      const catName = (t.category as { id: string; name: string } | null)?.name?.toLowerCase() ?? "";
       const isCapitalCategory = capitalKeywords.some((kw) => catName.includes(kw));
       if (amt >= 1000 || isCapitalCategory) {
         flaggedCapitalItems.push({
@@ -270,16 +261,16 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
     }
 
     // 7. Construction trade check
-    const isConstructionTrade = CONSTRUCTION_TRADE_TYPES.includes(
-      onboarding?.business_type ?? ""
-    );
+    const isConstructionTrade = CONSTRUCTION_TRADE_TYPES.includes(onboarding?.business_type ?? "");
 
     // 8. Close company — default true for most small Irish LLCs
     const isCloseCompany = true;
 
     // 9. Vehicle asset — depreciation & capital allowances from director onboarding
     let vehicleAsset: CT1Data["vehicleAsset"] = null;
-    const director1Data = (directorRows?.[0] as Record<string, unknown>)?.onboarding_data as Record<string, unknown> | undefined;
+    const director1Data = (directorRows?.[0] as Record<string, unknown>)?.onboarding_data as
+      | Record<string, unknown>
+      | undefined;
     if (director1Data?.vehicle_owned_by_director && director1Data?.vehicle_purchase_cost > 0) {
       const depreciation = calculateVehicleDepreciation(
         {
@@ -289,7 +280,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
           dateAcquired: director1Data.vehicle_date_acquired || `${taxYear}-01-01`,
           businessUsePct: Number(director1Data.vehicle_business_use_pct) || 100,
         },
-        taxYear
+        taxYear,
       );
       vehicleAsset = {
         description: director1Data.vehicle_description || "Motor Vehicle",
@@ -309,17 +300,21 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
         if (notes?.rct_enabled && notes?.rct_amount > 0) {
           rctPrepayment += Number(notes.rct_amount) || 0;
         }
-      } catch { /* not JSON */ }
+      } catch {
+        /* not JSON */
+      }
     }
     rctPrepayment = Math.round(rctPrepayment * 100) / 100;
 
     // 11. Travel allowance & director's loan from trips
-    const travelAllowance = Math.round(
-      invoiceTrips.reduce((sum, t) => sum + t.totalRevenueAllowance, 0) * 100
-    ) / 100;
-    const directorsLoanTravel = Math.round(
-      Math.max(0, invoiceTrips.reduce((sum, t) => sum + t.directorsLoanBalance, 0)) * 100
-    ) / 100;
+    const travelAllowance = Math.round(invoiceTrips.reduce((sum, t) => sum + t.totalRevenueAllowance, 0) * 100) / 100;
+    const directorsLoanTravel =
+      Math.round(
+        Math.max(
+          0,
+          invoiceTrips.reduce((sum, t) => sum + t.directorsLoanBalance, 0),
+        ) * 100,
+      ) / 100;
 
     // Director's Drawings offset the director's loan balance
     // Positive netDirectorsLoan = company still owes director (liability)
@@ -349,5 +344,20 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
       reEvaluationWarnings,
       originalExpenseSummary: reEvaluationApplied ? originalExpenseSummary : undefined,
     };
-  }, [incomeTransactions, expenseTransactions, vatSummaryPre, vatSummaryPost, onboarding, directorRows, invoices, invoiceTrips, isLoading, hasVATSplit, options, endDate, startDate, taxYear]);
+  }, [
+    incomeTransactions,
+    expenseTransactions,
+    vatSummaryPre,
+    vatSummaryPost,
+    onboarding,
+    directorRows,
+    invoices,
+    invoiceTrips,
+    isLoading,
+    hasVATSplit,
+    options,
+    endDate,
+    startDate,
+    taxYear,
+  ]);
 }

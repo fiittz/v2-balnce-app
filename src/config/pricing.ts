@@ -157,18 +157,18 @@ export const PRO_USAGE_TRIGGERS: UsageTrigger[] = [
 
 // Expected customer distribution
 export const EXPECTED_CUSTOMER_SPLIT = {
-  starter: 0.20, // 20%
-  pro: 0.60,     // 60% - Core revenue driver
-  ultimate: 0.20, // 20%
+  starter: 0.2, // 20%
+  pro: 0.6, // 60% - Core revenue driver
+  ultimate: 0.2, // 20%
 };
 
 // Helper functions
 export const getPlanById = (id: string): PricingPlan | undefined => {
-  return PRICING_PLANS.find(plan => plan.id === id);
+  return PRICING_PLANS.find((plan) => plan.id === id);
 };
 
 export const getHighlightedPlan = (): PricingPlan | undefined => {
-  return PRICING_PLANS.find(plan => plan.highlighted);
+  return PRICING_PLANS.find((plan) => plan.highlighted);
 };
 
 export const formatPrice = (plan: PricingPlan): string => {

@@ -62,7 +62,7 @@ export async function categorizeTransaction(
   transaction: Transaction,
   categories: Category[],
   businessType?: string,
-  receiptText?: string
+  receiptText?: string,
 ): Promise<CategorizeResult> {
   const { data, error } = await supabase.functions.invoke("categorize-transaction", {
     body: {
@@ -87,7 +87,7 @@ export async function categorizeTransaction(
  */
 export async function matchTransaction(
   transaction: Transaction,
-  candidates: Array<{ id: string; type: string; amount: number; date: string; description?: string }>
+  candidates: Array<{ id: string; type: string; amount: number; date: string; description?: string }>,
 ): Promise<{
   match_id: string | null;
   match_type: "invoice" | "expense";
@@ -115,7 +115,7 @@ export async function matchTransaction(
  */
 export async function detectAnomaly(
   transaction: Transaction,
-  recentTransactions: Transaction[]
+  recentTransactions: Transaction[],
 ): Promise<{
   is_anomaly: boolean;
   anomaly_type: "duplicate" | "unusual_amount" | "suspicious_pattern" | "none";
@@ -145,7 +145,7 @@ export async function detectAnomaly(
 export async function processReceipt(
   imageBase64: string,
   categories?: Category[],
-  mimeType?: string
+  mimeType?: string,
 ): Promise<ReceiptResult> {
   const { data, error } = await supabase.functions.invoke("process-receipt", {
     body: {
@@ -166,10 +166,7 @@ export async function processReceipt(
 /**
  * Process a receipt from URL
  */
-export async function processReceiptFromUrl(
-  imageUrl: string,
-  categories?: Category[]
-): Promise<ReceiptResult> {
+export async function processReceiptFromUrl(imageUrl: string, categories?: Category[]): Promise<ReceiptResult> {
   const { data, error } = await supabase.functions.invoke("process-receipt", {
     body: {
       imageUrl,
@@ -215,7 +212,7 @@ export async function generateInvoicePDF(invoiceId: string): Promise<{
  */
 export async function printInvoice(invoiceId: string): Promise<void> {
   const { html, invoice } = await generateInvoicePDF(invoiceId);
-  
+
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.write(html);
@@ -231,7 +228,7 @@ export async function printInvoice(invoiceId: string): Promise<void> {
  */
 export async function downloadInvoice(invoiceId: string): Promise<void> {
   const { html, invoice } = await generateInvoicePDF(invoiceId);
-  
+
   const printWindow = window.open("", "_blank");
   if (printWindow) {
     printWindow.document.write(html);

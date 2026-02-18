@@ -2,12 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { isDemoMode } from "@/lib/mockData";
-import {
-  WidgetId,
-  WidgetPreferences,
-  WidgetDefinition,
-  WIDGET_DEFINITIONS,
-} from "@/types/dashboardWidgets";
+import { WidgetId, WidgetPreferences, WidgetDefinition, WIDGET_DEFINITIONS } from "@/types/dashboardWidgets";
 
 interface OnboardingSettings {
   vat_registered: boolean | null;
@@ -108,10 +103,7 @@ export function useDashboardWidgets() {
     load();
   }, [user]);
 
-  const defaults = useMemo(
-    () => buildDefaults(onboardingSettings),
-    [onboardingSettings]
-  );
+  const defaults = useMemo(() => buildDefaults(onboardingSettings), [onboardingSettings]);
 
   const persist = useCallback(
     async (next: WidgetPreferences) => {
@@ -121,7 +113,7 @@ export function useDashboardWidgets() {
         .update({ dashboard_widget_preferences: next as unknown as Record<string, unknown> })
         .eq("id", user.id);
     },
-    [user]
+    [user],
   );
 
   const toggleWidget = useCallback(
@@ -133,7 +125,7 @@ export function useDashboardWidgets() {
         return next;
       });
     },
-    [defaults, persist]
+    [defaults, persist],
   );
 
   const resetToDefaults = useCallback(() => {
@@ -147,12 +139,12 @@ export function useDashboardWidgets() {
       const prefs = preferences ?? defaults;
       return prefs[id] ?? defaults[id] ?? false;
     },
-    [preferences, defaults, isLoading]
+    [preferences, defaults, isLoading],
   );
 
   const availableWidgets = useMemo(
     () => WIDGET_DEFINITIONS.filter((w) => isWidgetApplicable(w, onboardingSettings)),
-    [onboardingSettings]
+    [onboardingSettings],
   );
 
   return {

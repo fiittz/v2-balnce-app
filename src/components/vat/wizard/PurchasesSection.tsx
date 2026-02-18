@@ -14,10 +14,7 @@ interface PurchasesSectionProps {
 export function PurchasesSection({ data, onUpdate }: PurchasesSectionProps) {
   const addMissingReceipt = () => {
     onUpdate({
-      missing_receipts_list: [
-        ...data.missing_receipts_list,
-        { description: "", amount: 0 },
-      ],
+      missing_receipts_list: [...data.missing_receipts_list, { description: "", amount: 0 }],
     });
   };
 
@@ -44,9 +41,7 @@ export function PurchasesSection({ data, onUpdate }: PurchasesSectionProps) {
 
       {/* Question 1: All expenses added */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">
-          Have all expenses for this period been entered?
-        </Label>
+        <Label className="text-base font-medium">Have all expenses for this period been entered?</Label>
         <RadioGroup
           value={data.all_expenses_added || ""}
           onValueChange={(v) => onUpdate({ all_expenses_added: v as "yes" | "no" | "not_sure" })}
@@ -106,11 +101,7 @@ export function PurchasesSection({ data, onUpdate }: PurchasesSectionProps) {
                   onChange={(e) => updateMissingReceipt(index, "amount", parseFloat(e.target.value) || 0)}
                   className="w-32"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeMissingReceipt(index)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => removeMissingReceipt(index)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -119,10 +110,10 @@ export function PurchasesSection({ data, onUpdate }: PurchasesSectionProps) {
               <Plus className="w-4 h-4 mr-2" />
               Add Missing Receipt
             </Button>
-            
+
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
-              <strong>Note:</strong> VAT on expenses without valid receipts cannot be reclaimed. 
-              These amounts will be excluded from your input VAT claim.
+              <strong>Note:</strong> VAT on expenses without valid receipts cannot be reclaimed. These amounts will be
+              excluded from your input VAT claim.
             </div>
           </div>
         )}

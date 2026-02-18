@@ -13,8 +13,8 @@ export const TAX_CONSTANTS = {
     married_two_incomes: 88_000, // max increase of €44,000 for 2nd earner
     second_earner_max: 44_000,
   },
-  standardRate: 0.20,
-  higherRate: 0.40,
+  standardRate: 0.2,
+  higherRate: 0.4,
 
   // USC Bands (2026 — self-assessed, includes 11% surcharge band)
   usc: [
@@ -28,7 +28,7 @@ export const TAX_CONSTANTS = {
 
   // PRSI Class S (self-employed / directors) — 2026
   prsi: {
-    rate: 0.042,     // 4.2% Jan–Sep 2026 (rises to 4.35% from Oct 2026)
+    rate: 0.042, // 4.2% Jan–Sep 2026 (rises to 4.35% from Oct 2026)
     minimum: 500,
     threshold: 5_000,
   },
@@ -46,18 +46,18 @@ export const TAX_CONSTANTS = {
   // Pension Relief — age-based % of net relevant earnings
   pensionAgeLimits: [
     { maxAge: 29, rate: 0.15 },
-    { maxAge: 39, rate: 0.20 },
+    { maxAge: 39, rate: 0.2 },
     { maxAge: 49, rate: 0.25 },
-    { maxAge: 54, rate: 0.30 },
+    { maxAge: 54, rate: 0.3 },
     { maxAge: 59, rate: 0.35 },
-    { maxAge: Infinity, rate: 0.40 },
+    { maxAge: Infinity, rate: 0.4 },
   ] as const,
   pensionEarningsCap: 115_000,
 
   // Other Reliefs
-  medicalReliefRate: 0.20,
+  medicalReliefRate: 0.2,
   rentCredit: { single: 1_000, couple: 2_000 },
-  remoteWorkingRate: 0.30, // 30% of vouched costs
+  remoteWorkingRate: 0.3, // 30% of vouched costs
   charitableMinimum: 250,
 
   // CGT
@@ -69,10 +69,10 @@ export const TAX_CONSTANTS = {
   // BIK Vehicle — mileage-based % of OMV
   vehicleBIKBands: [
     { maxKm: 24_000, rate: 0.2267 },
-    { maxKm: 32_000, rate: 0.1800 },
-    { maxKm: 40_000, rate: 0.1350 },
-    { maxKm: 48_000, rate: 0.0900 },
-    { maxKm: Infinity, rate: 0.0450 },
+    { maxKm: 32_000, rate: 0.18 },
+    { maxKm: 40_000, rate: 0.135 },
+    { maxKm: 48_000, rate: 0.09 },
+    { maxKm: Infinity, rate: 0.045 },
   ] as const,
 } as const;
 
@@ -210,12 +210,7 @@ function calculateIncome(input: Form11Input) {
   const rentalProfit = Math.max(0, input.rentalIncome - input.rentalExpenses);
 
   const totalGrossIncome =
-    scheduleE +
-    scheduleD +
-    rentalProfit +
-    input.foreignIncome +
-    input.otherIncome +
-    input.spouseIncome;
+    scheduleE + scheduleD + rentalProfit + input.foreignIncome + input.otherIncome + input.spouseIncome;
 
   return { scheduleE, scheduleD, rentalProfit, totalGrossIncome };
 }
@@ -237,17 +232,18 @@ function calculateDeductions(input: Form11Input) {
 
   // Pension relief — age-based limit on net relevant earnings
   const band = TAX_CONSTANTS.pensionAgeLimits.find((b) => age <= b.maxAge)!;
-  const relevantEarnings = Math.min(
-    input.salary + input.businessIncome,
-    TAX_CONSTANTS.pensionEarningsCap
-  );
+  const relevantEarnings = Math.min(input.salary + input.businessIncome, TAX_CONSTANTS.pensionEarningsCap);
   const maxPension = relevantEarnings * band.rate;
   const pensionRelief = Math.min(input.pensionContributions, maxPension);
 
   return { pensionRelief, pensionAgeLimit: band.rate };
 }
 
-function getCutoff(basis: Form11Input["assessmentBasis"], maritalStatus: Form11Input["maritalStatus"], spouseIncome: number): number {
+function getCutoff(
+  basis: Form11Input["assessmentBasis"],
+  maritalStatus: Form11Input["maritalStatus"],
+  spouseIncome: number,
+): number {
   if (basis === "joint" && maritalStatus === "married") {
     const spouseExtra = Math.min(spouseIncome, TAX_CONSTANTS.standardRateCutoff.second_earner_max);
     return TAX_CONSTANTS.standardRateCutoff.single + spouseExtra;
@@ -255,11 +251,7 @@ function getCutoff(basis: Form11Input["assessmentBasis"], maritalStatus: Form11I
   return TAX_CONSTANTS.standardRateCutoff.single;
 }
 
-function calculateIncomeTax(
-  assessableIncome: number,
-  input: Form11Input,
-  overrideCutoff?: number
-): TaxBandLine[] {
+function calculateIncomeTax(assessableIncome: number, input: Form11Input, overrideCutoff?: number): TaxBandLine[] {
   if (assessableIncome <= 0) return [];
 
   const cutoff = overrideCutoff ?? getCutoff(input.assessmentBasis, input.maritalStatus, input.spouseIncome);
@@ -294,10 +286,7 @@ function calculateCredits(input: Form11Input): CreditLine[] {
   const lines: CreditLine[] = [];
 
   // Personal credit
-  if (
-    input.maritalStatus === "married" ||
-    input.maritalStatus === "civil_partner"
-  ) {
+  if (input.maritalStatus === "married" || input.maritalStatus === "civil_partner") {
     lines.push({ label: "Married / Civil Partner Credit", amount: TAX_CONSTANTS.credits.married });
   } else {
     lines.push({ label: "Single Person Credit", amount: TAX_CONSTANTS.credits.single });
@@ -431,12 +420,11 @@ export function calculateForm11(input: Form11Input): Form11Result {
     const preCutoff = getCutoff(input.preChangeAssessmentBasis, input.maritalStatus, input.spouseIncome);
     const postCutoff = getCutoff(input.assessmentBasis, input.maritalStatus, input.spouseIncome);
 
-    proportionalCutoff = Math.round(
-      (preCutoff * (daysBefore / totalDays)) + (postCutoff * (daysAfter / totalDays))
-    );
+    proportionalCutoff = Math.round(preCutoff * (daysBefore / totalDays) + postCutoff * (daysAfter / totalDays));
 
     splitYearApplied = true;
-    splitYearNote = `Assessment basis changed on ${input.changeEffectiveDate}. ` +
+    splitYearNote =
+      `Assessment basis changed on ${input.changeEffectiveDate}. ` +
       `Standard rate cutoff proportioned: ${daysBefore} days at old basis + ${daysAfter} days at new basis = €${proportionalCutoff.toLocaleString("en-IE")}.`;
     notes.push(splitYearNote);
   }
@@ -444,7 +432,7 @@ export function calculateForm11(input: Form11Input): Form11Result {
   // Mileage allowance note
   if (input.mileageAllowance > 0) {
     notes.push(
-      `Mileage allowance claimed: €${input.mileageAllowance.toLocaleString("en-IE", { minimumFractionDigits: 2 })} (personal vehicle commute — Revenue civil service rates).`
+      `Mileage allowance claimed: €${input.mileageAllowance.toLocaleString("en-IE", { minimumFractionDigits: 2 })} (personal vehicle commute — Revenue civil service rates).`,
     );
   }
 
@@ -459,7 +447,7 @@ export function calculateForm11(input: Form11Input): Form11Result {
   if (input.pensionContributions > 0 && deductions.pensionRelief < input.pensionContributions) {
     warnings.push(
       `Pension contributions capped at ${(deductions.pensionAgeLimit * 100).toFixed(0)}% of net relevant earnings (age-based limit). ` +
-      `Relief granted: €${deductions.pensionRelief.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`
+        `Relief granted: €${deductions.pensionRelief.toLocaleString("en-IE", { minimumFractionDigits: 2 })}`,
     );
   }
 
@@ -491,19 +479,15 @@ export function calculateForm11(input: Form11Input): Form11Result {
   const cgt = calculateCGT(input);
 
   // 8. Summary
-  const totalLiability =
-    Math.round((netIncomeTax + totalUSC + prsi.payable + cgt.payable) * 100) / 100;
-  const balanceDue =
-    Math.round((totalLiability - input.preliminaryTaxPaid) * 100) / 100;
+  const totalLiability = Math.round((netIncomeTax + totalUSC + prsi.payable + cgt.payable) * 100) / 100;
+  const balanceDue = Math.round((totalLiability - input.preliminaryTaxPaid) * 100) / 100;
 
   if (balanceDue < 0) {
     notes.push("Overpayment detected — you may be due a refund.");
   }
 
   if (input.charitableDonations > 0 && input.charitableDonations < TAX_CONSTANTS.charitableMinimum) {
-    warnings.push(
-      `Charitable donations must be at least €${TAX_CONSTANTS.charitableMinimum} to qualify for relief.`
-    );
+    warnings.push(`Charitable donations must be at least €${TAX_CONSTANTS.charitableMinimum} to qualify for relief.`);
   }
 
   return {

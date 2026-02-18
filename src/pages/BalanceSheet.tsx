@@ -1,15 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Building,
-  Package,
-  CreditCard,
-  Landmark,
-  AlertTriangle,
-  Loader2,
-  ChevronRight,
-} from "lucide-react";
+import { ArrowLeft, Building, Package, CreditCard, Landmark, AlertTriangle, Loader2, ChevronRight } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,10 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCT1Data } from "@/hooks/useCT1Data";
 import { useInvoiceTripMatcher } from "@/hooks/useInvoiceTripMatcher";
 import { ExportButtons } from "@/components/reports/ExportButtons";
-import {
-  assembleBalanceSheetData,
-  type BalanceSheetInput,
-} from "@/lib/reports/balanceSheetData";
+import { assembleBalanceSheetData, type BalanceSheetInput } from "@/lib/reports/balanceSheetData";
 import { generateBalanceSheetPdf } from "@/lib/reports/pdf/balanceSheetPdf";
 import { generateBalanceSheetExcel } from "@/lib/reports/excel/balanceSheetExcel";
 import type { ReportMeta } from "@/lib/reports/types";
@@ -72,9 +60,11 @@ const BalanceSheet = () => {
     const motorVehicleAllowance = ct1.vehicleAsset
       ? ct1.vehicleAsset.depreciation.annualAllowance
       : (savedCT1.capitalAllowancesMotorVehicles ?? 0);
-    const capitalAllowancesTotal =
-      (savedCT1.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
-    const tradingProfit = Math.max(0, totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel);
+    const capitalAllowancesTotal = (savedCT1.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
+    const tradingProfit = Math.max(
+      0,
+      totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel,
+    );
     const lossesForward = savedCT1.lossesForward ?? 0;
     const taxableProfit = Math.max(0, tradingProfit - lossesForward);
     const ctLiability = taxableProfit * 0.125 + (savedCT1.closeCompanySurcharge ?? 0);
@@ -129,9 +119,7 @@ const BalanceSheet = () => {
   const fixedAssets = bsInput
     ? bsInput.landBuildings + bsInput.plantMachinery + bsInput.motorVehicles + bsInput.fixturesFittings
     : 0;
-  const currentAssets = bsInput
-    ? bsInput.stock + bsInput.debtors + bsInput.cash + bsInput.bankBalance
-    : 0;
+  const currentAssets = bsInput ? bsInput.stock + bsInput.debtors + bsInput.cash + bsInput.bankBalance : 0;
   const currentLiabilities = bsInput
     ? bsInput.creditors + bsInput.taxation + bsInput.bankOverdraft + (bsInput.directorsLoanTravel ?? 0)
     : 0;
@@ -177,12 +165,7 @@ const BalanceSheet = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/tax")}
-                className="shrink-0"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/tax")} className="shrink-0">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
@@ -197,7 +180,6 @@ const BalanceSheet = () => {
         </header>
 
         <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
           {/* Fixed Assets */}
           <Card className="border-0 shadow-lg rounded-3xl overflow-hidden">
             <CardHeader className="pb-2">
@@ -212,7 +194,9 @@ const BalanceSheet = () => {
               <Row label="Motor Vehicles" amount={bsInput.motorVehicles} />
               {ct1.vehicleAsset && (
                 <p className="text-xs text-muted-foreground pl-1 pb-1">
-                  {ct1.vehicleAsset.description} ({ct1.vehicleAsset.reg}) — Net Book Value after {ct1.vehicleAsset.depreciation.yearsOwned} yr{ct1.vehicleAsset.depreciation.yearsOwned !== 1 ? "s" : ""} depreciation
+                  {ct1.vehicleAsset.description} ({ct1.vehicleAsset.reg}) — Net Book Value after{" "}
+                  {ct1.vehicleAsset.depreciation.yearsOwned} yr
+                  {ct1.vehicleAsset.depreciation.yearsOwned !== 1 ? "s" : ""} depreciation
                 </p>
               )}
               <Row label="Fixtures & Fittings" amount={bsInput.fixturesFittings} />
@@ -258,9 +242,7 @@ const BalanceSheet = () => {
             <CardContent className="space-y-1">
               <Row label="Creditors" amount={bsInput.creditors} />
               <Row label="Taxation" amount={bsInput.taxation} />
-              {bsInput.bankOverdraft > 0 && (
-                <Row label="Bank Overdraft" amount={bsInput.bankOverdraft} />
-              )}
+              {bsInput.bankOverdraft > 0 && <Row label="Bank Overdraft" amount={bsInput.bankOverdraft} />}
               {(bsInput.directorsLoanTravel ?? 0) > 0 && (
                 <div>
                   <Row label="Director's Loan" amount={bsInput.directorsLoanTravel} />
@@ -274,16 +256,14 @@ const BalanceSheet = () => {
                   {travelExpanded && invoiceTrips.length > 0 && (
                     <div className="ml-3 mt-1 mb-2 pl-3 border-l-2 border-primary/20 space-y-1.5">
                       {invoiceTrips
-                        .filter(t => t.directorsLoanBalance > 0)
-                        .map(trip => (
+                        .filter((t) => t.directorsLoanBalance > 0)
+                        .map((trip) => (
                           <div key={trip.invoiceId} className="text-xs text-muted-foreground">
                             <div className="flex justify-between">
                               <span className="font-medium text-foreground/80">
                                 {trip.customerName} — {trip.jobLocation}
                               </span>
-                              <span className="font-mono tabular-nums">
-                                {eur(trip.directorsLoanBalance)}
-                              </span>
+                              <span className="font-mono tabular-nums">{eur(trip.directorsLoanBalance)}</span>
                             </div>
                             <div className="flex gap-3 mt-0.5 text-[11px]">
                               {trip.suggestedMileage.allowance > 0 && (
@@ -336,17 +316,21 @@ const BalanceSheet = () => {
           )}
 
           {/* Net Assets + Balance Check */}
-          <Card className={`border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ${
-            isBalanced ? "ring-green-500/30" : "ring-red-500/30"
-          }`}>
+          <Card
+            className={`border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ${
+              isBalanced ? "ring-green-500/30" : "ring-red-500/30"
+            }`}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 Net Assets
-                <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                  isBalanced
-                    ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
-                    : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
-                }`}>
+                <span
+                  className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
+                    isBalanced
+                      ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
+                      : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300"
+                  }`}
+                >
                   {isBalanced ? "Balanced" : "Mismatch"}
                 </span>
               </CardTitle>
@@ -354,9 +338,7 @@ const BalanceSheet = () => {
             <CardContent className="space-y-1">
               <Row label="Fixed Assets" amount={fixedAssets} />
               <Row label="Net Current Assets" amount={netCurrentAssets} />
-              {longTermLiabilities > 0 && (
-                <Row label="Less: Long-term Liabilities" amount={longTermLiabilities} />
-              )}
+              {longTermLiabilities > 0 && <Row label="Less: Long-term Liabilities" amount={longTermLiabilities} />}
               <Divider />
               <Row label="Net Assets" amount={netAssets} bold />
             </CardContent>

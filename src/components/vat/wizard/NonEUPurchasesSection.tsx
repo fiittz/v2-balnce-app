@@ -26,14 +26,14 @@ interface NonEUPurchasesSectionProps {
 
 export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: NonEUPurchasesSectionProps) {
   const getDetail = (transactionId: string) => {
-    return data.non_eu_purchase_details.find(d => d.transaction_id === transactionId);
+    return data.non_eu_purchase_details.find((d) => d.transaction_id === transactionId);
   };
 
   const toggleExpense = (expenseId: string) => {
-    const existing = data.non_eu_purchase_details.find(d => d.transaction_id === expenseId);
+    const existing = data.non_eu_purchase_details.find((d) => d.transaction_id === expenseId);
     if (existing) {
       onUpdate({
-        non_eu_purchase_details: data.non_eu_purchase_details.filter(d => d.transaction_id !== expenseId),
+        non_eu_purchase_details: data.non_eu_purchase_details.filter((d) => d.transaction_id !== expenseId),
       });
     } else {
       onUpdate({
@@ -54,13 +54,13 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
 
   const updateDetail = (transactionId: string, updates: Partial<VATWizardData["non_eu_purchase_details"][0]>) => {
     onUpdate({
-      non_eu_purchase_details: data.non_eu_purchase_details.map(d =>
-        d.transaction_id === transactionId ? { ...d, ...updates } : d
+      non_eu_purchase_details: data.non_eu_purchase_details.map((d) =>
+        d.transaction_id === transactionId ? { ...d, ...updates } : d,
       ),
     });
   };
 
-  const selectedIds = data.non_eu_purchase_details.map(d => d.transaction_id);
+  const selectedIds = data.non_eu_purchase_details.map((d) => d.transaction_id);
 
   return (
     <div className="space-y-6">
@@ -73,9 +73,7 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
 
       {/* Question: Any non-EU purchases */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">
-          Did you make any purchases from non-EU suppliers this period?
-        </Label>
+        <Label className="text-base font-medium">Did you make any purchases from non-EU suppliers this period?</Label>
         <RadioGroup
           value={data.non_eu_purchases ? "yes" : "no"}
           onValueChange={(v) => onUpdate({ non_eu_purchases: v === "yes" })}
@@ -99,9 +97,7 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
       {/* Transaction Selection */}
       {data.non_eu_purchases && (
         <div className="space-y-3">
-          <Label className="text-base font-medium">
-            Select the transactions that are non-EU imports:
-          </Label>
+          <Label className="text-base font-medium">Select the transactions that are non-EU imports:</Label>
 
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -128,24 +124,17 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
                   {expenses.map((expense) => {
                     const isSelected = selectedIds.includes(expense.id);
                     return (
-                      <tr 
-                        key={expense.id} 
+                      <tr
+                        key={expense.id}
                         className={`border-t hover:bg-muted/50 cursor-pointer ${isSelected ? "bg-primary/5" : ""}`}
                         onClick={() => toggleExpense(expense.id)}
                       >
                         <td className="p-3">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => toggleExpense(expense.id)}
-                          />
+                          <Checkbox checked={isSelected} onCheckedChange={() => toggleExpense(expense.id)} />
                         </td>
-                        <td className="p-3">
-                          {format(parseISO(expense.expense_date), "dd/MM/yy")}
-                        </td>
+                        <td className="p-3">{format(parseISO(expense.expense_date), "dd/MM/yy")}</td>
                         <td className="p-3">{expense.supplier?.name || "-"}</td>
-                        <td className="p-3 max-w-[200px] truncate">
-                          {expense.description || "-"}
-                        </td>
+                        <td className="p-3 max-w-[200px] truncate">{expense.description || "-"}</td>
                         <td className="p-3 text-right">€{expense.amount.toFixed(2)}</td>
                         <td className="p-3">{expense.category?.name || "-"}</td>
                       </tr>
@@ -159,32 +148,35 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
           {/* Selected Purchase Details */}
           {data.non_eu_purchase_details.length > 0 && (
             <div className="space-y-3 mt-4">
-              <Label className="text-base font-medium">
-                Provide details for selected purchases:
-              </Label>
+              <Label className="text-base font-medium">Provide details for selected purchases:</Label>
               {data.non_eu_purchase_details.map((detail) => {
-                const expense = expenses.find(e => e.id === detail.transaction_id);
+                const expense = expenses.find((e) => e.id === detail.transaction_id);
                 if (!expense) return null;
 
                 return (
                   <div key={detail.transaction_id} className="p-4 border rounded-lg space-y-4">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">
-                        {expense.supplier?.name || expense.description || "Unknown"}
-                      </span>
-                      <span className="text-muted-foreground">
-                        €{expense.amount.toFixed(2)}
-                      </span>
+                      <span className="font-medium">{expense.supplier?.name || expense.description || "Unknown"}</span>
+                      <span className="text-muted-foreground">€{expense.amount.toFixed(2)}</span>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Type</Label>
                       <Select
                         value={detail.import_type}
-                        onValueChange={(v) => updateDetail(detail.transaction_id, {
-                          import_type: v as "goods" | "services",
-                          ...(v === "services" ? { reverse_charge_applies: true, import_vat_paid: false, import_vat_amount: 0, deferred_vat: false } : { reverse_charge_applies: false }),
-                        })}
+                        onValueChange={(v) =>
+                          updateDetail(detail.transaction_id, {
+                            import_type: v as "goods" | "services",
+                            ...(v === "services"
+                              ? {
+                                  reverse_charge_applies: true,
+                                  import_vat_paid: false,
+                                  import_vat_amount: 0,
+                                  deferred_vat: false,
+                                }
+                              : { reverse_charge_applies: false }),
+                          })
+                        }
                       >
                         <SelectTrigger className="w-[180px]">
                           <SelectValue />
@@ -203,7 +195,9 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
                           <Checkbox
                             id={`rc-${detail.transaction_id}`}
                             checked={detail.reverse_charge_applies}
-                            onCheckedChange={(checked) => updateDetail(detail.transaction_id, { reverse_charge_applies: !!checked })}
+                            onCheckedChange={(checked) =>
+                              updateDetail(detail.transaction_id, { reverse_charge_applies: !!checked })
+                            }
                           />
                           <Label htmlFor={`rc-${detail.transaction_id}`} className="cursor-pointer">
                             Reverse charge applies
@@ -232,7 +226,9 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
                           <Checkbox
                             id={`vat-paid-${detail.transaction_id}`}
                             checked={detail.import_vat_paid}
-                            onCheckedChange={(checked) => updateDetail(detail.transaction_id, { import_vat_paid: !!checked })}
+                            onCheckedChange={(checked) =>
+                              updateDetail(detail.transaction_id, { import_vat_paid: !!checked })
+                            }
                           />
                           <Label htmlFor={`vat-paid-${detail.transaction_id}`} className="cursor-pointer">
                             Import VAT paid
@@ -246,7 +242,11 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
                               type="number"
                               placeholder="0.00"
                               value={detail.import_vat_amount || ""}
-                              onChange={(e) => updateDetail(detail.transaction_id, { import_vat_amount: parseFloat(e.target.value) || 0 })}
+                              onChange={(e) =>
+                                updateDetail(detail.transaction_id, {
+                                  import_vat_amount: parseFloat(e.target.value) || 0,
+                                })
+                              }
                               className="w-32"
                             />
                           </div>
@@ -256,7 +256,9 @@ export function NonEUPurchasesSection({ data, onUpdate, expenses, isLoading }: N
                           <Checkbox
                             id={`deferred-${detail.transaction_id}`}
                             checked={detail.deferred_vat}
-                            onCheckedChange={(checked) => updateDetail(detail.transaction_id, { deferred_vat: !!checked })}
+                            onCheckedChange={(checked) =>
+                              updateDetail(detail.transaction_id, { deferred_vat: !!checked })
+                            }
                           />
                           <Label htmlFor={`deferred-${detail.transaction_id}`} className="cursor-pointer">
                             Deferred VAT scheme applies

@@ -55,10 +55,7 @@ export interface RCTMonthlySummary {
 /**
  * Calculate RCT deduction for a payment
  */
-export async function calculateRCT(
-  grossAmount: number,
-  subcontractorId: string
-): Promise<RCTCalculation> {
+export async function calculateRCT(grossAmount: number, subcontractorId: string): Promise<RCTCalculation> {
   const { data, error } = await supabase.functions.invoke("process-rct", {
     body: {
       action: "calculate_deduction",
@@ -104,10 +101,7 @@ export async function recordRCTDeduction(params: {
 /**
  * Get monthly RCT summary
  */
-export async function getRCTMonthlySummary(
-  month: number,
-  year: number
-): Promise<RCTMonthlySummary> {
+export async function getRCTMonthlySummary(month: number, year: number): Promise<RCTMonthlySummary> {
   const { data, error } = await supabase.functions.invoke("process-rct", {
     body: {
       action: "get_monthly_summary",
@@ -161,8 +155,18 @@ export function getRCTRateColor(rate: number): string {
  */
 export function formatRCTPeriod(month: number, year: number): string {
   const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   return `${monthNames[month - 1]} ${year}`;
 }

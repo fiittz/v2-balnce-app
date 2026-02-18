@@ -1,13 +1,12 @@
 import { describe, it, expect } from "vitest";
-import {
-  findMatchingAccount,
-  getAccountSuggestion,
-  getDefaultAccount,
-  type Account,
-} from "../accountMapping";
+import { findMatchingAccount, getAccountSuggestion, getDefaultAccount, type Account } from "../accountMapping";
 
 // ── Helper: build a mock Account row ─────────────────────────
-function mockAccount(name: string, account_type: string, id = "acc-" + name.toLowerCase().replace(/\s+/g, "-")): Account {
+function mockAccount(
+  name: string,
+  account_type: string,
+  id = "acc-" + name.toLowerCase().replace(/\s+/g, "-"),
+): Account {
   return {
     id,
     name,
@@ -343,9 +342,7 @@ describe("getAccountSuggestion", () => {
 describe("findMatchingAccount — partial match fallback", () => {
   it("falls back to partial match when exact account name is missing", () => {
     // Create accounts that only partially match the mapping candidates
-    const partialAccounts = [
-      mockAccount("Motor Expenses", "Expense"),
-    ];
+    const partialAccounts = [mockAccount("Motor Expenses", "Expense")];
     // "Motor/travel" maps to ["Motor – Fuel", "Motor Tax & Insurance"]
     // Neither exact match exists, but "Motor" is the first word of the candidate name
     // and "Motor Expenses" contains "Motor"

@@ -1,12 +1,25 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, ArrowUpRight, ArrowDownLeft, Tag, CheckCircle2, Link2, Loader2, Briefcase, User, HelpCircle, Brain, MessageSquare, Pencil, Camera } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Tag,
+  CheckCircle2,
+  Link2,
+  Loader2,
+  Briefcase,
+  User,
+  HelpCircle,
+  Brain,
+  MessageSquare,
+  Pencil,
+  Camera,
+} from "lucide-react";
 import { useReceiptUrl } from "@/hooks/useReceiptUrl";
 import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import TransactionEditDialog from "./TransactionEditDialog";
 import TransactionRowActions from "./TransactionRowActions";
 import InlineCategoryPicker from "./InlineCategoryPicker";
@@ -60,28 +73,24 @@ export default function AccountLedgerSection({
   const receiptPreviewUrl = useReceiptUrl(receiptPreviewPath);
 
   // Calculate account totals
-  const totalDebits = transactions
-    .filter(t => t.type === "expense")
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  
-  const totalCredits = transactions
-    .filter(t => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const totalDebits = transactions.filter((t) => t.type === "expense").reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  const totalCredits = transactions.filter((t) => t.type === "income").reduce((sum, t) => sum + t.amount, 0);
 
   // For expense-type accounts, show debits as positive (natural balance)
   // For income-type accounts, show credits as positive (natural balance)
   const isExpenseAccount = ["Expense", "Cost of Sales"].includes(accountType);
   const isIncomeAccount = accountType === "Income";
-  
+
   // Display balance based on account type
-  const displayBalance = isExpenseAccount 
-    ? totalDebits  // Expense accounts: show total spent
-    : isIncomeAccount 
-      ? totalCredits  // Income accounts: show total earned
-      : totalCredits - totalDebits;  // Other accounts: net
-  
-  const isPositiveBalance = isExpenseAccount 
-    ? true  // Expenses are always "positive" (money spent)
+  const displayBalance = isExpenseAccount
+    ? totalDebits // Expense accounts: show total spent
+    : isIncomeAccount
+      ? totalCredits // Income accounts: show total earned
+      : totalCredits - totalDebits; // Other accounts: net
+
+  const isPositiveBalance = isExpenseAccount
+    ? true // Expenses are always "positive" (money spent)
     : displayBalance >= 0;
 
   // Get type color
@@ -121,7 +130,7 @@ export default function AccountLedgerSection({
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           )}
         </div>
-        
+
         <div className="flex-1 text-left">
           <div className="flex items-center gap-2">
             {accountCode && (
@@ -130,9 +139,7 @@ export default function AccountLedgerSection({
               </span>
             )}
             <h3 className="font-semibold">{accountName}</h3>
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${getTypeColor()}`}>
-              {accountType}
-            </span>
+            <span className={`text-xs px-2 py-0.5 rounded-full border ${getTypeColor()}`}>{accountType}</span>
           </div>
           <p className="text-sm text-muted-foreground">
             {transactions.length} transaction{transactions.length !== 1 ? "s" : ""}
@@ -140,7 +147,9 @@ export default function AccountLedgerSection({
         </div>
 
         <div className="text-right">
-          <p className={`font-bold text-lg ${isExpenseAccount ? "text-red-600" : isPositiveBalance ? "text-green-600" : "text-red-600"}`}>
+          <p
+            className={`font-bold text-lg ${isExpenseAccount ? "text-red-600" : isPositiveBalance ? "text-green-600" : "text-red-600"}`}
+          >
             {isExpenseAccount ? "-" : isPositiveBalance ? "" : "-"}€{displayBalance.toFixed(2)}
           </p>
           <div className="flex gap-3 text-xs text-muted-foreground">
@@ -161,7 +170,9 @@ export default function AccountLedgerSection({
               } ${selectedIds.has(transaction.id) ? "bg-primary/5" : ""} ${
                 !selectionMode ? "cursor-pointer hover:bg-muted/50" : ""
               }`}
-              onClick={selectionMode ? () => onToggleSelection(transaction.id) : () => setEditingTransaction(transaction)}
+              onClick={
+                selectionMode ? () => onToggleSelection(transaction.id) : () => setEditingTransaction(transaction)
+              }
             >
               {selectionMode && (
                 <Checkbox
@@ -170,10 +181,12 @@ export default function AccountLedgerSection({
                   className="shrink-0"
                 />
               )}
-              
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                transaction.type === "income" ? "bg-green-100" : "bg-red-100"
-              }`}>
+
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  transaction.type === "income" ? "bg-green-100" : "bg-red-100"
+                }`}
+              >
                 {transaction.type === "income" ? (
                   <ArrowDownLeft className="w-4 h-4 text-green-600" />
                 ) : (
@@ -198,7 +211,7 @@ export default function AccountLedgerSection({
                   <span className="text-xs text-muted-foreground">
                     {format(parseISO(transaction.transaction_date), "d MMM yyyy")}
                   </span>
-                  
+
                   <InlineCategoryPicker
                     transactionId={transaction.id}
                     currentCategory={transaction.category}
@@ -216,22 +229,24 @@ export default function AccountLedgerSection({
                           <CheckCircle2 className="w-3 h-3" />
                           Matched
                         </span>
-                      ) : onMatchSingle && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onMatchSingle(transaction.id);
-                          }}
-                          disabled={matchingTxId === transaction.id}
-                          className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-amber-200 transition-colors"
-                        >
-                          {matchingTxId === transaction.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <Link2 className="w-3 h-3" />
-                          )}
-                          Match
-                        </button>
+                      ) : (
+                        onMatchSingle && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onMatchSingle(transaction.id);
+                            }}
+                            disabled={matchingTxId === transaction.id}
+                            className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-amber-200 transition-colors"
+                          >
+                            {matchingTxId === transaction.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Link2 className="w-3 h-3" />
+                            )}
+                            Match
+                          </button>
+                        )
                       )}
                       {transaction.receipt_url && (
                         <button
@@ -263,9 +278,7 @@ export default function AccountLedgerSection({
                   {transaction.type === "income" ? "+" : "-"}€{Math.abs(transaction.amount).toFixed(2)}
                 </p>
                 {transaction.vat_amount && transaction.vat_amount > 0 && (
-                  <span className="text-xs text-muted-foreground">
-                    VAT €{transaction.vat_amount.toFixed(2)}
-                  </span>
+                  <span className="text-xs text-muted-foreground">VAT €{transaction.vat_amount.toFixed(2)}</span>
                 )}
               </div>
             </div>
@@ -284,11 +297,7 @@ export default function AccountLedgerSection({
       <Dialog open={!!receiptPreviewPath} onOpenChange={(open) => !open && setReceiptPreviewPath(null)}>
         <DialogContent className="sm:max-w-lg">
           {receiptPreviewUrl ? (
-            <img
-              src={receiptPreviewUrl}
-              alt="Receipt"
-              className="w-full rounded-lg"
-            />
+            <img src={receiptPreviewUrl} alt="Receipt" className="w-full rounded-lg" />
           ) : receiptPreviewPath ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

@@ -1,30 +1,14 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, Building2, CheckCircle2, MapPin } from "lucide-react";
@@ -320,17 +304,11 @@ export function BusinessBankExportQuestionnaire({
     return yearsSinceIncorp <= 3;
   })();
 
-  const updateData = <K extends keyof QuestionnaireData>(
-    key: K,
-    value: QuestionnaireData[K]
-  ) => {
+  const updateData = <K extends keyof QuestionnaireData>(key: K, value: QuestionnaireData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const updateAutomationChange = (
-    key: keyof QuestionnaireData["automationChanges"],
-    value: boolean
-  ) => {
+  const updateAutomationChange = (key: keyof QuestionnaireData["automationChanges"], value: boolean) => {
     setData((prev) => ({
       ...prev,
       automationChanges: { ...prev.automationChanges, [key]: value },
@@ -351,10 +329,7 @@ export function BusinessBankExportQuestionnaire({
   const canProceed = () => {
     switch (currentSectionId) {
       case 1:
-        return (
-          data.automationNoChanges ||
-          Object.values(data.automationChanges).some(Boolean)
-        );
+        return data.automationNoChanges || Object.values(data.automationChanges).some(Boolean);
       case 2:
         return data.incomeComplete || data.incomeNotes.trim().length > 0;
       case 3:
@@ -364,10 +339,7 @@ export function BusinessBankExportQuestionnaire({
       case 5: // RCT
         return true; // optional section
       case 6:
-        return (
-          data.capitalTransactionsCorrect ||
-          data.capitalNotes.trim().length > 0
-        );
+        return data.capitalTransactionsCorrect || data.capitalNotes.trim().length > 0;
       case 7: // Stock & WIP
         return true; // optional section
       case 8: // Debtors & Creditors
@@ -431,8 +403,7 @@ export function BusinessBankExportQuestionnaire({
               Automation Assumption Check
             </h3>
             <p className="text-sm text-muted-foreground">
-              Since onboarding, has anything changed in how this business
-              operates?
+              Since onboarding, has anything changed in how this business operates?
             </p>
 
             <div className="space-y-3">
@@ -469,9 +440,7 @@ export function BusinessBankExportQuestionnaire({
                     }
                   }}
                 />
-                <Label htmlFor="yesChanges">
-                  Yes — the following changed:
-                </Label>
+                <Label htmlFor="yesChanges">Yes — the following changed:</Label>
               </div>
 
               {!data.automationNoChanges && (
@@ -495,16 +464,9 @@ export function BusinessBankExportQuestionnaire({
                     <div key={key} className="flex items-center space-x-2">
                       <Checkbox
                         id={key}
-                        checked={
-                          data.automationChanges[
-                            key as keyof typeof data.automationChanges
-                          ]
-                        }
+                        checked={data.automationChanges[key as keyof typeof data.automationChanges]}
                         onCheckedChange={(checked) =>
-                          updateAutomationChange(
-                            key as keyof typeof data.automationChanges,
-                            checked === true
-                          )
+                          updateAutomationChange(key as keyof typeof data.automationChanges, checked === true)
                         }
                       />
                       <Label htmlFor={key} className="text-sm">
@@ -517,31 +479,25 @@ export function BusinessBankExportQuestionnaire({
 
               {Object.values(data.automationChanges).some(Boolean) && (
                 <div className="mt-4">
-                  <Label className="text-sm">
-                    From what date did this change apply?
-                  </Label>
+                  <Label className="text-sm">From what date did this change apply?</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal mt-2",
-                          !data.automationChangeDate && "text-muted-foreground"
+                          !data.automationChangeDate && "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {data.automationChangeDate
-                          ? format(data.automationChangeDate, "PPP")
-                          : "Select date"}
+                        {data.automationChangeDate ? format(data.automationChangeDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={data.automationChangeDate}
-                        onSelect={(date) =>
-                          updateData("automationChangeDate", date)
-                        }
+                        onSelect={(date) => updateData("automationChangeDate", date)}
                         className="pointer-events-auto"
                       />
                     </PopoverContent>
@@ -570,9 +526,7 @@ export function BusinessBankExportQuestionnaire({
                 {detectedIncome.map((item, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span>{item.category}</span>
-                    <span className="font-mono">
-                      {formatCurrency(item.amount)}
-                    </span>
+                    <span className="font-mono">{formatCurrency(item.amount)}</span>
                   </div>
                 ))}
               </div>
@@ -582,17 +536,13 @@ export function BusinessBankExportQuestionnaire({
               </div>
             )}
 
-            <p className="text-sm font-medium">
-              Is this complete and accurate?
-            </p>
+            <p className="text-sm font-medium">Is this complete and accurate?</p>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="incomeYes"
                   checked={data.incomeComplete}
-                  onCheckedChange={(checked) =>
-                    updateData("incomeComplete", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("incomeComplete", checked === true)}
                 />
                 <Label htmlFor="incomeYes">Yes</Label>
               </div>
@@ -604,9 +554,7 @@ export function BusinessBankExportQuestionnaire({
                     if (checked) updateData("incomeComplete", false);
                   }}
                 />
-                <Label htmlFor="incomeNo">
-                  No — something is missing or incorrect
-                </Label>
+                <Label htmlFor="incomeNo">No — something is missing or incorrect</Label>
               </div>
               {!data.incomeComplete && (
                 <Textarea
@@ -647,7 +595,9 @@ export function BusinessBankExportQuestionnaire({
                   <span className="font-mono line-through">{formatCurrency(originalExpenseSummary.disallowed)}</span>
                 </div>
                 {reEvaluationWarnings.map((w, i) => (
-                  <p key={i} className="text-xs text-yellow-600 dark:text-yellow-400">{w}</p>
+                  <p key={i} className="text-xs text-yellow-600 dark:text-yellow-400">
+                    {w}
+                  </p>
                 ))}
               </div>
             )}
@@ -655,15 +605,11 @@ export function BusinessBankExportQuestionnaire({
             <div className="bg-muted/50 rounded-lg p-3 space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Allowable business expenses{reEvaluationApplied ? " (re-evaluated)" : ""}</span>
-                <span className="font-mono text-green-600">
-                  {formatCurrency(expenseSummary.allowable)}
-                </span>
+                <span className="font-mono text-green-600">{formatCurrency(expenseSummary.allowable)}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Disallowed / personal items{reEvaluationApplied ? " (re-evaluated)" : ""}</span>
-                <span className="font-mono text-red-600">
-                  {formatCurrency(expenseSummary.disallowed)}
-                </span>
+                <span className="font-mono text-red-600">{formatCurrency(expenseSummary.disallowed)}</span>
               </div>
             </div>
 
@@ -673,9 +619,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="expenseYes"
                   checked={data.expensesCorrect}
-                  onCheckedChange={(checked) =>
-                    updateData("expensesCorrect", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("expensesCorrect", checked === true)}
                 />
                 <Label htmlFor="expenseYes">Yes</Label>
               </div>
@@ -710,9 +654,7 @@ export function BusinessBankExportQuestionnaire({
               </span>
               VAT Treatment Confirmation
             </h3>
-            <p className="text-sm text-muted-foreground">
-              For this period, the platform treated this business as:
-            </p>
+            <p className="text-sm text-muted-foreground">For this period, the platform treated this business as:</p>
 
             {reEvaluationApplied && vatPosition && (
               <div className="bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
@@ -740,11 +682,7 @@ export function BusinessBankExportQuestionnaire({
                     id={value}
                     checked={data.vatStatus === value}
                     onCheckedChange={(checked) => {
-                      if (checked)
-                        updateData(
-                          "vatStatus",
-                          value as QuestionnaireData["vatStatus"]
-                        );
+                      if (checked) updateData("vatStatus", value as QuestionnaireData["vatStatus"]);
                     }}
                   />
                   <Label htmlFor={value}>{label}</Label>
@@ -754,27 +692,20 @@ export function BusinessBankExportQuestionnaire({
 
             <Separator />
 
-            <p className="text-sm font-medium">
-              Is this correct for the entire period?
-            </p>
+            <p className="text-sm font-medium">Is this correct for the entire period?</p>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="vatYes"
                   checked={data.vatStatusCorrect}
-                  onCheckedChange={(checked) =>
-                    updateData("vatStatusCorrect", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("vatStatusCorrect", checked === true)}
                 />
                 <Label htmlFor="vatYes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="vatNo"
-                  checked={
-                    !data.vatStatusCorrect &&
-                    data.vatStatusChangeDate !== undefined
-                  }
+                  checked={!data.vatStatusCorrect && data.vatStatusChangeDate !== undefined}
                   onCheckedChange={(checked) => {
                     if (checked) updateData("vatStatusCorrect", false);
                   }}
@@ -791,22 +722,18 @@ export function BusinessBankExportQuestionnaire({
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal mt-2",
-                          !data.vatStatusChangeDate && "text-muted-foreground"
+                          !data.vatStatusChangeDate && "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {data.vatStatusChangeDate
-                          ? format(data.vatStatusChangeDate, "PPP")
-                          : "Select date"}
+                        {data.vatStatusChangeDate ? format(data.vatStatusChangeDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={data.vatStatusChangeDate}
-                        onSelect={(date) =>
-                          updateData("vatStatusChangeDate", date)
-                        }
+                        onSelect={(date) => updateData("vatStatusChangeDate", date)}
                         className="pointer-events-auto"
                       />
                     </PopoverContent>
@@ -826,18 +753,14 @@ export function BusinessBankExportQuestionnaire({
               </span>
               RCT Reconciliation
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Confirm RCT deductions for this period.
-            </p>
+            <p className="text-sm text-muted-foreground">Confirm RCT deductions for this period.</p>
 
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="rctApplicable"
                   checked={data.rctApplicable}
-                  onCheckedChange={(checked) =>
-                    updateData("rctApplicable", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("rctApplicable", checked === true)}
                 />
                 <Label htmlFor="rctApplicable">RCT applied during this period</Label>
               </div>
@@ -848,7 +771,9 @@ export function BusinessBankExportQuestionnaire({
                     <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                       {rctDeductions.map((item, idx) => (
                         <div key={idx} className="flex justify-between text-sm">
-                          <span>{item.contractor} ({item.rate})</span>
+                          <span>
+                            {item.contractor} ({item.rate})
+                          </span>
                           <span className="font-mono">{formatCurrency(item.amount)}</span>
                         </div>
                       ))}
@@ -859,9 +784,7 @@ export function BusinessBankExportQuestionnaire({
                     <Checkbox
                       id="rctDeductionsCorrect"
                       checked={data.rctDeductionsCorrect}
-                      onCheckedChange={(checked) =>
-                        updateData("rctDeductionsCorrect", checked === true)
-                      }
+                      onCheckedChange={(checked) => updateData("rctDeductionsCorrect", checked === true)}
                     />
                     <Label htmlFor="rctDeductionsCorrect">RCT deductions are correct</Label>
                   </div>
@@ -898,23 +821,17 @@ export function BusinessBankExportQuestionnaire({
               Capital & One-Off Transactions
             </h3>
             <p className="text-sm text-muted-foreground">
-              The platform reviewed this account for transactions that may
-              require special treatment.
+              The platform reviewed this account for transactions that may require special treatment.
             </p>
 
             <div className="bg-muted/50 rounded-lg p-3">
               {flaggedCapitalItems.length === 0 ? (
-                <p className="text-sm">
-                  ✓ No transactions requiring special treatment
-                </p>
+                <p className="text-sm">✓ No transactions requiring special treatment</p>
               ) : (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Flagged items:</p>
                   {flaggedCapitalItems.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex justify-between text-sm border-b border-border/50 pb-1"
-                    >
+                    <div key={idx} className="flex justify-between text-sm border-b border-border/50 pb-1">
                       <span>{item.description}</span>
                       <span className="font-mono">
                         {item.date} • {formatCurrency(item.amount)}
@@ -931,26 +848,19 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="capitalYes"
                   checked={data.capitalTransactionsCorrect}
-                  onCheckedChange={(checked) =>
-                    updateData("capitalTransactionsCorrect", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("capitalTransactionsCorrect", checked === true)}
                 />
                 <Label htmlFor="capitalYes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="capitalNo"
-                  checked={
-                    !data.capitalTransactionsCorrect &&
-                    data.capitalNotes.length > 0
-                  }
+                  checked={!data.capitalTransactionsCorrect && data.capitalNotes.length > 0}
                   onCheckedChange={(checked) => {
                     if (checked) updateData("capitalTransactionsCorrect", false);
                   }}
                 />
-                <Label htmlFor="capitalNo">
-                  No — something is missing or incorrectly flagged
-                </Label>
+                <Label htmlFor="capitalNo">No — something is missing or incorrectly flagged</Label>
               </div>
               {!data.capitalTransactionsCorrect && (
                 <Textarea
@@ -982,9 +892,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasClosingStock"
                   checked={data.hasClosingStock}
-                  onCheckedChange={(checked) =>
-                    updateData("hasClosingStock", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasClosingStock", checked === true)}
                 />
                 <Label htmlFor="hasClosingStock">Business holds closing stock</Label>
               </div>
@@ -1005,7 +913,9 @@ export function BusinessBankExportQuestionnaire({
                     <Label className="text-sm">Valuation method</Label>
                     <Select
                       value={data.stockValuationMethod}
-                      onValueChange={(v) => updateData("stockValuationMethod", v as QuestionnaireData["stockValuationMethod"])}
+                      onValueChange={(v) =>
+                        updateData("stockValuationMethod", v as QuestionnaireData["stockValuationMethod"])
+                      }
                     >
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Select method" />
@@ -1025,9 +935,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasWip"
                   checked={data.hasWip}
-                  onCheckedChange={(checked) =>
-                    updateData("hasWip", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasWip", checked === true)}
                 />
                 <Label htmlFor="hasWip">Work in progress at period end</Label>
               </div>
@@ -1066,9 +974,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasTradeDebtors"
                   checked={data.hasTradeDebtors}
-                  onCheckedChange={(checked) =>
-                    updateData("hasTradeDebtors", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasTradeDebtors", checked === true)}
                 />
                 <Label htmlFor="hasTradeDebtors">Outstanding trade debtors</Label>
               </div>
@@ -1090,9 +996,7 @@ export function BusinessBankExportQuestionnaire({
                     <Checkbox
                       id="hasBadDebts"
                       checked={data.hasBadDebts}
-                      onCheckedChange={(checked) =>
-                        updateData("hasBadDebts", checked === true)
-                      }
+                      onCheckedChange={(checked) => updateData("hasBadDebts", checked === true)}
                     />
                     <Label htmlFor="hasBadDebts">Bad debts written off</Label>
                   </div>
@@ -1118,9 +1022,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasTradeCreditorsOutstanding"
                   checked={data.hasTradeCreditorsOutstanding}
-                  onCheckedChange={(checked) =>
-                    updateData("hasTradeCreditorsOutstanding", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasTradeCreditorsOutstanding", checked === true)}
                 />
                 <Label htmlFor="hasTradeCreditorsOutstanding">Outstanding trade creditors</Label>
               </div>
@@ -1156,17 +1058,13 @@ export function BusinessBankExportQuestionnaire({
 
             <div className="bg-muted/50 rounded-lg p-3">
               {detectedPayments.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No payments detected
-                </p>
+                <p className="text-sm text-muted-foreground">No payments detected</p>
               ) : (
                 <div className="space-y-1">
                   {detectedPayments.map((payment, idx) => (
                     <div key={idx} className="flex justify-between text-sm">
                       <span>{payment.type}</span>
-                      <span className="font-mono">
-                        {formatCurrency(payment.amount)}
-                      </span>
+                      <span className="font-mono">{formatCurrency(payment.amount)}</span>
                     </div>
                   ))}
                 </div>
@@ -1179,18 +1077,14 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="paymentsYes"
                   checked={data.paymentsCorrect}
-                  onCheckedChange={(checked) =>
-                    updateData("paymentsCorrect", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("paymentsCorrect", checked === true)}
                 />
                 <Label htmlFor="paymentsYes">Yes</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="paymentsNo"
-                  checked={
-                    !data.paymentsCorrect && data.paymentNotes.length > 0
-                  }
+                  checked={!data.paymentsCorrect && data.paymentNotes.length > 0}
                   onCheckedChange={(checked) => {
                     if (checked) updateData("paymentsCorrect", false);
                   }}
@@ -1225,18 +1119,14 @@ export function BusinessBankExportQuestionnaire({
               <div className="bg-muted/50 rounded-lg p-3">
                 <div className="flex justify-between text-sm">
                   <span>Closing bank balance at period end:</span>
-                  <span className="font-mono font-medium">
-                    {formatCurrency(closingBalance)}
-                  </span>
+                  <span className="font-mono font-medium">{formatCurrency(closingBalance)}</span>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="bankConfirmed"
                   checked={data.bankBalanceConfirmed}
-                  onCheckedChange={(checked) =>
-                    updateData("bankBalanceConfirmed", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("bankBalanceConfirmed", checked === true)}
                 />
                 <Label htmlFor="bankConfirmed">Confirmed</Label>
               </div>
@@ -1250,35 +1140,25 @@ export function BusinessBankExportQuestionnaire({
               <div className="bg-muted/50 rounded-lg p-3">
                 {vatPosition ? (
                   <div className="flex justify-between text-sm">
-                    <span>
-                      VAT{" "}
-                      {vatPosition.type === "payable" ? "payable" : "refundable"}
-                      :
-                    </span>
+                    <span>VAT {vatPosition.type === "payable" ? "payable" : "refundable"}:</span>
                     <span
                       className={cn(
                         "font-mono font-medium",
-                        vatPosition.type === "payable"
-                          ? "text-red-600"
-                          : "text-green-600"
+                        vatPosition.type === "payable" ? "text-red-600" : "text-green-600",
                       )}
                     >
                       {formatCurrency(vatPosition.amount)}
                     </span>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No VAT position calculated
-                  </p>
+                  <p className="text-sm text-muted-foreground">No VAT position calculated</p>
                 )}
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="vatConfirmed"
                   checked={data.vatPositionConfirmed}
-                  onCheckedChange={(checked) =>
-                    updateData("vatPositionConfirmed", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("vatPositionConfirmed", checked === true)}
                 />
                 <Label htmlFor="vatConfirmed">Confirmed</Label>
               </div>
@@ -1291,9 +1171,7 @@ export function BusinessBankExportQuestionnaire({
               <h4 className="font-medium text-sm">Fixed Assets</h4>
               <div className="bg-muted/50 rounded-lg p-3">
                 {fixedAssets.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No fixed assets recorded
-                  </p>
+                  <p className="text-sm text-muted-foreground">No fixed assets recorded</p>
                 ) : (
                   <div className="space-y-1">
                     {fixedAssets.map((asset, idx) => (
@@ -1311,9 +1189,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="assetsConfirmed"
                   checked={data.fixedAssetsConfirmed}
-                  onCheckedChange={(checked) =>
-                    updateData("fixedAssetsConfirmed", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("fixedAssetsConfirmed", checked === true)}
                 />
                 <Label htmlFor="assetsConfirmed">Complete and accurate</Label>
               </div>
@@ -1326,17 +1202,13 @@ export function BusinessBankExportQuestionnaire({
               <h4 className="font-medium text-sm">Loans & Finance</h4>
               <div className="bg-muted/50 rounded-lg p-3">
                 {loans.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No loans detected
-                  </p>
+                  <p className="text-sm text-muted-foreground">No loans detected</p>
                 ) : (
                   <div className="space-y-1">
                     {loans.map((loan, idx) => (
                       <div key={idx} className="flex justify-between text-sm">
                         <span>{loan.name}</span>
-                        <span className="font-mono">
-                          {formatCurrency(loan.amount)}
-                        </span>
+                        <span className="font-mono">{formatCurrency(loan.amount)}</span>
                       </div>
                     ))}
                   </div>
@@ -1346,9 +1218,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="loansConfirmed"
                   checked={data.loansConfirmed}
-                  onCheckedChange={(checked) =>
-                    updateData("loansConfirmed", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("loansConfirmed", checked === true)}
                 />
                 <Label htmlFor="loansConfirmed">Confirmed</Label>
               </div>
@@ -1359,15 +1229,11 @@ export function BusinessBankExportQuestionnaire({
               <>
                 <Separator />
                 <div className="space-y-2">
-                  <h4 className="font-medium text-sm">
-                    Director's Loan Account
-                  </h4>
+                  <h4 className="font-medium text-sm">Director's Loan Account</h4>
                   <div className="bg-muted/50 rounded-lg p-3">
                     <div className="flex justify-between text-sm">
                       <span>Calculated balance at period end:</span>
-                      <span className="font-mono font-medium">
-                        {formatCurrency(directorsLoanBalance)}
-                      </span>
+                      <span className="font-mono font-medium">{formatCurrency(directorsLoanBalance)}</span>
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -1376,8 +1242,7 @@ export function BusinessBankExportQuestionnaire({
                         id="owedTo"
                         checked={data.directorsLoanDirection === "owed_to"}
                         onCheckedChange={(checked) => {
-                          if (checked)
-                            updateData("directorsLoanDirection", "owed_to");
+                          if (checked) updateData("directorsLoanDirection", "owed_to");
                         }}
                       />
                       <Label htmlFor="owedTo">Money owed to the director</Label>
@@ -1387,8 +1252,7 @@ export function BusinessBankExportQuestionnaire({
                         id="owedBy"
                         checked={data.directorsLoanDirection === "owed_by"}
                         onCheckedChange={(checked) => {
-                          if (checked)
-                            updateData("directorsLoanDirection", "owed_by");
+                          if (checked) updateData("directorsLoanDirection", "owed_by");
                         }}
                       />
                       <Label htmlFor="owedBy">Money owed by the director</Label>
@@ -1398,9 +1262,7 @@ export function BusinessBankExportQuestionnaire({
                     <Checkbox
                       id="directorsConfirmed"
                       checked={data.directorsLoanConfirmed}
-                      onCheckedChange={(checked) =>
-                        updateData("directorsLoanConfirmed", checked === true)
-                      }
+                      onCheckedChange={(checked) => updateData("directorsLoanConfirmed", checked === true)}
                     />
                     <Label htmlFor="directorsConfirmed">Confirmed</Label>
                   </div>
@@ -1445,9 +1307,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="depreciationConfirmed"
                   checked={data.depreciationConfirmed}
-                  onCheckedChange={(checked) =>
-                    updateData("depreciationConfirmed", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("depreciationConfirmed", checked === true)}
                 />
                 <Label htmlFor="depreciationConfirmed">Capital allowances / depreciation is correct</Label>
               </div>
@@ -1473,9 +1333,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="isCloseCompany"
                   checked={data.isCloseCompany}
-                  onCheckedChange={(checked) =>
-                    updateData("isCloseCompany", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("isCloseCompany", checked === true)}
                 />
                 <Label htmlFor="isCloseCompany">This is a close company</Label>
               </div>
@@ -1485,9 +1343,7 @@ export function BusinessBankExportQuestionnaire({
                   <Checkbox
                     id="distributedProfitsSufficiently"
                     checked={data.distributedProfitsSufficiently}
-                    onCheckedChange={(checked) =>
-                      updateData("distributedProfitsSufficiently", checked === true)
-                    }
+                    onCheckedChange={(checked) => updateData("distributedProfitsSufficiently", checked === true)}
                   />
                   <Label htmlFor="distributedProfitsSufficiently">
                     Sufficient profits distributed to avoid surcharge
@@ -1501,9 +1357,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasRelatedPartyTransactions"
                   checked={data.hasRelatedPartyTransactions}
-                  onCheckedChange={(checked) =>
-                    updateData("hasRelatedPartyTransactions", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasRelatedPartyTransactions", checked === true)}
                 />
                 <Label htmlFor="hasRelatedPartyTransactions">Related party transactions occurred</Label>
               </div>
@@ -1523,9 +1377,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasLossesCarriedForward"
                   checked={data.hasLossesCarriedForward}
-                  onCheckedChange={(checked) =>
-                    updateData("hasLossesCarriedForward", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasLossesCarriedForward", checked === true)}
                 />
                 <Label htmlFor="hasLossesCarriedForward">Losses to carry forward</Label>
               </div>
@@ -1556,8 +1408,8 @@ export function BusinessBankExportQuestionnaire({
               Travel, Subsistence & Mileage
             </h3>
             <p className="text-sm text-muted-foreground">
-              Summary of business trips detected from bank transactions and invoice matches.
-              Rates applied are Revenue civil service rates (2024).
+              Summary of business trips detected from bank transactions and invoice matches. Rates applied are Revenue
+              civil service rates (2024).
             </p>
 
             {tripSummary && (
@@ -1578,7 +1430,9 @@ export function BusinessBankExportQuestionnaire({
                   <Separator />
                   <div className="flex justify-between text-sm font-semibold">
                     <span>Total travel & subsistence</span>
-                    <span className="font-mono">{formatCurrency(tripSummary.totalSubsistence + tripSummary.totalMileage)}</span>
+                    <span className="font-mono">
+                      {formatCurrency(tripSummary.totalSubsistence + tripSummary.totalMileage)}
+                    </span>
                   </div>
                 </div>
 
@@ -1628,9 +1482,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="preliminaryCTPaid"
                   checked={data.preliminaryCTPaid}
-                  onCheckedChange={(checked) =>
-                    updateData("preliminaryCTPaid", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("preliminaryCTPaid", checked === true)}
                 />
                 <Label htmlFor="preliminaryCTPaid">Preliminary CT paid</Label>
               </div>
@@ -1655,13 +1507,11 @@ export function BusinessBankExportQuestionnaire({
                           variant="outline"
                           className={cn(
                             "w-full justify-start text-left font-normal mt-1",
-                            !data.preliminaryCTDate && "text-muted-foreground"
+                            !data.preliminaryCTDate && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {data.preliminaryCTDate
-                            ? format(data.preliminaryCTDate, "PPP")
-                            : "Select date"}
+                          {data.preliminaryCTDate ? format(data.preliminaryCTDate, "PPP") : "Select date"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -1794,9 +1644,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasLossesBroughtForward"
                   checked={data.hasLossesBroughtForward}
-                  onCheckedChange={(checked) =>
-                    updateData("hasLossesBroughtForward", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasLossesBroughtForward", checked === true)}
                 />
                 <Label htmlFor="hasLossesBroughtForward">Trading losses brought forward from prior years</Label>
               </div>
@@ -1839,7 +1687,8 @@ export function BusinessBankExportQuestionnaire({
               Start-up Exemption (Section 486C)
             </h3>
             <p className="text-sm text-muted-foreground">
-              Companies in their first 3 years of trading may be exempt from corporation tax if total tax liability does not exceed employer PRSI contributions.
+              Companies in their first 3 years of trading may be exempt from corporation tax if total tax liability does
+              not exceed employer PRSI contributions.
             </p>
 
             <div className="space-y-3">
@@ -1847,9 +1696,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="claimStartupExemption"
                   checked={data.claimStartupExemption}
-                  onCheckedChange={(checked) =>
-                    updateData("claimStartupExemption", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("claimStartupExemption", checked === true)}
                 />
                 <Label htmlFor="claimStartupExemption">Claim start-up company exemption</Label>
               </div>
@@ -1882,18 +1729,14 @@ export function BusinessBankExportQuestionnaire({
               </span>
               Dividend Withholding Tax
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Were dividends paid to shareholders during this period?
-            </p>
+            <p className="text-sm text-muted-foreground">Were dividends paid to shareholders during this period?</p>
 
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="hasDividendsPaid"
                   checked={data.hasDividendsPaid}
-                  onCheckedChange={(checked) =>
-                    updateData("hasDividendsPaid", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasDividendsPaid", checked === true)}
                 />
                 <Label htmlFor="hasDividendsPaid">Dividends paid during this period</Label>
               </div>
@@ -1949,9 +1792,7 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="hasAssetDisposals"
                   checked={data.hasAssetDisposals}
-                  onCheckedChange={(checked) =>
-                    updateData("hasAssetDisposals", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("hasAssetDisposals", checked === true)}
                 />
                 <Label htmlFor="hasAssetDisposals">Asset disposals occurred</Label>
               </div>
@@ -2094,18 +1935,12 @@ export function BusinessBankExportQuestionnaire({
                 <Checkbox
                   id="finalDeclaration"
                   checked={data.finalDeclaration}
-                  onCheckedChange={(checked) =>
-                    updateData("finalDeclaration", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("finalDeclaration", checked === true)}
                   className="mt-1"
                 />
-                <Label
-                  htmlFor="finalDeclaration"
-                  className="text-sm leading-relaxed cursor-pointer"
-                >
-                  I confirm that Balnce has correctly automated the bookkeeping,
-                  VAT, and balance sheet for this business account for the
-                  selected period, based on the confirmations above.
+                <Label htmlFor="finalDeclaration" className="text-sm leading-relaxed cursor-pointer">
+                  I confirm that Balnce has correctly automated the bookkeeping, VAT, and balance sheet for this
+                  business account for the selected period, based on the confirmations above.
                 </Label>
               </div>
             </div>
@@ -2113,9 +1948,7 @@ export function BusinessBankExportQuestionnaire({
             {data.finalDeclaration && (
               <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                 <CheckCircle2 className="h-5 w-5" />
-                <span className="text-sm font-medium">
-                  Ready to export
-                </span>
+                <span className="text-sm font-medium">Ready to export</span>
               </div>
             )}
           </div>
@@ -2139,8 +1972,7 @@ export function BusinessBankExportQuestionnaire({
             {periodStart && periodEnd && (
               <>
                 {" "}
-                • {format(periodStart, "d MMM yyyy")} –{" "}
-                {format(periodEnd, "d MMM yyyy")}
+                • {format(periodStart, "d MMM yyyy")} – {format(periodEnd, "d MMM yyyy")}
               </>
             )}
           </p>
@@ -2153,7 +1985,7 @@ export function BusinessBankExportQuestionnaire({
               key={idx}
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-colors",
-                idx + 1 <= currentSection ? "bg-primary" : "bg-muted"
+                idx + 1 <= currentSection ? "bg-primary" : "bg-muted",
               )}
             />
           ))}
@@ -2162,11 +1994,7 @@ export function BusinessBankExportQuestionnaire({
         <ScrollArea className="max-h-[50vh] pr-4">{renderSection()}</ScrollArea>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentSection === 1}
-          >
+          <Button variant="outline" onClick={handleBack} disabled={currentSection === 1}>
             Back
           </Button>
           <Button onClick={handleNext} disabled={!canProceed()}>

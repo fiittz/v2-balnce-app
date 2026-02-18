@@ -125,9 +125,7 @@ describe("addHeader", () => {
     const meta = makeMeta({ registeredAddress: undefined });
     addHeader(doc, meta, "Report");
     // Should not have address call with maxWidth option at y=33
-    const addressCalls = mockDoc.text.mock.calls.filter(
-      (call: unknown[]) => call[0] === undefined
-    );
+    const addressCalls = mockDoc.text.mock.calls.filter((call: unknown[]) => call[0] === undefined);
     expect(addressCalls.length).toBe(0);
   });
 
@@ -219,7 +217,7 @@ describe("addTable", () => {
           ["Materials", "30,000"],
           ["Fuel", "5,000"],
         ],
-      })
+      }),
     );
   });
 
@@ -258,11 +256,7 @@ describe("addFooter", () => {
     const doc = createPdfDoc();
     addFooter(doc);
     expect(mockDoc.text).toHaveBeenCalledWith("Page 1 of 1", 190, 290, { align: "right" });
-    expect(mockDoc.text).toHaveBeenCalledWith(
-      expect.stringContaining("AI-generated"),
-      20,
-      290
-    );
+    expect(mockDoc.text).toHaveBeenCalledWith(expect.stringContaining("AI-generated"), 20, 290);
   });
 });
 
@@ -290,14 +284,10 @@ describe("addSignatures", () => {
     const doc = createPdfDoc();
     const meta = makeMeta({ directorNames: ["Alice Murphy", "Bob Smith"] });
     addSignatures(doc, meta, 100);
-    const directorCalls = mockDoc.text.mock.calls.filter(
-      (call: unknown[]) => call[0] === "Director"
-    );
+    const directorCalls = mockDoc.text.mock.calls.filter((call: unknown[]) => call[0] === "Director");
     expect(directorCalls.length).toBe(2);
     // Secretary should NOT be rendered
-    const secretaryCalls = mockDoc.text.mock.calls.filter(
-      (call: unknown[]) => call[0] === "Secretary"
-    );
+    const secretaryCalls = mockDoc.text.mock.calls.filter((call: unknown[]) => call[0] === "Secretary");
     expect(secretaryCalls.length).toBe(0);
   });
 

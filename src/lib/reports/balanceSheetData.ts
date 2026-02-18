@@ -26,20 +26,14 @@ export interface BalanceSheetInput {
   retainedProfits: number;
 }
 
-export function assembleBalanceSheetData(
-  input: BalanceSheetInput,
-  meta: ReportMeta
-): BalanceSheetReportData {
+export function assembleBalanceSheetData(input: BalanceSheetInput, meta: ReportMeta): BalanceSheetReportData {
   const sections: ReportSection[] = [];
 
-  const fixedAssets =
-    input.landBuildings + input.plantMachinery + input.motorVehicles + input.fixturesFittings;
+  const fixedAssets = input.landBuildings + input.plantMachinery + input.motorVehicles + input.fixturesFittings;
 
-  const currentAssets =
-    input.stock + input.debtors + input.cash + input.bankBalance + (input.rctPrepayment ?? 0);
+  const currentAssets = input.stock + input.debtors + input.cash + input.bankBalance + (input.rctPrepayment ?? 0);
 
-  const currentLiabilities =
-    input.creditors + input.taxation + input.bankOverdraft + (input.directorsLoanTravel ?? 0);
+  const currentLiabilities = input.creditors + input.taxation + input.bankOverdraft + (input.directorsLoanTravel ?? 0);
 
   const longTermLiabilities = input.bankLoans + input.directorsLoans;
 
@@ -78,7 +72,9 @@ export function assembleBalanceSheetData(
       { label: "Creditors", value: fmtEuro(input.creditors) },
       { label: "Taxation", value: fmtEuro(input.taxation) },
       { label: "Bank Overdraft", value: fmtEuro(input.bankOverdraft) },
-      ...((input.directorsLoanTravel ?? 0) > 0 ? [{ label: "Director's Loan", value: fmtEuro(input.directorsLoanTravel) }] : []),
+      ...((input.directorsLoanTravel ?? 0) > 0
+        ? [{ label: "Director's Loan", value: fmtEuro(input.directorsLoanTravel) }]
+        : []),
       { label: "Total Current Liabilities", value: fmtEuro(currentLiabilities) },
     ],
   });

@@ -7,7 +7,8 @@ interface ChatMarkdownProps {
 
 export default function ChatMarkdown({ content }: ChatMarkdownProps) {
   return (
-    <div className="prose prose-sm dark:prose-invert max-w-none break-words
+    <div
+      className="prose prose-sm dark:prose-invert max-w-none break-words
       prose-p:my-1 prose-p:leading-relaxed
       prose-ul:my-1 prose-ol:my-1 prose-li:my-0
       prose-headings:my-2 prose-headings:font-semibold
@@ -17,7 +18,8 @@ export default function ChatMarkdown({ content }: ChatMarkdownProps) {
       prose-td:border-b prose-td:border-border/50
       prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-xs
       prose-pre:bg-muted prose-pre:rounded-lg prose-pre:p-3
-      prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline">
+      prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline"
+    >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

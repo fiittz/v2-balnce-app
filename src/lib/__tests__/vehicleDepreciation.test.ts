@@ -1,8 +1,5 @@
 import { describe, it, expect } from "vitest";
-import {
-  calculateVehicleDepreciation,
-  type VehicleAsset,
-} from "../vehicleDepreciation";
+import { calculateVehicleDepreciation, type VehicleAsset } from "../vehicleDepreciation";
 
 // ══════════════════════════════════════════════════════════════
 // Helper: build a VehicleAsset with sensible defaults
@@ -46,37 +43,25 @@ describe("vehicle under €24,000 cap", () => {
 // ══════════════════════════════════════════════════════════════
 describe("vehicle over €24,000 cap", () => {
   it("caps qualifying cost at €24,000", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 45_000 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 45_000 }), 2023);
     expect(result.cost).toBe(45_000);
     expect(result.qualifyingCost).toBe(24_000);
   });
 
   it("calculates annual allowance on capped cost, not actual cost", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 45_000 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 45_000 }), 2023);
     // 24,000 * 0.125 = 3,000
     expect(result.annualAllowanceFull).toBe(3_000);
   });
 
   it("net book value is based on capped qualifying cost", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 45_000 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 45_000 }), 2023);
     // NBV = 24,000 - (1 * 3,000) = 21,000
     expect(result.netBookValue).toBe(21_000);
   });
 
   it("caps at exactly €24,000 boundary", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 24_000 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 24_000 }), 2023);
     expect(result.qualifyingCost).toBe(24_000);
     expect(result.annualAllowanceFull).toBe(3_000);
   });
@@ -87,28 +72,19 @@ describe("vehicle over €24,000 cap", () => {
 // ══════════════════════════════════════════════════════════════
 describe("100% business use", () => {
   it("annual allowance equals full allowance", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 100 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 100 }), 2023);
     expect(result.annualAllowance).toBe(result.annualAllowanceFull);
   });
 
   it("cumulative allowances equal full allowance * years at 100%", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 100 }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 100 }), 2025);
     // 3 years owned (2023, 2024, 2025), annualFull = 2,500
     // Cumulative = 3 * 2,500 * 1.0 = 7,500
     expect(result.cumulativeAllowances).toBe(7_500);
   });
 
   it("businessUsePct is passed through", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ businessUsePct: 100 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ businessUsePct: 100 }), 2023);
     expect(result.businessUsePct).toBe(100);
   });
 });
@@ -118,20 +94,14 @@ describe("100% business use", () => {
 // ══════════════════════════════════════════════════════════════
 describe("partial business use — 80%", () => {
   it("annual allowance is 80% of full allowance", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 80 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 80 }), 2023);
     // Full = 2,500; 80% = 2,000
     expect(result.annualAllowanceFull).toBe(2_500);
     expect(result.annualAllowance).toBe(2_000);
   });
 
   it("cumulative allowances reflect 80% business use", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 80 }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 80 }), 2025);
     // 3 years, 2,500 * 0.80 * 3 = 6,000
     expect(result.cumulativeAllowances).toBe(6_000);
   });
@@ -142,24 +112,15 @@ describe("partial business use — 80%", () => {
 // ══════════════════════════════════════════════════════════════
 describe("partial business use — 50%", () => {
   it("annual allowance is 50% of full allowance", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 24_000, businessUsePct: 50 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 24_000, businessUsePct: 50 }), 2023);
     // Full = 3,000; 50% = 1,500
     expect(result.annualAllowanceFull).toBe(3_000);
     expect(result.annualAllowance).toBe(1_500);
   });
 
   it("cumulative allowances are halved vs 100% use", () => {
-    const full = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 24_000, businessUsePct: 100 }),
-      2026,
-    );
-    const half = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 24_000, businessUsePct: 50 }),
-      2026,
-    );
+    const full = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 24_000, businessUsePct: 100 }), 2026);
+    const half = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 24_000, businessUsePct: 50 }), 2026);
     expect(half.cumulativeAllowances).toBe(full.cumulativeAllowances / 2);
   });
 });
@@ -169,10 +130,7 @@ describe("partial business use — 50%", () => {
 // ══════════════════════════════════════════════════════════════
 describe("vehicle acquired same year as tax year (year 1)", () => {
   it("yearsOwned is 1", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2025-11-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2025-11-01" }), 2025);
     expect(result.yearsOwned).toBe(1);
   });
 
@@ -187,10 +145,7 @@ describe("vehicle acquired same year as tax year (year 1)", () => {
   });
 
   it("is not fully depreciated", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2025-01-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2025-01-01" }), 2025);
     expect(result.fullyDepreciated).toBe(false);
   });
 });
@@ -200,10 +155,7 @@ describe("vehicle acquired same year as tax year (year 1)", () => {
 // ══════════════════════════════════════════════════════════════
 describe("vehicle in year 4 of 8", () => {
   it("yearsOwned is 4", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2022-06-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2022-06-01" }), 2025);
     expect(result.yearsOwned).toBe(4);
   });
 
@@ -226,10 +178,7 @@ describe("vehicle in year 4 of 8", () => {
   });
 
   it("is not yet fully depreciated", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2022-06-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2022-06-01" }), 2025);
     expect(result.fullyDepreciated).toBe(false);
   });
 });
@@ -239,20 +188,14 @@ describe("vehicle in year 4 of 8", () => {
 // ══════════════════════════════════════════════════════════════
 describe("fully depreciated vehicle (8+ years)", () => {
   it("fullyDepreciated is true at exactly 8 years", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2018-01-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2018-01-01" }), 2025);
     // 2025 - 2018 + 1 = 8
     expect(result.yearsOwned).toBe(8);
     expect(result.fullyDepreciated).toBe(true);
   });
 
   it("fullyDepreciated is true beyond 8 years", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2010-01-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2010-01-01" }), 2025);
     expect(result.yearsOwned).toBe(16);
     expect(result.fullyDepreciated).toBe(true);
   });
@@ -321,34 +264,22 @@ describe("net book value goes to 0 after 8 years", () => {
 // ══════════════════════════════════════════════════════════════
 describe("edge case — 0% business use", () => {
   it("annual allowance is 0", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 0 }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 0 }), 2025);
     expect(result.annualAllowance).toBe(0);
   });
 
   it("cumulative allowances are 0", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 0 }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 0 }), 2025);
     expect(result.cumulativeAllowances).toBe(0);
   });
 
   it("annualAllowanceFull is still calculated (pre-apportionment)", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 0 }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 0 }), 2025);
     expect(result.annualAllowanceFull).toBe(2_500);
   });
 
   it("businessUsePct is 0", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ businessUsePct: 0 }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ businessUsePct: 0 }), 2025);
     expect(result.businessUsePct).toBe(0);
   });
 });
@@ -358,10 +289,7 @@ describe("edge case — 0% business use", () => {
 // ══════════════════════════════════════════════════════════════
 describe("edge case — vehicle acquired in future year", () => {
   it("yearsOwned is 0 when tax year is before acquisition", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2027-01-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2027-01-01" }), 2025);
     expect(result.yearsOwned).toBe(0);
   });
 
@@ -382,10 +310,7 @@ describe("edge case — vehicle acquired in future year", () => {
   });
 
   it("is not fully depreciated", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ dateAcquired: "2027-01-01" }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ dateAcquired: "2027-01-01" }), 2025);
     expect(result.fullyDepreciated).toBe(false);
   });
 });
@@ -395,42 +320,27 @@ describe("edge case — vehicle acquired in future year", () => {
 // ══════════════════════════════════════════════════════════════
 describe("rounding and precision", () => {
   it("handles odd purchase costs that produce fractional allowances", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 19_999, businessUsePct: 100 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 19_999, businessUsePct: 100 }), 2023);
     // 19,999 * 0.125 = 2499.875 -> rounds to 2499.88
     expect(result.annualAllowanceFull).toBe(2499.88);
   });
 
   it("handles fractional business use percentages", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 24_000, businessUsePct: 33 }),
-      2023,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 24_000, businessUsePct: 33 }), 2023);
     // Full = 3,000; 33% = 990
     expect(result.annualAllowanceFull).toBe(3_000);
     expect(result.annualAllowance).toBe(990);
   });
 
   it("clamps negative business use to 0%", () => {
-    const result = calculateVehicleDepreciation(
-      makeVehicle({ businessUsePct: -10 }),
-      2025,
-    );
+    const result = calculateVehicleDepreciation(makeVehicle({ businessUsePct: -10 }), 2025);
     expect(result.annualAllowance).toBe(0);
     expect(result.cumulativeAllowances).toBe(0);
   });
 
   it("clamps business use above 100% to 100%", () => {
-    const result100 = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 100 }),
-      2023,
-    );
-    const result150 = calculateVehicleDepreciation(
-      makeVehicle({ purchaseCost: 20_000, businessUsePct: 150 }),
-      2023,
-    );
+    const result100 = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 100 }), 2023);
+    const result150 = calculateVehicleDepreciation(makeVehicle({ purchaseCost: 20_000, businessUsePct: 150 }), 2023);
     expect(result150.annualAllowance).toBe(result100.annualAllowance);
     expect(result150.cumulativeAllowances).toBe(result100.cumulativeAllowances);
   });

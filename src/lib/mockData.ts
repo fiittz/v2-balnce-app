@@ -11,8 +11,8 @@ export const MOCK_USER = {
   updated_at: new Date().toISOString(),
   app_metadata: {},
   user_metadata: {
-    business_name: "Demo Construction Ltd"
-  }
+    business_name: "Demo Construction Ltd",
+  },
 };
 
 export const MOCK_SESSION = {
@@ -21,7 +21,7 @@ export const MOCK_SESSION = {
   expires_in: 3600,
   expires_at: Math.floor(Date.now() / 1000) + 3600,
   refresh_token: "demo-refresh-token",
-  user: MOCK_USER
+  user: MOCK_USER,
 };
 
 export const MOCK_PROFILE = {
@@ -29,17 +29,17 @@ export const MOCK_PROFILE = {
   email: "demo@balnce.app",
   business_name: "Demo Construction Ltd",
   business_type: "construction",
-  created_at: new Date().toISOString()
+  created_at: new Date().toISOString(),
 };
 
 export const isDemoMode = () => {
-  return localStorage.getItem('demo_mode') === 'true';
+  return localStorage.getItem("demo_mode") === "true";
 };
 
 export const enableDemoMode = () => {
-  localStorage.setItem('demo_mode', 'true');
+  localStorage.setItem("demo_mode", "true");
 };
 
 export const disableDemoMode = () => {
-  localStorage.removeItem('demo_mode');
+  localStorage.removeItem("demo_mode");
 };

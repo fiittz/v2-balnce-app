@@ -1,20 +1,9 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateCategory, useCategories } from "@/hooks/useCategories";
 import { toast } from "sonner";
 
@@ -61,9 +50,7 @@ export function AddCategoryDialog({ open, onOpenChange, defaultAccountType }: Ad
 
     // Duplicate check: case-insensitive name + type
     const duplicate = existingCategories.some(
-      (c) =>
-        c.name.toLowerCase() === trimmedName.toLowerCase() &&
-        c.type === type
+      (c) => c.name.toLowerCase() === trimmedName.toLowerCase() && c.type === type,
     );
     if (duplicate) {
       toast.error(`A ${type} category named "${trimmedName}" already exists`);
@@ -158,11 +145,7 @@ export function AddCategoryDialog({ open, onOpenChange, defaultAccountType }: Ad
           </div>
 
           <div className="flex gap-2 justify-end pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={createCategory.isPending}>

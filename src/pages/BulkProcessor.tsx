@@ -1,8 +1,16 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  ArrowLeft, Sparkles, Loader2, CheckCircle2, AlertCircle,
-  Tag, FileText, Upload, Trash2, Check
+import {
+  ArrowLeft,
+  Sparkles,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Tag,
+  FileText,
+  Upload,
+  Trash2,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -40,7 +48,7 @@ const BulkProcessor = () => {
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(transactions?.map(t => t.id) || []));
+      setSelectedIds(new Set(transactions?.map((t) => t.id) || []));
     }
   };
 
@@ -61,7 +69,7 @@ const BulkProcessor = () => {
     const newResults = new Map<string, ProcessingResult>();
 
     // Initialize all as pending
-    selectedIds.forEach(id => {
+    selectedIds.forEach((id) => {
       newResults.set(id, { id, status: "pending" });
     });
     setResults(new Map(newResults));
@@ -70,7 +78,7 @@ const BulkProcessor = () => {
     let errorCount = 0;
 
     for (const id of selectedIds) {
-      const transaction = transactions?.find(t => t.id === id);
+      const transaction = transactions?.find((t) => t.id === id);
       if (!transaction) continue;
 
       // Update to processing
@@ -87,7 +95,7 @@ const BulkProcessor = () => {
             type: transaction.type as "income" | "expense",
           },
           categories as unknown[],
-          profile?.business_type || undefined
+          profile?.business_type || undefined,
         );
 
         // Find category ID
@@ -95,9 +103,7 @@ const BulkProcessor = () => {
         if (result.category_id) {
           categoryId = result.category_id;
         } else if (result.category_name) {
-          const match = categories.find(c => 
-            c.name.toLowerCase() === result.category_name.toLowerCase()
-          );
+          const match = categories.find((c) => c.name.toLowerCase() === result.category_name.toLowerCase());
           if (match) categoryId = match.id;
         }
 
@@ -127,9 +133,9 @@ const BulkProcessor = () => {
       }
 
       setResults(new Map(newResults));
-      
+
       // Small delay between requests to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
     setIsProcessing(false);
@@ -139,8 +145,8 @@ const BulkProcessor = () => {
 
   const stats = useMemo(() => {
     const total = transactions?.length || 0;
-    const processed = Array.from(results.values()).filter(r => r.status === "success").length;
-    const highConfidence = Array.from(results.values()).filter(r => (r.confidence || 0) >= 0.8).length;
+    const processed = Array.from(results.values()).filter((r) => r.status === "success").length;
+    const highConfidence = Array.from(results.values()).filter((r) => (r.confidence || 0) >= 0.8).length;
     return { total, processed, highConfidence };
   }, [transactions, results]);
 
@@ -176,25 +182,15 @@ const BulkProcessor = () => {
         {/* Action Bar */}
         <div className="bg-card rounded-2xl p-4 card-shadow flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Checkbox 
-              checked={allSelected}
-              onCheckedChange={toggleAll}
-              className="w-5 h-5"
-            />
-            <span className="text-sm font-medium">
-              {allSelected ? "Deselect All" : "Select All"}
-            </span>
+            <Checkbox checked={allSelected} onCheckedChange={toggleAll} className="w-5 h-5" />
+            <span className="text-sm font-medium">{allSelected ? "Deselect All" : "Select All"}</span>
           </div>
           <Button
             onClick={handleBulkCategorize}
             disabled={!someSelected || isProcessing}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            {isProcessing ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="w-4 h-4 mr-2" />
-            )}
+            {isProcessing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
             Categorize Selected
           </Button>
         </div>
@@ -208,18 +204,16 @@ const BulkProcessor = () => {
           <div className="bg-card rounded-2xl p-8 card-shadow text-center">
             <CheckCircle2 className="w-12 h-12 mx-auto text-green-600 mb-3" />
             <p className="font-medium">All caught up!</p>
-            <p className="text-sm text-muted-foreground">
-              No uncategorized transactions to process
-            </p>
+            <p className="text-sm text-muted-foreground">No uncategorized transactions to process</p>
           </div>
         ) : (
           <div className="bg-card rounded-2xl card-shadow overflow-hidden">
             {transactions.map((transaction, index) => {
               const result = results.get(transaction.id);
               const isSelected = selectedIds.has(transaction.id);
-              
+
               return (
-                <div 
+                <div
                   key={transaction.id}
                   className={`p-4 flex items-center gap-4 ${
                     index !== transactions.length - 1 ? "border-b border-border" : ""
@@ -231,19 +225,21 @@ const BulkProcessor = () => {
                     disabled={isProcessing}
                     className="w-5 h-5"
                   />
-                  
+
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{transaction.description}</p>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-xs text-muted-foreground">
                         {format(parseISO(transaction.transaction_date), "d MMM yyyy")}
                       </span>
-                      <span className={`text-xs font-medium ${
-                        transaction.type === "income" ? "text-green-600" : "text-red-600"
-                      }`}>
+                      <span
+                        className={`text-xs font-medium ${
+                          transaction.type === "income" ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
                         {transaction.type === "income" ? "+" : "-"}€{Math.abs(transaction.amount).toFixed(2)}
                       </span>
-                      
+
                       {/* Result indicator */}
                       {result?.status === "processing" && (
                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center gap-1">
@@ -268,10 +264,15 @@ const BulkProcessor = () => {
 
                   {result?.confidence !== undefined && (
                     <div className="text-right">
-                      <p className={`text-sm font-medium ${
-                        result.confidence >= 0.8 ? "text-green-600" : 
-                        result.confidence >= 0.6 ? "text-amber-600" : "text-red-600"
-                      }`}>
+                      <p
+                        className={`text-sm font-medium ${
+                          result.confidence >= 0.8
+                            ? "text-green-600"
+                            : result.confidence >= 0.6
+                              ? "text-amber-600"
+                              : "text-red-600"
+                        }`}
+                      >
                         {Math.round(result.confidence * 100)}%
                       </p>
                       <p className="text-xs text-muted-foreground">confidence</p>
@@ -291,7 +292,7 @@ const BulkProcessor = () => {
               <h3 className="font-semibold text-green-800">Processing Complete</h3>
             </div>
             <p className="text-sm text-green-700">
-              Successfully categorized {stats.processed} transactions. 
+              Successfully categorized {stats.processed} transactions.
               {stats.highConfidence > 0 && ` ${stats.highConfidence} with high confidence (80%+).`}
             </p>
             <Button

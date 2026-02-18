@@ -41,7 +41,7 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
     for (const txn of transactions) {
       const vatRateStr = String(txn.vat_rate || "");
       const isReverseCharge = vatRateStr === "reverse_charge" || vatRateStr === "Reverse Charge";
-      let vatAmount = isReverseCharge ? 0 : (txn.vat_amount || 0);
+      let vatAmount = isReverseCharge ? 0 : txn.vat_amount || 0;
       if (!vatAmount && !isReverseCharge && txn.vat_rate && txn.vat_rate > 0) {
         const calculated = calculateVATFromGross(Math.abs(txn.amount), vatRateStr);
         vatAmount = calculated.vatAmount;
@@ -52,11 +52,7 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
         salesCount++;
       } else if (txn.type === "expense" && vatAmount > 0) {
         // Apply Section 59/60 rules — hotels, food, petrol etc. are NOT deductible
-        const deductibility = isVATDeductible(
-          txn.description || "",
-          txn.category?.name || null,
-          null
-        );
+        const deductibility = isVATDeductible(txn.description || "", txn.category?.name || null, null);
         if (deductibility.isDeductible) {
           vatOnPurchases += vatAmount;
           purchasesCount++;
@@ -92,7 +88,9 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
     if (!d) return "";
     try {
       return new Date(d).toLocaleDateString("en-IE", { day: "numeric", month: "short" });
-    } catch { return d; }
+    } catch {
+      return d;
+    }
   };
 
   const rateLabel = (r: string) => {
@@ -119,12 +117,8 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
                 <TrendingUp className="w-4 h-4" />
                 <span className="text-sm font-medium">VAT on Sales</span>
               </div>
-              <p className="text-2xl font-bold text-emerald-600">
-                {formatCurrency(vatSummary.vatOnSales)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                From invoices only
-              </p>
+              <p className="text-2xl font-bold text-emerald-600">{formatCurrency(vatSummary.vatOnSales)}</p>
+              <p className="text-xs text-muted-foreground mt-1">From invoices only</p>
             </div>
 
             {/* VAT on Purchases — clickable */}
@@ -135,14 +129,12 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
               <div className="flex items-center gap-2 text-rose-600 mb-1">
                 <TrendingDown className="w-4 h-4" />
                 <span className="text-sm font-medium">VAT on Purchases</span>
-                <ChevronDown className={`w-3.5 h-3.5 ml-auto transition-transform ${expandedSection === "purchases" ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`w-3.5 h-3.5 ml-auto transition-transform ${expandedSection === "purchases" ? "rotate-180" : ""}`}
+                />
               </div>
-              <p className="text-2xl font-bold text-rose-600">
-                {formatCurrency(vatSummary.vatOnPurchases)}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {vatSummary.purchasesCount} deductible transactions
-              </p>
+              <p className="text-2xl font-bold text-rose-600">{formatCurrency(vatSummary.vatOnPurchases)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{vatSummary.purchasesCount} deductible transactions</p>
             </div>
           </div>
 
@@ -168,9 +160,13 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
                         <p className="text-xs text-muted-foreground">{formatDate(d.date)}</p>
                       </div>
                       <div className="flex gap-8 shrink-0">
-                        <span className="text-xs text-muted-foreground w-16 text-right tabular-nums">{rateLabel(d.vatRate)}</span>
+                        <span className="text-xs text-muted-foreground w-16 text-right tabular-nums">
+                          {rateLabel(d.vatRate)}
+                        </span>
                         <span className="text-sm w-20 text-right tabular-nums">{formatCurrency(d.gross)}</span>
-                        <span className="text-sm font-medium text-rose-600 w-20 text-right tabular-nums">{formatCurrency(d.vatAmount)}</span>
+                        <span className="text-sm font-medium text-rose-600 w-20 text-right tabular-nums">
+                          {formatCurrency(d.vatAmount)}
+                        </span>
                       </div>
                     </div>
                   ))
@@ -179,22 +175,18 @@ const VATSummaryCard = ({ transactions, accountName }: VATSummaryCardProps) => {
             </div>
           )}
 
-          <div className={`rounded-xl p-4 ${vatSummary.isRefund ? 'bg-emerald-500/10' : 'bg-primary/10'}`}>
+          <div className={`rounded-xl p-4 ${vatSummary.isRefund ? "bg-emerald-500/10" : "bg-primary/10"}`}>
             <div className="flex items-center gap-2 mb-1">
               <Calculator className="w-4 h-4" />
-              <span className="text-sm font-medium">
-                {vatSummary.isRefund ? "VAT Refund Due" : "VAT Payable"}
-              </span>
+              <span className="text-sm font-medium">{vatSummary.isRefund ? "VAT Refund Due" : "VAT Payable"}</span>
             </div>
-            <p className={`text-3xl font-bold ${vatSummary.isRefund ? 'text-emerald-600' : 'text-foreground'}`}>
+            <p className={`text-3xl font-bold ${vatSummary.isRefund ? "text-emerald-600" : "text-foreground"}`}>
               {formatCurrency(Math.abs(vatSummary.netVat))}
             </p>
           </div>
 
           {transactions.length === 0 && (
-            <p className="text-center text-muted-foreground py-4">
-              No transactions to calculate VAT from
-            </p>
+            <p className="text-center text-muted-foreground py-4">No transactions to calculate VAT from</p>
           )}
         </CardContent>
       </Card>

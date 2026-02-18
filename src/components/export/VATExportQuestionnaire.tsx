@@ -87,13 +87,19 @@ const SECTIONS = [
   "Declaration",
 ];
 
-const fmtEur = (v: number) =>
-  `€${v.toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const fmtEur = (v: number) => `€${v.toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function VATExportQuestionnaire({
-  open, onOpenChange, onComplete,
-  vatNumber, vatBasis, outputVat = 0, inputVat = 0, netVat = 0,
-  periodStart, periodEnd,
+  open,
+  onOpenChange,
+  onComplete,
+  vatNumber,
+  vatBasis,
+  outputVat = 0,
+  inputVat = 0,
+  netVat = 0,
+  periodStart,
+  periodEnd,
 }: Props) {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<VATQuestionnaireData>({
@@ -103,7 +109,7 @@ export function VATExportQuestionnaire({
   });
 
   const update = <K extends keyof VATQuestionnaireData>(key: K, val: VATQuestionnaireData[K]) =>
-    setData(prev => ({ ...prev, [key]: val }));
+    setData((prev) => ({ ...prev, [key]: val }));
 
   const canProceed = () => {
     if (step === 0) return data.vatNumber.length > 0;
@@ -116,7 +122,11 @@ export function VATExportQuestionnaire({
   const handleComplete = () => {
     onComplete(data);
     setStep(0);
-    setData({ ...initialData, vatNumber: vatNumber || "", vatBasis: (vatBasis as VATQuestionnaireData["vatBasis"]) || "cash_basis" });
+    setData({
+      ...initialData,
+      vatNumber: vatNumber || "",
+      vatBasis: (vatBasis as VATQuestionnaireData["vatBasis"]) || "cash_basis",
+    });
   };
 
   const progress = ((step + 1) / SECTIONS.length) * 100;
@@ -145,14 +155,19 @@ export function VATExportQuestionnaire({
                   <Label>VAT Registration Number</Label>
                   <Input
                     value={data.vatNumber}
-                    onChange={e => update("vatNumber", e.target.value)}
+                    onChange={(e) => update("vatNumber", e.target.value)}
                     placeholder="IE1234567T"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>VAT Accounting Basis</Label>
-                  <Select value={data.vatBasis} onValueChange={v => update("vatBasis", v as VATQuestionnaireData["vatBasis"])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={data.vatBasis}
+                    onValueChange={(v) => update("vatBasis", v as VATQuestionnaireData["vatBasis"])}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cash_basis">Cash Basis</SelectItem>
                       <SelectItem value="invoice_basis">Invoice Basis</SelectItem>
@@ -161,8 +176,13 @@ export function VATExportQuestionnaire({
                 </div>
                 <div className="space-y-2">
                   <Label>Return Frequency</Label>
-                  <Select value={data.vatFrequency} onValueChange={v => update("vatFrequency", v as VATQuestionnaireData["vatFrequency"])}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={data.vatFrequency}
+                    onValueChange={(v) => update("vatFrequency", v as VATQuestionnaireData["vatFrequency"])}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bi_monthly">Bi-monthly (VAT3)</SelectItem>
                       <SelectItem value="quarterly">Quarterly</SelectItem>
@@ -177,8 +197,14 @@ export function VATExportQuestionnaire({
             {step === 1 && (
               <>
                 <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
-                  <div className="flex justify-between"><span>Output VAT (on Sales)</span><span className="font-medium">{fmtEur(outputVat)}</span></div>
-                  <div className="flex justify-between"><span>Input VAT (on Purchases)</span><span className="font-medium">{fmtEur(inputVat)}</span></div>
+                  <div className="flex justify-between">
+                    <span>Output VAT (on Sales)</span>
+                    <span className="font-medium">{fmtEur(outputVat)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Input VAT (on Purchases)</span>
+                    <span className="font-medium">{fmtEur(inputVat)}</span>
+                  </div>
                   <Separator className="my-2" />
                   <div className="flex justify-between font-semibold">
                     <span>{netVat >= 0 ? "VAT Payable" : "VAT Refundable"}</span>
@@ -186,32 +212,56 @@ export function VATExportQuestionnaire({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.salesComplete} onCheckedChange={v => update("salesComplete", !!v)} id="sc" />
+                  <Checkbox
+                    checked={data.salesComplete}
+                    onCheckedChange={(v) => update("salesComplete", !!v)}
+                    id="sc"
+                  />
                   <Label htmlFor="sc">I confirm all sales income for this period is captured</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.hasExemptSales} onCheckedChange={v => update("hasExemptSales", !!v)} id="es" />
+                  <Checkbox
+                    checked={data.hasExemptSales}
+                    onCheckedChange={(v) => update("hasExemptSales", !!v)}
+                    id="es"
+                  />
                   <Label htmlFor="es">I have VAT-exempt sales this period</Label>
                 </div>
                 {data.hasExemptSales && (
                   <div className="space-y-2 ml-6">
                     <Label>Exempt Sales Amount</Label>
-                    <Input type="number" value={data.exemptSalesAmount || ""} onChange={e => update("exemptSalesAmount", Number(e.target.value))} />
+                    <Input
+                      type="number"
+                      value={data.exemptSalesAmount || ""}
+                      onChange={(e) => update("exemptSalesAmount", Number(e.target.value))}
+                    />
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.hasZeroRatedSales} onCheckedChange={v => update("hasZeroRatedSales", !!v)} id="zr" />
+                  <Checkbox
+                    checked={data.hasZeroRatedSales}
+                    onCheckedChange={(v) => update("hasZeroRatedSales", !!v)}
+                    id="zr"
+                  />
                   <Label htmlFor="zr">I have zero-rated sales (exports, RCT reverse charge)</Label>
                 </div>
                 {data.hasZeroRatedSales && (
                   <div className="space-y-2 ml-6">
                     <Label>Zero-Rated Sales Amount</Label>
-                    <Input type="number" value={data.zeroRatedSalesAmount || ""} onChange={e => update("zeroRatedSalesAmount", Number(e.target.value))} />
+                    <Input
+                      type="number"
+                      value={data.zeroRatedSalesAmount || ""}
+                      onChange={(e) => update("zeroRatedSalesAmount", Number(e.target.value))}
+                    />
                   </div>
                 )}
                 <div className="space-y-2">
                   <Label>Notes (optional)</Label>
-                  <Input value={data.salesNotes} onChange={e => update("salesNotes", e.target.value)} placeholder="Any notes about sales..." />
+                  <Input
+                    value={data.salesNotes}
+                    onChange={(e) => update("salesNotes", e.target.value)}
+                    placeholder="Any notes about sales..."
+                  />
                 </div>
               </>
             )}
@@ -220,28 +270,47 @@ export function VATExportQuestionnaire({
             {step === 2 && (
               <>
                 <div className="bg-muted/50 rounded-lg p-3 text-sm">
-                  <div className="flex justify-between"><span>Input VAT Claimed</span><span className="font-medium">{fmtEur(inputVat)}</span></div>
+                  <div className="flex justify-between">
+                    <span>Input VAT Claimed</span>
+                    <span className="font-medium">{fmtEur(inputVat)}</span>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Section 59/60 rules applied — meals, entertainment, petrol, passenger vehicles excluded.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.purchasesComplete} onCheckedChange={v => update("purchasesComplete", !!v)} id="pc" />
+                  <Checkbox
+                    checked={data.purchasesComplete}
+                    onCheckedChange={(v) => update("purchasesComplete", !!v)}
+                    id="pc"
+                  />
                   <Label htmlFor="pc">I confirm all purchase invoices/receipts are captured</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.hasDisallowedVAT} onCheckedChange={v => update("hasDisallowedVAT", !!v)} id="dv" />
+                  <Checkbox
+                    checked={data.hasDisallowedVAT}
+                    onCheckedChange={(v) => update("hasDisallowedVAT", !!v)}
+                    id="dv"
+                  />
                   <Label htmlFor="dv">I have additional non-deductible VAT to exclude</Label>
                 </div>
                 {data.hasDisallowedVAT && (
                   <div className="space-y-2 ml-6">
                     <Label>Details</Label>
-                    <Input value={data.disallowedVATNotes} onChange={e => update("disallowedVATNotes", e.target.value)} placeholder="e.g. Staff party, client gifts..." />
+                    <Input
+                      value={data.disallowedVATNotes}
+                      onChange={(e) => update("disallowedVATNotes", e.target.value)}
+                      placeholder="e.g. Staff party, client gifts..."
+                    />
                   </div>
                 )}
                 <div className="space-y-2">
                   <Label>Notes (optional)</Label>
-                  <Input value={data.purchasesNotes} onChange={e => update("purchasesNotes", e.target.value)} placeholder="Any notes about purchases..." />
+                  <Input
+                    value={data.purchasesNotes}
+                    onChange={(e) => update("purchasesNotes", e.target.value)}
+                    placeholder="Any notes about purchases..."
+                  />
                 </div>
               </>
             )}
@@ -250,24 +319,37 @@ export function VATExportQuestionnaire({
             {step === 3 && (
               <>
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.hasAdjustments} onCheckedChange={v => update("hasAdjustments", !!v)} id="adj" />
+                  <Checkbox
+                    checked={data.hasAdjustments}
+                    onCheckedChange={(v) => update("hasAdjustments", !!v)}
+                    id="adj"
+                  />
                   <Label htmlFor="adj">I have VAT adjustments for this period</Label>
                 </div>
                 {data.hasAdjustments && (
                   <>
                     <div className="space-y-2 ml-6">
                       <Label>Adjustment Amount (positive = owe more, negative = owe less)</Label>
-                      <Input type="number" value={data.adjustmentAmount || ""} onChange={e => update("adjustmentAmount", Number(e.target.value))} />
+                      <Input
+                        type="number"
+                        value={data.adjustmentAmount || ""}
+                        onChange={(e) => update("adjustmentAmount", Number(e.target.value))}
+                      />
                     </div>
                     <div className="space-y-2 ml-6">
                       <Label>Reason</Label>
-                      <Input value={data.adjustmentNotes} onChange={e => update("adjustmentNotes", e.target.value)} placeholder="e.g. Bad debt relief, capital goods adjustment..." />
+                      <Input
+                        value={data.adjustmentNotes}
+                        onChange={(e) => update("adjustmentNotes", e.target.value)}
+                        placeholder="e.g. Bad debt relief, capital goods adjustment..."
+                      />
                     </div>
                   </>
                 )}
                 {!data.hasAdjustments && (
                   <p className="text-sm text-muted-foreground">
-                    Adjustments include bad debt relief (S.63), capital goods scheme (S.64), and self-supply corrections.
+                    Adjustments include bad debt relief (S.63), capital goods scheme (S.64), and self-supply
+                    corrections.
                   </p>
                 )}
               </>
@@ -277,23 +359,35 @@ export function VATExportQuestionnaire({
             {step === 4 && (
               <>
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.hasEUSales} onCheckedChange={v => update("hasEUSales", !!v)} id="eus" />
+                  <Checkbox checked={data.hasEUSales} onCheckedChange={(v) => update("hasEUSales", !!v)} id="eus" />
                   <Label htmlFor="eus">I made sales to EU VAT-registered customers</Label>
                 </div>
                 {data.hasEUSales && (
                   <div className="space-y-2 ml-6">
                     <Label>EU Sales Amount</Label>
-                    <Input type="number" value={data.euSalesAmount || ""} onChange={e => update("euSalesAmount", Number(e.target.value))} />
+                    <Input
+                      type="number"
+                      value={data.euSalesAmount || ""}
+                      onChange={(e) => update("euSalesAmount", Number(e.target.value))}
+                    />
                   </div>
                 )}
                 <div className="flex items-center gap-2">
-                  <Checkbox checked={data.hasEUPurchases} onCheckedChange={v => update("hasEUPurchases", !!v)} id="eup" />
+                  <Checkbox
+                    checked={data.hasEUPurchases}
+                    onCheckedChange={(v) => update("hasEUPurchases", !!v)}
+                    id="eup"
+                  />
                   <Label htmlFor="eup">I made purchases from EU suppliers</Label>
                 </div>
                 {data.hasEUPurchases && (
                   <div className="space-y-2 ml-6">
                     <Label>EU Purchases Amount</Label>
-                    <Input type="number" value={data.euPurchasesAmount || ""} onChange={e => update("euPurchasesAmount", Number(e.target.value))} />
+                    <Input
+                      type="number"
+                      value={data.euPurchasesAmount || ""}
+                      onChange={(e) => update("euPurchasesAmount", Number(e.target.value))}
+                    />
                   </div>
                 )}
                 {!data.hasEUSales && !data.hasEUPurchases && (
@@ -309,23 +403,39 @@ export function VATExportQuestionnaire({
               <>
                 <div className="bg-muted/50 rounded-lg p-3 text-sm space-y-1">
                   <div className="font-semibold mb-2">VAT Return Summary</div>
-                  <div className="flex justify-between"><span>Output VAT</span><span>{fmtEur(outputVat)}</span></div>
-                  <div className="flex justify-between"><span>Input VAT</span><span>{fmtEur(inputVat)}</span></div>
+                  <div className="flex justify-between">
+                    <span>Output VAT</span>
+                    <span>{fmtEur(outputVat)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Input VAT</span>
+                    <span>{fmtEur(inputVat)}</span>
+                  </div>
                   {data.hasAdjustments && (
-                    <div className="flex justify-between"><span>Adjustments</span><span>{fmtEur(data.adjustmentAmount)}</span></div>
+                    <div className="flex justify-between">
+                      <span>Adjustments</span>
+                      <span>{fmtEur(data.adjustmentAmount)}</span>
+                    </div>
                   )}
                   <Separator className="my-2" />
                   <div className="flex justify-between font-semibold">
-                    <span>{(netVat + (data.hasAdjustments ? data.adjustmentAmount : 0)) >= 0 ? "VAT Payable" : "VAT Refundable"}</span>
+                    <span>
+                      {netVat + (data.hasAdjustments ? data.adjustmentAmount : 0) >= 0
+                        ? "VAT Payable"
+                        : "VAT Refundable"}
+                    </span>
                     <span>{fmtEur(Math.abs(netVat + (data.hasAdjustments ? data.adjustmentAmount : 0)))}</span>
                   </div>
                 </div>
                 <div className="flex items-start gap-2 mt-4">
-                  <Checkbox checked={data.finalDeclaration} onCheckedChange={v => update("finalDeclaration", !!v)} id="fd" />
+                  <Checkbox
+                    checked={data.finalDeclaration}
+                    onCheckedChange={(v) => update("finalDeclaration", !!v)}
+                    id="fd"
+                  />
                   <Label htmlFor="fd" className="text-sm leading-relaxed">
-                    I declare that the information in this VAT return is correct and complete to the best
-                    of my knowledge. I understand this data will be used to prepare the VAT3 return
-                    for filing with Revenue.
+                    I declare that the information in this VAT return is correct and complete to the best of my
+                    knowledge. I understand this data will be used to prepare the VAT3 return for filing with Revenue.
                   </Label>
                 </div>
               </>
@@ -334,7 +444,7 @@ export function VATExportQuestionnaire({
         </ScrollArea>
 
         <DialogFooter className="flex justify-between">
-          <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : onOpenChange(false)}>
+          <Button variant="outline" onClick={() => (step > 0 ? setStep(step - 1) : onOpenChange(false))}>
             <ChevronLeft className="w-4 h-4 mr-1" />
             {step === 0 ? "Cancel" : "Back"}
           </Button>

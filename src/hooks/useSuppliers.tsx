@@ -13,10 +13,7 @@ export function useSuppliers() {
   return useQuery({
     queryKey: ["suppliers", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("suppliers")
-        .select("*")
-        .order("name");
+      const { data, error } = await supabase.from("suppliers").select("*").order("name");
 
       if (error) throw error;
       return data as Supplier[];

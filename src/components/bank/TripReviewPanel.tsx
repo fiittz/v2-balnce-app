@@ -21,9 +21,7 @@ const TripReviewPanel = ({
   isProcessing = false,
   invoiceMatches = [],
 }: TripReviewPanelProps) => {
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(
-    () => new Set(trips.map((t) => t.id))
-  );
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(trips.map((t) => t.id)));
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const toggle = (id: string) => {
@@ -66,8 +64,8 @@ const TripReviewPanel = ({
             {trips.length} potential business trip{trips.length > 1 ? "s" : ""} detected
           </p>
           <p className="text-xs text-blue-700 mt-0.5">
-            We found transaction clusters that look like travel away from your base.
-            Confirm to re-categorize them as travel &amp; subsistence.
+            We found transaction clusters that look like travel away from your base. Confirm to re-categorize them as
+            travel &amp; subsistence.
           </p>
         </div>
       </div>
@@ -86,11 +84,7 @@ const TripReviewPanel = ({
             >
               {/* Trip header */}
               <div className="flex items-center gap-3 p-3">
-                <Checkbox
-                  checked={isSelected}
-                  onCheckedChange={() => toggle(trip.id)}
-                  disabled={isProcessing}
-                />
+                <Checkbox checked={isSelected} onCheckedChange={() => toggle(trip.id)} disabled={isProcessing} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
@@ -104,9 +98,7 @@ const TripReviewPanel = ({
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {trip.transactions.length} transaction{trip.transactions.length > 1 ? "s" : ""} &middot;{" "}
-                    <span className="font-medium text-foreground">
-                      &euro;{trip.totalSpend.toFixed(2)}
-                    </span>
+                    <span className="font-medium text-foreground">&euro;{trip.totalSpend.toFixed(2)}</span>
                   </p>
                   {(() => {
                     const match = getInvoiceMatch(trip);
@@ -120,16 +112,17 @@ const TripReviewPanel = ({
                         {match.suggestedSubsistence.allowance > 0 && (
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <Info className="w-3 h-3" />
-                            Subsistence: {match.suggestedSubsistence.nights > 0
+                            Subsistence:{" "}
+                            {match.suggestedSubsistence.nights > 0
                               ? `${match.suggestedSubsistence.nights} night${match.suggestedSubsistence.nights > 1 ? "s" : ""} @ €191 = ${formatCurrency(match.suggestedSubsistence.allowance)}`
-                              : `${match.suggestedSubsistence.days} day${match.suggestedSubsistence.days > 1 ? "s" : ""} @ €39.08 = ${formatCurrency(match.suggestedSubsistence.allowance)}`
-                            }
+                              : `${match.suggestedSubsistence.days} day${match.suggestedSubsistence.days > 1 ? "s" : ""} @ €39.08 = ${formatCurrency(match.suggestedSubsistence.allowance)}`}
                           </p>
                         )}
                         {match.suggestedMileage.distanceKm > 0 && (
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <Route className="w-3 h-3" />
-                            Mileage: {match.suggestedMileage.distanceKm} km @ {formatCurrency(match.suggestedMileage.allowance)}
+                            Mileage: {match.suggestedMileage.distanceKm} km @{" "}
+                            {formatCurrency(match.suggestedMileage.allowance)}
                           </p>
                         )}
                       </div>
@@ -141,11 +134,7 @@ const TripReviewPanel = ({
                   className="p-1 text-muted-foreground hover:text-foreground"
                   onClick={() => setExpandedId(isExpanded ? null : trip.id)}
                 >
-                  {isExpanded ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
+                  {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                 </button>
               </div>
 
@@ -153,15 +142,10 @@ const TripReviewPanel = ({
               {isExpanded && (
                 <div className="border-t divide-y text-xs">
                   {trip.transactions.map((txn) => (
-                    <div
-                      key={txn.id}
-                      className="flex items-center justify-between px-3 py-2 pl-10"
-                    >
+                    <div key={txn.id} className="flex items-center justify-between px-3 py-2 pl-10">
                       <div className="flex-1 min-w-0">
                         <p className="truncate">{txn.description}</p>
-                        <span className="text-muted-foreground capitalize">
-                          {txn.expenseType}
-                        </span>
+                        <span className="text-muted-foreground capitalize">{txn.expenseType}</span>
                       </div>
                       <span className="font-medium text-red-600 shrink-0 ml-2">
                         -&euro;{Math.abs(txn.amount).toFixed(2)}
@@ -177,28 +161,16 @@ const TripReviewPanel = ({
 
       {/* VAT note */}
       <p className="text-[11px] text-muted-foreground leading-tight">
-        Note: Hotel/accommodation VAT is <strong>not</strong> deductible under
-        Section 60(2)(a)(i) of the VAT Consolidation Act 2010, but the expense
-        itself is allowable for Corporation Tax.
+        Note: Hotel/accommodation VAT is <strong>not</strong> deductible under Section 60(2)(a)(i) of the VAT
+        Consolidation Act 2010, but the expense itself is allowable for Corporation Tax.
       </p>
 
       <div className="flex gap-2 pt-1">
-        <Button
-          variant="outline"
-          onClick={onSkip}
-          className="flex-1"
-          disabled={isProcessing}
-        >
+        <Button variant="outline" onClick={onSkip} className="flex-1" disabled={isProcessing}>
           Skip
         </Button>
-        <Button
-          onClick={handleConfirm}
-          className="flex-1"
-          disabled={isProcessing || selectedIds.size === 0}
-        >
-          {isProcessing
-            ? "Updating..."
-            : `Confirm ${selectedIds.size} Trip${selectedIds.size > 1 ? "s" : ""}`}
+        <Button onClick={handleConfirm} className="flex-1" disabled={isProcessing || selectedIds.size === 0}>
+          {isProcessing ? "Updating..." : `Confirm ${selectedIds.size} Trip${selectedIds.size > 1 ? "s" : ""}`}
         </Button>
       </div>
     </div>

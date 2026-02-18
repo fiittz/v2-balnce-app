@@ -23,9 +23,7 @@ export interface VendorCacheEntry {
  *
  * Returns a Map keyed by normalized vendor_pattern for O(1) lookup.
  */
-export async function loadVendorCache(
-  userId: string
-): Promise<Map<string, VendorCacheEntry>> {
+export async function loadVendorCache(userId: string): Promise<Map<string, VendorCacheEntry>> {
   try {
     // RLS handles filtering: global (user_id IS NULL) + user's own entries
     const { data, error } = await supabase
@@ -58,29 +56,27 @@ export async function loadVendorCache(
  */
 export async function saveVendorCacheEntry(
   userId: string,
-  entry: Omit<VendorCacheEntry, "id" | "hit_count" | "last_seen">
+  entry: Omit<VendorCacheEntry, "id" | "hit_count" | "last_seen">,
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
-      .from("vendor_cache")
-      .upsert(
-        {
-          vendor_pattern: entry.vendor_pattern,
-          normalized_name: entry.normalized_name,
-          category: entry.category,
-          vat_type: entry.vat_type,
-          vat_deductible: entry.vat_deductible,
-          business_purpose: entry.business_purpose,
-          confidence: entry.confidence,
-          source: entry.source,
-          user_id: userId,
-          mcc_code: entry.mcc_code,
-          sector: entry.sector,
-          hit_count: 1,
-          last_seen: new Date().toISOString(),
-        },
-        { onConflict: "vendor_pattern,user_id" }
-      );
+    const { error } = await supabase.from("vendor_cache").upsert(
+      {
+        vendor_pattern: entry.vendor_pattern,
+        normalized_name: entry.normalized_name,
+        category: entry.category,
+        vat_type: entry.vat_type,
+        vat_deductible: entry.vat_deductible,
+        business_purpose: entry.business_purpose,
+        confidence: entry.confidence,
+        source: entry.source,
+        user_id: userId,
+        mcc_code: entry.mcc_code,
+        sector: entry.sector,
+        hit_count: 1,
+        last_seen: new Date().toISOString(),
+      },
+      { onConflict: "vendor_pattern,user_id" },
+    );
 
     if (error) {
       console.error("[VendorCache] Save error:", error);
@@ -127,7 +123,7 @@ export async function recordCacheHit(entryId: string): Promise<void> {
  */
 export async function saveVendorCacheBatch(
   userId: string,
-  entries: Array<Omit<VendorCacheEntry, "id" | "hit_count" | "last_seen">>
+  entries: Array<Omit<VendorCacheEntry, "id" | "hit_count" | "last_seen">>,
 ): Promise<number> {
   if (entries.length === 0) return 0;
 
@@ -154,9 +150,7 @@ export async function saveVendorCacheBatch(
 
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE);
-      const { error } = await supabase
-        .from("vendor_cache")
-        .upsert(batch, { onConflict: "vendor_pattern,user_id" });
+      const { error } = await supabase.from("vendor_cache").upsert(batch, { onConflict: "vendor_pattern,user_id" });
 
       if (error) {
         console.error(`[VendorCache] Batch save error at offset ${i}:`, error);

@@ -13,10 +13,7 @@ export function useCustomers() {
   return useQuery({
     queryKey: ["customers", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select("*")
-        .order("name");
+      const { data, error } = await supabase.from("customers").select("*").order("name");
 
       if (error) throw error;
       return data as Customer[];

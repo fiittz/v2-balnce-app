@@ -33,12 +33,12 @@ export function useDirectorOnboarding() {
       if (!row?.onboarding_data) return null;
       return row.onboarding_data as Record<string, unknown>;
     },
-    [query.data]
+    [query.data],
   );
 
   const invalidate = useCallback(
     () => queryClient.invalidateQueries({ queryKey: ["director-onboarding", user?.id] }),
-    [queryClient, user?.id]
+    [queryClient, user?.id],
   );
 
   return { ...query, getDirector, invalidate };

@@ -60,11 +60,7 @@ function StatusBadge({ status }: { status: BulkReceiptFile["status"] }) {
         </Badge>
       );
     case "done":
-      return (
-        <Badge className="bg-blue-500/15 text-blue-700 border-blue-200 gap-1">
-          OCR Done
-        </Badge>
-      );
+      return <Badge className="bg-blue-500/15 text-blue-700 border-blue-200 gap-1">OCR Done</Badge>;
     default:
       return null;
   }
@@ -129,8 +125,8 @@ function ManualMatchDialog({
 
         {file?.receiptData && (
           <div className="text-sm text-muted-foreground mb-2">
-            Receipt: {file.receiptData.supplier_name || "Unknown vendor"} -{" "}
-            {file.receiptData.total_amount?.toFixed(2)} EUR
+            Receipt: {file.receiptData.supplier_name || "Unknown vendor"} - {file.receiptData.total_amount?.toFixed(2)}{" "}
+            EUR
             {file.receiptData.date ? ` on ${file.receiptData.date}` : ""}
           </div>
         )}
@@ -155,9 +151,7 @@ function ManualMatchDialog({
           )}
 
           {!loading && results.length === 0 && search && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No unlinked transactions found
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-4">No unlinked transactions found</p>
           )}
 
           {results.map((tx) => (
@@ -176,9 +170,7 @@ function ManualMatchDialog({
                   <p className="font-medium text-sm">{tx.description}</p>
                   <p className="text-xs text-muted-foreground">{tx.transaction_date}</p>
                 </div>
-                <span className="font-mono text-sm font-medium">
-                  {Math.abs(tx.amount).toFixed(2)} EUR
-                </span>
+                <span className="font-mono text-sm font-medium">{Math.abs(tx.amount).toFixed(2)} EUR</span>
               </div>
             </button>
           ))}
@@ -212,7 +204,9 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
 
   // Grab user id from first file's receipt or from supabase
   const openManualMatch = async (file: BulkReceiptFile) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (user) setUserId(user.id);
     setSelectedFile(file);
     setMatchDialogOpen(true);
@@ -224,10 +218,7 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
     <>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {files.map((f) => (
-          <div
-            key={f.id}
-            className="border rounded-xl p-3 space-y-2 bg-card"
-          >
+          <div key={f.id} className="border rounded-xl p-3 space-y-2 bg-card">
             {/* Thumbnail + filename */}
             <div className="flex items-center gap-3">
               {(() => {
@@ -258,18 +249,11 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{f.file.name}</p>
                 {f.receiptData?.supplier_name && (
-                  <p className="text-xs text-muted-foreground truncate">
-                    {f.receiptData.supplier_name}
-                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{f.receiptData.supplier_name}</p>
                 )}
               </div>
               {phase === "idle" && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 flex-shrink-0"
-                  onClick={() => onRemove(f.id)}
-                >
+                <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => onRemove(f.id)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               )}
@@ -294,20 +278,13 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
             )}
 
             {/* Error message */}
-            {f.error && (
-              <p className="text-xs text-destructive">{f.error}</p>
-            )}
+            {f.error && <p className="text-xs text-destructive">{f.error}</p>}
 
             {/* Status + action */}
             <div className="flex items-center justify-between">
               <StatusBadge status={f.status} />
               {f.status === "not_matched" && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => openManualMatch(f)}
-                >
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => openManualMatch(f)}>
                   <Search className="w-3 h-3 mr-1" />
                   Assign
                 </Button>
@@ -334,17 +311,20 @@ export function BulkReceiptGrid({ files, onRemove, onManualMatch, phase }: BulkR
         }}
       />
 
-      {viewerFile && (() => {
-        const url = getViewableUrl(viewerFile);
-        return url ? (
-          <ReceiptImageViewer
-            open={true}
-            onOpenChange={(open) => { if (!open) setViewerFile(null); }}
-            imageUrl={url}
-            title={viewerFile.receiptData?.supplier_name || viewerFile.file.name}
-          />
-        ) : null;
-      })()}
+      {viewerFile &&
+        (() => {
+          const url = getViewableUrl(viewerFile);
+          return url ? (
+            <ReceiptImageViewer
+              open={true}
+              onOpenChange={(open) => {
+                if (!open) setViewerFile(null);
+              }}
+              imageUrl={url}
+              title={viewerFile.receiptData?.supplier_name || viewerFile.file.name}
+            />
+          ) : null;
+        })()}
     </>
   );
 }

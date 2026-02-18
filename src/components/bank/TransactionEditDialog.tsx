@@ -1,22 +1,11 @@
 import { useState, useEffect } from "react";
 import { Loader2, MessageSquare, BookOpen, Camera } from "lucide-react";
 import { useReceiptUrl } from "@/hooks/useReceiptUrl";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUpdateTransaction } from "@/hooks/useTransactions";
 import { useAccounts } from "@/hooks/useAccounts";
 
@@ -37,11 +26,7 @@ interface TransactionEditDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export default function TransactionEditDialog({
-  transaction,
-  open,
-  onOpenChange,
-}: TransactionEditDialogProps) {
+export default function TransactionEditDialog({ transaction, open, onOpenChange }: TransactionEditDialogProps) {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const updateTransaction = useUpdateTransaction();
@@ -57,16 +42,30 @@ export default function TransactionEditDialog({
   }, [open, transaction]);
 
   // Group accounts by type
-  const groupedAccounts = accounts?.reduce((groups, account) => {
-    const type = account.account_type;
-    if (!groups[type]) {
-      groups[type] = [];
-    }
-    groups[type].push(account);
-    return groups;
-  }, {} as Record<string, typeof accounts>) || {};
+  const groupedAccounts =
+    accounts?.reduce(
+      (groups, account) => {
+        const type = account.account_type;
+        if (!groups[type]) {
+          groups[type] = [];
+        }
+        groups[type].push(account);
+        return groups;
+      },
+      {} as Record<string, typeof accounts>,
+    ) || {};
 
-  const accountTypes = ["Income", "Cost of Sales", "Expense", "VAT", "Payroll", "Fixed Assets", "Current Assets", "Current Liabilities", "Equity"];
+  const accountTypes = [
+    "Income",
+    "Cost of Sales",
+    "Expense",
+    "VAT",
+    "Payroll",
+    "Fixed Assets",
+    "Current Assets",
+    "Current Liabilities",
+    "Equity",
+  ];
 
   const handleSave = async () => {
     if (!transaction) return;
@@ -79,7 +78,7 @@ export default function TransactionEditDialog({
     onOpenChange(false);
   };
 
-  const currentAccount = accounts?.find(a => a.id === accountId);
+  const currentAccount = accounts?.find((a) => a.id === accountId);
 
   if (!transaction) return null;
 
@@ -153,7 +152,7 @@ export default function TransactionEditDialog({
                 <SelectItem value="unassigned">
                   <span className="text-muted-foreground">Unassigned</span>
                 </SelectItem>
-                {accountTypes.map(type => {
+                {accountTypes.map((type) => {
                   const typeAccounts = groupedAccounts[type];
                   if (!typeAccounts?.length) return null;
                   return (
@@ -161,7 +160,7 @@ export default function TransactionEditDialog({
                       <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50 sticky top-0">
                         {type}
                       </div>
-                      {typeAccounts.map(account => (
+                      {typeAccounts.map((account) => (
                         <SelectItem key={account.id} value={account.id}>
                           <span className="flex items-center gap-2">
                             <span className="text-xs font-mono text-muted-foreground w-14">
@@ -192,29 +191,17 @@ export default function TransactionEditDialog({
               rows={3}
               className="resize-none"
             />
-            <p className="text-xs text-muted-foreground">
-              Notes are visible in reports and useful for audit trails.
-            </p>
+            <p className="text-xs text-muted-foreground">Notes are visible in reports and useful for audit trails.</p>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
             Cancel
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={updateTransaction.isPending}
-            className="flex-1"
-          >
-            {updateTransaction.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : null}
+          <Button onClick={handleSave} disabled={updateTransaction.isPending} className="flex-1">
+            {updateTransaction.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
             Save Changes
           </Button>
         </div>

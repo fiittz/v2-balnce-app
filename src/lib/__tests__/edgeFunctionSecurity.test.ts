@@ -23,10 +23,7 @@ function escapeHtml(str: string | null | undefined): string {
 // ── From lookup-vendor/index.ts  (line 33) ───────────────────
 function extractVendorName(rawDescription: string): string {
   let cleaned = rawDescription
-    .replace(
-      /^(VDP-|VDC-|VDA-|POS |DD |D\/D |STO |BGC |TFR |FPI |FPO |CHQ )/i,
-      "",
-    )
+    .replace(/^(VDP-|VDC-|VDA-|POS |DD |D\/D |STO |BGC |TFR |FPI |FPO |CHQ )/i, "")
     .replace(/\d{6,}/g, "") // Remove long numbers (account refs, card numbers)
     .replace(/\s+\d{2}\/\d{2}\/\d{2,4}/g, "") // Remove dates
     .replace(/\s+[A-Z]{2}\d{2}[A-Z0-9]{10,}/g, "") // Remove IBANs
@@ -154,14 +151,8 @@ function extractMerchantName(description: string): {
 
 // ── Input-validation helpers (patterns from multiple edge fns) ─
 // From lookup-vendor/index.ts  (lines 83-95)
-function validateVendorName(
-  vendor_name: unknown,
-): { valid: true } | { valid: false; error: string } {
-  if (
-    !vendor_name ||
-    typeof vendor_name !== "string" ||
-    (vendor_name as string).trim().length === 0
-  ) {
+function validateVendorName(vendor_name: unknown): { valid: true } | { valid: false; error: string } {
+  if (!vendor_name || typeof vendor_name !== "string" || (vendor_name as string).trim().length === 0) {
     return { valid: false, error: "vendor_name is required" };
   }
   if ((vendor_name as string).length > 500) {
@@ -174,9 +165,7 @@ function validateVendorName(
 }
 
 // From categorize-transaction/index.ts  (line 168)
-function validateAction(
-  action: unknown,
-): { valid: true } | { valid: false; error: string } {
+function validateAction(action: unknown): { valid: true } | { valid: false; error: string } {
   const ALLOWED_ACTIONS = ["categorize", "match", "detect_anomaly"];
   if (!action || !ALLOWED_ACTIONS.includes(action as string)) {
     return {
@@ -188,14 +177,8 @@ function validateAction(
 }
 
 // From auto-match-transactions/index.ts  (line 62)
-function validateTransactionIds(
-  transactionIds: unknown,
-): { valid: true } | { valid: false; error: string } {
-  if (
-    transactionIds &&
-    Array.isArray(transactionIds) &&
-    transactionIds.length > 100
-  ) {
+function validateTransactionIds(transactionIds: unknown): { valid: true } | { valid: false; error: string } {
+  if (transactionIds && Array.isArray(transactionIds) && transactionIds.length > 100) {
     return {
       valid: false,
       error: "Maximum batch size is 100 transactions",
@@ -205,14 +188,8 @@ function validateTransactionIds(
 }
 
 // From process-receipt/index.ts  (line 47)
-function validateImageBase64(
-  imageBase64: unknown,
-): { valid: true } | { valid: false; error: string } {
-  if (
-    imageBase64 &&
-    typeof imageBase64 === "string" &&
-    imageBase64.length > 14_000_000
-  ) {
+function validateImageBase64(imageBase64: unknown): { valid: true } | { valid: false; error: string } {
+  if (imageBase64 && typeof imageBase64 === "string" && imageBase64.length > 14_000_000) {
     return {
       valid: false,
       error: "Image too large. Maximum size is 10MB.",
@@ -259,18 +236,14 @@ describe("escapeHtml (XSS Prevention)", () => {
   it("full XSS payload is rendered safe", () => {
     const payload = "<script>alert('xss')</script>";
     const escaped = escapeHtml(payload);
-    expect(escaped).toBe(
-      "&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;",
-    );
+    expect(escaped).toBe("&lt;script&gt;alert(&#039;xss&#039;)&lt;/script&gt;");
     expect(escaped).not.toContain("<");
     expect(escaped).not.toContain(">");
   });
 
   it("handles normal text without escaping", () => {
     expect(escapeHtml("Hello World")).toBe("Hello World");
-    expect(escapeHtml("Chadwicks Building Supplies")).toBe(
-      "Chadwicks Building Supplies",
-    );
+    expect(escapeHtml("Chadwicks Building Supplies")).toBe("Chadwicks Building Supplies");
   });
 
   it("handles numbers converted to string", () => {
@@ -284,27 +257,21 @@ describe("escapeHtml (XSS Prevention)", () => {
   it("escapes nested HTML / img onerror injection", () => {
     const payload = '<img onerror="alert(1)" src=x>';
     const escaped = escapeHtml(payload);
-    expect(escaped).toBe(
-      "&lt;img onerror=&quot;alert(1)&quot; src=x&gt;",
-    );
+    expect(escaped).toBe("&lt;img onerror=&quot;alert(1)&quot; src=x&gt;");
     expect(escaped).not.toContain("<img");
   });
 
   it("escapes event-handler injection via attribute breakout", () => {
     const payload = '" onmouseover="alert(1)';
     const escaped = escapeHtml(payload);
-    expect(escaped).toBe(
-      "&quot; onmouseover=&quot;alert(1)",
-    );
+    expect(escaped).toBe("&quot; onmouseover=&quot;alert(1)");
     expect(escaped).not.toContain('"');
   });
 
   it("handles multiple special characters in one string", () => {
     const payload = `<div class="a" title='b'>&copy;</div>`;
     const escaped = escapeHtml(payload);
-    expect(escaped).toBe(
-      "&lt;div class=&quot;a&quot; title=&#039;b&#039;&gt;&amp;copy;&lt;/div&gt;",
-    );
+    expect(escaped).toBe("&lt;div class=&quot;a&quot; title=&#039;b&#039;&gt;&amp;copy;&lt;/div&gt;");
     // Verify none of the dangerous raw characters remain
     expect(escaped).not.toMatch(/[<>"']/);
     // Ampersands should only appear as entity prefixes
@@ -318,9 +285,7 @@ describe("escapeHtml (XSS Prevention)", () => {
     expect(escaped).not.toContain("<a");
     expect(escaped).not.toContain("<");
     expect(escaped).not.toContain(">");
-    expect(escaped).toBe(
-      "&lt;a href=&quot;javascript:alert(1)&quot;&gt;click&lt;/a&gt;",
-    );
+    expect(escaped).toBe("&lt;a href=&quot;javascript:alert(1)&quot;&gt;click&lt;/a&gt;");
   });
 
   it("escapes SVG-based XSS vectors", () => {
@@ -357,9 +322,7 @@ describe("extractVendorName (Bank Description Cleaning)", () => {
   });
 
   it("strips STO prefix", () => {
-    expect(extractVendorName("STO ALLIANZ INSURANCE")).toBe(
-      "ALLIANZ INSURANCE",
-    );
+    expect(extractVendorName("STO ALLIANZ INSURANCE")).toBe("ALLIANZ INSURANCE");
   });
 
   it("removes long numbers (card / account refs)", () => {
@@ -378,15 +341,11 @@ describe("extractVendorName (Bank Description Cleaning)", () => {
     // The \d{6,} regex runs before the IBAN regex, so the numeric tail
     // "93115212345678" is stripped first, leaving "IE29AIBK" which no
     // longer matches the IBAN pattern [A-Z]{2}\d{2}[A-Z0-9]{10,}.
-    expect(
-      extractVendorName("TFR PAYMENT IE29AIBK93115212345678"),
-    ).toBe("PAYMENT IE29AIBK");
+    expect(extractVendorName("TFR PAYMENT IE29AIBK93115212345678")).toBe("PAYMENT IE29AIBK");
   });
 
   it("trims to first 3 words when description is long", () => {
-    const result = extractVendorName(
-      "CHADWICKS BUILDING SUPPLIES DUBLIN NORTH",
-    );
+    const result = extractVendorName("CHADWICKS BUILDING SUPPLIES DUBLIN NORTH");
     expect(result).toBe("CHADWICKS BUILDING SUPPLIES");
   });
 
@@ -404,9 +363,7 @@ describe("extractVendorName (Bank Description Cleaning)", () => {
   });
 
   it("collapses multiple whitespace", () => {
-    expect(extractVendorName("VDP-CHADWICKS   DUBLIN    STORE")).toBe(
-      "CHADWICKS DUBLIN STORE",
-    );
+    expect(extractVendorName("VDP-CHADWICKS   DUBLIN    STORE")).toBe("CHADWICKS DUBLIN STORE");
   });
 
   it("handles combined prefix + number + date removal", () => {
@@ -420,30 +377,26 @@ describe("extractVendorName (Bank Description Cleaning)", () => {
 // ── extractMerchantName  (Merchant Matching) ─────────────────
 describe("extractMerchantName (Merchant Matching)", () => {
   it("matches known Irish merchant by key: chadwicks", () => {
-    const { cleanName, matchedMerchant } =
-      extractMerchantName("CHADWICKS DUBLIN 4");
+    const { cleanName, matchedMerchant } = extractMerchantName("CHADWICKS DUBLIN 4");
     expect(cleanName).toBe("Chadwicks");
     expect(matchedMerchant).not.toBeNull();
     expect(matchedMerchant!.category).toBe("Materials");
   });
 
   it("matches by keyword: chadwick (partial)", () => {
-    const { cleanName, matchedMerchant } =
-      extractMerchantName("CHADWICK BUILDERS MERCHANTS");
+    const { cleanName, matchedMerchant } = extractMerchantName("CHADWICK BUILDERS MERCHANTS");
     expect(cleanName).toBe("Chadwicks");
     expect(matchedMerchant).not.toBeNull();
   });
 
   it("matches screwfix by key", () => {
-    const { cleanName, matchedMerchant } =
-      extractMerchantName("POS SCREWFIX STORE 123");
+    const { cleanName, matchedMerchant } = extractMerchantName("POS SCREWFIX STORE 123");
     expect(cleanName).toBe("Screwfix");
     expect(matchedMerchant!.businessType).toBe("tools_store");
   });
 
   it("matches circle k by key", () => {
-    const { cleanName, matchedMerchant } =
-      extractMerchantName("CARD CIRCLE K LUCAN");
+    const { cleanName, matchedMerchant } = extractMerchantName("CARD CIRCLE K LUCAN");
     expect(cleanName).toBe("Circle K");
     expect(matchedMerchant!.category).toBe("Fuel & Transport");
   });
@@ -474,8 +427,7 @@ describe("extractMerchantName (Merchant Matching)", () => {
   });
 
   it("returns cleaned name for unknown merchants", () => {
-    const { cleanName, matchedMerchant } =
-      extractMerchantName("SOME RANDOM SHOP");
+    const { cleanName, matchedMerchant } = extractMerchantName("SOME RANDOM SHOP");
     expect(matchedMerchant).toBeNull();
     expect(cleanName).toBe("Some Random Shop");
   });
@@ -490,15 +442,12 @@ describe("extractMerchantName (Merchant Matching)", () => {
   });
 
   it("removes dates from description before matching", () => {
-    const { cleanName } = extractMerchantName(
-      "POS SCREWFIX 01/06/2024 STORE",
-    );
+    const { cleanName } = extractMerchantName("POS SCREWFIX 01/06/2024 STORE");
     expect(cleanName).toBe("Screwfix");
   });
 
   it("strips trailing 'ie' country code", () => {
-    const { cleanName, matchedMerchant } =
-      extractMerchantName("ADOBE SYSTEMS IE");
+    const { cleanName, matchedMerchant } = extractMerchantName("ADOBE SYSTEMS IE");
     expect(cleanName).toBe("Adobe");
     expect(matchedMerchant).not.toBeNull();
   });
@@ -509,8 +458,7 @@ describe("extractMerchantName (Merchant Matching)", () => {
   });
 
   it("strips Dublin + district number", () => {
-    const { cleanName, matchedMerchant } =
-      extractMerchantName("CHADWICKS DUBLIN 12");
+    const { cleanName, matchedMerchant } = extractMerchantName("CHADWICKS DUBLIN 12");
     expect(cleanName).toBe("Chadwicks");
     expect(matchedMerchant).not.toBeNull();
   });
@@ -524,9 +472,7 @@ describe("extractMerchantName (Merchant Matching)", () => {
   });
 
   it("limits unknown merchant name to first 3 words, title-cased", () => {
-    const { cleanName, matchedMerchant } = extractMerchantName(
-      "ACME WIDGETS MANUFACTURING CORPORATION LTD",
-    );
+    const { cleanName, matchedMerchant } = extractMerchantName("ACME WIDGETS MANUFACTURING CORPORATION LTD");
     expect(matchedMerchant).toBeNull();
     expect(cleanName).toBe("Acme Widgets Manufacturing");
   });
@@ -731,8 +677,7 @@ describe("Pipeline: extractVendorName -> extractMerchantName", () => {
   it("raw bank description flows through both cleaners to a known match", () => {
     const raw = "VDP-CHADWICKS DUBLIN 987654 01/01/2024";
     const vendorCleaned = extractVendorName(raw);
-    const { cleanName, matchedMerchant } =
-      extractMerchantName(vendorCleaned);
+    const { cleanName, matchedMerchant } = extractMerchantName(vendorCleaned);
     expect(cleanName).toBe("Chadwicks");
     expect(matchedMerchant).not.toBeNull();
     expect(matchedMerchant!.category).toBe("Materials");
@@ -741,8 +686,7 @@ describe("Pipeline: extractVendorName -> extractMerchantName", () => {
   it("unknown vendor still produces a usable cleaned name", () => {
     const raw = "VDC-JOES PLUMBING SUPPLIES 44332211";
     const vendorCleaned = extractVendorName(raw);
-    const { cleanName, matchedMerchant } =
-      extractMerchantName(vendorCleaned);
+    const { cleanName, matchedMerchant } = extractMerchantName(vendorCleaned);
     expect(matchedMerchant).toBeNull();
     expect(cleanName.length).toBeGreaterThan(0);
     // Should be title-cased
@@ -752,8 +696,7 @@ describe("Pipeline: extractVendorName -> extractMerchantName", () => {
   it("POS prefix bank description matches fuel station", () => {
     const raw = "POS CIRCLE K MOTORWAY 15/02/2024";
     const vendorCleaned = extractVendorName(raw);
-    const { cleanName, matchedMerchant } =
-      extractMerchantName(vendorCleaned);
+    const { cleanName, matchedMerchant } = extractMerchantName(vendorCleaned);
     expect(cleanName).toBe("Circle K");
     expect(matchedMerchant!.businessType).toBe("fuel_station");
   });
@@ -783,8 +726,7 @@ describe("escapeHtml in invoice context", () => {
   });
 
   it("escapes invoice description with line item injection", () => {
-    const description =
-      'Timber 4x2 <td><script>document.cookie</script></td>';
+    const description = "Timber 4x2 <td><script>document.cookie</script></td>";
     const escaped = escapeHtml(description);
     expect(escaped).not.toContain("<td>");
     expect(escaped).not.toContain("<script>");

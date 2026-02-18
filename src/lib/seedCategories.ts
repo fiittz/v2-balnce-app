@@ -366,17 +366,17 @@ interface IndustryCategories {
 }
 
 const INDUSTRY_CATEGORIES: Record<string, IndustryCategories> = {
-  construction:  { income: CONSTRUCTION_INCOME,  expenses: CONSTRUCTION_EXPENSES },
-  technology:    { income: TECHNOLOGY_INCOME,    expenses: TECHNOLOGY_EXPENSES },
-  software_dev:  { income: SOFTWARE_DEV_INCOME,  expenses: SOFTWARE_DEV_EXPENSES },
-  events:        { income: EVENTS_INCOME,        expenses: EVENTS_EXPENSES },
-  hospitality:   { income: HOSPITALITY_INCOME,   expenses: HOSPITALITY_EXPENSES },
-  retail:        { income: RETAIL_INCOME,        expenses: RETAIL_EXPENSES },
-  transport:     { income: TRANSPORT_INCOME,     expenses: TRANSPORT_EXPENSES },
-  health:        { income: HEALTH_INCOME,        expenses: HEALTH_EXPENSES },
-  property:      { income: PROPERTY_INCOME,      expenses: PROPERTY_EXPENSES },
+  construction: { income: CONSTRUCTION_INCOME, expenses: CONSTRUCTION_EXPENSES },
+  technology: { income: TECHNOLOGY_INCOME, expenses: TECHNOLOGY_EXPENSES },
+  software_dev: { income: SOFTWARE_DEV_INCOME, expenses: SOFTWARE_DEV_EXPENSES },
+  events: { income: EVENTS_INCOME, expenses: EVENTS_EXPENSES },
+  hospitality: { income: HOSPITALITY_INCOME, expenses: HOSPITALITY_EXPENSES },
+  retail: { income: RETAIL_INCOME, expenses: RETAIL_EXPENSES },
+  transport: { income: TRANSPORT_INCOME, expenses: TRANSPORT_EXPENSES },
+  health: { income: HEALTH_INCOME, expenses: HEALTH_EXPENSES },
+  property: { income: PROPERTY_INCOME, expenses: PROPERTY_EXPENSES },
   manufacturing: { income: MANUFACTURING_INCOME, expenses: MANUFACTURING_EXPENSES },
-  professional:  { income: PROFESSIONAL_INCOME,  expenses: PROFESSIONAL_EXPENSES },
+  professional: { income: PROFESSIONAL_INCOME, expenses: PROFESSIONAL_EXPENSES },
 };
 
 // Map primary_activity values → industry group key
@@ -539,9 +539,7 @@ export async function seedDefaultCategories(userId: string, businessType?: strin
       type: "income",
     }));
 
-    const { error: insertError } = await supabase
-      .from("categories")
-      .insert([...expenseInserts, ...incomeInserts]);
+    const { error: insertError } = await supabase.from("categories").insert([...expenseInserts, ...incomeInserts]);
 
     if (insertError) {
       console.error("Error seeding categories:", insertError);
@@ -578,12 +576,7 @@ export async function ensureNewCategories(userId: string): Promise<void> {
   ];
 
   for (const cat of needed) {
-    const { data } = await supabase
-      .from("categories")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("name", cat.name)
-      .limit(1);
+    const { data } = await supabase.from("categories").select("id").eq("user_id", userId).eq("name", cat.name).limit(1);
 
     if (!data || data.length === 0) {
       await supabase.from("categories").insert({ ...cat, user_id: userId });

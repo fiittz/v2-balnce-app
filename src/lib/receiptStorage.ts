@@ -22,9 +22,7 @@ export function extractReceiptPath(urlOrPath: string): string {
 export async function getSignedReceiptUrl(receiptPath: string): Promise<string | null> {
   const path = extractReceiptPath(receiptPath);
 
-  const { data, error } = await supabase.storage
-    .from("receipts")
-    .createSignedUrl(path, SIGNED_URL_EXPIRY);
+  const { data, error } = await supabase.storage.from("receipts").createSignedUrl(path, SIGNED_URL_EXPIRY);
 
   if (error) {
     console.error("Signed URL error:", error);

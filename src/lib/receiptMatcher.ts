@@ -30,7 +30,7 @@ function scoreCandidate(
   candidate: MatchCandidate,
   receiptAmount: number,
   receiptVendor: string | null,
-  receiptDate: string | null
+  receiptDate: string | null,
 ): { score: number; explanation: string } {
   let score = 0;
   const reasons: string[] = [];
@@ -39,7 +39,7 @@ function scoreCandidate(
   const candidateAbs = Math.abs(candidate.amount);
   const receiptAbs = Math.abs(receiptAmount);
   if (Math.abs(candidateAbs - receiptAbs) < 0.005) {
-    score += 0.50;
+    score += 0.5;
     reasons.push(`Amount exact match: ${receiptAbs.toFixed(2)}`);
   }
 
@@ -49,13 +49,13 @@ function scoreCandidate(
     const vendorLower = receiptVendor.toLowerCase().trim();
 
     if (vendorLower && descLower.includes(vendorLower)) {
-      score += 0.30;
+      score += 0.3;
       reasons.push(`Vendor full match: "${receiptVendor}"`);
     } else {
       // Check first word of vendor (e.g. "Chadwicks" from "Chadwicks Dublin")
       const firstWord = vendorLower.split(/\s+/)[0];
       if (firstWord && firstWord.length >= 3 && descLower.includes(firstWord)) {
-        score += 0.30;
+        score += 0.3;
         reasons.push(`Vendor partial match: "${firstWord}"`);
       }
     }
@@ -69,7 +69,7 @@ function scoreCandidate(
     const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
     if (diffDays < 0.5) {
-      score += 0.20;
+      score += 0.2;
       reasons.push("Date: same day");
     } else if (diffDays <= 1.5) {
       score += 0.15;
@@ -92,7 +92,7 @@ export async function matchReceiptToTransaction(
   receiptId: string,
   receiptAmount: number,
   receiptVendor: string | null,
-  receiptDate: string | null
+  receiptDate: string | null,
 ): Promise<MatchResult> {
   // Build query for unlinked transactions (no receipt attached)
   let query = supabase
@@ -142,12 +142,7 @@ export async function matchReceiptToTransaction(
   let bestExplanation = "";
 
   for (const c of candidates) {
-    const { score, explanation } = scoreCandidate(
-      c as MatchCandidate,
-      receiptAmount,
-      receiptVendor,
-      receiptDate
-    );
+    const { score, explanation } = scoreCandidate(c as MatchCandidate, receiptAmount, receiptVendor, receiptDate);
     if (score > bestScore) {
       bestScore = score;
       bestCandidate = c as MatchCandidate;
@@ -175,7 +170,7 @@ export async function linkReceiptToTransaction(
   transactionId: string,
   imageUrl: string,
   receiptVatAmount?: number | null,
-  receiptVatRate?: number | null
+  receiptVatRate?: number | null,
 ): Promise<void> {
   // Update receipt: set transaction_id
   const { error: receiptError } = await supabase
@@ -192,10 +187,7 @@ export async function linkReceiptToTransaction(
   if (receiptVatAmount != null) txUpdate.vat_amount = receiptVatAmount;
   if (receiptVatRate != null) txUpdate.vat_rate = receiptVatRate;
 
-  const { error: txError } = await supabase
-    .from("transactions")
-    .update(txUpdate)
-    .eq("id", transactionId);
+  const { error: txError } = await supabase.from("transactions").update(txUpdate).eq("id", transactionId);
 
   if (txError) {
     throw new Error(`Failed to update transaction: ${txError.message}`);

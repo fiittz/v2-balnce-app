@@ -148,9 +148,11 @@ const formatPnlCt1Section = (s: PnlCt1Summary): string => {
     if (drawings > 0) lines.push(`Drawings taken by director: ${fmtEur(drawings)}`);
     if (subsAllowance > 0) lines.push(`Less: Subsistence owed to director: (${fmtEur(subsAllowance)})`);
     if (mileAllowance > 0) lines.push(`Less: Mileage owed to director: (${fmtEur(mileAllowance)})`);
-    lines.push(netLoan >= 0
-      ? `Directors Current A/C (Cr): ${fmtEur(netLoan)}`
-      : `Directors Current A/C (Dr): (${fmtEur(Math.abs(netLoan))})`);
+    lines.push(
+      netLoan >= 0
+        ? `Directors Current A/C (Cr): ${fmtEur(netLoan)}`
+        : `Directors Current A/C (Dr): (${fmtEur(Math.abs(netLoan))})`,
+    );
     lines.push("");
   }
 
@@ -160,9 +162,10 @@ const formatPnlCt1Section = (s: PnlCt1Summary): string => {
 
 const formatPnlCt1Html = (s: PnlCt1Summary): string => {
   const row = (label: string, amount: string, bold = false) =>
-    `<tr${bold ? ' style="font-weight:bold;border-top:2px solid #333"' : ''}><td>${label}</td><td class="amount">${amount}</td></tr>`;
+    `<tr${bold ? ' style="font-weight:bold;border-top:2px solid #333"' : ""}><td>${label}</td><td class="amount">${amount}</td></tr>`;
 
-  let html = '<h2>Profit & Loss</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
+  let html =
+    '<h2>Profit & Loss</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
   html += '<tr style="background:#f5f5f5;font-weight:bold"><td colspan="2">Income</td></tr>';
   for (const [cat, amt] of Object.entries(s.incomeByCategory).sort((a, b) => b[1] - a[1])) {
     html += row(`&nbsp;&nbsp;${cat}`, fmtEur(amt));
@@ -187,19 +190,23 @@ const formatPnlCt1Html = (s: PnlCt1Summary): string => {
   }
   html += row("Net Expenses", fmtEur(s.netExpenses), true);
   html += row("Net Profit", fmtEur(s.netProfit), true);
-  html += '</table>';
+  html += "</table>";
 
   if (s.taxableProfit !== undefined) {
-    html += '<h2>Corporation Tax (CT1)</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
+    html +=
+      '<h2>Corporation Tax (CT1)</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
     html += row("Net Profit (per accounts)", fmtEur(s.netProfit));
     if (s.disallowedByCategory && s.disallowedByCategory.length > 0) {
-      html += '<tr style="font-size:11px;color:#b45309"><td colspan="2"><em>Add back: Non-deductible expenses</em></td></tr>';
+      html +=
+        '<tr style="font-size:11px;color:#b45309"><td colspan="2"><em>Add back: Non-deductible expenses</em></td></tr>';
       for (const { category, amount } of s.disallowedByCategory) {
         html += `<tr style="font-size:11px;color:#b45309"><td>&nbsp;&nbsp;&nbsp;&nbsp;${category}</td><td class="amount">${fmtEur(amount)}</td></tr>`;
       }
     }
-    if (s.capitalAllowances && s.capitalAllowances > 0) html += row("Less: Capital Allowances", `(${fmtEur(s.capitalAllowances)})`);
-    if (s.travelDeduction && s.travelDeduction > 0) html += row("Less: Travel Deduction", `(${fmtEur(s.travelDeduction)})`);
+    if (s.capitalAllowances && s.capitalAllowances > 0)
+      html += row("Less: Capital Allowances", `(${fmtEur(s.capitalAllowances)})`);
+    if (s.travelDeduction && s.travelDeduction > 0)
+      html += row("Less: Travel Deduction", `(${fmtEur(s.travelDeduction)})`);
     html += row("Trading Profit", fmtEur(s.tradingProfit ?? 0), true);
     if (s.lossesForward && s.lossesForward > 0) html += row("Less: Losses B/F", fmtEur(s.lossesForward));
     html += row("Taxable Profit", fmtEur(s.taxableProfit), true);
@@ -209,8 +216,8 @@ const formatPnlCt1Html = (s: PnlCt1Summary): string => {
     if (s.rctCredit && s.rctCredit > 0) html += row("Less: RCT Credit", fmtEur(s.rctCredit));
     if (s.prelimPaid && s.prelimPaid > 0) html += row("Less: Preliminary CT Paid", fmtEur(s.prelimPaid));
     const due = s.balanceDue ?? 0;
-    html += `<tr style="font-weight:bold;font-size:14px;border-top:3px solid #333;color:${due <= 0 ? '#16a34a' : '#dc2626'}"><td>${due <= 0 ? "CT Refund Due" : "CT Balance Due"}</td><td class="amount">${fmtEur(Math.abs(due))}</td></tr>`;
-    html += '</table>';
+    html += `<tr style="font-weight:bold;font-size:14px;border-top:3px solid #333;color:${due <= 0 ? "#16a34a" : "#dc2626"}"><td>${due <= 0 ? "CT Refund Due" : "CT Balance Due"}</td><td class="amount">${fmtEur(Math.abs(due))}</td></tr>`;
+    html += "</table>";
   }
 
   // Directors Current Account
@@ -220,16 +227,17 @@ const formatPnlCt1Html = (s: PnlCt1Summary): string => {
     const mile = s.totalMileageAllowance ?? 0;
     const net = s.netDirectorsLoan ?? 0;
     if (dr > 0 || sub > 0 || mile > 0) {
-      html += '<h2>Directors Current Account</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
+      html +=
+        '<h2>Directors Current Account</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
       if (dr > 0) html += row("Drawings taken by director", fmtEur(dr));
       if (sub > 0) html += row("Less: Subsistence owed to director", `(${fmtEur(sub)})`);
       if (mile > 0) html += row("Less: Mileage owed to director", `(${fmtEur(mile)})`);
       html += row(
         net >= 0 ? "Directors Current A/C (Cr)" : "Directors Current A/C (Dr)",
         net >= 0 ? fmtEur(net) : `(${fmtEur(Math.abs(net))})`,
-        true
+        true,
       );
-      html += '</table>';
+      html += "</table>";
     }
   }
 
@@ -238,12 +246,12 @@ const formatPnlCt1Html = (s: PnlCt1Summary): string => {
 
 const formatBusinessQuestionnaireSection = (data: QuestionnaireData): string => {
   const lines: string[] = [];
-  
+
   lines.push("=".repeat(60));
   lines.push("BUSINESS BANK ACCOUNT FINALISATION QUESTIONNAIRE");
   lines.push("=".repeat(60));
   lines.push("");
-  
+
   // Section 1
   lines.push("1. AUTOMATION ASSUMPTION CHECK");
   lines.push("-".repeat(40));
@@ -321,9 +329,11 @@ const formatBusinessQuestionnaireSection = (data: QuestionnaireData): string => 
   // Section 8
   lines.push("8. FINAL DECLARATION");
   lines.push("-".repeat(40));
-  lines.push(data.finalDeclaration 
-    ? "☑ CONFIRMED: Balnce has correctly automated the bookkeeping, VAT, and balance sheet for this business account."
-    : "☐ NOT CONFIRMED");
+  lines.push(
+    data.finalDeclaration
+      ? "☑ CONFIRMED: Balnce has correctly automated the bookkeeping, VAT, and balance sheet for this business account."
+      : "☐ NOT CONFIRMED",
+  );
   lines.push("");
   lines.push(`Generated: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}`);
   lines.push("=".repeat(60));
@@ -335,12 +345,12 @@ const formatBusinessQuestionnaireSection = (data: QuestionnaireData): string => 
 
 const formatDirectorQuestionnaireSection = (data: DirectorQuestionnaireData): string => {
   const lines: string[] = [];
-  
+
   lines.push("=".repeat(60));
   lines.push("DIRECTOR - PERSONAL ACCOUNT FINALISATION (FORM 11)");
   lines.push("=".repeat(60));
   lines.push("");
-  
+
   // Section 1
   lines.push("1. CHANGE DETECTION SINCE ONBOARDING");
   lines.push("-".repeat(40));
@@ -370,7 +380,9 @@ const formatDirectorQuestionnaireSection = (data: DirectorQuestionnaireData): st
   lines.push("3. BUSINESS LINK VALIDATION");
   lines.push("-".repeat(40));
   const businessLabels = { yes: "☑ Yes", no: "☐ No", unsure: "? Unsure" };
-  lines.push(`All business income included: ${data.businessLinksStatus ? businessLabels[data.businessLinksStatus] : "Not answered"}`);
+  lines.push(
+    `All business income included: ${data.businessLinksStatus ? businessLabels[data.businessLinksStatus] : "Not answered"}`,
+  );
   if (data.businessLinkNotes) lines.push(`Notes: ${data.businessLinkNotes}`);
   lines.push("");
 
@@ -385,7 +397,9 @@ const formatDirectorQuestionnaireSection = (data: DirectorQuestionnaireData): st
   lines.push("5. PRELIMINARY TAX (PERSONAL)");
   lines.push("-".repeat(40));
   const prelimLabels = { yes: "☑ Yes", no: "☐ No", unsure: "? Unsure" };
-  lines.push(`Preliminary tax paid: ${data.preliminaryTaxPaid ? prelimLabels[data.preliminaryTaxPaid] : "Not answered"}`);
+  lines.push(
+    `Preliminary tax paid: ${data.preliminaryTaxPaid ? prelimLabels[data.preliminaryTaxPaid] : "Not answered"}`,
+  );
   if (data.preliminaryTaxPaid === "yes") {
     if (data.preliminaryTaxAmount) lines.push(`Amount: ${data.preliminaryTaxAmount}`);
     if (data.preliminaryTaxDate) lines.push(`Date paid: ${format(data.preliminaryTaxDate, "dd/MM/yyyy")}`);
@@ -407,9 +421,11 @@ const formatDirectorQuestionnaireSection = (data: DirectorQuestionnaireData): st
   // Section 7
   lines.push("7. FINAL DECLARATION - FORM 11");
   lines.push("-".repeat(40));
-  lines.push(data.finalDeclaration 
-    ? "☑ CONFIRMED: Balnce's automated treatment of personal income, expenses, and tax position is accurate for Form 11 purposes."
-    : "☐ NOT CONFIRMED");
+  lines.push(
+    data.finalDeclaration
+      ? "☑ CONFIRMED: Balnce's automated treatment of personal income, expenses, and tax position is accurate for Form 11 purposes."
+      : "☐ NOT CONFIRMED",
+  );
   lines.push("");
   lines.push(`Generated: ${format(new Date(), "dd/MM/yyyy HH:mm:ss")}`);
   lines.push("=".repeat(60));
@@ -423,7 +439,7 @@ export const exportToExcel = (
   transactions: Transaction[],
   filename?: string,
   questionnaire?: QuestionnaireData,
-  pnlCt1?: PnlCt1Summary
+  pnlCt1?: PnlCt1Summary,
 ) => {
   const headers = [
     "Date",
@@ -436,10 +452,10 @@ export const exportToExcel = (
     "VAT Amount (€)",
     "Net Amount (€)",
     "Reference",
-    "Receipt"
+    "Receipt",
   ];
 
-  const rows = transactions.map(tx => [
+  const rows = transactions.map((tx) => [
     format(new Date(tx.transaction_date), "dd/MM/yyyy"),
     tx.description,
     tx.amount.toFixed(2),
@@ -450,7 +466,7 @@ export const exportToExcel = (
     tx.vat_amount?.toFixed(2) || "",
     tx.net_amount?.toFixed(2) || "",
     tx.bank_reference || "",
-    tx.receipt_url ? "Yes" : "No"
+    tx.receipt_url ? "Yes" : "No",
   ]);
 
   // Create CSV content (Excel compatible)
@@ -469,7 +485,7 @@ export const exportToExcel = (
   // Receipt Matching Summary
   {
     const totalTx = transactions.length;
-    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const matched = transactions.filter((tx) => tx.receipt_url).length;
     const unmatched = totalTx - matched;
     const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
     const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
@@ -482,7 +498,7 @@ export const exportToExcel = (
 
   csvContent += [
     headers.join(","),
-    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
   ].join("\n");
 
   // Add BOM for Excel UTF-8 compatibility
@@ -524,21 +540,31 @@ export const exportToPDF = (
   questionnaire?: QuestionnaireData,
   pnlCt1?: PnlCt1Summary,
   companyInfo?: CompanyInfo,
-  options?: ExportOptions
+  options?: ExportOptions,
 ) => {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   let y = 15;
 
-  const addText = (text: string, size: number, opts?: { bold?: boolean; color?: [number, number, number]; maxW?: number }) => {
+  const addText = (
+    text: string,
+    size: number,
+    opts?: { bold?: boolean; color?: [number, number, number]; maxW?: number },
+  ) => {
     doc.setFontSize(size);
     doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
-    if (opts?.color) doc.setTextColor(...opts.color); else doc.setTextColor(0, 0, 0);
+    if (opts?.color) doc.setTextColor(...opts.color);
+    else doc.setTextColor(0, 0, 0);
     doc.text(text, 14, y, { maxWidth: opts?.maxW ?? pageW - 28 });
     y += size * 0.5;
   };
 
-  const checkPage = (need: number) => { if (y + need > 280) { doc.addPage(); y = 15; } };
+  const checkPage = (need: number) => {
+    if (y + need > 280) {
+      doc.addPage();
+      y = 15;
+    }
+  };
 
   // Company header
   if (companyInfo?.companyName) {
@@ -550,7 +576,8 @@ export const exportToPDF = (
   const infoLines: string[] = [];
   if (companyInfo?.croNumber) infoLines.push(`CRO: ${companyInfo.croNumber}`);
   if (companyInfo?.taxReference) infoLines.push(`Tax Ref: ${companyInfo.taxReference}`);
-  if (companyInfo?.incorporationDate) infoLines.push(`Incorporated: ${format(new Date(companyInfo.incorporationDate), "dd MMMM yyyy")}`);
+  if (companyInfo?.incorporationDate)
+    infoLines.push(`Incorporated: ${format(new Date(companyInfo.incorporationDate), "dd MMMM yyyy")}`);
   if (infoLines.length > 0) {
     addText(infoLines.join("  |  "), 8, { color: [100, 100, 100] });
   }
@@ -566,7 +593,8 @@ export const exportToPDF = (
 
   // P&L / CT1 section
   if (pnlCt1) {
-    addText("Profit & Loss", 14, { bold: true }); y += 2;
+    addText("Profit & Loss", 14, { bold: true });
+    y += 2;
     const pnlRows: [string, string][] = [];
     for (const [cat, amt] of Object.entries(pnlCt1.incomeByCategory).sort((a, b) => b[1] - a[1])) {
       pnlRows.push([`  ${cat}`, fmtEur(amt)]);
@@ -587,7 +615,9 @@ export const exportToPDF = (
     pnlRows.push(["Net Profit", fmtEur(pnlCt1.netProfit)]);
 
     autoTable(doc, {
-      startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: "plain",
       head: [["", "Amount"]],
       body: pnlRows,
       styles: { fontSize: 8, cellPadding: 1.5 },
@@ -604,7 +634,8 @@ export const exportToPDF = (
 
     if (pnlCt1.taxableProfit !== undefined) {
       checkPage(40);
-      addText("Corporation Tax (CT1)", 14, { bold: true }); y += 2;
+      addText("Corporation Tax (CT1)", 14, { bold: true });
+      y += 2;
       const ctRows: [string, string][] = [["Net Profit (per accounts)", fmtEur(pnlCt1.netProfit)]];
       if (pnlCt1.disallowedByCategory && pnlCt1.disallowedByCategory.length > 0) {
         ctRows.push(["Add back: Non-deductible expenses", ""]);
@@ -612,28 +643,38 @@ export const exportToPDF = (
           ctRows.push([`    ${category}`, fmtEur(amount)]);
         }
       }
-      if (pnlCt1.capitalAllowances && pnlCt1.capitalAllowances > 0) ctRows.push(["Less: Capital Allowances", `(${fmtEur(pnlCt1.capitalAllowances)})`]);
-      if (pnlCt1.travelDeduction && pnlCt1.travelDeduction > 0) ctRows.push(["Less: Travel Deduction", `(${fmtEur(pnlCt1.travelDeduction)})`]);
+      if (pnlCt1.capitalAllowances && pnlCt1.capitalAllowances > 0)
+        ctRows.push(["Less: Capital Allowances", `(${fmtEur(pnlCt1.capitalAllowances)})`]);
+      if (pnlCt1.travelDeduction && pnlCt1.travelDeduction > 0)
+        ctRows.push(["Less: Travel Deduction", `(${fmtEur(pnlCt1.travelDeduction)})`]);
       ctRows.push(["Trading Profit", fmtEur(pnlCt1.tradingProfit ?? 0)]);
-      if (pnlCt1.lossesForward && pnlCt1.lossesForward > 0) ctRows.push(["Less: Losses B/F", fmtEur(pnlCt1.lossesForward)]);
+      if (pnlCt1.lossesForward && pnlCt1.lossesForward > 0)
+        ctRows.push(["Less: Losses B/F", fmtEur(pnlCt1.lossesForward)]);
       ctRows.push(["Taxable Profit", fmtEur(pnlCt1.taxableProfit)]);
       ctRows.push(["CT @ 12.5%", fmtEur(pnlCt1.ctAt125 ?? 0)]);
       if (pnlCt1.surcharge && pnlCt1.surcharge > 0) ctRows.push(["Close Company Surcharge", fmtEur(pnlCt1.surcharge)]);
       ctRows.push(["Total CT Liability", fmtEur(pnlCt1.totalCT ?? 0)]);
       if (pnlCt1.rctCredit && pnlCt1.rctCredit > 0) ctRows.push(["Less: RCT Credit", fmtEur(pnlCt1.rctCredit)]);
-      if (pnlCt1.prelimPaid && pnlCt1.prelimPaid > 0) ctRows.push(["Less: Preliminary CT Paid", fmtEur(pnlCt1.prelimPaid)]);
+      if (pnlCt1.prelimPaid && pnlCt1.prelimPaid > 0)
+        ctRows.push(["Less: Preliminary CT Paid", fmtEur(pnlCt1.prelimPaid)]);
       const due = pnlCt1.balanceDue ?? 0;
       ctRows.push([due <= 0 ? "CT Refund Due" : "CT Balance Due", fmtEur(Math.abs(due))]);
 
       autoTable(doc, {
-        startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+        startY: y,
+        margin: { left: 14, right: 14 },
+        theme: "plain",
         head: [["", "Amount"]],
         body: ctRows,
         styles: { fontSize: 8, cellPadding: 1.5 },
         headStyles: { fillColor: [240, 240, 240], fontStyle: "bold" },
         didParseCell: (data) => {
           const label = String(data.cell.raw);
-          if (["Trading Profit", "Taxable Profit", "Total CT Liability", "CT Balance Due", "CT Refund Due"].includes(label)) {
+          if (
+            ["Trading Profit", "Taxable Profit", "Total CT Liability", "CT Balance Due", "CT Refund Due"].includes(
+              label,
+            )
+          ) {
             data.cell.styles.fontStyle = "bold";
           }
           if (label === "Add back: Non-deductible expenses") {
@@ -659,7 +700,8 @@ export const exportToPDF = (
     const netLoan = pnlCt1.netDirectorsLoan ?? 0;
     if (drawings > 0 || subsAllowance > 0 || mileAllowance > 0) {
       checkPage(30);
-      addText("Directors Current Account", 14, { bold: true }); y += 2;
+      addText("Directors Current Account", 14, { bold: true });
+      y += 2;
       const dcaRows: [string, string][] = [];
       if (drawings > 0) dcaRows.push(["Drawings taken by director", fmtEur(drawings)]);
       if (subsAllowance > 0) dcaRows.push(["Less: Subsistence owed to director", `(${fmtEur(subsAllowance)})`]);
@@ -669,7 +711,9 @@ export const exportToPDF = (
         netLoan >= 0 ? fmtEur(netLoan) : `(${fmtEur(Math.abs(netLoan))})`,
       ]);
       autoTable(doc, {
-        startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+        startY: y,
+        margin: { left: 14, right: 14 },
+        theme: "plain",
         head: [["", "Amount"]],
         body: dcaRows,
         styles: { fontSize: 8, cellPadding: 1.5 },
@@ -687,19 +731,29 @@ export const exportToPDF = (
   // Questionnaire section
   if (questionnaire) {
     checkPage(30);
-    addText("Business Bank Account Finalisation", 14, { bold: true }); y += 2;
+    addText("Business Bank Account Finalisation", 14, { bold: true });
+    y += 2;
     const qRows: [string, string][] = [];
     qRows.push(["1. Automation Check", questionnaire.automationNoChanges ? "No changes" : "Changes reported"]);
     qRows.push(["2. Income Capture", questionnaire.incomeComplete ? "Complete" : "Requires review"]);
     qRows.push(["3. Expense Classification", questionnaire.expensesCorrect ? "Correct" : "Requires review"]);
-    qRows.push(["4. VAT Status", questionnaire.vatStatus === "not_registered" ? "Not registered" : questionnaire.vatStatus === "cash_basis" ? "Cash basis" : "Invoice basis"]);
+    qRows.push([
+      "4. VAT Status",
+      questionnaire.vatStatus === "not_registered"
+        ? "Not registered"
+        : questionnaire.vatStatus === "cash_basis"
+          ? "Cash basis"
+          : "Invoice basis",
+    ]);
     qRows.push(["5. Capital Items", questionnaire.capitalTransactionsCorrect ? "Correct" : "Requires review"]);
     qRows.push(["6. Payments", questionnaire.paymentsCorrect ? "Correct" : "Requires correction"]);
     qRows.push(["7. Balance Sheet", questionnaire.bankBalanceConfirmed ? "Confirmed" : "Not confirmed"]);
     qRows.push(["8. Final Declaration", questionnaire.finalDeclaration ? "CONFIRMED" : "NOT CONFIRMED"]);
 
     autoTable(doc, {
-      startY: y, margin: { left: 14, right: 14 }, theme: "striped",
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: "striped",
       head: [["Section", "Status"]],
       body: qRows,
       styles: { fontSize: 8, cellPadding: 2 },
@@ -710,11 +764,16 @@ export const exportToPDF = (
 
   // Sales Tax Audit Report — transactions grouped by VAT rate
   checkPage(20);
-  addText("Sales Tax Audit Report", 14, { bold: true }); y += 2;
+  addText("Sales Tax Audit Report", 14, { bold: true });
+  y += 2;
 
   // Calculate VAT from rate when vat_amount is not stored
   // Formula: VAT = gross × (rate / (100 + rate)) for VAT-inclusive amounts
-  const calcVat = (gross: number, vatPct: number, storedVat: number | null | undefined): { tax: number; net: number } => {
+  const calcVat = (
+    gross: number,
+    vatPct: number,
+    storedVat: number | null | undefined,
+  ): { tax: number; net: number } => {
     if (storedVat != null && storedVat !== 0) {
       return { tax: Math.abs(storedVat), net: Math.abs(gross) - Math.abs(storedVat) };
     }
@@ -727,17 +786,26 @@ export const exportToPDF = (
 
   // ── PURCHASES: only expense bank transactions ──
   interface AuditGroup {
-    label: string; sortKey: number;
-    bodyRows: string[][]; catHeaderIndices: number[]; totalRowIdx: number;
-    totalGross: number; totalTax: number; totalNet: number;
+    label: string;
+    sortKey: number;
+    bodyRows: string[][];
+    catHeaderIndices: number[];
+    totalRowIdx: number;
+    totalGross: number;
+    totalTax: number;
+    totalNet: number;
   }
   const auditGroups: AuditGroup[] = [];
-  let purchaseGross = 0, purchaseTax = 0, purchaseNet = 0;
-  let salesGross = 0, salesTax = 0, salesNet = 0;
+  let purchaseGross = 0,
+    purchaseTax = 0,
+    purchaseNet = 0;
+  let salesGross = 0,
+    salesTax = 0,
+    salesNet = 0;
 
   // Group expenses by VAT rate
   // Exclude: Director's Drawings (balance sheet), Revenue refunds (not a supply — no VAT)
-  const isDrawings = (catName: string | null) => catName ? catName.toLowerCase().includes("drawing") : false;
+  const isDrawings = (catName: string | null) => (catName ? catName.toLowerCase().includes("drawing") : false);
   const isRevenueRefund = (tx: Transaction) => {
     const cat = tx.category?.name ?? "";
     const d = (tx.description || "").toLowerCase();
@@ -770,7 +838,9 @@ export const exportToPDF = (
 
     const bodyRows: string[][] = [];
     const catHeaderIndices: number[] = [];
-    let grpGross = 0, grpTax = 0, grpNet = 0;
+    let grpGross = 0,
+      grpTax = 0,
+      grpNet = 0;
 
     for (const [catName, catTxs] of sortedCats) {
       catHeaderIndices.push(bodyRows.length);
@@ -780,18 +850,35 @@ export const exportToPDF = (
         const { tax, net } = calcVat(absGross, vatPct, tx.vat_amount);
         bodyRows.push([
           format(new Date(tx.transaction_date), "d/MM/yyyy"),
-          "", tx.bank_reference || "", tx.description,
-          fmtEur(-absGross), fmtEur(-tax), fmtEur(-net),
+          "",
+          tx.bank_reference || "",
+          tx.description,
+          fmtEur(-absGross),
+          fmtEur(-tax),
+          fmtEur(-net),
           tx.receipt_url ? "Yes" : "No",
         ]);
-        grpGross -= absGross; grpTax -= tax; grpNet -= net;
+        grpGross -= absGross;
+        grpTax -= tax;
+        grpNet -= net;
       }
     }
 
     const totalRowIdx = bodyRows.length;
     bodyRows.push(["", `Total ${label}`, "", "", fmtEur(grpGross), fmtEur(grpTax), fmtEur(grpNet), ""]);
-    purchaseGross += grpGross; purchaseTax += grpTax; purchaseNet += grpNet;
-    auditGroups.push({ label, sortKey: 100 - vatPct, bodyRows, catHeaderIndices, totalRowIdx, totalGross: grpGross, totalTax: grpTax, totalNet: grpNet });
+    purchaseGross += grpGross;
+    purchaseTax += grpTax;
+    purchaseNet += grpNet;
+    auditGroups.push({
+      label,
+      sortKey: 100 - vatPct,
+      bodyRows,
+      catHeaderIndices,
+      totalRowIdx,
+      totalGross: grpGross,
+      totalTax: grpTax,
+      totalNet: grpNet,
+    });
   }
 
   // ── SALES: bank income transactions ──
@@ -805,9 +892,7 @@ export const exportToPDF = (
     let vatPct = tx.vat_rate ? parseFloat(tx.vat_rate) : 0;
     // RCT income is always 0% (reverse charge) — subcontractor doesn't charge VAT
     // Also clear any stale vat_amount so calcVat doesn't use it
-    const incomeTx = options?.isRCT
-      ? { ...tx, vat_amount: null, vat_rate: "0" } as Transaction
-      : tx;
+    const incomeTx = options?.isRCT ? ({ ...tx, vat_amount: null, vat_rate: "0" } as Transaction) : tx;
     if (options?.isRCT) vatPct = 0;
     if (!incomeGroupMap.has(vatPct)) incomeGroupMap.set(vatPct, []);
     incomeGroupMap.get(vatPct)!.push(incomeTx);
@@ -829,7 +914,9 @@ export const exportToPDF = (
 
     const bodyRows: string[][] = [];
     const catHeaderIndices: number[] = [];
-    let grpGross = 0, grpTax = 0, grpNet = 0;
+    let grpGross = 0,
+      grpTax = 0,
+      grpNet = 0;
 
     for (const [catName, catTxs] of sortedCats) {
       catHeaderIndices.push(bodyRows.length);
@@ -839,18 +926,35 @@ export const exportToPDF = (
         const { tax, net } = calcVat(absGross, vatPct, tx.vat_amount);
         bodyRows.push([
           format(new Date(tx.transaction_date), "d/MM/yyyy"),
-          "", tx.bank_reference || "", tx.description,
-          fmtEur(absGross), fmtEur(tax), fmtEur(net),
+          "",
+          tx.bank_reference || "",
+          tx.description,
+          fmtEur(absGross),
+          fmtEur(tax),
+          fmtEur(net),
           tx.receipt_url ? "Yes" : "No",
         ]);
-        grpGross += absGross; grpTax += tax; grpNet += net;
+        grpGross += absGross;
+        grpTax += tax;
+        grpNet += net;
       }
     }
 
     const totalRowIdx = bodyRows.length;
     bodyRows.push(["", `Total ${label}`, "", "", fmtEur(grpGross), fmtEur(grpTax), fmtEur(grpNet), ""]);
-    salesGross += grpGross; salesTax += grpTax; salesNet += grpNet;
-    auditGroups.push({ label, sortKey: 1000 + (100 - vatPct), bodyRows, catHeaderIndices, totalRowIdx, totalGross: grpGross, totalTax: grpTax, totalNet: grpNet });
+    salesGross += grpGross;
+    salesTax += grpTax;
+    salesNet += grpNet;
+    auditGroups.push({
+      label,
+      sortKey: 1000 + (100 - vatPct),
+      bodyRows,
+      catHeaderIndices,
+      totalRowIdx,
+      totalGross: grpGross,
+      totalTax: grpTax,
+      totalNet: grpNet,
+    });
   }
 
   // Sort: purchases first, then sales
@@ -858,11 +962,16 @@ export const exportToPDF = (
 
   for (const g of auditGroups) {
     checkPage(20);
-    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 0, 0);
-    doc.text(g.label, 14, y); y += 4;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text(g.label, 14, y);
+    y += 4;
 
     autoTable(doc, {
-      startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: "plain",
       head: [["Date", "Account", "Ref", "Details", "Gross", "Tax", "Net", "Receipt"]],
       body: g.bodyRows,
       styles: { fontSize: 6.5, cellPadding: 1.2, overflow: "linebreak" },
@@ -907,15 +1016,14 @@ export const exportToPDF = (
     if (outputVat > 0) summaryRows.push(["Output VAT (on Sales)", "", fmtEur(outputVat), ""]);
     if (inputVat > 0) summaryRows.push(["Input VAT (on Purchases)", "", fmtEur(inputVat), ""]);
     const netVat = outputVat - inputVat;
-    summaryRows.push([
-      netVat >= 0 ? "VAT Payable" : "VAT Refundable",
-      "", fmtEur(Math.abs(netVat)), ""
-    ]);
+    summaryRows.push([netVat >= 0 ? "VAT Payable" : "VAT Refundable", "", fmtEur(Math.abs(netVat)), ""]);
   }
   const vatSummaryRowIdx = summaryRows.length - 1;
-  const separatorRowIdx = summaryRows.findIndex(r => r[0] === "" && r[1] === "" && r[2] === "" && r[3] === "");
+  const separatorRowIdx = summaryRows.findIndex((r) => r[0] === "" && r[1] === "" && r[2] === "" && r[3] === "");
   autoTable(doc, {
-    startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+    startY: y,
+    margin: { left: 14, right: 14 },
+    theme: "plain",
     head: [["", "Gross", "Tax", "Net"]],
     body: summaryRows,
     styles: { fontSize: 7.5, cellPadding: 1.5 },
@@ -945,16 +1053,19 @@ export const exportToPDF = (
   // Receipt Matching Summary
   {
     const totalTx = transactions.length;
-    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const matched = transactions.filter((tx) => tx.receipt_url).length;
     const unmatched = totalTx - matched;
     const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
     const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
 
     checkPage(30);
     y += 4;
-    addText("Receipt Matching Summary", 11, { bold: true }); y += 2;
+    addText("Receipt Matching Summary", 11, { bold: true });
+    y += 2;
     autoTable(doc, {
-      startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: "plain",
       body: [
         ["Total transactions", String(totalTx)],
         ["Receipts matched", `${matched} (${matchedPct}%)`],
@@ -975,20 +1086,28 @@ export const exportToPDF = (
     const lineWidth = 70;
     const blocksNeeded = directors.length === 1 ? 2 : directors.length;
     const spaceNeeded = 30 + blocksNeeded * 28;
-    if (y + spaceNeeded > 280) { doc.addPage(); y = 15; }
+    if (y + spaceNeeded > 280) {
+      doc.addPage();
+      y = 15;
+    }
 
     y += 10;
-    doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 0, 0);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
     doc.text("Signed on behalf of the company", 14, y);
     y += 10;
 
     if (directors.length === 1) {
       // Single director — needs Director + Secretary signatures
-      doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3);
+      doc.setDrawColor(0, 0, 0);
+      doc.setLineWidth(0.3);
       doc.line(14, y, 14 + lineWidth, y);
-      doc.setFontSize(9); doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
       doc.text("Director", 14, y + 5);
-      doc.setFont("helvetica", "normal"); doc.setTextColor(80, 80, 80);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
       doc.text(directors[0], 14, y + 10);
       doc.setTextColor(0, 0, 0);
 
@@ -996,18 +1115,22 @@ export const exportToPDF = (
       doc.line(rightX, y, rightX + lineWidth, y);
       doc.setFont("helvetica", "bold");
       doc.text("Secretary", rightX, y + 5);
-      doc.setFont("helvetica", "normal"); doc.setTextColor(80, 80, 80);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(80, 80, 80);
       doc.text("________________________", rightX, y + 10);
       doc.setTextColor(0, 0, 0);
       y += 20;
     } else {
       // Two+ directors — no secretary required
       for (const name of directors) {
-        doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3);
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.3);
         doc.line(14, y, 14 + lineWidth, y);
-        doc.setFontSize(9); doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
         doc.text("Director", 14, y + 5);
-        doc.setFont("helvetica", "normal"); doc.setTextColor(80, 80, 80);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(80, 80, 80);
         doc.text(name, 14, y + 10);
         doc.setTextColor(0, 0, 0);
         y += 22;
@@ -1016,9 +1139,11 @@ export const exportToPDF = (
 
     // Date line
     y += 4;
-    doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3);
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.3);
     doc.line(14, y, 14 + lineWidth, y);
-    doc.setFontSize(9); doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
     doc.text("Date", 14, y + 5);
   }
 
@@ -1026,9 +1151,9 @@ export const exportToPDF = (
 };
 
 export const exportDirectorToExcel = (
-  transactions: Transaction[], 
+  transactions: Transaction[],
   filename?: string,
-  questionnaire?: DirectorQuestionnaireData
+  questionnaire?: DirectorQuestionnaireData,
 ) => {
   const headers = [
     "Date",
@@ -1041,10 +1166,10 @@ export const exportDirectorToExcel = (
     "VAT Amount (€)",
     "Net Amount (€)",
     "Reference",
-    "Receipt"
+    "Receipt",
   ];
 
-  const rows = transactions.map(tx => [
+  const rows = transactions.map((tx) => [
     format(new Date(tx.transaction_date), "dd/MM/yyyy"),
     tx.description,
     tx.amount.toFixed(2),
@@ -1055,7 +1180,7 @@ export const exportDirectorToExcel = (
     tx.vat_amount?.toFixed(2) || "",
     tx.net_amount?.toFixed(2) || "",
     tx.bank_reference || "",
-    tx.receipt_url ? "Yes" : "No"
+    tx.receipt_url ? "Yes" : "No",
   ]);
 
   let csvContent = "";
@@ -1067,7 +1192,7 @@ export const exportDirectorToExcel = (
   // Receipt Matching Summary
   {
     const totalTx = transactions.length;
-    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const matched = transactions.filter((tx) => tx.receipt_url).length;
     const unmatched = totalTx - matched;
     const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
     const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
@@ -1080,7 +1205,7 @@ export const exportDirectorToExcel = (
 
   csvContent += [
     headers.join(","),
-    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+    ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
   ].join("\n");
 
   const bom = "\uFEFF";
@@ -1094,21 +1219,31 @@ export const exportDirectorToPDF = (
   transactions: Transaction[],
   filename?: string,
   questionnaire?: DirectorQuestionnaireData,
-  companyInfo?: CompanyInfo
+  companyInfo?: CompanyInfo,
 ) => {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   let y = 15;
 
-  const addText = (text: string, size: number, opts?: { bold?: boolean; color?: [number, number, number]; maxW?: number }) => {
+  const addText = (
+    text: string,
+    size: number,
+    opts?: { bold?: boolean; color?: [number, number, number]; maxW?: number },
+  ) => {
     doc.setFontSize(size);
     doc.setFont("helvetica", opts?.bold ? "bold" : "normal");
-    if (opts?.color) doc.setTextColor(...opts.color); else doc.setTextColor(0, 0, 0);
+    if (opts?.color) doc.setTextColor(...opts.color);
+    else doc.setTextColor(0, 0, 0);
     doc.text(text, 14, y, { maxWidth: opts?.maxW ?? pageW - 28 });
     y += size * 0.5;
   };
 
-  const checkPage = (need: number) => { if (y + need > 280) { doc.addPage(); y = 15; } };
+  const checkPage = (need: number) => {
+    if (y + need > 280) {
+      doc.addPage();
+      y = 15;
+    }
+  };
 
   // Company header
   if (companyInfo?.companyName) {
@@ -1117,7 +1252,8 @@ export const exportDirectorToPDF = (
   const infoLines: string[] = [];
   if (companyInfo?.registeredAddress) infoLines.push(companyInfo.registeredAddress);
   if (companyInfo?.croNumber) infoLines.push(`CRO: ${companyInfo.croNumber}`);
-  if (companyInfo?.incorporationDate) infoLines.push(`Incorporated: ${format(new Date(companyInfo.incorporationDate), "dd MMMM yyyy")}`);
+  if (companyInfo?.incorporationDate)
+    infoLines.push(`Incorporated: ${format(new Date(companyInfo.incorporationDate), "dd MMMM yyyy")}`);
   if (infoLines.length > 0) {
     addText(infoLines.join("  |  "), 8, { color: [100, 100, 100] });
     y += 2;
@@ -1133,18 +1269,35 @@ export const exportDirectorToPDF = (
 
   // Questionnaire
   if (questionnaire) {
-    addText("Personal Account Finalisation (Form 11)", 14, { bold: true }); y += 2;
+    addText("Personal Account Finalisation (Form 11)", 14, { bold: true });
+    y += 2;
     const qRows: [string, string][] = [];
     qRows.push(["1. Changes Since Onboarding", questionnaire.noChanges ? "No changes" : "Changes reported"]);
     qRows.push(["2. Income Reconciliation", questionnaire.incomeComplete ? "Complete" : "Missing source"]);
-    qRows.push(["3. Business Link", questionnaire.businessLinksStatus === "yes" ? "Yes" : questionnaire.businessLinksStatus === "no" ? "No" : "Unsure"]);
+    qRows.push([
+      "3. Business Link",
+      questionnaire.businessLinksStatus === "yes"
+        ? "Yes"
+        : questionnaire.businessLinksStatus === "no"
+          ? "No"
+          : "Unsure",
+    ]);
     qRows.push(["4. Reliefs & Credits", questionnaire.reliefsCorrect ? "Correct" : "Changed"]);
-    qRows.push(["5. Preliminary Tax", questionnaire.preliminaryTaxPaid === "yes" ? "Paid" : questionnaire.preliminaryTaxPaid === "no" ? "Not paid" : "Unsure"]);
+    qRows.push([
+      "5. Preliminary Tax",
+      questionnaire.preliminaryTaxPaid === "yes"
+        ? "Paid"
+        : questionnaire.preliminaryTaxPaid === "no"
+          ? "Not paid"
+          : "Unsure",
+    ]);
     qRows.push(["6. Edge Cases", questionnaire.edgeCases.none ? "None" : "See details"]);
     qRows.push(["7. Final Declaration", questionnaire.finalDeclaration ? "CONFIRMED" : "NOT CONFIRMED"]);
 
     autoTable(doc, {
-      startY: y, margin: { left: 14, right: 14 }, theme: "striped",
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: "striped",
       head: [["Section", "Status"]],
       body: qRows,
       styles: { fontSize: 8, cellPadding: 2 },
@@ -1155,10 +1308,15 @@ export const exportDirectorToPDF = (
 
   // Sales Tax Audit Report — transactions grouped by VAT rate
   checkPage(20);
-  addText("Transactions", 14, { bold: true }); y += 2;
+  addText("Transactions", 14, { bold: true });
+  y += 2;
 
   // Calculate VAT from rate when vat_amount is not stored
-  const dirCalcVat = (gross: number, vatPct: number, storedVat: number | null | undefined): { tax: number; net: number } => {
+  const dirCalcVat = (
+    gross: number,
+    vatPct: number,
+    storedVat: number | null | undefined,
+  ): { tax: number; net: number } => {
     if (storedVat != null && storedVat !== 0) {
       return { tax: Math.abs(storedVat), net: Math.abs(gross) - Math.abs(storedVat) };
     }
@@ -1169,7 +1327,10 @@ export const exportDirectorToPDF = (
     return { tax: 0, net: Math.abs(gross) };
   };
 
-  const dirGroupMap = new Map<string, { label: string; sortKey: number; rows: Transaction[]; totalGross: number; totalTax: number; totalNet: number }>();
+  const dirGroupMap = new Map<
+    string,
+    { label: string; sortKey: number; rows: Transaction[]; totalGross: number; totalTax: number; totalNet: number }
+  >();
   for (const tx of transactions) {
     const vatPct = tx.vat_rate ? parseFloat(tx.vat_rate) : 0;
     const isPurchase = tx.type === "expense";
@@ -1194,8 +1355,11 @@ export const exportDirectorToPDF = (
   const dirGroups = Array.from(dirGroupMap.values()).sort((a, b) => a.sortKey - b.sortKey);
   for (const g of dirGroups) {
     checkPage(20);
-    doc.setFontSize(9); doc.setFont("helvetica", "bold"); doc.setTextColor(0, 0, 0);
-    doc.text(g.label, 14, y); y += 4;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 0, 0);
+    doc.text(g.label, 14, y);
+    y += 4;
     const isPurchase = g.sortKey >= 1000;
     const sign = isPurchase ? -1 : 1;
 
@@ -1222,7 +1386,9 @@ export const exportDirectorToPDF = (
           format(new Date(tx.transaction_date), "d/MM/yyyy"),
           "",
           tx.description,
-          fmtEur(sign * absGross), fmtEur(sign * tax), fmtEur(sign * net),
+          fmtEur(sign * absGross),
+          fmtEur(sign * tax),
+          fmtEur(sign * net),
           tx.receipt_url ? "Yes" : "No",
         ]);
       }
@@ -1232,7 +1398,9 @@ export const exportDirectorToPDF = (
     bodyRows.push(["", `Total ${g.label}`, "", fmtEur(g.totalGross), fmtEur(g.totalTax), fmtEur(g.totalNet), ""]);
 
     autoTable(doc, {
-      startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: "plain",
       head: [["Date", "Account", "Details", "Gross", "Tax", "Net", "Receipt"]],
       body: bodyRows,
       styles: { fontSize: 6.5, cellPadding: 1.2, overflow: "linebreak" },
@@ -1264,16 +1432,19 @@ export const exportDirectorToPDF = (
   // Receipt Matching Summary
   {
     const totalTx = transactions.length;
-    const matched = transactions.filter(tx => tx.receipt_url).length;
+    const matched = transactions.filter((tx) => tx.receipt_url).length;
     const unmatched = totalTx - matched;
     const matchedPct = totalTx > 0 ? Math.round((matched / totalTx) * 100) : 0;
     const unmatchedPct = totalTx > 0 ? 100 - matchedPct : 0;
 
     checkPage(30);
     y += 4;
-    addText("Receipt Matching Summary", 11, { bold: true }); y += 2;
+    addText("Receipt Matching Summary", 11, { bold: true });
+    y += 2;
     autoTable(doc, {
-      startY: y, margin: { left: 14, right: 14 }, theme: "plain",
+      startY: y,
+      margin: { left: 14, right: 14 },
+      theme: "plain",
       body: [
         ["Total transactions", String(totalTx)],
         ["Receipts matched", `${matched} (${matchedPct}%)`],

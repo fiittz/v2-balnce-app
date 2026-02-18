@@ -9,7 +9,11 @@ import { loadUserCorrections, type UserCorrection } from "@/services/userCorrect
 export function useUserCorrections() {
   const { user } = useAuth();
 
-  const { data: userCorrections, isLoading, error } = useQuery({
+  const {
+    data: userCorrections,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["user-corrections", user?.id],
     queryFn: () => loadUserCorrections(user!.id),
     enabled: !!user?.id,

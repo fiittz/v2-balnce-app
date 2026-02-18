@@ -1,15 +1,15 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Calendar, 
-  FileText, 
-  User, 
-  Building2, 
-  Clock, 
-  CheckCircle2, 
+import {
+  Calendar,
+  FileText,
+  User,
+  Building2,
+  Clock,
+  CheckCircle2,
   AlertCircle,
   ChevronRight,
-  Calculator
+  Calculator,
 } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -43,12 +43,11 @@ interface TaxDeadline {
 
 const TaxCentre = () => {
   const navigate = useNavigate();
-  const { user, profile, directorCount, directorsCompleted, onboardingComplete, directorOnboardingComplete } = useAuth();
+  const { user, profile, directorCount, directorsCompleted, onboardingComplete, directorOnboardingComplete } =
+    useAuth();
   const { data: personalAccounts } = useAccounts("directors_personal_tax");
   const hasPersonalAccounts = (personalAccounts?.length ?? 0) > 0;
-  const { reliefs } = useReliefScan(
-    hasPersonalAccounts ? { accountType: "directors_personal_tax" } : undefined
-  );
+  const { reliefs } = useReliefScan(hasPersonalAccounts ? { accountType: "directors_personal_tax" } : undefined);
   const { getDirector, isLoading: directorsLoading } = useDirectorOnboarding();
   const [showCT1Questionnaire, setShowCT1Questionnaire] = useState(false);
   const [showForm11Questionnaire, setShowForm11Questionnaire] = useState(false);
@@ -84,7 +83,7 @@ const TaxCentre = () => {
           vatStatusBefore: savedCT1.vatStatus === "not_registered" ? "not_registered" : undefined,
           vatStatusAfter: savedCT1.vatStatus,
         }
-      : undefined
+      : undefined,
   );
 
   const getCT1ReportMeta = (): ReportMeta => ({
@@ -123,9 +122,11 @@ const TaxCentre = () => {
     const motorVehicleAllowance = ct1.vehicleAsset
       ? ct1.vehicleAsset.depreciation.annualAllowance
       : (savedCT1?.capitalAllowancesMotorVehicles ?? 0);
-    const capitalAllowancesTotal =
-      (savedCT1?.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
-    const tradingProfit = Math.max(0, totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel);
+    const capitalAllowancesTotal = (savedCT1?.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
+    const tradingProfit = Math.max(
+      0,
+      totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel,
+    );
     const lossesForward = savedCT1?.lossesForward ?? 0;
     const taxableProfit = Math.max(0, tradingProfit - lossesForward);
     const ctLiability = taxableProfit * 0.125 + (savedCT1?.closeCompanySurcharge ?? 0);
@@ -177,7 +178,7 @@ const TaxCentre = () => {
   // Calculate deadlines based on Irish tax calendar
   const getDeadlines = (): TaxDeadline[] => {
     const deadlines: TaxDeadline[] = [];
-    
+
     // CT1 deadline: 9 months after accounting year end (typically 21st of the 9th month)
     const ct1Deadline = new Date(currentYear, 8, 21); // September 21st
     deadlines.push({
@@ -235,9 +236,12 @@ const TaxCentre = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "overdue": return "bg-destructive text-destructive-foreground";
-      case "due_soon": return "bg-yellow-500 text-white";
-      default: return "bg-secondary text-secondary-foreground";
+      case "overdue":
+        return "bg-destructive text-destructive-foreground";
+      case "due_soon":
+        return "bg-yellow-500 text-white";
+      default:
+        return "bg-secondary text-secondary-foreground";
     }
   };
 
@@ -245,13 +249,13 @@ const TaxCentre = () => {
   const calculateReadiness = () => {
     let score = 0;
     const total = 4;
-    
+
     if (onboardingComplete) score++;
     if (directorOnboardingComplete) score++;
     // Add more criteria based on data completeness
     score += 1; // Placeholder for transactions imported
     score += 0.5; // Placeholder for receipts matched
-    
+
     return Math.round((score / total) * 100);
   };
 
@@ -301,9 +305,7 @@ const TaxCentre = () => {
                   ) : (
                     <AlertCircle className="w-4 h-4 text-muted-foreground" />
                   )}
-                  <span className={onboardingComplete ? "" : "text-muted-foreground"}>
-                    Business setup
-                  </span>
+                  <span className={onboardingComplete ? "" : "text-muted-foreground"}>Business setup</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {directorOnboardingComplete ? (
@@ -337,10 +339,7 @@ const TaxCentre = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {deadlines.map((deadline, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center justify-between p-4 bg-secondary/50 rounded-xl"
-                >
+                <div key={idx} className="flex items-center justify-between p-4 bg-secondary/50 rounded-xl">
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-muted-foreground" />
                     <div>
@@ -348,9 +347,7 @@ const TaxCentre = () => {
                       <p className="text-sm text-muted-foreground">{formatDate(deadline.date)}</p>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(deadline.status)}>
-                    {getDaysUntil(deadline.date)}
-                  </Badge>
+                  <Badge className={getStatusColor(deadline.status)}>{getDaysUntil(deadline.date)}</Badge>
                 </div>
               ))}
             </CardContent>
@@ -382,36 +379,37 @@ const TaxCentre = () => {
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Status</span>
-                    <Badge variant={ct1Status === "complete" ? "default" : "outline"} className={
-                      ct1Status === "complete" ? "bg-green-600" :
-                      ct1Status === "in_progress" ? "border-yellow-500 text-yellow-600" : ""
-                    }>
-                      {ct1Status === "complete" ? "Complete" : ct1Status === "in_progress" ? "In Progress" : "Not Started"}
+                    <Badge
+                      variant={ct1Status === "complete" ? "default" : "outline"}
+                      className={
+                        ct1Status === "complete"
+                          ? "bg-green-600"
+                          : ct1Status === "in_progress"
+                            ? "border-yellow-500 text-yellow-600"
+                            : ""
+                      }
+                    >
+                      {ct1Status === "complete"
+                        ? "Complete"
+                        : ct1Status === "in_progress"
+                          ? "In Progress"
+                          : "Not Started"}
                     </Badge>
                   </div>
                 </div>
-                <Button
-                  className="w-full mt-6 rounded-xl"
-                  onClick={() => setShowCT1Questionnaire(true)}
-                >
-                  {ct1Status === "not_started" ? "Start" : ct1Status === "in_progress" ? "Continue" : "Review"} CT1 Questionnaire
+                <Button className="w-full mt-6 rounded-xl" onClick={() => setShowCT1Questionnaire(true)}>
+                  {ct1Status === "not_started" ? "Start" : ct1Status === "in_progress" ? "Continue" : "Review"} CT1
+                  Questionnaire
                   <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
                 {ct1Status === "complete" && (
                   <div className="mt-3 space-y-2">
-                    <Button
-                      variant="outline"
-                      className="w-full rounded-xl"
-                      onClick={() => navigate("/tax/ct1")}
-                    >
+                    <Button variant="outline" className="w-full rounded-xl" onClick={() => navigate("/tax/ct1")}>
                       View CT1 Results
                       <ChevronRight className="w-4 h-4 ml-2" />
                     </Button>
                     <div className="flex justify-center">
-                      <ExportButtons
-                        onPdf={handleCT1Pdf}
-                        onExcel={handleCT1Excel}
-                      />
+                      <ExportButtons onPdf={handleCT1Pdf} onExcel={handleCT1Excel} />
                     </div>
                     <div className="flex justify-center">
                       <ExportButtons
@@ -421,9 +419,7 @@ const TaxCentre = () => {
                         excelLabel="Abridged Excel"
                       />
                     </div>
-                    <p className="text-xs text-center text-muted-foreground">
-                      CRO Abridged Accounts (s.352)
-                    </p>
+                    <p className="text-xs text-center text-muted-foreground">CRO Abridged Accounts (s.352)</p>
                   </div>
                 )}
               </CardContent>
@@ -446,52 +442,47 @@ const TaxCentre = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Complete Form 11 questionnaires for each director's personal tax return.
                 </p>
-                
+
                 {/* Director list */}
                 <div className="space-y-2 mb-6">
-                  {directorsLoading ? (
-                    Array.from({ length: directorCount }, (_, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl">
-                        <div className="flex items-center gap-2">
-                          <Skeleton className="w-4 h-4 rounded-full" />
-                          <Skeleton className="h-4 w-28" />
-                        </div>
-                        <Skeleton className="h-8 w-24 rounded-full" />
-                      </div>
-                    ))
-                  ) : (
-                    Array.from({ length: directorCount }, (_, i) => i + 1).map((num) => {
-                      const parsed = getDirector(num);
-                      const name = parsed?.director_name || `Director ${num}`;
-                      const completed = parsed?.onboarding_completed;
-
-                      return (
-                        <div
-                          key={num}
-                          className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl"
-                        >
+                  {directorsLoading
+                    ? Array.from({ length: directorCount }, (_, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl">
                           <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-muted-foreground" />
-                            <span className="text-sm font-medium">{name}</span>
+                            <Skeleton className="w-4 h-4 rounded-full" />
+                            <Skeleton className="h-4 w-28" />
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleOpenForm11(num)}
-                            disabled={!completed}
-                            className="rounded-full"
-                          >
-                            {completed ? "Start" : "Complete onboarding first"}
-                            {completed && <ChevronRight className="w-4 h-4 ml-1" />}
-                          </Button>
+                          <Skeleton className="h-8 w-24 rounded-full" />
                         </div>
-                      );
-                    })
-                  )}
+                      ))
+                    : Array.from({ length: directorCount }, (_, i) => i + 1).map((num) => {
+                        const parsed = getDirector(num);
+                        const name = parsed?.director_name || `Director ${num}`;
+                        const completed = parsed?.onboarding_completed;
+
+                        return (
+                          <div key={num} className="flex items-center justify-between p-3 bg-secondary/50 rounded-xl">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                              <span className="text-sm font-medium">{name}</span>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenForm11(num)}
+                              disabled={!completed}
+                              className="rounded-full"
+                            >
+                              {completed ? "Start" : "Complete onboarding first"}
+                              {completed && <ChevronRight className="w-4 h-4 ml-1" />}
+                            </Button>
+                          </div>
+                        );
+                      })}
                 </div>
 
                 {!directorOnboardingComplete && (
-                  <Button 
+                  <Button
                     variant="outline"
                     className="w-full rounded-xl"
                     onClick={() => navigate("/onboarding/director")}
@@ -502,9 +493,6 @@ const TaxCentre = () => {
               </CardContent>
             </Card>
           </div>
-
-
-
         </main>
       </div>
 
@@ -521,10 +509,7 @@ const TaxCentre = () => {
               vatStatusChangeDate: data.vatStatusChangeDate?.toISOString() ?? null,
               preliminaryCTDate: data.preliminaryCTDate?.toISOString() ?? null,
             };
-            localStorage.setItem(
-              `ct1_questionnaire_${user.id}_${taxYear}`,
-              JSON.stringify(serialized)
-            );
+            localStorage.setItem(`ct1_questionnaire_${user.id}_${taxYear}`, JSON.stringify(serialized));
             setCt1SaveCounter((c) => c + 1);
           }
           setShowCT1Questionnaire(false);
@@ -558,10 +543,7 @@ const TaxCentre = () => {
         onComplete={(data) => {
           // Save questionnaire data for the calculator
           if (user?.id) {
-            localStorage.setItem(
-              `form11_questionnaire_${user.id}_${selectedDirectorIndex}`,
-              JSON.stringify(data)
-            );
+            localStorage.setItem(`form11_questionnaire_${user.id}_${selectedDirectorIndex}`, JSON.stringify(data));
           }
           setShowForm11Questionnaire(false);
           // Navigate to the Form 11 results page

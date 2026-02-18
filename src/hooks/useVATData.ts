@@ -77,7 +77,8 @@ export const useVATSummary = (periodStart: string, periodEnd: string) => {
       // Get transactions with VAT data (from CSV imports)
       const { data: transactions, error: txnError } = await supabase
         .from("transactions")
-        .select(`
+        .select(
+          `
           id,
           type,
           amount,
@@ -87,7 +88,8 @@ export const useVATSummary = (periodStart: string, periodEnd: string) => {
           transaction_date,
           category:categories(name),
           account:accounts(name)
-        `)
+        `,
+        )
         .eq("user_id", user!.id)
         .gte("transaction_date", periodStart)
         .lte("transaction_date", periodEnd);
@@ -133,8 +135,14 @@ export const useVATSummary = (periodStart: string, periodEnd: string) => {
 
         // Reverse charge = no VAT (subcontractor RCT)
         const isReverseCharge = txn.vat_rate === "reverse_charge" || txn.vat_rate === "Reverse Charge";
-        let vatAmount = isReverseCharge ? 0 : (txn.vat_amount || 0);
-        if (!vatAmount && !isReverseCharge && txn.vat_rate && txn.vat_rate !== "exempt" && txn.vat_rate !== "zero_rated") {
+        let vatAmount = isReverseCharge ? 0 : txn.vat_amount || 0;
+        if (
+          !vatAmount &&
+          !isReverseCharge &&
+          txn.vat_rate &&
+          txn.vat_rate !== "exempt" &&
+          txn.vat_rate !== "zero_rated"
+        ) {
           const calculated = calculateVATFromGross(Math.abs(txn.amount), txn.vat_rate);
           vatAmount = calculated.vatAmount;
         }
@@ -177,8 +185,8 @@ export const useVATSummary = (periodStart: string, periodEnd: string) => {
         vatOnSales,
         vatOnPurchases,
         netVat,
-        salesCount: (invoices?.length || 0),
-        purchasesCount: (expenses?.length || 0),
+        salesCount: invoices?.length || 0,
+        purchasesCount: expenses?.length || 0,
         transactionSalesCount,
         transactionPurchasesCount,
         isRefund: netVat < 0,
@@ -304,12 +312,7 @@ export const useUpdateVATReturn = () => {
         updateData.notes = notes;
       }
 
-      const { data, error } = await supabase
-        .from("vat_returns")
-        .update(updateData)
-        .eq("id", id)
-        .select()
-        .single();
+      const { data, error } = await supabase.from("vat_returns").update(updateData).eq("id", id).select().single();
 
       if (error) throw error;
       return data;

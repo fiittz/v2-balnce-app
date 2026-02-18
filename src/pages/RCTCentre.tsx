@@ -15,10 +15,24 @@ const rctRates = [
 ];
 
 const contracts = [
-  { id: 1, contractor: "Murphy Construction", description: "Site works Phase 1", rate: "20%", status: "pending", amount: 15000 },
+  {
+    id: 1,
+    contractor: "Murphy Construction",
+    description: "Site works Phase 1",
+    rate: "20%",
+    status: "pending",
+    amount: 15000,
+  },
   { id: 2, contractor: "Kelly Builders", description: "Foundation work", rate: "0%", status: "filed", amount: 8500 },
   { id: 3, contractor: "Dublin Groundworks", description: "Excavation", rate: "20%", status: "paid", amount: 12000 },
-  { id: 4, contractor: "O'Brien Electrical", description: "Wiring installation", rate: "35%", status: "pending", amount: 6500 },
+  {
+    id: 4,
+    contractor: "O'Brien Electrical",
+    description: "Wiring installation",
+    rate: "35%",
+    status: "pending",
+    amount: 6500,
+  },
 ];
 
 const RCTCentre = () => {
@@ -27,7 +41,7 @@ const RCTCentre = () => {
   const [filter, setFilter] = useState<string>("all");
   const [selectedRate, setSelectedRate] = useState<string | null>("20%");
 
-  const filteredContracts = contracts.filter(c => {
+  const filteredContracts = contracts.filter((c) => {
     if (filter === "all") return true;
     return c.status === filter;
   });
@@ -40,7 +54,7 @@ const RCTCentre = () => {
 
   const totalDeductions = contracts.reduce((sum, c) => {
     const rate = parseFloat(c.rate) / 100;
-    return sum + (c.amount * rate);
+    return sum + c.amount * rate;
   }, 0);
 
   if (view === "add-contract") {
@@ -59,25 +73,15 @@ const RCTCentre = () => {
           <div className="bg-card rounded-2xl p-6 card-shadow space-y-5 animate-fade-in">
             <div className="space-y-2">
               <Label className="font-medium">Contractor Name</Label>
-              <Input 
-                placeholder="Enter contractor name"
-                className="h-14 rounded-xl text-base"
-              />
+              <Input placeholder="Enter contractor name" className="h-14 rounded-xl text-base" />
             </div>
             <div className="space-y-2">
               <Label className="font-medium">Contract Description</Label>
-              <Input 
-                placeholder="Describe the work"
-                className="h-14 rounded-xl text-base"
-              />
+              <Input placeholder="Describe the work" className="h-14 rounded-xl text-base" />
             </div>
             <div className="space-y-2">
               <Label className="font-medium">Contract Value (€)</Label>
-              <Input 
-                type="number"
-                placeholder="0.00"
-                className="h-14 rounded-xl text-base"
-              />
+              <Input type="number" placeholder="0.00" className="h-14 rounded-xl text-base" />
             </div>
           </div>
 
@@ -96,7 +100,9 @@ const RCTCentre = () => {
                 >
                   <div className={`w-4 h-4 rounded-full ${rate.color}`} />
                   <div className="flex-1 text-left">
-                    <p className="font-semibold">{rate.rate} - {rate.label}</p>
+                    <p className="font-semibold">
+                      {rate.rate} - {rate.label}
+                    </p>
                     <p className="text-sm text-muted-foreground">{rate.description}</p>
                   </div>
                   {selectedRate === rate.rate && (
@@ -112,7 +118,7 @@ const RCTCentre = () => {
 
         <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 md:left-60">
           <div className="max-w-4xl mx-auto md:mx-0">
-            <Button 
+            <Button
               onClick={() => setView("dashboard")}
               className="w-full h-14 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-lg font-semibold"
             >
@@ -134,7 +140,7 @@ const RCTCentre = () => {
             <h1 className="font-semibold text-xl">RCT Centre</h1>
           </div>
           <div className="w-24 flex justify-end">
-            <Button 
+            <Button
               onClick={() => setView("add-contract")}
               size="sm"
               className="bg-foreground text-background hover:bg-foreground/90 rounded-lg"
@@ -149,16 +155,13 @@ const RCTCentre = () => {
         {/* RCT Rate Summary */}
         <div className="grid grid-cols-3 gap-3 animate-fade-in">
           {rctRates.map((rate, index) => (
-            <div 
-              key={rate.rate}
-              className={`rounded-2xl p-4 card-shadow ${index === 1 ? "bg-primary" : "bg-card"}`}
-            >
+            <div key={rate.rate} className={`rounded-2xl p-4 card-shadow ${index === 1 ? "bg-primary" : "bg-card"}`}>
               <div className={`w-8 h-8 rounded-full ${rate.color} flex items-center justify-center mb-2`}>
                 <span className="text-xs font-bold text-white">{rate.rate}</span>
               </div>
               <p className={`text-sm font-medium ${index === 1 ? "text-primary-foreground" : ""}`}>{rate.label}</p>
               <p className={`text-xs ${index === 1 ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                {contracts.filter(c => c.rate === rate.rate).length} contracts
+                {contracts.filter((c) => c.rate === rate.rate).length} contracts
               </p>
             </div>
           ))}
@@ -189,12 +192,15 @@ const RCTCentre = () => {
         </div>
 
         {/* Contracts List */}
-        <div className="bg-card rounded-2xl card-shadow overflow-hidden animate-fade-in" style={{ animationDelay: "0.15s" }}>
+        <div
+          className="bg-card rounded-2xl card-shadow overflow-hidden animate-fade-in"
+          style={{ animationDelay: "0.15s" }}
+        >
           <div className="px-4 py-3 border-b border-border">
             <h2 className="font-semibold">Contracts</h2>
           </div>
           {filteredContracts.map((contract, index) => (
-            <div 
+            <div
               key={contract.id}
               className={`p-4 flex items-center gap-4 ${index !== filteredContracts.length - 1 ? "border-b border-border" : ""}`}
             >
@@ -209,7 +215,9 @@ const RCTCentre = () => {
                 <p className="font-semibold">€{contract.amount.toLocaleString()}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs font-medium">{contract.rate}</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusColors[contract.status as keyof typeof statusColors]}`}>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${statusColors[contract.status as keyof typeof statusColors]}`}
+                  >
                     {contract.status}
                   </span>
                 </div>

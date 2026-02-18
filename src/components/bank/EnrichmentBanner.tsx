@@ -9,9 +9,7 @@ interface EnrichmentBannerProps {
 export default function EnrichmentBanner({ progress }: EnrichmentBannerProps) {
   if (!progress || (progress.isComplete && progress.total === 0)) return null;
 
-  const percentage = progress.total > 0
-    ? Math.round((progress.processed / progress.total) * 100)
-    : 0;
+  const percentage = progress.total > 0 ? Math.round((progress.processed / progress.total) * 100) : 0;
 
   return (
     <div className="flex items-center gap-3 rounded-lg border bg-muted/50 px-4 py-3 text-sm">
@@ -29,15 +27,12 @@ export default function EnrichmentBanner({ progress }: EnrichmentBannerProps) {
           </span>
         </div>
 
-        {!progress.isComplete && (
-          <Progress value={percentage} className="h-1.5" />
-        )}
+        {!progress.isComplete && <Progress value={percentage} className="h-1.5" />}
 
         <p className="text-xs text-muted-foreground mt-1">
           {progress.isComplete
             ? `${progress.enriched} enriched, ${progress.skipped} skipped, ${progress.failed} failed`
-            : `${progress.processed}/${progress.total} vendors processed`
-          }
+            : `${progress.processed}/${progress.total} vendors processed`}
         </p>
       </div>
     </div>

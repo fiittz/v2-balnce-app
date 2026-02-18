@@ -48,7 +48,7 @@ export function useActiveJobs() {
           queryClient.invalidateQueries({ queryKey: ["processing-jobs"] });
           queryClient.invalidateQueries({ queryKey: ["transactions"] });
           queryClient.invalidateQueries({ queryKey: ["unmatched-transactions"] });
-        }
+        },
       )
       .subscribe();
 
@@ -78,10 +78,9 @@ export function useCreateJob() {
       if (insertError) throw insertError;
 
       // Invoke the edge function
-      const { error: invokeError } = await supabase.functions.invoke(
-        "process-job-worker",
-        { body: { job_id: job.id } }
-      );
+      const { error: invokeError } = await supabase.functions.invoke("process-job-worker", {
+        body: { job_id: job.id },
+      });
 
       if (invokeError) {
         console.error("Failed to invoke worker:", invokeError);
@@ -106,11 +105,7 @@ export function useJobProgress(jobId: string | null) {
     queryKey: ["processing-jobs", "progress", jobId],
     queryFn: async () => {
       if (!jobId) return null;
-      const { data, error } = await supabase
-        .from("processing_jobs")
-        .select("*")
-        .eq("id", jobId)
-        .single();
+      const { data, error } = await supabase.from("processing_jobs").select("*").eq("id", jobId).single();
 
       if (error) throw error;
       return data as ProcessingJob;
@@ -134,12 +129,9 @@ export function useJobProgress(jobId: string | null) {
           filter: `id=eq.${jobId}`,
         },
         (payload) => {
-          queryClient.setQueryData(
-            ["processing-jobs", "progress", jobId],
-            payload.new
-          );
+          queryClient.setQueryData(["processing-jobs", "progress", jobId], payload.new);
           queryClient.invalidateQueries({ queryKey: ["processing-jobs", "active"] });
-        }
+        },
       )
       .subscribe();
 

@@ -18,7 +18,7 @@ export interface VATDeductibilityResult {
 export function isVATDeductible(
   description: string,
   categoryName?: string | null,
-  accountName?: string | null
+  accountName?: string | null,
 ): VATDeductibilityResult {
   const descLower = (description || "").toLowerCase();
   const catLower = (categoryName || "").toLowerCase();
@@ -28,41 +28,41 @@ export function isVATDeductible(
   // ── Section 60 keyword checks (description-based) ──
 
   // Section 60(2)(a)(i) - Food, drink, accommodation
-  if (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some(k => combined.includes(k))) {
+  if (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords.some((k) => combined.includes(k))) {
     return {
       isDeductible: false,
       reason: "Food, drink or accommodation - VAT NOT recoverable",
-      section: "Section 60(2)(a)(i)"
+      section: "Section 60(2)(a)(i)",
     };
   }
 
   // Section 60(2)(a)(iii) - Entertainment
-  if (DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some(k => combined.includes(k))) {
+  if (DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some((k) => combined.includes(k))) {
     return {
       isDeductible: false,
       reason: "Entertainment expense - VAT NOT recoverable",
-      section: "Section 60(2)(a)(iii)"
+      section: "Section 60(2)(a)(iii)",
     };
   }
 
   // Section 60(2)(a)(iv) - Passenger motor vehicles
-  if (DISALLOWED_VAT_CREDITS.PASSENGER_VEHICLES.keywords.some(k => combined.includes(k))) {
+  if (DISALLOWED_VAT_CREDITS.PASSENGER_VEHICLES.keywords.some((k) => combined.includes(k))) {
     return {
       isDeductible: false,
       reason: "Passenger vehicle purchase/hire - VAT NOT recoverable",
-      section: "Section 60(2)(a)(iv)"
+      section: "Section 60(2)(a)(iv)",
     };
   }
 
   // Section 60(2)(a)(v) - Petrol (but not diesel!)
-  const hasPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some(k => combined.includes(k));
-  const hasDiesel = ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => combined.includes(k));
+  const hasPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some((k) => combined.includes(k));
+  const hasDiesel = ALLOWED_VAT_CREDITS.DIESEL.keywords!.some((k) => combined.includes(k));
 
   if (hasPetrol && !hasDiesel) {
     return {
       isDeductible: false,
       reason: "Petrol - VAT NOT recoverable (diesel IS deductible)",
-      section: "Section 60(2)(a)(v)"
+      section: "Section 60(2)(a)(v)",
     };
   }
 
@@ -70,23 +70,23 @@ export function isVATDeductible(
   if (hasDiesel) {
     return {
       isDeductible: true,
-      reason: "Diesel fuel - VAT IS recoverable"
+      reason: "Diesel fuel - VAT IS recoverable",
     };
   }
 
   // Mixed fuel retailers without receipt - conservative approach
   const fuelStations = ["maxol", "circle k", "applegreen", "texaco", "esso", "shell", "topaz", "spar", "centra"];
-  if (fuelStations.some(f => combined.includes(f))) {
+  if (fuelStations.some((f) => combined.includes(f))) {
     if (combined.includes("diesel") || (combined.includes("fuel") && !combined.includes("petrol"))) {
       return {
         isDeductible: true,
-        reason: "Fuel purchase - categorized as deductible"
+        reason: "Fuel purchase - categorized as deductible",
       };
     }
     return {
       isDeductible: false,
       reason: "Mixed retailer - cannot claim VAT without receipt proving diesel",
-      section: "Section 60"
+      section: "Section 60",
     };
   }
 
@@ -95,7 +95,7 @@ export function isVATDeductible(
     return {
       isDeductible: false,
       reason: "Non-business expense - VAT NOT recoverable",
-      section: "Section 59"
+      section: "Section 59",
     };
   }
 
@@ -103,7 +103,7 @@ export function isVATDeductible(
   if (combined.includes("bank") && (combined.includes("fee") || combined.includes("charge"))) {
     return {
       isDeductible: false,
-      reason: "Bank charges — VAT exempt supply, VAT not recoverable"
+      reason: "Bank charges — VAT exempt supply, VAT not recoverable",
     };
   }
 
@@ -111,7 +111,7 @@ export function isVATDeductible(
   if (combined.includes("insurance") && !combined.includes("motor tax")) {
     return {
       isDeductible: false,
-      reason: "Insurance — VAT exempt supply, VAT not recoverable"
+      reason: "Insurance — VAT exempt supply, VAT not recoverable",
     };
   }
 
@@ -122,13 +122,17 @@ export function isVATDeductible(
     return {
       isDeductible: false,
       reason: "Meals & Entertainment — not an allowable tax deduction",
-      section: "Section 60(2)(a)(i)/(iii)"
+      section: "Section 60(2)(a)(i)/(iii)",
     };
   }
 
   // Fines & Penalties — never deductible for tax purposes
-  if (catLower.includes("fine") || catLower.includes("penalt") ||
-      /\bfines?\b/.test(descLower) || /\bpenalt(y|ies)\b/.test(descLower)) {
+  if (
+    catLower.includes("fine") ||
+    catLower.includes("penalt") ||
+    /\bfines?\b/.test(descLower) ||
+    /\bpenalt(y|ies)\b/.test(descLower)
+  ) {
     return {
       isDeductible: false,
       reason: "Fines & penalties are not allowable tax deductions",
@@ -146,7 +150,7 @@ export function isVATDeductible(
   // Default: assume deductible for business expenses
   return {
     isDeductible: true,
-    reason: "Business expense - VAT recoverable"
+    reason: "Business expense - VAT recoverable",
   };
 }
 
@@ -156,7 +160,7 @@ export function isVATDeductible(
  */
 export function calculateVATFromGross(
   grossAmount: number,
-  vatRateKey: string | number
+  vatRateKey: string | number,
 ): { netAmount: number; vatAmount: number } {
   const rates: Record<string, number> = {
     standard_23: 0.23,
@@ -164,7 +168,7 @@ export function calculateVATFromGross(
     second_reduced_9: 0.09,
     livestock_4_8: 0.048,
     zero_rated: 0,
-    exempt: 0
+    exempt: 0,
   };
 
   let rate: number;
@@ -174,14 +178,14 @@ export function calculateVATFromGross(
   } else {
     rate = rates[vatRateKey] ?? 0.23;
   }
-  
+
   if (rate === 0) {
     return { netAmount: grossAmount, vatAmount: 0 };
   }
 
-  const vatAmount = Number((grossAmount * rate / (1 + rate)).toFixed(2));
+  const vatAmount = Number(((grossAmount * rate) / (1 + rate)).toFixed(2));
   const netAmount = Number((grossAmount - vatAmount).toFixed(2));
-  
+
   return { netAmount, vatAmount };
 }
 
@@ -198,7 +202,7 @@ export function calculateVATFromGross(
  */
 export function isCTDeductible(
   description: string,
-  categoryName?: string | null
+  categoryName?: string | null,
 ): { isDeductible: boolean; reason: string } {
   const catLower = (categoryName || "").toLowerCase();
   const descLower = (description || "").toLowerCase();
@@ -209,8 +213,12 @@ export function isCTDeductible(
     return { isDeductible: false, reason: "Meals & Entertainment — not allowable for CT" };
   }
   // Fines & penalties
-  if (catLower.includes("fine") || catLower.includes("penalt") ||
-      /\bfines?\b/.test(descLower) || /\bpenalt(y|ies)\b/.test(descLower)) {
+  if (
+    catLower.includes("fine") ||
+    catLower.includes("penalt") ||
+    /\bfines?\b/.test(descLower) ||
+    /\bpenalt(y|ies)\b/.test(descLower)
+  ) {
     return { isDeductible: false, reason: "Fines & penalties — not allowable for CT" };
   }
   // Personal / non-business

@@ -114,10 +114,7 @@ describe("generateCT1Excel", () => {
 
   it("saves with CT1 filename pattern", async () => {
     await generateCT1Excel(makeCT1Data());
-    expect(mockSaveWorkbook).toHaveBeenCalledWith(
-      mockWorkbook,
-      "CT1_Test_Company_Ltd_2024.xlsx"
-    );
+    expect(mockSaveWorkbook).toHaveBeenCalledWith(mockWorkbook, "CT1_Test_Company_Ltd_2024.xlsx");
   });
 });
 
@@ -167,10 +164,7 @@ describe("generateForm11Excel", () => {
 
   it("saves with director name in filename", async () => {
     await generateForm11Excel(makeForm11Data());
-    expect(mockSaveWorkbook).toHaveBeenCalledWith(
-      mockWorkbook,
-      "Form11_Alice_Murphy_2024.xlsx"
-    );
+    expect(mockSaveWorkbook).toHaveBeenCalledWith(mockWorkbook, "Form11_Alice_Murphy_2024.xlsx");
   });
 });
 
@@ -211,10 +205,7 @@ describe("generateVATExcel", () => {
 
   it("saves with VAT filename pattern", async () => {
     await generateVATExcel(makeVATData());
-    expect(mockSaveWorkbook).toHaveBeenCalledWith(
-      mockWorkbook,
-      "VAT_Return_Test_Company_Ltd_2024.xlsx"
-    );
+    expect(mockSaveWorkbook).toHaveBeenCalledWith(mockWorkbook, "VAT_Return_Test_Company_Ltd_2024.xlsx");
   });
 });
 
@@ -255,10 +246,7 @@ describe("generateBalanceSheetExcel", () => {
 
   it("saves with Balance Sheet filename pattern", async () => {
     await generateBalanceSheetExcel(makeBSData());
-    expect(mockSaveWorkbook).toHaveBeenCalledWith(
-      mockWorkbook,
-      "Balance_Sheet_Test_Company_Ltd_2024.xlsx"
-    );
+    expect(mockSaveWorkbook).toHaveBeenCalledWith(mockWorkbook, "Balance_Sheet_Test_Company_Ltd_2024.xlsx");
   });
 });
 
@@ -309,9 +297,6 @@ describe("generateAbridgedAccountsExcel", () => {
 
   it("saves with Abridged Accounts filename pattern", async () => {
     await generateAbridgedAccountsExcel(makeAbridgedData());
-    expect(mockSaveWorkbook).toHaveBeenCalledWith(
-      mockWorkbook,
-      "Abridged_Accounts_Test_Company_Ltd_2024.xlsx"
-    );
+    expect(mockSaveWorkbook).toHaveBeenCalledWith(mockWorkbook, "Abridged_Accounts_Test_Company_Ltd_2024.xlsx");
   });
 });

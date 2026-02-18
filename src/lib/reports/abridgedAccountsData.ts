@@ -31,7 +31,7 @@ export interface AbridgedAccountsInput {
 
 export function assembleAbridgedAccountsData(
   input: AbridgedAccountsInput,
-  meta: ReportMeta
+  meta: ReportMeta,
 ): AbridgedAccountsReportData {
   const sections: ReportSection[] = [];
 
@@ -84,7 +84,7 @@ export function assembleAbridgedAccountsData(
         label: "Basis of Preparation",
         value:
           "These financial statements have been prepared in accordance with FRS 102 " +
-          "\"The Financial Reporting Standard applicable in the UK and Republic of Ireland\" " +
+          '"The Financial Reporting Standard applicable in the UK and Republic of Ireland" ' +
           "(Section 1A — Small Entities) and the Companies Act 2014.",
       },
       {
@@ -121,11 +121,9 @@ export function assembleAbridgedAccountsData(
   // ── 4. Abridged Balance Sheet (Schedule 3A) ─────────────
   const fixedAssets = input.fixedAssetsTangible;
 
-  const currentAssets =
-    input.stock + input.wip + input.debtors + input.prepayments + input.cashAtBank;
+  const currentAssets = input.stock + input.wip + input.debtors + input.prepayments + input.cashAtBank;
 
-  const currentLiabilities =
-    input.creditors + input.accruals + input.taxation;
+  const currentLiabilities = input.creditors + input.accruals + input.taxation;
 
   const netCurrentAssets = currentAssets - currentLiabilities;
 
@@ -145,9 +143,7 @@ export function assembleAbridgedAccountsData(
       { label: "", value: "" },
       { label: "CURRENT ASSETS", value: "" },
       { label: "  Stocks", value: fmtEuro(input.stock) },
-      ...(input.wip > 0
-        ? [{ label: "  Work-in-progress", value: fmtEuro(input.wip) }]
-        : []),
+      ...(input.wip > 0 ? [{ label: "  Work-in-progress", value: fmtEuro(input.wip) }] : []),
       { label: "  Debtors", value: fmtEuro(input.debtors) },
       ...(input.prepayments > 0
         ? [{ label: "  Prepayments and accrued income", value: fmtEuro(input.prepayments) }]
@@ -157,12 +153,8 @@ export function assembleAbridgedAccountsData(
       { label: "", value: "" },
       { label: "CREDITORS: amounts falling due within one year", value: "" },
       { label: "  Trade creditors", value: fmtEuro(input.creditors) },
-      ...(input.accruals > 0
-        ? [{ label: "  Accruals and deferred income", value: fmtEuro(input.accruals) }]
-        : []),
-      ...(input.taxation > 0
-        ? [{ label: "  Taxation", value: fmtEuro(input.taxation) }]
-        : []),
+      ...(input.accruals > 0 ? [{ label: "  Accruals and deferred income", value: fmtEuro(input.accruals) }] : []),
+      ...(input.taxation > 0 ? [{ label: "  Taxation", value: fmtEuro(input.taxation) }] : []),
       { label: "  Total Current Liabilities", value: `(${fmtEuro(currentLiabilities)})` },
       { label: "", value: "" },
       { label: "NET CURRENT ASSETS / (LIABILITIES)", value: fmtEuro(netCurrentAssets) },
@@ -172,14 +164,14 @@ export function assembleAbridgedAccountsData(
         ? [
             { label: "", value: "" },
             { label: "CREDITORS: amounts falling due after more than one year", value: "" },
-            ...(input.bankLoans > 0
-              ? [{ label: "  Bank loans", value: fmtEuro(input.bankLoans) }]
-              : []),
+            ...(input.bankLoans > 0 ? [{ label: "  Bank loans", value: fmtEuro(input.bankLoans) }] : []),
             ...(input.directorsLoans > 0
-              ? [{
-                  label: `  Directors' loan${input.directorsLoanDirection === "from_company" ? " (due from company)" : ""}`,
-                  value: fmtEuro(input.directorsLoans),
-                }]
+              ? [
+                  {
+                    label: `  Directors' loan${input.directorsLoanDirection === "from_company" ? " (due from company)" : ""}`,
+                    value: fmtEuro(input.directorsLoans),
+                  },
+                ]
               : []),
             { label: "  Total Long-term Liabilities", value: `(${fmtEuro(longTermLiabilities)})` },
           ]

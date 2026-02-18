@@ -4,49 +4,24 @@ import AppLayout from "@/components/layout/AppLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAccounts, useCreateAccount, useUpdateAccount } from "@/hooks/useAccounts";
 import type { Account } from "@/hooks/useAccounts";
 import { toast } from "sonner";
 
-const ACCOUNT_TYPES = [
-  "bank",
-  "expense",
-  "income",
-  "asset",
-  "liability",
-  "equity",
-];
+const ACCOUNT_TYPES = ["bank", "expense", "income", "asset", "liability", "equity"];
 
 const TYPE_COLORS: Record<string, string> = {
-  "bank": "bg-blue-500/10 text-blue-600 border-blue-500/20",
-  "income": "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
-  "expense": "bg-red-500/10 text-red-600 border-red-500/20",
-  "asset": "bg-purple-500/10 text-purple-600 border-purple-500/20",
-  "liability": "bg-pink-500/10 text-pink-600 border-pink-500/20",
-  "equity": "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
+  bank: "bg-blue-500/10 text-blue-600 border-blue-500/20",
+  income: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+  expense: "bg-red-500/10 text-red-600 border-red-500/20",
+  asset: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+  liability: "bg-pink-500/10 text-pink-600 border-pink-500/20",
+  equity: "bg-indigo-500/10 text-indigo-600 border-indigo-500/20",
 };
 
 interface AccountFormData {
@@ -85,12 +60,15 @@ const ChartOfAccounts = () => {
       return matchesSearch && matchesType;
     });
 
-    return filtered.reduce((groups, account) => {
-      const type = account.account_type;
-      if (!groups[type]) groups[type] = [];
-      groups[type].push(account);
-      return groups;
-    }, {} as Record<string, Account[]>);
+    return filtered.reduce(
+      (groups, account) => {
+        const type = account.account_type;
+        if (!groups[type]) groups[type] = [];
+        groups[type].push(account);
+        return groups;
+      },
+      {} as Record<string, Account[]>,
+    );
   }, [accounts, searchQuery, typeFilter]);
 
   const toggleType = (type: string) => {
@@ -161,9 +139,7 @@ const ChartOfAccounts = () => {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Chart of Accounts</h1>
-            <p className="text-muted-foreground">
-              Manage your income, expense, and balance sheet accounts
-            </p>
+            <p className="text-muted-foreground">Manage your income, expense, and balance sheet accounts</p>
           </div>
           <Button onClick={openAddModal} className="gap-2">
             <Plus className="h-4 w-4" />
@@ -222,9 +198,7 @@ const ChartOfAccounts = () => {
                     <Badge variant="outline" className={TYPE_COLORS[type] || "bg-muted"}>
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      ({filteredAndGrouped[type].length} accounts)
-                    </span>
+                    <span className="text-sm text-muted-foreground">({filteredAndGrouped[type].length} accounts)</span>
                   </button>
 
                   {/* Group Content */}

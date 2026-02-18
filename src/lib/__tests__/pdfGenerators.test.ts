@@ -121,7 +121,7 @@ describe("generateCT1Pdf", () => {
     expect(mockAddHeader).toHaveBeenCalledWith(
       mockDoc,
       expect.objectContaining({ companyName: "Test Company Ltd" }),
-      "CT1 \u2014 Corporation Tax Return"
+      "CT1 \u2014 Corporation Tax Return",
     );
   });
 
@@ -145,10 +145,7 @@ describe("generateCT1Pdf", () => {
 
   it("calls savePdf with CT1 filename pattern", () => {
     generateCT1Pdf(makeCT1Data());
-    expect(mockSavePdf).toHaveBeenCalledWith(
-      mockDoc,
-      "CT1_Test_Company_Ltd_2024.pdf"
-    );
+    expect(mockSavePdf).toHaveBeenCalledWith(mockDoc, "CT1_Test_Company_Ltd_2024.pdf");
   });
 });
 
@@ -195,11 +192,7 @@ describe("generateForm11Pdf", () => {
 
   it("calls addHeader with Form 11 title", () => {
     generateForm11Pdf(makeForm11Data());
-    expect(mockAddHeader).toHaveBeenCalledWith(
-      mockDoc,
-      expect.anything(),
-      "Form 11 \u2014 Income Tax Return"
-    );
+    expect(mockAddHeader).toHaveBeenCalledWith(mockDoc, expect.anything(), "Form 11 \u2014 Income Tax Return");
   });
 
   it("calls addSection for each section", () => {
@@ -214,10 +207,7 @@ describe("generateForm11Pdf", () => {
 
   it("saves with director name in filename", () => {
     generateForm11Pdf(makeForm11Data());
-    expect(mockSavePdf).toHaveBeenCalledWith(
-      mockDoc,
-      "Form11_Alice_Murphy_2024.pdf"
-    );
+    expect(mockSavePdf).toHaveBeenCalledWith(mockDoc, "Form11_Alice_Murphy_2024.pdf");
   });
 });
 
@@ -259,7 +249,7 @@ describe("generateVATPdf", () => {
     expect(mockAddSection).toHaveBeenCalledWith(
       mockDoc,
       expect.objectContaining({ title: "Registration Information" }),
-      expect.any(Number)
+      expect.any(Number),
     );
   });
 
@@ -275,10 +265,7 @@ describe("generateVATPdf", () => {
 
   it("saves with VAT filename pattern", () => {
     generateVATPdf(makeVATData());
-    expect(mockSavePdf).toHaveBeenCalledWith(
-      mockDoc,
-      "VAT_Return_Test_Company_Ltd_2024.pdf"
-    );
+    expect(mockSavePdf).toHaveBeenCalledWith(mockDoc, "VAT_Return_Test_Company_Ltd_2024.pdf");
   });
 });
 
@@ -324,10 +311,7 @@ describe("generateBalanceSheetPdf", () => {
 
   it("saves with Balance Sheet filename pattern", () => {
     generateBalanceSheetPdf(makeBSData());
-    expect(mockSavePdf).toHaveBeenCalledWith(
-      mockDoc,
-      "Balance_Sheet_Test_Company_Ltd_2024.pdf"
-    );
+    expect(mockSavePdf).toHaveBeenCalledWith(mockDoc, "Balance_Sheet_Test_Company_Ltd_2024.pdf");
   });
 });
 
@@ -379,15 +363,12 @@ describe("generateAbridgedAccountsPdf", () => {
     expect(mockAddSection).toHaveBeenCalledWith(
       mockDoc,
       expect.objectContaining({ title: "Abridged Balance Sheet" }),
-      expect.any(Number)
+      expect.any(Number),
     );
   });
 
   it("saves with Abridged Accounts filename pattern", () => {
     generateAbridgedAccountsPdf(makeAbridgedData());
-    expect(mockSavePdf).toHaveBeenCalledWith(
-      mockDoc,
-      "Abridged_Accounts_Test_Company_Ltd_2024.pdf"
-    );
+    expect(mockSavePdf).toHaveBeenCalledWith(mockDoc, "Abridged_Accounts_Test_Company_Ltd_2024.pdf");
   });
 });

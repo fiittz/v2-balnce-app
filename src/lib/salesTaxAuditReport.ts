@@ -103,7 +103,7 @@ function calculateVatFromTotal(total: number, vatRateKey: string): { net: number
   if (!config || config.rate === 0) {
     return { net: total, vat: 0 };
   }
-  const vat = Number((total * config.rate / (1 + config.rate)).toFixed(2));
+  const vat = Number(((total * config.rate) / (1 + config.rate)).toFixed(2));
   const net = Number((total - vat).toFixed(2));
   return { net, vat };
 }
@@ -114,10 +114,10 @@ export function generateSalesTaxAuditReport(
   periodEnd: Date,
   transactions: Transaction[],
   expenses: Expense[],
-  invoices: Invoice[]
+  invoices: Invoice[],
 ): SalesTaxAuditReport {
   const sections: AuditSection[] = [];
-  
+
   // Group by VAT rate and type
   const purchasesByRate: Record<string, AuditLineItem[]> = {};
   const salesByRate: Record<string, AuditLineItem[]> = {};
@@ -126,14 +126,14 @@ export function generateSalesTaxAuditReport(
   for (const expense of expenses) {
     const vatRateKey = expense.vat_rate || "standard_23";
     const rateConfig = VAT_RATE_CONFIG[vatRateKey] || VAT_RATE_CONFIG.standard_23;
-    
+
     if (!purchasesByRate[vatRateKey]) {
       purchasesByRate[vatRateKey] = [];
     }
 
     const categoryName = expense.category?.name || "Uncategorized";
     const supplierName = expense.supplier?.name || "";
-    const details = expense.description 
+    const details = expense.description
       ? `${supplierName}${supplierName ? " - " : ""}${expense.description}`
       : supplierName || "Purchase";
 
@@ -149,7 +149,7 @@ export function generateSalesTaxAuditReport(
   }
 
   // Process transactions that are expenses (applying Section 59/60 deductibility rules)
-  const expenseTransactions = transactions.filter(t => t.type === "expense");
+  const expenseTransactions = transactions.filter((t) => t.type === "expense");
   for (const txn of expenseTransactions) {
     // Skip non-business expenses
     if (txn.is_business_expense === false) {
@@ -159,22 +159,23 @@ export function generateSalesTaxAuditReport(
     const vatRateKey = txn.vat_rate || "standard_23";
     const categoryName = txn.category?.name || null;
     const accountName = txn.account?.name || null;
-    
+
     // Apply Section 59/60 deductibility check
     const deductibility = isVATDeductible(txn.description, categoryName, accountName);
-    
+
     // Skip non-deductible transactions for VAT purposes
     if (!deductibility.isDeductible) {
       continue;
     }
-    
+
     if (!purchasesByRate[vatRateKey]) {
       purchasesByRate[vatRateKey] = [];
     }
 
-    const { net, vat } = txn.net_amount && txn.vat_amount 
-      ? { net: txn.net_amount, vat: txn.vat_amount }
-      : calculateVatFromTotal(txn.amount, vatRateKey);
+    const { net, vat } =
+      txn.net_amount && txn.vat_amount
+        ? { net: txn.net_amount, vat: txn.vat_amount }
+        : calculateVatFromTotal(txn.amount, vatRateKey);
 
     purchasesByRate[vatRateKey].push({
       date: formatDate(txn.transaction_date),
@@ -191,7 +192,7 @@ export function generateSalesTaxAuditReport(
   for (const invoice of invoices) {
     // Try to determine VAT rate from items or default to 13.5% for trades
     let primaryVatRate = "reduced_13_5"; // Default for trades/construction
-    
+
     if (invoice.items && invoice.items.length > 0) {
       // Use the VAT rate from the first item or most common
       primaryVatRate = invoice.items[0].vat_rate || "reduced_13_5";
@@ -207,7 +208,7 @@ export function generateSalesTaxAuditReport(
     }
 
     const customerName = invoice.customer?.name || "";
-    const itemDescriptions = invoice.items?.map(i => i.description).join("; ") || "";
+    const itemDescriptions = invoice.items?.map((i) => i.description).join("; ") || "";
     const details = `${customerName}${customerName && itemDescriptions ? " - " : ""}${itemDescriptions}`.slice(0, 100);
 
     salesByRate[primaryVatRate].push({
@@ -222,17 +223,18 @@ export function generateSalesTaxAuditReport(
   }
 
   // Process income transactions
-  const incomeTransactions = transactions.filter(t => t.type === "income");
+  const incomeTransactions = transactions.filter((t) => t.type === "income");
   for (const txn of incomeTransactions) {
     const vatRateKey = txn.vat_rate || "zero_rated"; // Default income to zero-rated (subcontractor)
-    
+
     if (!salesByRate[vatRateKey]) {
       salesByRate[vatRateKey] = [];
     }
 
-    const { net, vat } = txn.net_amount && txn.vat_amount 
-      ? { net: txn.net_amount, vat: txn.vat_amount }
-      : calculateVatFromTotal(txn.amount, vatRateKey);
+    const { net, vat } =
+      txn.net_amount && txn.vat_amount
+        ? { net: txn.net_amount, vat: txn.vat_amount }
+        : calculateVatFromTotal(txn.amount, vatRateKey);
 
     const categoryName = txn.category?.name || "Sales";
 
@@ -263,7 +265,11 @@ export function generateSalesTaxAuditReport(
         title: `Purchases ${rateConfig.display} (${rateConfig.display})`,
         vatRate: rate,
         type: "purchases",
-        items: items.sort((a, b) => new Date(a.date.split("/").reverse().join("-")).getTime() - new Date(b.date.split("/").reverse().join("-")).getTime()),
+        items: items.sort(
+          (a, b) =>
+            new Date(a.date.split("/").reverse().join("-")).getTime() -
+            new Date(b.date.split("/").reverse().join("-")).getTime(),
+        ),
         totalGross: Number(totalGross.toFixed(2)),
         totalTax: Number(totalTax.toFixed(2)),
         totalNet: Number(totalNet.toFixed(2)),
@@ -284,7 +290,11 @@ export function generateSalesTaxAuditReport(
         title: `Sales ${rateConfig.display} (${rateConfig.display})`,
         vatRate: rate,
         type: "sales",
-        items: items.sort((a, b) => new Date(a.date.split("/").reverse().join("-")).getTime() - new Date(b.date.split("/").reverse().join("-")).getTime()),
+        items: items.sort(
+          (a, b) =>
+            new Date(a.date.split("/").reverse().join("-")).getTime() -
+            new Date(b.date.split("/").reverse().join("-")).getTime(),
+        ),
         totalGross: Number(totalGross.toFixed(2)),
         totalTax: Number(totalTax.toFixed(2)),
         totalNet: Number(totalNet.toFixed(2)),
@@ -293,8 +303,8 @@ export function generateSalesTaxAuditReport(
   }
 
   // Calculate grand totals
-  const salesSections = sections.filter(s => s.type === "sales");
-  const purchaseSections = sections.filter(s => s.type === "purchases");
+  const salesSections = sections.filter((s) => s.type === "sales");
+  const purchaseSections = sections.filter((s) => s.type === "purchases");
 
   const grandTotalSalesGross = salesSections.reduce((sum, s) => sum + s.totalGross, 0);
   const grandTotalSalesTax = salesSections.reduce((sum, s) => sum + s.totalTax, 0);
@@ -341,37 +351,45 @@ export function exportToCSV(report: SalesTaxAuditReport): string {
   // Sections
   for (const section of report.sections) {
     lines.push(section.title);
-    
+
     for (const item of section.items) {
       const escapedDetails = `"${item.details.replace(/"/g, '""')}"`;
-      lines.push([
-        item.date,
-        item.account,
-        item.reference,
-        escapedDetails,
-        formatCurrency(item.gross),
-        formatCurrency(item.tax),
-        formatCurrency(item.net),
-      ].join(","));
+      lines.push(
+        [
+          item.date,
+          item.account,
+          item.reference,
+          escapedDetails,
+          formatCurrency(item.gross),
+          formatCurrency(item.tax),
+          formatCurrency(item.net),
+        ].join(","),
+      );
     }
-    
-    lines.push([
-      `Total ${section.title}`,
-      "",
-      "",
-      "",
-      formatCurrency(section.totalGross),
-      formatCurrency(section.totalTax),
-      formatCurrency(section.totalNet),
-    ].join(","));
+
+    lines.push(
+      [
+        `Total ${section.title}`,
+        "",
+        "",
+        "",
+        formatCurrency(section.totalGross),
+        formatCurrency(section.totalTax),
+        formatCurrency(section.totalNet),
+      ].join(","),
+    );
     lines.push("");
   }
 
   // Summary
   lines.push("");
   lines.push("SUMMARY");
-  lines.push(`Total Sales,,,${formatCurrency(report.grandTotalSalesGross)},${formatCurrency(report.grandTotalSalesTax)},${formatCurrency(report.grandTotalSalesNet)}`);
-  lines.push(`Total Purchases,,,${formatCurrency(report.grandTotalPurchasesGross)},${formatCurrency(report.grandTotalPurchasesTax)},${formatCurrency(report.grandTotalPurchasesNet)}`);
+  lines.push(
+    `Total Sales,,,${formatCurrency(report.grandTotalSalesGross)},${formatCurrency(report.grandTotalSalesTax)},${formatCurrency(report.grandTotalSalesNet)}`,
+  );
+  lines.push(
+    `Total Purchases,,,${formatCurrency(report.grandTotalPurchasesGross)},${formatCurrency(report.grandTotalPurchasesTax)},${formatCurrency(report.grandTotalPurchasesNet)}`,
+  );
   lines.push("");
   lines.push(`Net VAT Payable,,,,,${formatCurrency(report.netVatPayable)}`);
 
@@ -386,7 +404,11 @@ export function downloadCSV(report: SalesTaxAuditReport, filename?: string): voi
   const url = URL.createObjectURL(blob);
 
   link.setAttribute("href", url);
-  link.setAttribute("download", filename || `Sales_Tax_Audit_Report_${report.periodStart.replace(/ /g, "_")}_to_${report.periodEnd.replace(/ /g, "_")}.csv`);
+  link.setAttribute(
+    "download",
+    filename ||
+      `Sales_Tax_Audit_Report_${report.periodStart.replace(/ /g, "_")}_to_${report.periodEnd.replace(/ /g, "_")}.csv`,
+  );
   link.style.visibility = "hidden";
 
   document.body.appendChild(link);

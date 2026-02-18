@@ -40,9 +40,7 @@ class ErrorBoundary extends Component<Props, State> {
           <div className="max-w-md w-full text-center space-y-4">
             <AlertTriangle className="w-12 h-12 text-destructive mx-auto" />
             <h1 className="text-xl font-semibold">Something went wrong</h1>
-            <p className="text-sm text-muted-foreground">
-              An unexpected error occurred. Please try again.
-            </p>
+            <p className="text-sm text-muted-foreground">An unexpected error occurred. Please try again.</p>
             {import.meta.env.DEV && this.state.error?.stack && (
               <pre className="text-xs text-left bg-muted p-3 rounded-lg overflow-auto max-h-48 whitespace-pre-wrap">
                 {this.state.error.stack}

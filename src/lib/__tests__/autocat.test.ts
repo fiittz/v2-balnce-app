@@ -9,10 +9,7 @@ import {
 import type { VendorCacheEntry } from "@/services/vendorCacheService";
 
 // ── Helper: build a minimal expense transaction ─────────────
-function expense(
-  description: string,
-  overrides: Partial<TransactionInput> = {}
-): TransactionInput {
+function expense(description: string, overrides: Partial<TransactionInput> = {}): TransactionInput {
   return {
     amount: -50,
     date: "2024-06-15",
@@ -25,10 +22,7 @@ function expense(
   };
 }
 
-function income(
-  description: string,
-  overrides: Partial<TransactionInput> = {}
-): TransactionInput {
+function income(description: string, overrides: Partial<TransactionInput> = {}): TransactionInput {
   return {
     amount: 500,
     date: "2024-06-15",
@@ -187,9 +181,7 @@ describe("autoCategorise — trade supplies", () => {
   });
 
   it("boosts confidence to 95% for Chadwicks + construction user", () => {
-    const result = autoCategorise(
-      expense("CHADWICKS DUBLIN", { user_industry: "construction" })
-    );
+    const result = autoCategorise(expense("CHADWICKS DUBLIN", { user_industry: "construction" }));
     expect(result.confidence_score).toBe(95);
     expect(result.is_business_expense).toBe(true);
   });
@@ -199,7 +191,7 @@ describe("autoCategorise — trade supplies", () => {
       expense("POS SCREWFIX IRELAND", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.confidence_score).toBe(65);
     expect(result.is_business_expense).toBeNull(); // uncertain
@@ -472,9 +464,7 @@ describe("autoCategorise — workwear", () => {
 // ══════════════════════════════════════════════════════════════
 describe("autoCategorise — income", () => {
   it("identifies RCT income from company (construction user)", () => {
-    const result = autoCategorise(
-      income("FROM CARACON LTD PAYMENT", { user_industry: "construction" })
-    );
+    const result = autoCategorise(income("FROM CARACON LTD PAYMENT", { user_industry: "construction" }));
     expect(result.category).toBe("RCT");
     expect(result.vat_type).toBe("Reverse Charge");
     expect(result.is_business_expense).toBe(true);
@@ -521,35 +511,27 @@ describe("autoCategorise — payment to individual", () => {
 // ══════════════════════════════════════════════════════════════
 describe("autoCategorise — receipt refinement", () => {
   it("upgrades to diesel + VAT deductible when receipt says diesel", () => {
-    const result = autoCategorise(
-      expense("CIRCLE K BLANCHARDSTOWN", { receipt_text: "Diesel 40L" })
-    );
+    const result = autoCategorise(expense("CIRCLE K BLANCHARDSTOWN", { receipt_text: "Diesel 40L" }));
     expect(result.category).toBe("Motor Vehicle Expenses");
     expect(result.vat_deductible).toBe(true);
     expect(result.notes).toContain("DIESEL");
   });
 
   it("confirms petrol as not deductible when receipt says petrol", () => {
-    const result = autoCategorise(
-      expense("MAXOL STATION", { receipt_text: "Unleaded petrol 35L" })
-    );
+    const result = autoCategorise(expense("MAXOL STATION", { receipt_text: "Unleaded petrol 35L" }));
     expect(result.category).toBe("Motor Vehicle Expenses");
     expect(result.vat_deductible).toBe(false);
     expect(result.notes).toContain("PETROL");
   });
 
   it("confirms materials when receipt mentions timber", () => {
-    const result = autoCategorise(
-      expense("WOODIES DIY", { receipt_text: "Timber planks x3, plywood sheets" })
-    );
+    const result = autoCategorise(expense("WOODIES DIY", { receipt_text: "Timber planks x3, plywood sheets" }));
     expect(result.category).toBe("Materials");
     expect(result.vat_deductible).toBe(true);
   });
 
   it("confirms tools when receipt mentions drill", () => {
-    const result = autoCategorise(
-      expense("SCREWFIX IRELAND", { receipt_text: "Makita drill, saw blade" })
-    );
+    const result = autoCategorise(expense("SCREWFIX IRELAND", { receipt_text: "Makita drill, saw blade" }));
     expect(result.category).toBe("Tools");
     expect(result.vat_deductible).toBe(true);
   });
@@ -606,7 +588,7 @@ describe("autoCategorise — confidence and review flags", () => {
       expense("SCREWFIX PURCHASE", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.confidence_score).toBeLessThan(70);
     expect(result.needs_review).toBe(true);
@@ -618,16 +600,12 @@ describe("autoCategorise — confidence and review flags", () => {
 // ══════════════════════════════════════════════════════════════
 describe("autoCategorise — directors_personal_tax account", () => {
   it("flags looks_like_business_expense for business category on personal account", () => {
-    const result = autoCategorise(
-      expense("SCREWFIX IRELAND", { account_type: "directors_personal_tax" })
-    );
+    const result = autoCategorise(expense("SCREWFIX IRELAND", { account_type: "directors_personal_tax" }));
     expect(result.looks_like_business_expense).toBe(true);
   });
 
   it("does not flag looks_like_business for non-business category on personal account", () => {
-    const result = autoCategorise(
-      expense("RANDOM UNKNOWN VENDOR XYZ123", { account_type: "directors_personal_tax" })
-    );
+    const result = autoCategorise(expense("RANDOM UNKNOWN VENDOR XYZ123", { account_type: "directors_personal_tax" }));
     // "other" category does not match BUSINESS_INDICATOR_CATEGORIES
     expect(result.looks_like_business_expense).toBeUndefined();
   });
@@ -640,9 +618,7 @@ describe("autoCategorise — trade user industry-specific detection", () => {
   it("returns null for unknown description even for construction industry user", () => {
     // "GENERIC MATERIAL SUPPLY" doesn't match any merchant patterns or keyword rules,
     // so it falls through to the unknown path with is_business_expense = null
-    const result = autoCategorise(
-      expense("GENERIC MATERIAL SUPPLY", { user_industry: "construction" })
-    );
+    const result = autoCategorise(expense("GENERIC MATERIAL SUPPLY", { user_industry: "construction" }));
     expect(result.category).toBe("other");
     expect(result.is_business_expense).toBeNull();
     expect(result.needs_review).toBe(true);
@@ -650,9 +626,7 @@ describe("autoCategorise — trade user industry-specific detection", () => {
 
   it("detects business expense when trade supplier matches for trade user", () => {
     // CHADWICKS is a known trade supplier → Materials category → business expense
-    const result = autoCategorise(
-      expense("CHADWICKS BUILDING SUPPLIES", { user_industry: "construction" })
-    );
+    const result = autoCategorise(expense("CHADWICKS BUILDING SUPPLIES", { user_industry: "construction" }));
     expect(result.category).toBe("Materials");
     expect(result.is_business_expense).toBe(true);
     expect(result.confidence_score).toBeGreaterThanOrEqual(90);
@@ -729,9 +703,7 @@ describe("findMatchingCategory — account_type filtering", () => {
 
   it("fallback path: exact match in all categories when filtered set has no match", () => {
     // "Materials & Supplies" is exact match but account_type business — excluded for personal
-    const catsWithExact = [
-      { name: "Materials & Supplies", type: "expense", account_type: "business" },
-    ];
+    const catsWithExact = [{ name: "Materials & Supplies", type: "expense", account_type: "business" }];
     const result = findMatchingCategory("Materials & Supplies", catsWithExact, "expense", "directors_personal_tax");
     // Personal filter excludes it, but fallback tries all categories and finds exact match
     expect(result).not.toBeNull();
@@ -740,9 +712,7 @@ describe("findMatchingCategory — account_type filtering", () => {
 
   it("fallback path: mapped match in all categories when filtered set has no match", () => {
     // "Materials" maps to ["Timber & Sheet Materials", ...] — all are business only
-    const catsForFallback = [
-      { name: "Timber & Sheet Materials", type: "expense", account_type: "business" },
-    ];
+    const catsForFallback = [{ name: "Timber & Sheet Materials", type: "expense", account_type: "business" }];
     const result = findMatchingCategory("Materials", catsForFallback, "expense", "directors_personal_tax");
     // Personal filter excludes it, but fallback tries all categories via mapping
     expect(result).not.toBeNull();
@@ -813,7 +783,7 @@ describe("autoCategorise — income: industry-specific purposes", () => {
       income("CLIENT PAYMENT RECEIVED", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.category).toBe("Sales");
     expect(result.business_purpose).toContain("professional services");
@@ -825,7 +795,7 @@ describe("autoCategorise — income: industry-specific purposes", () => {
       income("CUSTOMER PAYMENT RECEIVED", {
         user_industry: "retail",
         user_business_type: "Sole Trader",
-      })
+      }),
     );
     expect(result.category).toBe("Sales");
     expect(result.business_purpose).toContain("product sales");
@@ -838,7 +808,7 @@ describe("autoCategorise — income: industry-specific purposes", () => {
       income("MISC INFLOW ABC123", {
         user_industry: "retail",
         user_business_type: "Sole Trader",
-      })
+      }),
     );
     expect(result.category).toBe("Sales");
     expect(result.business_purpose).toContain("Income received");
@@ -851,7 +821,7 @@ describe("autoCategorise — income: industry-specific purposes", () => {
       income("PAYMENT FROM PRIVATE CLIENT", {
         user_industry: "construction",
         user_business_type: "Sole Trader",
-      })
+      }),
     );
     // "from" triggers isFromCompany AND userInConstruction => RCT
     expect(result.category).toBe("RCT");
@@ -868,7 +838,7 @@ describe("autoCategorise — income: generic income with no pattern", () => {
       income("MISC INFLOW ABC123", {
         user_industry: "technology_it",
         user_business_type: "LTD",
-      })
+      }),
     );
     expect(result.category).toBe("Sales");
     expect(result.business_purpose).toContain("Income received");
@@ -1028,7 +998,7 @@ describe("autoCategorise — tech supplier + tech user", () => {
       expense("AWS SUBSCRIPTION CHARGE", {
         user_industry: "technology_it",
         user_business_type: "LTD",
-      })
+      }),
     );
     expect(result.category).toBe("Cloud Hosting");
     expect(result.confidence_score).toBe(95);
@@ -1042,7 +1012,7 @@ describe("autoCategorise — tech supplier + tech user", () => {
       expense("STRIPE PAYMENTS FEE", {
         user_industry: "technology_it",
         user_business_type: "LTD",
-      })
+      }),
     );
     expect(result.category).toBe("Payment Processing");
     expect(result.confidence_score).toBe(95);
@@ -1056,7 +1026,7 @@ describe("autoCategorise — tech supplier + tech user", () => {
       expense("GITHUB SUBSCRIPTION", {
         user_industry: "construction",
         user_business_type: "Contractor",
-      })
+      }),
     );
     expect(result.confidence_score).toBe(75);
     expect(result.is_business_expense).toBe(true); // Most businesses use SaaS
@@ -1069,7 +1039,7 @@ describe("autoCategorise — tech supplier + tech user", () => {
         user_industry: "technology_it",
         user_business_type: "LTD",
         user_business_description: "SaaS platform for accounting",
-      })
+      }),
     );
     expect(result.confidence_score).toBe(95);
     expect(result.business_purpose).toContain("SaaS platform for accounting");
@@ -1081,7 +1051,7 @@ describe("autoCategorise — tech supplier + tech user", () => {
         user_industry: "construction",
         user_business_type: "Contractor",
         user_business_description: "Commercial building contractor",
-      })
+      }),
     );
     expect(result.business_purpose).toContain("construction");
     expect(result.business_purpose).toContain("Commercial building contractor");
@@ -1098,7 +1068,7 @@ describe("autoCategorise — merchant match default branch", () => {
       expense("FREENOW TAXI SERVICE", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.category).toBe("Motor/travel");
     // Motor/travel is in businessCategories -> is_business_expense = true
@@ -1120,7 +1090,7 @@ describe("autoCategorise — merchant match default branch", () => {
       expense("TROCAIRE ANNUAL DONATION", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.category).toBe("other");
     expect(result.vat_deductible).toBe(false);
@@ -1140,7 +1110,7 @@ describe("autoCategorise — merchant match default branch", () => {
       expense("SHELL ACCOUNTING SERVICES", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.category).toBe("Consulting & Accounting");
     // VAT deductible should be overridden to false by Irish rules
@@ -1152,7 +1122,7 @@ describe("autoCategorise — merchant match default branch", () => {
       expense("HARVEY NORMAN ELECTRONICS", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.category).toBe("Equipment");
     expect(result.needs_receipt).toBe(true);
@@ -1168,7 +1138,7 @@ describe("autoCategorise — determineBusinessExpense coverage", () => {
       expense("EFLOW TOLL M50", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.category).toBe("Motor/travel");
     expect(result.is_business_expense).toBe(true);
@@ -1180,7 +1150,7 @@ describe("autoCategorise — determineBusinessExpense coverage", () => {
       expense("DEGIRO TRADING FEE", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.category).toBe("other");
     expect(result.vat_deductible).toBe(false);
@@ -1193,7 +1163,7 @@ describe("autoCategorise — determineBusinessExpense coverage", () => {
       expense("LIDL GROCERIES", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.needs_receipt).toBe(true);
     expect(result.is_business_expense).toBeNull();
@@ -1205,7 +1175,7 @@ describe("autoCategorise — determineBusinessExpense coverage", () => {
       expense("NCP PARKING DUBLIN", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.vat_deductible).toBe(true);
     expect(result.is_business_expense).toBe(true);
@@ -1229,7 +1199,7 @@ describe("autoCategorise — finalizeResult confidence banding", () => {
       expense("WOODIES HOME IMPROVEMENT", {
         user_industry: "professional_services",
         user_business_type: "Consultant",
-      })
+      }),
     );
     expect(result.confidence_score).toBe(65);
     expect(result.needs_review).toBe(true);
@@ -1253,7 +1223,7 @@ describe("autoCategorise — directors_personal_tax looks_like_business advanced
     const result = autoCategorise(
       expense("CHADWICKS BUILDERS SUPPLY", {
         account_type: "directors_personal_tax",
-      })
+      }),
     );
     expect(result.is_business_expense).toBe(true);
     expect(result.looks_like_business_expense).toBe(true);
@@ -1264,7 +1234,7 @@ describe("autoCategorise — directors_personal_tax looks_like_business advanced
     const result = autoCategorise(
       expense("XERO ACCOUNTING SOFTWARE", {
         account_type: "directors_personal_tax",
-      })
+      }),
     );
     expect(result.category).toBe("Software");
     expect(result.looks_like_business_expense).toBe(true);
@@ -1274,7 +1244,7 @@ describe("autoCategorise — directors_personal_tax looks_like_business advanced
     const result = autoCategorise(
       expense("PENNEYS CLOTHING", {
         account_type: "directors_personal_tax",
-      })
+      }),
     );
     expect(result.category).toBe("Drawings");
     expect(result.looks_like_business_expense).toBeUndefined();
@@ -1282,9 +1252,7 @@ describe("autoCategorise — directors_personal_tax looks_like_business advanced
 
   it("does NOT flag looks_like_business on limited_company account", () => {
     // Same expense but on business account — should not flag
-    const result = autoCategorise(
-      expense("SCREWFIX IRELAND", { account_type: "limited_company" })
-    );
+    const result = autoCategorise(expense("SCREWFIX IRELAND", { account_type: "limited_company" }));
     expect(result.looks_like_business_expense).toBeUndefined();
   });
 });
@@ -1470,9 +1438,7 @@ describe("autoCategorise — receipt text edge cases", () => {
   });
 
   it("returns base result when receipt text does not match any pattern", () => {
-    const result = autoCategorise(
-      expense("CIRCLE K STATION", { receipt_text: "Car wash deluxe" })
-    );
+    const result = autoCategorise(expense("CIRCLE K STATION", { receipt_text: "Car wash deluxe" }));
     // Receipt says "car wash" — doesn't match diesel, petrol, materials, or tools
     expect(result.category).toBe("General Expenses");
   });
@@ -1523,10 +1489,7 @@ describe("autoCategorise — vendor cache lookup", () => {
     const cache = new Map<string, VendorCacheEntry>();
     cache.set("acme software", makeCacheEntry("acme software"));
 
-    const result = autoCategorise(
-      expense("ACME SOFTWARE SUBSCRIPTION"),
-      cache
-    );
+    const result = autoCategorise(expense("ACME SOFTWARE SUBSCRIPTION"), cache);
     expect(result.category).toBe("Software");
     expect(result.notes).toContain("Matched vendor");
   });
@@ -1535,10 +1498,7 @@ describe("autoCategorise — vendor cache lookup", () => {
     const cache = new Map<string, VendorCacheEntry>();
     cache.set("acme", makeCacheEntry("acme", { category: "Materials", vat_deductible: true }));
 
-    const result = autoCategorise(
-      expense("PAYMENT TO ACME LTD"),
-      cache
-    );
+    const result = autoCategorise(expense("PAYMENT TO ACME LTD"), cache);
     // "acme" is a single token that should match via n-gram search
     expect(result.category).toBe("Materials");
   });

@@ -15,10 +15,7 @@ export function AdjustmentsSection({ data, onUpdate }: AdjustmentsSectionProps) 
   // Credit notes handlers
   const addCreditNote = () => {
     onUpdate({
-      credit_notes_details: [
-        ...data.credit_notes_details,
-        { description: "", amount: 0 },
-      ],
+      credit_notes_details: [...data.credit_notes_details, { description: "", amount: 0 }],
     });
   };
 
@@ -37,10 +34,7 @@ export function AdjustmentsSection({ data, onUpdate }: AdjustmentsSectionProps) 
   // Late transactions handlers
   const addLateTransaction = () => {
     onUpdate({
-      late_transactions_list: [
-        ...data.late_transactions_list,
-        { description: "", date: "", amount: 0 },
-      ],
+      late_transactions_list: [...data.late_transactions_list, { description: "", date: "", amount: 0 }],
     });
   };
 
@@ -80,9 +74,7 @@ export function AdjustmentsSection({ data, onUpdate }: AdjustmentsSectionProps) 
 
         {data.credit_notes && (
           <div className="ml-6 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              List the credit notes below:
-            </p>
+            <p className="text-sm text-muted-foreground">List the credit notes below:</p>
             {data.credit_notes_details.map((note, index) => (
               <div key={index} className="flex gap-3">
                 <Input
@@ -98,11 +90,7 @@ export function AdjustmentsSection({ data, onUpdate }: AdjustmentsSectionProps) 
                   onChange={(e) => updateCreditNote(index, "amount", parseFloat(e.target.value) || 0)}
                   className="w-32"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeCreditNote(index)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => removeCreditNote(index)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -209,11 +197,7 @@ export function AdjustmentsSection({ data, onUpdate }: AdjustmentsSectionProps) 
                   onChange={(e) => updateLateTransaction(index, "amount", parseFloat(e.target.value) || 0)}
                   className="w-32"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeLateTransaction(index)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => removeLateTransaction(index)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>

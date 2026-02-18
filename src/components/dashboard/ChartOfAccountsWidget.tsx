@@ -2,12 +2,7 @@ import { useState } from "react";
 import { Plus, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useCategories } from "@/hooks/useCategories";
 import { AddCategoryDialog } from "./AddCategoryDialog";
 
@@ -20,19 +15,11 @@ export function ChartOfAccountsButton({ accountType }: ChartOfAccountsWidgetProp
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setOpen(true)}
-      >
+      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
         <BookOpen className="w-4 h-4 mr-2" />
         Chart of Accounts
       </Button>
-      <ChartOfAccountsDialog
-        open={open}
-        onOpenChange={setOpen}
-        accountType={accountType}
-      />
+      <ChartOfAccountsDialog open={open} onOpenChange={setOpen} accountType={accountType} />
     </>
   );
 }
@@ -57,11 +44,7 @@ function ChartOfAccountsDialog({ open, onOpenChange, accountType }: ChartOfAccou
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle>Chart of Accounts</DialogTitle>
-              <Button
-                size="sm"
-                className="gap-1 rounded-xl text-xs"
-                onClick={() => setAddDialogOpen(true)}
-              >
+              <Button size="sm" className="gap-1 rounded-xl text-xs" onClick={() => setAddDialogOpen(true)}>
                 <Plus className="w-3 h-3" />
                 Add Category
               </Button>
@@ -71,9 +54,7 @@ function ChartOfAccountsDialog({ open, onOpenChange, accountType }: ChartOfAccou
           {isLoading ? (
             <p className="text-sm text-muted-foreground py-4">Loading categories...</p>
           ) : categories.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">
-              No categories yet. Add one to get started.
-            </p>
+            <p className="text-sm text-muted-foreground py-4">No categories yet. Add one to get started.</p>
           ) : (
             <div className="space-y-5 mt-2">
               {/* Income */}
@@ -84,17 +65,9 @@ function ChartOfAccountsDialog({ open, onOpenChange, accountType }: ChartOfAccou
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {incomeCategories.map((c) => (
-                      <Badge
-                        key={c.id}
-                        variant="secondary"
-                        className="bg-green-100 text-green-800 text-xs py-1 px-2.5"
-                      >
+                      <Badge key={c.id} variant="secondary" className="bg-green-100 text-green-800 text-xs py-1 px-2.5">
                         {c.name}
-                        {c.account_code && (
-                          <span className="ml-1 text-green-600 opacity-60">
-                            {c.account_code}
-                          </span>
-                        )}
+                        {c.account_code && <span className="ml-1 text-green-600 opacity-60">{c.account_code}</span>}
                       </Badge>
                     ))}
                   </div>
@@ -109,17 +82,9 @@ function ChartOfAccountsDialog({ open, onOpenChange, accountType }: ChartOfAccou
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {expenseCategories.map((c) => (
-                      <Badge
-                        key={c.id}
-                        variant="secondary"
-                        className="bg-red-100 text-red-800 text-xs py-1 px-2.5"
-                      >
+                      <Badge key={c.id} variant="secondary" className="bg-red-100 text-red-800 text-xs py-1 px-2.5">
                         {c.name}
-                        {c.account_code && (
-                          <span className="ml-1 text-red-600 opacity-60">
-                            {c.account_code}
-                          </span>
-                        )}
+                        {c.account_code && <span className="ml-1 text-red-600 opacity-60">{c.account_code}</span>}
                       </Badge>
                     ))}
                   </div>
@@ -130,11 +95,7 @@ function ChartOfAccountsDialog({ open, onOpenChange, accountType }: ChartOfAccou
         </DialogContent>
       </Dialog>
 
-      <AddCategoryDialog
-        open={addDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        defaultAccountType={accountType}
-      />
+      <AddCategoryDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} defaultAccountType={accountType} />
     </>
   );
 }

@@ -7,13 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export function OnboardingProgressCard() {
   const navigate = useNavigate();
-  const { 
-    user,
-    onboardingComplete, 
-    directorOnboardingComplete, 
-    directorCount, 
-    directorsCompleted 
-  } = useAuth();
+  const { user, onboardingComplete, directorOnboardingComplete, directorCount, directorsCompleted } = useAuth();
 
   // Don't show if everything is complete
   if (onboardingComplete && directorOnboardingComplete) {
@@ -59,12 +53,7 @@ export function OnboardingProgressCard() {
               </div>
             </div>
             {!onboardingComplete && (
-              <Button 
-                size="sm" 
-                variant="ghost"
-                onClick={() => navigate("/onboarding")}
-                className="rounded-full"
-              >
+              <Button size="sm" variant="ghost" onClick={() => navigate("/onboarding")} className="rounded-full">
                 Continue
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
@@ -83,15 +72,15 @@ export function OnboardingProgressCard() {
                 <div>
                   <p className="font-medium text-sm">Director Details</p>
                   <p className="text-xs text-muted-foreground">
-                    {directorOnboardingComplete 
-                      ? "All directors completed" 
+                    {directorOnboardingComplete
+                      ? "All directors completed"
                       : `${directorsCompleted} of ${directorCount} directors completed`}
                   </p>
                 </div>
               </div>
               {!directorOnboardingComplete && (
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   variant="ghost"
                   onClick={() => navigate("/onboarding/director")}
                   className="rounded-full"

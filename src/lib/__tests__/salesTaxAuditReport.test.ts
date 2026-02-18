@@ -44,7 +44,7 @@ vi.mock("../vatDeductibility", () => ({
     };
     const rate = rates[vatRateKey] ?? 0.23;
     if (rate === 0) return { netAmount: grossAmount, vatAmount: 0 };
-    const vatAmount = Number((grossAmount * rate / (1 + rate)).toFixed(2));
+    const vatAmount = Number(((grossAmount * rate) / (1 + rate)).toFixed(2));
     const netAmount = Number((grossAmount - vatAmount).toFixed(2));
     return { netAmount, vatAmount };
   },
@@ -165,14 +165,7 @@ describe("generateSalesTaxAuditReport", () => {
   // ──────────────────────────────────────────────────────────
   describe("empty data", () => {
     it("returns a report with zero totals and no sections", () => {
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], []);
 
       expect(report.sections).toHaveLength(0);
       expect(report.grandTotalSalesGross).toBe(0);
@@ -185,26 +178,12 @@ describe("generateSalesTaxAuditReport", () => {
     });
 
     it("includes business name in the report", () => {
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], []);
       expect(report.businessName).toBe(BUSINESS_NAME);
     });
 
     it("includes formatted period dates in the report", () => {
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], []);
       // date-fns format "d MMMM yyyy"
       expect(report.periodStart).toBe("1 January 2025");
       expect(report.periodEnd).toBe("31 March 2025");
@@ -246,24 +225,17 @@ describe("generateSalesTaxAuditReport", () => {
         }),
       ];
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        transactions,
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, transactions, [], []);
 
-      const salesSections = report.sections.filter(s => s.type === "sales");
+      const salesSections = report.sections.filter((s) => s.type === "sales");
       expect(salesSections.length).toBe(2);
 
-      const reduced = salesSections.find(s => s.vatRate === "reduced_13_5");
+      const reduced = salesSections.find((s) => s.vatRate === "reduced_13_5");
       expect(reduced).toBeDefined();
       expect(reduced!.items).toHaveLength(2);
       expect(reduced!.totalGross).toBeCloseTo(1500, 2);
 
-      const standard = salesSections.find(s => s.vatRate === "standard_23");
+      const standard = salesSections.find((s) => s.vatRate === "standard_23");
       expect(standard).toBeDefined();
       expect(standard!.items).toHaveLength(1);
       expect(standard!.totalGross).toBeCloseTo(2000, 2);
@@ -277,16 +249,9 @@ describe("generateSalesTaxAuditReport", () => {
         vat_rate: undefined,
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const salesSections = report.sections.filter(s => s.type === "sales");
+      const salesSections = report.sections.filter((s) => s.type === "sales");
       expect(salesSections).toHaveLength(1);
       expect(salesSections[0].vatRate).toBe("zero_rated");
       // zero-rated means 0 VAT
@@ -303,16 +268,9 @@ describe("generateSalesTaxAuditReport", () => {
         net_amount: 1000,
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const section = report.sections.find(s => s.type === "sales" && s.vatRate === "reduced_13_5");
+      const section = report.sections.find((s) => s.type === "sales" && s.vatRate === "reduced_13_5");
       expect(section).toBeDefined();
       expect(section!.items[0].tax).toBe(135);
       expect(section!.items[0].net).toBe(1000);
@@ -347,16 +305,9 @@ describe("generateSalesTaxAuditReport", () => {
         }),
       ];
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        transactions,
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, transactions, [], []);
 
-      const purchaseSections = report.sections.filter(s => s.type === "purchases");
+      const purchaseSections = report.sections.filter((s) => s.type === "purchases");
       expect(purchaseSections).toHaveLength(1);
       expect(purchaseSections[0].vatRate).toBe("standard_23");
       expect(purchaseSections[0].items).toHaveLength(2);
@@ -374,14 +325,7 @@ describe("generateSalesTaxAuditReport", () => {
         category: { name: "Materials", id: "cat-mat" },
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
       const item = report.sections[0].items[0];
       expect(item.account).toBe("Materials");
@@ -401,17 +345,10 @@ describe("generateSalesTaxAuditReport", () => {
         category: { name: "Tax", id: "cat-tax" },
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
       // Revenue refunds should be filtered out by isVATDeductible returning false
-      const purchaseSections = report.sections.filter(s => s.type === "purchases");
+      const purchaseSections = report.sections.filter((s) => s.type === "purchases");
       expect(purchaseSections).toHaveLength(0);
     });
 
@@ -424,16 +361,9 @@ describe("generateSalesTaxAuditReport", () => {
         category: { name: "Tax", id: "cat-tax" },
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const purchaseSections = report.sections.filter(s => s.type === "purchases");
+      const purchaseSections = report.sections.filter((s) => s.type === "purchases");
       expect(purchaseSections).toHaveLength(0);
     });
   });
@@ -451,16 +381,9 @@ describe("generateSalesTaxAuditReport", () => {
         category: { name: "Director's Drawings", id: "cat-draw" },
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const purchaseSections = report.sections.filter(s => s.type === "purchases");
+      const purchaseSections = report.sections.filter((s) => s.type === "purchases");
       expect(purchaseSections).toHaveLength(0);
     });
   });
@@ -480,16 +403,9 @@ describe("generateSalesTaxAuditReport", () => {
         net_amount: undefined,
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const section = report.sections.find(s => s.type === "sales");
+      const section = report.sections.find((s) => s.type === "sales");
       expect(section).toBeDefined();
       // 123 * 0.23 / 1.23 = 23.00
       expect(section!.items[0].tax).toBeCloseTo(23, 2);
@@ -506,16 +422,9 @@ describe("generateSalesTaxAuditReport", () => {
         net_amount: undefined,
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const section = report.sections.find(s => s.type === "sales");
+      const section = report.sections.find((s) => s.type === "sales");
       // 1135 * 0.135 / 1.135 = 135.00 exactly
       expect(section!.items[0].tax).toBeCloseTo(135, 1);
       expect(section!.items[0].net).toBeCloseTo(1000, 1);
@@ -530,16 +439,9 @@ describe("generateSalesTaxAuditReport", () => {
         net_amount: undefined,
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const section = report.sections.find(s => s.type === "sales");
+      const section = report.sections.find((s) => s.type === "sales");
       expect(section!.items[0].tax).toBe(0);
       expect(section!.items[0].net).toBe(500);
     });
@@ -553,16 +455,9 @@ describe("generateSalesTaxAuditReport", () => {
         net_amount: undefined,
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
-      const section = report.sections.find(s => s.type === "sales");
+      const section = report.sections.find((s) => s.type === "sales");
       expect(section!.items[0].tax).toBe(0);
       expect(section!.items[0].net).toBe(750);
     });
@@ -588,16 +483,9 @@ describe("generateSalesTaxAuditReport", () => {
         ],
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [inv],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], [inv]);
 
-      const salesSections = report.sections.filter(s => s.type === "sales");
+      const salesSections = report.sections.filter((s) => s.type === "sales");
       expect(salesSections).toHaveLength(1);
       expect(salesSections[0].vatRate).toBe("reduced_13_5");
       expect(salesSections[0].items[0].gross).toBe(1135);
@@ -621,16 +509,9 @@ describe("generateSalesTaxAuditReport", () => {
         ],
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [inv],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], [inv]);
 
-      const section = report.sections.find(s => s.type === "sales");
+      const section = report.sections.find((s) => s.type === "sales");
       expect(section!.vatRate).toBe("second_reduced_9");
     });
 
@@ -648,14 +529,7 @@ describe("generateSalesTaxAuditReport", () => {
         ],
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [inv],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], [inv]);
 
       const item = report.sections[0].items[0];
       expect(item.details).toContain("John Smith");
@@ -665,14 +539,7 @@ describe("generateSalesTaxAuditReport", () => {
     it("uses invoice_number as the reference", () => {
       const inv = makeInvoice({ invoice_number: "INV-999" });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [inv],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], [inv]);
 
       expect(report.sections[0].items[0].reference).toBe("INV-999");
     });
@@ -698,16 +565,9 @@ describe("generateSalesTaxAuditReport", () => {
         ],
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [],
-        [inv],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], [inv]);
 
-      const section = report.sections.find(s => s.type === "sales");
+      const section = report.sections.find((s) => s.type === "sales");
       expect(section!.vatRate).toBe("zero_rated");
     });
   });
@@ -798,14 +658,7 @@ describe("generateSalesTaxAuditReport", () => {
         }),
       ];
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        income,
-        expenses,
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, income, expenses, []);
 
       // Sales tax is 0 (zero rated), purchases tax is -230
       // Net VAT = 0 + (-230) = -230 (refund due)
@@ -830,8 +683,8 @@ describe("generateSalesTaxAuditReport", () => {
           amount: 200,
           type: "income",
           vat_rate: "standard_23",
-          vat_amount: 37.40,
-          net_amount: 162.60,
+          vat_amount: 37.4,
+          net_amount: 162.6,
         }),
         makeTransaction({
           id: "t3",
@@ -843,18 +696,9 @@ describe("generateSalesTaxAuditReport", () => {
         }),
       ];
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        transactions,
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, transactions, [], []);
 
-      const salesRateOrder = report.sections
-        .filter(s => s.type === "sales")
-        .map(s => s.vatRate);
+      const salesRateOrder = report.sections.filter((s) => s.type === "sales").map((s) => s.vatRate);
 
       // reduced_13_5 comes before standard_23, which comes before zero_rated
       expect(salesRateOrder.indexOf("reduced_13_5")).toBeLessThan(salesRateOrder.indexOf("standard_23"));
@@ -883,17 +727,10 @@ describe("generateSalesTaxAuditReport", () => {
         }),
       ];
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        transactions,
-        expenses,
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, transactions, expenses, []);
 
-      const firstPurchaseIdx = report.sections.findIndex(s => s.type === "purchases");
-      const firstSalesIdx = report.sections.findIndex(s => s.type === "sales");
+      const firstPurchaseIdx = report.sections.findIndex((s) => s.type === "purchases");
+      const firstSalesIdx = report.sections.findIndex((s) => s.type === "sales");
       expect(firstPurchaseIdx).toBeLessThan(firstSalesIdx);
     });
   });
@@ -905,25 +742,18 @@ describe("generateSalesTaxAuditReport", () => {
     it("adds expense records as purchase line items with negative amounts", () => {
       const exp = makeExpense({
         total_amount: 500,
-        vat_amount: 93.50,
-        net_amount: 406.50,
+        vat_amount: 93.5,
+        net_amount: 406.5,
         vat_rate: "standard_23",
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [exp],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [exp], []);
 
-      const section = report.sections.find(s => s.type === "purchases");
+      const section = report.sections.find((s) => s.type === "purchases");
       expect(section).toBeDefined();
       expect(section!.items[0].gross).toBe(-500);
-      expect(section!.items[0].tax).toBe(-93.50);
-      expect(section!.items[0].net).toBe(-406.50);
+      expect(section!.items[0].tax).toBe(-93.5);
+      expect(section!.items[0].net).toBe(-406.5);
     });
 
     it("uses the supplier name and description in details", () => {
@@ -932,14 +762,7 @@ describe("generateSalesTaxAuditReport", () => {
         description: "Timber and screws",
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [exp],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [exp], []);
 
       const item = report.sections[0].items[0];
       expect(item.details).toContain("Chadwicks");
@@ -954,16 +777,9 @@ describe("generateSalesTaxAuditReport", () => {
         net_amount: 200,
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [],
-        [exp],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [exp], []);
 
-      const section = report.sections.find(s => s.type === "purchases");
+      const section = report.sections.find((s) => s.type === "purchases");
       expect(section!.vatRate).toBe("standard_23");
     });
   });
@@ -982,14 +798,7 @@ describe("generateSalesTaxAuditReport", () => {
         category: { name: "General", id: "cat-gen" },
       });
 
-      const report = generateSalesTaxAuditReport(
-        BUSINESS_NAME,
-        PERIOD_START,
-        PERIOD_END,
-        [txn],
-        [],
-        [],
-      );
+      const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
       expect(report.sections).toHaveLength(0);
     });
@@ -1027,8 +836,8 @@ describe("generateSalesTaxAuditReport", () => {
           id: "exp-obj-1",
           total_amount: 200,
           vat_rate: "standard_23",
-          vat_amount: 37.40,
-          net_amount: 162.60,
+          vat_amount: 37.4,
+          net_amount: 162.6,
         }),
       ];
 
@@ -1060,8 +869,8 @@ describe("generateSalesTaxAuditReport", () => {
       );
 
       // Expect purchases and sales sections
-      const purchases = report.sections.filter(s => s.type === "purchases");
-      const sales = report.sections.filter(s => s.type === "sales");
+      const purchases = report.sections.filter((s) => s.type === "purchases");
+      const sales = report.sections.filter((s) => s.type === "sales");
 
       expect(purchases.length).toBeGreaterThanOrEqual(1);
       expect(sales.length).toBeGreaterThanOrEqual(1);
@@ -1187,7 +996,7 @@ describe("exportToCSV", () => {
     const lines = csv.split("\n");
 
     // Find a line that looks like a data row (starts with a date like d/MM/yyyy)
-    const dataLines = lines.filter(l => /^\d{1,2}\/\d{2}\/\d{4},/.test(l));
+    const dataLines = lines.filter((l) => /^\d{1,2}\/\d{2}\/\d{4},/.test(l));
     expect(dataLines.length).toBeGreaterThan(0);
 
     for (const line of dataLines) {
@@ -1199,14 +1008,7 @@ describe("exportToCSV", () => {
   });
 
   it("returns a non-empty string for an empty report", () => {
-    const emptyReport = generateSalesTaxAuditReport(
-      BUSINESS_NAME,
-      PERIOD_START,
-      PERIOD_END,
-      [],
-      [],
-      [],
-    );
+    const emptyReport = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], []);
     const csv = exportToCSV(emptyReport);
     expect(csv.length).toBeGreaterThan(0);
     expect(csv).toContain("Sales Tax Audit Report");
@@ -1227,14 +1029,7 @@ describe("formatDate fallback in export", () => {
       transaction_date: "not-a-real-date",
     });
 
-    const report = generateSalesTaxAuditReport(
-      BUSINESS_NAME,
-      PERIOD_START,
-      PERIOD_END,
-      [txn],
-      [],
-      [],
-    );
+    const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
     // The report should still generate without crashing
     expect(report.sections.length).toBeGreaterThan(0);
@@ -1269,17 +1064,10 @@ describe("uncategorised expense filtering", () => {
       category: null,
     });
 
-    const report = generateSalesTaxAuditReport(
-      BUSINESS_NAME,
-      PERIOD_START,
-      PERIOD_END,
-      [txn],
-      [],
-      [],
-    );
+    const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
 
     // Uncategorised expenses should be filtered by isVATDeductible returning false
-    const purchaseSections = report.sections.filter(s => s.type === "purchases");
+    const purchaseSections = report.sections.filter((s) => s.type === "purchases");
     expect(purchaseSections).toHaveLength(0);
   });
 });
@@ -1307,7 +1095,7 @@ describe("downloadCSV", () => {
       "Blob",
       vi.fn(function (this: unknown, parts: unknown, opts?: { type?: string }) {
         return { parts, type: opts?.type };
-      })
+      }),
     );
   });
 
@@ -1345,7 +1133,7 @@ describe("downloadCSV", () => {
     expect(mockLink.setAttribute).toHaveBeenCalledWith("href", "blob:mock-url");
     expect(mockLink.setAttribute).toHaveBeenCalledWith(
       "download",
-      "Sales_Tax_Audit_Report_1_January_2025_to_31_March_2025.csv"
+      "Sales_Tax_Audit_Report_1_January_2025_to_31_March_2025.csv",
     );
     expect(mockLink.style.visibility).toBe("hidden");
     expect(mockLink.click).toHaveBeenCalled();

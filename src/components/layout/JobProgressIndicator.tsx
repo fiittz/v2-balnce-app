@@ -54,10 +54,7 @@ export default function JobProgressIndicator() {
           route: "/",
         };
         const Icon = config.icon;
-        const progress =
-          job.total_items > 0
-            ? Math.round((job.processed_items / job.total_items) * 100)
-            : 0;
+        const progress = job.total_items > 0 ? Math.round((job.processed_items / job.total_items) * 100) : 0;
         const isComplete = job.status === "completed";
         const isFailed = job.status === "failed";
 
@@ -66,21 +63,13 @@ export default function JobProgressIndicator() {
             key={job.id}
             onClick={() => navigate(config.route)}
             className={`bg-card border rounded-xl p-3 shadow-lg cursor-pointer hover:shadow-xl transition-shadow animate-in slide-in-from-right-4 fade-in duration-200 ${
-              isComplete
-                ? "border-green-200"
-                : isFailed
-                ? "border-red-200"
-                : "border-border"
+              isComplete ? "border-green-200" : isFailed ? "border-red-200" : "border-border"
             }`}
           >
             <div className="flex items-center gap-3">
               <div
                 className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                  isComplete
-                    ? "bg-green-100"
-                    : isFailed
-                    ? "bg-red-100"
-                    : "bg-primary/10"
+                  isComplete ? "bg-green-100" : isFailed ? "bg-red-100" : "bg-primary/10"
                 }`}
               >
                 {isComplete ? (
@@ -97,12 +86,10 @@ export default function JobProgressIndicator() {
                   {isComplete
                     ? `Done — ${job.processed_items} ${config.label}`
                     : isFailed
-                    ? `Failed — ${job.error_message || "Unknown error"}`
-                    : `Processing ${job.processed_items}/${job.total_items} ${config.label}...`}
+                      ? `Failed — ${job.error_message || "Unknown error"}`
+                      : `Processing ${job.processed_items}/${job.total_items} ${config.label}...`}
                 </p>
-                {!isComplete && !isFailed && (
-                  <Progress value={progress} className="h-1.5 mt-1.5" />
-                )}
+                {!isComplete && !isFailed && <Progress value={progress} className="h-1.5 mt-1.5" />}
               </div>
 
               {!isComplete && !isFailed && (

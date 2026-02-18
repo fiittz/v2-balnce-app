@@ -43,12 +43,12 @@ describe("calculateMileageAllowance — motor_car", () => {
 
   it("calculates band 1 only (1,000 km)", () => {
     // 1000 * 0.5182 = 518.20
-    expect(calculateMileageAllowance(1_000, "motor_car")).toBe(518.20);
+    expect(calculateMileageAllowance(1_000, "motor_car")).toBe(518.2);
   });
 
   it("calculates exact band 1 boundary (1,500 km)", () => {
     // 1500 * 0.5182 = 777.30
-    expect(calculateMileageAllowance(1_500, "motor_car")).toBe(777.30);
+    expect(calculateMileageAllowance(1_500, "motor_car")).toBe(777.3);
   });
 
   it("spans bands 1 and 2 (3,000 km)", () => {
@@ -64,7 +64,7 @@ describe("calculateMileageAllowance — motor_car", () => {
     // Band 3: 19500 * 0.3922 = 7647.90
     // Band 4: 5000 * 0.2587 = 1293.50
     // Total: 13343.90
-    expect(calculateMileageAllowance(30_000, "motor_car")).toBe(13343.90);
+    expect(calculateMileageAllowance(30_000, "motor_car")).toBe(13343.9);
   });
 
   it("handles very large distance (100,000 km)", () => {

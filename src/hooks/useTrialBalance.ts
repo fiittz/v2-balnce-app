@@ -53,12 +53,12 @@ const ACCOUNT_TYPE_ORDER: Record<string, number> = {
   "Current Assets": 1,
   "Fixed Assets": 2,
   "Current Liabilities": 3,
-  "Equity": 4,
-  "Income": 5,
+  Equity: 4,
+  Income: 5,
   "Cost of Sales": 6,
-  "Expense": 7,
-  "Payroll": 8,
-  "VAT": 9,
+  Expense: 7,
+  Payroll: 8,
+  VAT: 9,
 };
 
 // ── Empty result (used while loading) ────────────────────────
@@ -118,12 +118,9 @@ export function useTrialBalance(): TrialBalanceResult {
       const amt = Math.abs(Number(t.amount) || 0);
       if (amt === 0) continue;
 
-      const catName =
-        (t.category as { id: string; name: string } | null)?.name ?? null;
+      const catName = (t.category as { id: string; name: string } | null)?.name ?? null;
       const txType = (t.type as "income" | "expense") || "expense";
-      const isDrawings = catName
-        ? catName.toLowerCase().includes("drawing")
-        : false;
+      const isDrawings = catName ? catName.toLowerCase().includes("drawing") : false;
       const isInternalTransfer = catName === "Internal Transfer";
 
       // Skip internal transfers — net effect on bank is zero
@@ -163,9 +160,7 @@ export function useTrialBalance(): TrialBalanceResult {
       // Map category to account
       const suggestion = getAccountSuggestion(catName, txType, undefined);
       const accountName = suggestion?.account_name || catName;
-      const accountType =
-        suggestion?.account_type ||
-        (txType === "income" ? "Income" : "Expense");
+      const accountType = suggestion?.account_type || (txType === "income" ? "Income" : "Expense");
 
       const bank = getOrCreate("Bank – Current Account", "Current Assets");
       const plAcct = getOrCreate(accountName, accountType);
@@ -186,24 +181,15 @@ export function useTrialBalance(): TrialBalanceResult {
     // ── Director's loan adjustment (travel owed to director) ──
     if (ct1.netDirectorsLoan > 0) {
       // Company owes director — liability
-      const dirLoan = getOrCreate(
-        "Director's Loan Account",
-        "Current Liabilities"
-      );
-      const travel = getOrCreate(
-        "Travel & Subsistence (Revenue Rates)",
-        "Expense"
-      );
+      const dirLoan = getOrCreate("Director's Loan Account", "Current Liabilities");
+      const travel = getOrCreate("Travel & Subsistence (Revenue Rates)", "Expense");
       dirLoan.credit += ct1.netDirectorsLoan;
       travel.debit += ct1.netDirectorsLoan;
       dirLoan.transactionCount++;
       travel.transactionCount++;
     } else if (ct1.netDirectorsLoan < 0) {
       // Director owes company — asset
-      const dirLoan = getOrCreate(
-        "Director's Loan Account",
-        "Current Assets"
-      );
+      const dirLoan = getOrCreate("Director's Loan Account", "Current Assets");
       dirLoan.debit += Math.abs(ct1.netDirectorsLoan);
       dirLoan.transactionCount++;
     }
@@ -223,14 +209,9 @@ export function useTrialBalance(): TrialBalanceResult {
         return a.accountName.localeCompare(b.accountName);
       });
 
-    const totalDebits = Math.round(
-      accounts.reduce((s, a) => s + a.debit, 0) * 100
-    ) / 100;
-    const totalCredits = Math.round(
-      accounts.reduce((s, a) => s + a.credit, 0) * 100
-    ) / 100;
-    const imbalanceAmount =
-      Math.round((totalDebits - totalCredits) * 100) / 100;
+    const totalDebits = Math.round(accounts.reduce((s, a) => s + a.debit, 0) * 100) / 100;
+    const totalCredits = Math.round(accounts.reduce((s, a) => s + a.credit, 0) * 100) / 100;
+    const imbalanceAmount = Math.round((totalDebits - totalCredits) * 100) / 100;
     const isBalanced = Math.abs(imbalanceAmount) < 1; // €1 tolerance
 
     // ── VAT reconciliation ───────────────────────────────────
@@ -245,9 +226,7 @@ export function useTrialBalance(): TrialBalanceResult {
 
     // ── Issue detection ──────────────────────────────────────
     const issues: TrialBalanceIssue[] = [];
-    const categorizedCount = allTransactions.filter(
-      (t) => (t.category as { name: string } | null)?.name
-    ).length;
+    const categorizedCount = allTransactions.filter((t) => (t.category as { name: string } | null)?.name).length;
 
     // Safeguard: don't flag issues for brand-new users
     if (categorizedCount >= 5) {

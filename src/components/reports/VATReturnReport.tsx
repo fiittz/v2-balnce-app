@@ -1,10 +1,20 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { format, parseISO } from "date-fns";
-import { 
-  FileText, CheckCircle2, XCircle, AlertTriangle, 
-  ChevronDown, ChevronUp, Download, Loader2,
-  TrendingUp, TrendingDown, Globe, Truck, FileCheck
+import {
+  FileText,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Globe,
+  Truck,
+  FileCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,16 +25,16 @@ import { useVATWizardData } from "@/hooks/useVATWizard";
 export function VATReturnReport() {
   const [searchParams] = useSearchParams();
   const periodStart = searchParams.get("period");
-  
+
   const { data: vatReturns, isLoading: returnsLoading } = useVATReturns();
-  
+
   // Find the return for this period
-  const vatReturn = vatReturns?.find(r => r.period_start === periodStart);
-  
+  const vatReturn = vatReturns?.find((r) => r.period_start === periodStart);
+
   const { data: finalisationData, isLoading: finalisationLoading } = useVATWizardData(vatReturn?.id);
   const { data: vatSummary, isLoading: summaryLoading } = useVATSummary(
     vatReturn?.period_start || "",
-    vatReturn?.period_end || ""
+    vatReturn?.period_end || "",
   );
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -38,7 +48,7 @@ export function VATReturnReport() {
   });
 
   const toggleSection = (section: string) => {
-    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   const isLoading = returnsLoading || finalisationLoading || summaryLoading;
@@ -67,7 +77,15 @@ export function VATReturnReport() {
     );
   }
 
-  const BooleanIndicator = ({ value, trueLabel = "Yes", falseLabel = "No" }: { value: boolean | null | undefined; trueLabel?: string; falseLabel?: string }) => (
+  const BooleanIndicator = ({
+    value,
+    trueLabel = "Yes",
+    falseLabel = "No",
+  }: {
+    value: boolean | null | undefined;
+    trueLabel?: string;
+    falseLabel?: string;
+  }) => (
     <span className={`inline-flex items-center gap-1 ${value ? "text-green-600" : "text-muted-foreground"}`}>
       {value ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
       {value ? trueLabel : falseLabel}
@@ -152,9 +170,7 @@ export function VATReturnReport() {
                   <p className={`text-2xl font-bold ${netVat < 0 ? "text-green-400" : "text-primary"}`}>
                     {netVat < 0 ? "-" : ""}€{Math.abs(netVat).toFixed(2)}
                   </p>
-                  <p className="text-xs opacity-60">
-                    {netVat < 0 ? "Refund due" : "Amount owed"}
-                  </p>
+                  <p className="text-xs opacity-60">{netVat < 0 ? "Refund due" : "Amount owed"}</p>
                 </>
               );
             })()}
@@ -190,22 +206,29 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Unpaid invoices?</span>
                 <BooleanIndicator value={finalisationData.unpaid_invoices} />
               </div>
-              {finalisationData.unpaid_invoices && (finalisationData.unpaid_invoices_list as { description: string; amount: number }[])?.length > 0 && (
-                <div className="bg-amber-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-amber-800 mb-2">Unpaid Invoices:</p>
-                  <ul className="text-sm text-amber-700 space-y-1">
-                    {(finalisationData.unpaid_invoices_list as { description: string; amount: number }[]).map((item, i) => (
-                      <li key={i}>• {item.description}: €{item.amount}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {finalisationData.unpaid_invoices &&
+                (finalisationData.unpaid_invoices_list as { description: string; amount: number }[])?.length > 0 && (
+                  <div className="bg-amber-50 rounded-lg p-3">
+                    <p className="text-sm font-medium text-amber-800 mb-2">Unpaid Invoices:</p>
+                    <ul className="text-sm text-amber-700 space-y-1">
+                      {(finalisationData.unpaid_invoices_list as { description: string; amount: number }[]).map(
+                        (item, i) => (
+                          <li key={i}>
+                            • {item.description}: €{item.amount}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
               {finalisationData.special_sales && finalisationData.special_sales.length > 0 && (
                 <div>
                   <span className="text-muted-foreground text-sm">Special Sales Types:</span>
                   <div className="flex flex-wrap gap-2 mt-1">
-                    {finalisationData.special_sales.map(s => (
-                      <Badge key={s} variant="outline">{specialSalesLabels[s] || s}</Badge>
+                    {finalisationData.special_sales.map((s) => (
+                      <Badge key={s} variant="outline">
+                        {specialSalesLabels[s] || s}
+                      </Badge>
                     ))}
                   </div>
                   {finalisationData.special_sales_notes && (
@@ -235,16 +258,21 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Missing receipts?</span>
                 <BooleanIndicator value={finalisationData.missing_receipts} />
               </div>
-              {finalisationData.missing_receipts && (finalisationData.missing_receipts_list as { description: string; amount: number }[])?.length > 0 && (
-                <div className="bg-amber-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-amber-800 mb-2">Missing Receipts:</p>
-                  <ul className="text-sm text-amber-700 space-y-1">
-                    {(finalisationData.missing_receipts_list as { description: string; amount: number }[]).map((item, i) => (
-                      <li key={i}>• {item.description}: €{item.amount}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {finalisationData.missing_receipts &&
+                (finalisationData.missing_receipts_list as { description: string; amount: number }[])?.length > 0 && (
+                  <div className="bg-amber-50 rounded-lg p-3">
+                    <p className="text-sm font-medium text-amber-800 mb-2">Missing Receipts:</p>
+                    <ul className="text-sm text-amber-700 space-y-1">
+                      {(finalisationData.missing_receipts_list as { description: string; amount: number }[]).map(
+                        (item, i) => (
+                          <li key={i}>
+                            • {item.description}: €{item.amount}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
             </CollapsibleContent>
           </Collapsible>
 
@@ -257,11 +285,15 @@ export function VATReturnReport() {
             <CollapsibleContent className="pt-4 space-y-3 px-4">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Food VAT claim</span>
-                <span className="font-medium">{foodVatLabels[finalisationData.food_vat_claim || ""] || "Not specified"}</span>
+                <span className="font-medium">
+                  {foodVatLabels[finalisationData.food_vat_claim || ""] || "Not specified"}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Motor VAT claim</span>
-                <span className="font-medium">{motorVatLabels[finalisationData.motor_vat_claim || ""] || "Not specified"}</span>
+                <span className="font-medium">
+                  {motorVatLabels[finalisationData.motor_vat_claim || ""] || "Not specified"}
+                </span>
               </div>
               {finalisationData.remove_non_allowed_vat !== null && (
                 <div className="flex justify-between">
@@ -291,13 +323,15 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Has EU purchases?</span>
                 <BooleanIndicator value={finalisationData.eu_purchases} />
               </div>
-              {finalisationData.eu_purchases && finalisationData.eu_purchase_ids && finalisationData.eu_purchase_ids.length > 0 && (
-                <div className="bg-blue-50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-blue-800">
-                    {finalisationData.eu_purchase_ids.length} EU purchase(s) flagged for reverse charge
-                  </p>
-                </div>
-              )}
+              {finalisationData.eu_purchases &&
+                finalisationData.eu_purchase_ids &&
+                finalisationData.eu_purchase_ids.length > 0 && (
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <p className="text-sm font-medium text-blue-800">
+                      {finalisationData.eu_purchase_ids.length} EU purchase(s) flagged for reverse charge
+                    </p>
+                  </div>
+                )}
             </CollapsibleContent>
           </Collapsible>
 
@@ -315,24 +349,30 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Has non-EU purchases?</span>
                 <BooleanIndicator value={finalisationData.non_eu_purchases} />
               </div>
-              {finalisationData.non_eu_purchases && finalisationData.non_eu_purchase_details?.length > 0 && (() => {
-                const goodsCount = finalisationData.non_eu_purchase_details.filter(d => d.import_type === "goods").length;
-                const servicesCount = finalisationData.non_eu_purchase_details.filter(d => d.import_type === "services").length;
-                return (
-                  <div className="bg-purple-50 rounded-lg p-3 space-y-1">
-                    {goodsCount > 0 && (
-                      <p className="text-sm font-medium text-purple-800">
-                        {goodsCount} goods import(s) — postponed accounting (PA1)
-                      </p>
-                    )}
-                    {servicesCount > 0 && (
-                      <p className="text-sm font-medium text-purple-800">
-                        {servicesCount} service reverse charge(s) — self-account VAT (T1/T2)
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
+              {finalisationData.non_eu_purchases &&
+                finalisationData.non_eu_purchase_details?.length > 0 &&
+                (() => {
+                  const goodsCount = finalisationData.non_eu_purchase_details.filter(
+                    (d) => d.import_type === "goods",
+                  ).length;
+                  const servicesCount = finalisationData.non_eu_purchase_details.filter(
+                    (d) => d.import_type === "services",
+                  ).length;
+                  return (
+                    <div className="bg-purple-50 rounded-lg p-3 space-y-1">
+                      {goodsCount > 0 && (
+                        <p className="text-sm font-medium text-purple-800">
+                          {goodsCount} goods import(s) — postponed accounting (PA1)
+                        </p>
+                      )}
+                      {servicesCount > 0 && (
+                        <p className="text-sm font-medium text-purple-800">
+                          {servicesCount} service reverse charge(s) — self-account VAT (T1/T2)
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
             </CollapsibleContent>
           </Collapsible>
 
@@ -347,16 +387,21 @@ export function VATReturnReport() {
                 <span className="text-muted-foreground">Credit notes?</span>
                 <BooleanIndicator value={finalisationData.credit_notes} />
               </div>
-              {finalisationData.credit_notes && (finalisationData.credit_notes_details as { description: string; amount: number }[])?.length > 0 && (
-                <div className="bg-muted rounded-lg p-3">
-                  <p className="text-sm font-medium mb-2">Credit Notes:</p>
-                  <ul className="text-sm space-y-1">
-                    {(finalisationData.credit_notes_details as { description: string; amount: number }[]).map((item, i) => (
-                      <li key={i}>• {item.description}: €{item.amount}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {finalisationData.credit_notes &&
+                (finalisationData.credit_notes_details as { description: string; amount: number }[])?.length > 0 && (
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-sm font-medium mb-2">Credit Notes:</p>
+                    <ul className="text-sm space-y-1">
+                      {(finalisationData.credit_notes_details as { description: string; amount: number }[]).map(
+                        (item, i) => (
+                          <li key={i}>
+                            • {item.description}: €{item.amount}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Manual adjustments?</span>
                 <BooleanIndicator value={finalisationData.manual_adjustments} />

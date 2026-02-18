@@ -68,31 +68,25 @@ export const useDeleteImportBatch = () => {
   return useMutation({
     mutationFn: async (batchId: string) => {
       // Unlink receipts from transactions in this batch
-      const { data: batchTxIds } = await supabase
-        .from("transactions")
-        .select("id")
-        .eq("import_batch_id", batchId);
+      const { data: batchTxIds } = await supabase.from("transactions").select("id").eq("import_batch_id", batchId);
 
       if (batchTxIds?.length) {
         await supabase
           .from("receipts")
           .update({ transaction_id: null })
-          .in("transaction_id", batchTxIds.map((t) => t.id));
+          .in(
+            "transaction_id",
+            batchTxIds.map((t) => t.id),
+          );
       }
 
       // Delete transactions first (they reference import_batches via FK)
-      const { error: txError } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("import_batch_id", batchId);
+      const { error: txError } = await supabase.from("transactions").delete().eq("import_batch_id", batchId);
 
       if (txError) throw txError;
 
       // Then delete the batch (now safe, no FK references)
-      const { error } = await supabase
-        .from("import_batches")
-        .delete()
-        .eq("id", batchId);
+      const { error } = await supabase.from("import_batches").delete().eq("id", batchId);
 
       if (error) throw error;
       return batchId;
@@ -117,31 +111,25 @@ export const useBulkDeleteImportBatches = () => {
   return useMutation({
     mutationFn: async (batchIds: string[]) => {
       // Unlink receipts from transactions in these batches
-      const { data: batchTxIds } = await supabase
-        .from("transactions")
-        .select("id")
-        .in("import_batch_id", batchIds);
+      const { data: batchTxIds } = await supabase.from("transactions").select("id").in("import_batch_id", batchIds);
 
       if (batchTxIds?.length) {
         await supabase
           .from("receipts")
           .update({ transaction_id: null })
-          .in("transaction_id", batchTxIds.map((t) => t.id));
+          .in(
+            "transaction_id",
+            batchTxIds.map((t) => t.id),
+          );
       }
 
       // Delete transactions first (they reference import_batches via FK)
-      const { error: txError } = await supabase
-        .from("transactions")
-        .delete()
-        .in("import_batch_id", batchIds);
+      const { error: txError } = await supabase.from("transactions").delete().in("import_batch_id", batchIds);
 
       if (txError) throw txError;
 
       // Then delete the batches (now safe, no FK references)
-      const { error } = await supabase
-        .from("import_batches")
-        .delete()
-        .in("id", batchIds);
+      const { error } = await supabase.from("import_batches").delete().in("id", batchIds);
 
       if (error) throw error;
       return batchIds.length;

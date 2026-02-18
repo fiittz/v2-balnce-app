@@ -25,10 +25,7 @@ const SPECIAL_SALES_OPTIONS = [
 export function SalesSection({ data, onUpdate }: SalesSectionProps) {
   const addUnpaidInvoice = () => {
     onUpdate({
-      unpaid_invoices_list: [
-        ...data.unpaid_invoices_list,
-        { description: "", amount: 0 },
-      ],
+      unpaid_invoices_list: [...data.unpaid_invoices_list, { description: "", amount: 0 }],
     });
   };
 
@@ -49,9 +46,9 @@ export function SalesSection({ data, onUpdate }: SalesSectionProps) {
     if (id === "none") {
       onUpdate({ special_sales: current.includes("none") ? [] : ["none"] });
     } else {
-      const withoutNone = current.filter(s => s !== "none");
+      const withoutNone = current.filter((s) => s !== "none");
       if (current.includes(id)) {
-        onUpdate({ special_sales: withoutNone.filter(s => s !== id) });
+        onUpdate({ special_sales: withoutNone.filter((s) => s !== id) });
       } else {
         onUpdate({ special_sales: [...withoutNone, id] });
       }
@@ -62,16 +59,12 @@ export function SalesSection({ data, onUpdate }: SalesSectionProps) {
     <div className="space-y-6">
       <div className="space-y-1">
         <h3 className="text-lg font-semibold">Sales (Output VAT)</h3>
-        <p className="text-sm text-muted-foreground">
-          Confirm all sales for this VAT period have been recorded
-        </p>
+        <p className="text-sm text-muted-foreground">Confirm all sales for this VAT period have been recorded</p>
       </div>
 
       {/* Question 1: All sales added */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">
-          Have all sales for this period been entered?
-        </Label>
+        <Label className="text-base font-medium">Have all sales for this period been entered?</Label>
         <RadioGroup
           value={data.all_sales_added || ""}
           onValueChange={(v) => onUpdate({ all_sales_added: v as "yes" | "no" | "not_sure" })}
@@ -113,9 +106,7 @@ export function SalesSection({ data, onUpdate }: SalesSectionProps) {
 
         {data.unpaid_invoices && (
           <div className="ml-6 space-y-3">
-            <p className="text-sm text-muted-foreground">
-              List the unpaid invoices below:
-            </p>
+            <p className="text-sm text-muted-foreground">List the unpaid invoices below:</p>
             {data.unpaid_invoices_list.map((invoice, index) => (
               <div key={index} className="flex gap-3">
                 <Input
@@ -131,11 +122,7 @@ export function SalesSection({ data, onUpdate }: SalesSectionProps) {
                   onChange={(e) => updateUnpaidInvoice(index, "amount", parseFloat(e.target.value) || 0)}
                   className="w-32"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeUnpaidInvoice(index)}
-                >
+                <Button variant="ghost" size="icon" onClick={() => removeUnpaidInvoice(index)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -150,9 +137,7 @@ export function SalesSection({ data, onUpdate }: SalesSectionProps) {
 
       {/* Question 3: Special sales */}
       <div className="space-y-3">
-        <Label className="text-base font-medium">
-          Did you make any of the following types of sales?
-        </Label>
+        <Label className="text-base font-medium">Did you make any of the following types of sales?</Label>
         <div className="grid gap-2">
           {SPECIAL_SALES_OPTIONS.map((option) => (
             <div

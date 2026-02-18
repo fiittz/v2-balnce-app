@@ -1,24 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, FileText, Receipt, ChevronRight, User, Link2, Shield, LogOut, Loader2, Save, MapPin, Sun, Moon, Palette } from "lucide-react";
+import {
+  Building2,
+  FileText,
+  Receipt,
+  ChevronRight,
+  User,
+  Link2,
+  Shield,
+  LogOut,
+  Loader2,
+  Save,
+  MapPin,
+  Sun,
+  Moon,
+  Palette,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AddressAutocomplete } from "@/components/ui/address-autocomplete";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/components/ThemeProvider";
 import PenguinIcon from "@/components/PenguinIcon";
@@ -54,7 +58,7 @@ const Settings = () => {
   const queryClient = useQueryClient();
   const { user, profile, signOut } = useAuth();
   const { data: onboarding } = useOnboardingSettings();
-  
+
   const { theme, toggleTheme } = useTheme();
   const { data: directorRows } = useDirectorOnboarding();
   const [showBusinessDialog, setShowBusinessDialog] = useState(false);
@@ -98,7 +102,9 @@ const Settings = () => {
           subsistenceRadius: biz?.subsistence_radius_km || 8,
         };
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return { placeOfWork: "", workshopAddress: "", subsistenceRadius: 8 };
   };
 
@@ -148,7 +154,9 @@ const Settings = () => {
       try {
         const raw = localStorage.getItem("business_onboarding_extra");
         if (raw) extra = JSON.parse(raw);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       if (!extra.businesses || !Array.isArray(extra.businesses) || extra.businesses.length === 0) {
         extra.businesses = [{}];
@@ -173,10 +181,7 @@ const Settings = () => {
             commute_method: commuteMethod,
             vehicle_owned_by_director: vehicleOwnedByDirector,
           };
-          await supabase
-            .from("director_onboarding")
-            .update({ onboarding_data: updatedData })
-            .eq("id", existing.id);
+          await supabase.from("director_onboarding").update({ onboarding_data: updatedData }).eq("id", existing.id);
         }
       }
 
@@ -192,7 +197,7 @@ const Settings = () => {
 
   const handleSaveBusinessInfo = async () => {
     if (!user?.id) return;
-    
+
     setIsSaving(true);
     try {
       // Update profile
@@ -229,7 +234,7 @@ const Settings = () => {
       // Refresh data
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
       await queryClient.invalidateQueries({ queryKey: ["onboarding-settings"] });
-      
+
       toast.success("Business details updated");
       setShowBusinessDialog(false);
     } catch (error) {
@@ -298,7 +303,8 @@ const Settings = () => {
   };
 
   const displayBusinessName = onboarding?.business_name || profile?.business_name || "Your Business";
-  const displayBusinessType = businessTypes.find(bt => bt.value === (onboarding?.business_type || profile?.business_type))?.label || "Not set";
+  const displayBusinessType =
+    businessTypes.find((bt) => bt.value === (onboarding?.business_type || profile?.business_type))?.label || "Not set";
 
   const currentTravel = getTravelSettings();
   const currentCommuteMethod = getCommuteMethod();
@@ -311,29 +317,49 @@ const Settings = () => {
       title: "Business",
       items: [
         { icon: Building2, label: "Business Info", description: displayBusinessType, onClick: openBusinessDialog },
-        { icon: MapPin, label: "Trip & Travel", description: currentTravel.workshopAddress || currentTravel.placeOfWork || "Set your place of work", onClick: openTravelDialog },
-        { icon: FileText, label: "VAT Settings", description: onboarding?.vat_registered ? `VAT: ${onboarding?.vat_number || "Registered"}` : "Not VAT registered", onClick: () => navigate("/vat") },
-        { icon: Receipt, label: "RCT Settings", description: onboarding?.rct_registered ? "RCT enabled" : "Not using RCT", onClick: () => navigate("/rct") },
-      ]
+        {
+          icon: MapPin,
+          label: "Trip & Travel",
+          description: currentTravel.workshopAddress || currentTravel.placeOfWork || "Set your place of work",
+          onClick: openTravelDialog,
+        },
+        {
+          icon: FileText,
+          label: "VAT Settings",
+          description: onboarding?.vat_registered
+            ? `VAT: ${onboarding?.vat_number || "Registered"}`
+            : "Not VAT registered",
+          onClick: () => navigate("/vat"),
+        },
+        {
+          icon: Receipt,
+          label: "RCT Settings",
+          description: onboarding?.rct_registered ? "RCT enabled" : "Not using RCT",
+          onClick: () => navigate("/rct"),
+        },
+      ],
     },
     {
       title: "Connections",
       items: [
-        { icon: Link2, label: "Bank Connections", description: "Manage linked accounts", onClick: () => navigate("/bank") },
-      ]
+        {
+          icon: Link2,
+          label: "Bank Connections",
+          description: "Manage linked accounts",
+          onClick: () => navigate("/bank"),
+        },
+      ],
     },
     {
       title: "Account",
       items: [
         { icon: User, label: "User Profile", description: user?.email || "Not signed in", onClick: openProfileDialog },
         { icon: Shield, label: "Security", description: "Change password", onClick: openSecurityDialog },
-      ]
+      ],
     },
     {
       title: "Appearance",
-      items: [
-        { icon: Palette, label: "Dark Mode", description: theme === "dark" ? "On" : "Off", toggle: true },
-      ]
+      items: [{ icon: Palette, label: "Dark Mode", description: theme === "dark" ? "On" : "Off", toggle: true }],
     },
   ];
 
@@ -355,7 +381,7 @@ const Settings = () => {
                 placeholder="Enter business name"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="businessType">Business Type</Label>
               <Select value={businessType} onValueChange={setBusinessType}>
@@ -371,7 +397,7 @@ const Settings = () => {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="vatNumber">VAT Number</Label>
               <Input
@@ -381,7 +407,7 @@ const Settings = () => {
                 placeholder="IE1234567X"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
               <Input
@@ -391,7 +417,7 @@ const Settings = () => {
                 placeholder="+353 1 234 5678"
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="address">Business Address</Label>
               <AddressAutocomplete
@@ -419,17 +445,13 @@ const Settings = () => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setShowBusinessDialog(false)}>
               Cancel
             </Button>
             <Button onClick={handleSaveBusinessInfo} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Save
             </Button>
           </div>
@@ -535,11 +557,7 @@ const Settings = () => {
               Cancel
             </Button>
             <Button onClick={handleSaveTravelInfo} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Save
             </Button>
           </div>
@@ -555,12 +573,7 @@ const Settings = () => {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="profileEmail">Email</Label>
-              <Input
-                id="profileEmail"
-                value={user?.email || ""}
-                disabled
-                className="opacity-60"
-              />
+              <Input id="profileEmail" value={user?.email || ""} disabled className="opacity-60" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="displayName">Full Name</Label>
@@ -577,11 +590,7 @@ const Settings = () => {
               Cancel
             </Button>
             <Button onClick={handleSaveProfile} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Save
             </Button>
           </div>
@@ -621,11 +630,7 @@ const Settings = () => {
               Cancel
             </Button>
             <Button onClick={handleChangePassword} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Shield className="w-4 h-4 mr-2" />
-              )}
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Shield className="w-4 h-4 mr-2" />}
               Update Password
             </Button>
           </div>
@@ -662,7 +667,7 @@ const Settings = () => {
 
         {/* Settings Sections */}
         {settingsSections.map((section, sectionIndex) => (
-          <div 
+          <div
             key={section.title}
             className="animate-fade-in"
             style={{ animationDelay: `${(sectionIndex + 1) * 0.05}s` }}
@@ -679,7 +684,11 @@ const Settings = () => {
                 >
                   <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center">
                     {"toggle" in item && item.toggle ? (
-                      theme === "dark" ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />
+                      theme === "dark" ? (
+                        <Moon className="w-5 h-5" />
+                      ) : (
+                        <Sun className="w-5 h-5" />
+                      )
                     ) : (
                       <item.icon className="w-5 h-5" />
                     )}
@@ -704,9 +713,9 @@ const Settings = () => {
         ))}
 
         {/* Sign Out */}
-        <button 
+        <button
           onClick={handleSignOut}
-          className="w-full bg-card rounded-2xl p-4 card-shadow flex items-center gap-4 hover:bg-destructive/5 transition-colors animate-fade-in" 
+          className="w-full bg-card rounded-2xl p-4 card-shadow flex items-center gap-4 hover:bg-destructive/5 transition-colors animate-fade-in"
           style={{ animationDelay: "0.25s" }}
         >
           <div className="w-10 h-10 bg-destructive/10 rounded-xl flex items-center justify-center">

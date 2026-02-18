@@ -110,7 +110,9 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
 
   const effectiveDueDate = dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
-  const itemsHTML = items.map((item) => `
+  const itemsHTML = items
+    .map(
+      (item) => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${item.description}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${UNIT_TYPE_LABELS[item.unitType || "items"] || "Items"}</td>
@@ -119,7 +121,9 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${VAT_RATE_LABELS[item.vatRate] || item.vatRate}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">${formatCurrency(item.total_amount)}</td>
     </tr>
-  `).join("");
+  `,
+    )
+    .join("");
 
   const noteText = comment || notes || "";
 
@@ -209,20 +213,28 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
       <label>Invoice Date</label>
       <span>${formatDate(invoiceDate)}</span>
     </div>
-    ${supplyDate && supplyDate !== invoiceDate ? `
+    ${
+      supplyDate && supplyDate !== invoiceDate
+        ? `
     <div class="date-item">
       <label>Date of Supply</label>
       <span>${formatDate(supplyDate)}</span>
-    </div>` : ""}
+    </div>`
+        : ""
+    }
     <div class="date-item">
       <label>Due Date</label>
       <span>${formatDate(effectiveDueDate)}</span>
     </div>
-    ${customerPoNumber ? `
+    ${
+      customerPoNumber
+        ? `
     <div class="date-item">
       <label>PO Number</label>
       <span>${customerPoNumber}</span>
-    </div>` : ""}
+    </div>`
+        : ""
+    }
   </div>
 
   <table>
@@ -251,7 +263,9 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
         <span>VAT${rctEnabled ? " (Reverse Charge)" : ""}</span>
         <span>${rctEnabled ? "€0.00" : formatCurrency(vatAmount)}</span>
       </div>
-      ${rctEnabled ? `
+      ${
+        rctEnabled
+          ? `
       <div class="totals-row" style="font-size: 11px; color: #666;">
         <span colspan="2">VAT reverse charge applies per s.12(1)(b) VATCA 2010</span>
         <span></span>
@@ -259,28 +273,38 @@ export function generateInvoiceHTML(data: InvoiceHTMLData): string {
       <div class="totals-row rct">
         <span>RCT Deduction (${rctRate}%)</span>
         <span>-${formatCurrency(rctAmount)}</span>
-      </div>` : ""}
+      </div>`
+          : ""
+      }
       <div class="totals-row total">
         <span>${rctEnabled ? "Net Receivable" : "Total Due"}</span>
-        <span>${formatCurrency(rctEnabled ? (total - rctAmount) : total)}</span>
+        <span>${formatCurrency(rctEnabled ? total - rctAmount : total)}</span>
       </div>
     </div>
   </div>
 
-  ${supplierIban ? `
+  ${
+    supplierIban
+      ? `
   <div class="notes-section">
     <h3>Payment Details</h3>
     <p style="font-size: 13px; line-height: 1.8;">
       <strong>IBAN:</strong> <span style="font-family: monospace;">${supplierIban}</span><br>
       ${supplierBic ? `<strong>BIC:</strong> <span style="font-family: monospace;">${supplierBic}</span>` : ""}
     </p>
-  </div>` : ""}
+  </div>`
+      : ""
+  }
 
-  ${noteText ? `
+  ${
+    noteText
+      ? `
   <div class="notes-section">
     <h3>Notes</h3>
     <p>${noteText}</p>
-  </div>` : ""}
+  </div>`
+      : ""
+  }
 
   <div class="footer">
     <p>Thank you for your business!</p>

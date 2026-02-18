@@ -69,10 +69,7 @@ vi.mock("@/integrations/supabase/client", () => {
   };
 });
 
-import {
-  matchReceiptToTransaction,
-  linkReceiptToTransaction,
-} from "../receiptMatcher";
+import { matchReceiptToTransaction, linkReceiptToTransaction } from "../receiptMatcher";
 
 // ── Helpers ──────────────────────────────────────────────────
 const USER_ID = "user-123";
@@ -117,13 +114,7 @@ describe("matchReceiptToTransaction — no candidates", () => {
   it("returns null match when no candidate transactions found", async () => {
     setCandidates([]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     expect(result.receiptId).toBe(RECEIPT_ID);
     expect(result.transactionId).toBeNull();
@@ -135,13 +126,7 @@ describe("matchReceiptToTransaction — no candidates", () => {
   it("returns null match with error message on query error", async () => {
     setError("connection refused");
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     expect(result.transactionId).toBeNull();
     expect(result.score).toBe(0);
@@ -168,7 +153,7 @@ describe("matchReceiptToTransaction — amount scoring", () => {
       RECEIPT_ID,
       42.5, // receipt amount
       null, // no vendor
-      null // no date
+      null, // no date
     );
 
     expect(result.score).toBe(0.5);
@@ -185,13 +170,7 @@ describe("matchReceiptToTransaction — amount scoring", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      99.99,
-      null,
-      null
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 99.99, null, null);
 
     expect(result.score).toBe(0.5);
   });
@@ -210,7 +189,7 @@ describe("matchReceiptToTransaction — amount scoring", () => {
       RECEIPT_ID,
       42.5, // different amount
       null,
-      null
+      null,
     );
 
     expect(result.score).toBe(0);
@@ -233,7 +212,7 @@ describe("matchReceiptToTransaction — amount scoring", () => {
       RECEIPT_ID,
       75.0, // positive receipt amount
       null,
-      null
+      null,
     );
 
     expect(result.score).toBe(0.5);
@@ -259,7 +238,7 @@ describe("matchReceiptToTransaction — vendor scoring", () => {
       RECEIPT_ID,
       42.5,
       "Screwfix Ireland", // full vendor
-      null
+      null,
     );
 
     expect(result.score).toBe(0.3);
@@ -280,7 +259,7 @@ describe("matchReceiptToTransaction — vendor scoring", () => {
       RECEIPT_ID,
       42.5,
       "chadwicks dublin", // lowercase
-      null
+      null,
     );
 
     expect(result.score).toBe(0.3);
@@ -301,7 +280,7 @@ describe("matchReceiptToTransaction — vendor scoring", () => {
       RECEIPT_ID,
       42.5,
       "Chadwicks Dublin", // "chadwicks" is found in description
-      null
+      null,
     );
 
     expect(result.score).toBe(0.3);
@@ -323,7 +302,7 @@ describe("matchReceiptToTransaction — vendor scoring", () => {
       RECEIPT_ID,
       42.5,
       "AB Something", // "ab" is only 2 chars
-      null
+      null,
     );
 
     expect(result.score).toBe(0);
@@ -343,7 +322,7 @@ describe("matchReceiptToTransaction — vendor scoring", () => {
       RECEIPT_ID,
       42.5,
       null, // no vendor
-      null
+      null,
     );
 
     expect(result.score).toBe(0);
@@ -363,7 +342,7 @@ describe("matchReceiptToTransaction — vendor scoring", () => {
       RECEIPT_ID,
       42.5,
       "  ", // whitespace only
-      null
+      null,
     );
 
     // After trim, vendorLower is empty, so the `if (vendorLower && ...)` check fails
@@ -389,7 +368,7 @@ describe("matchReceiptToTransaction — date scoring", () => {
       RECEIPT_ID,
       42.5,
       null,
-      "2024-06-15" // same day
+      "2024-06-15", // same day
     );
 
     expect(result.score).toBe(0.2);
@@ -405,13 +384,7 @@ describe("matchReceiptToTransaction — date scoring", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      null,
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, null, "2024-06-15");
 
     expect(result.score).toBe(0.15);
     expect(result.explanation).toContain("Date: within +/-1 day");
@@ -426,13 +399,7 @@ describe("matchReceiptToTransaction — date scoring", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      null,
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, null, "2024-06-15");
 
     expect(result.score).toBe(0.15);
     expect(result.explanation).toContain("Date: within +/-1 day");
@@ -447,13 +414,7 @@ describe("matchReceiptToTransaction — date scoring", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      null,
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, null, "2024-06-15");
 
     expect(result.score).toBe(0);
   });
@@ -472,7 +433,7 @@ describe("matchReceiptToTransaction — date scoring", () => {
       RECEIPT_ID,
       42.5,
       null,
-      null // no receipt date
+      null, // no receipt date
     );
 
     expect(result.score).toBe(0);
@@ -492,13 +453,7 @@ describe("matchReceiptToTransaction — combined scoring", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     expect(result.score).toBe(1.0);
     expect(result.autoMatched).toBe(true);
@@ -517,13 +472,7 @@ describe("matchReceiptToTransaction — combined scoring", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     expect(result.score).toBe(0.95); // 0.50 + 0.30 + 0.15
     expect(result.autoMatched).toBe(true);
@@ -543,7 +492,7 @@ describe("matchReceiptToTransaction — combined scoring", () => {
       RECEIPT_ID,
       42.5,
       "Screwfix", // vendor not in description
-      "2024-06-15"
+      "2024-06-15",
     );
 
     expect(result.score).toBe(0.7); // 0.50 + 0.20
@@ -559,13 +508,7 @@ describe("matchReceiptToTransaction — combined scoring", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     expect(result.score).toBe(0.5); // 0.30 + 0.20
     expect(result.autoMatched).toBe(false);
@@ -585,7 +528,7 @@ describe("matchReceiptToTransaction — combined scoring", () => {
       RECEIPT_ID,
       42.5,
       "Screwfix",
-      null // no date provided
+      null, // no date provided
     );
 
     expect(result.score).toBe(0.8); // 0.50 + 0.30
@@ -619,13 +562,7 @@ describe("matchReceiptToTransaction — best candidate selection", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     expect(result.transactionId).toBe("tx-good");
     expect(result.score).toBe(1.0);
@@ -648,13 +585,7 @@ describe("matchReceiptToTransaction — best candidate selection", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      null,
-      null
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, null, null);
 
     // Both score 0.50 (amount only). First one wins because score > bestScore
     // uses strict >, so the first candidate keeps the lead.
@@ -676,13 +607,7 @@ describe("matchReceiptToTransaction — autoMatched threshold", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     // 0.50 + 0.30 + 0.15 = 0.95
     expect(result.score).toBe(0.95);
@@ -703,7 +628,7 @@ describe("matchReceiptToTransaction — autoMatched threshold", () => {
       RECEIPT_ID,
       42.5,
       "Screwfix", // no vendor match
-      "2024-06-15"
+      "2024-06-15",
     );
 
     // 0.50 + 0.20 = 0.70
@@ -736,13 +661,7 @@ describe("matchReceiptToTransaction — query construction", () => {
   it("applies date window filter when receiptDate is provided", async () => {
     setCandidates([]);
 
-    await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      null,
-      "2024-06-15"
-    );
+    await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, null, "2024-06-15");
 
     expect(mockGte).toHaveBeenCalledWith("transaction_date", "2024-06-13");
     expect(mockLte).toHaveBeenCalledWith("transaction_date", "2024-06-17");
@@ -771,13 +690,7 @@ describe("matchReceiptToTransaction — edge cases", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     // Amount 0.50 + Date 0.20 = 0.70 (no vendor match on empty description)
     expect(result.score).toBe(0.7);
@@ -797,7 +710,7 @@ describe("matchReceiptToTransaction — edge cases", () => {
       RECEIPT_ID,
       0, // zero amount
       null,
-      "2024-06-15"
+      "2024-06-15",
     );
 
     // Amount match (0.50) + date match (0.20) = 0.70
@@ -813,13 +726,7 @@ describe("matchReceiptToTransaction — edge cases", () => {
       }),
     ]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      "Screwfix",
-      "2024-06-15"
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, "Screwfix", "2024-06-15");
 
     // 0.50 + 0.30 + 0.15 = 0.95 (no floating point weirdness)
     expect(result.score).toBe(0.95);
@@ -829,13 +736,7 @@ describe("matchReceiptToTransaction — edge cases", () => {
   it("returns receiptId in result regardless of match", async () => {
     setCandidates([]);
 
-    const result = await matchReceiptToTransaction(
-      USER_ID,
-      RECEIPT_ID,
-      42.5,
-      null,
-      null
-    );
+    const result = await matchReceiptToTransaction(USER_ID, RECEIPT_ID, 42.5, null, null);
 
     expect(result.receiptId).toBe(RECEIPT_ID);
   });
@@ -846,11 +747,7 @@ describe("matchReceiptToTransaction — edge cases", () => {
 // ==============================================================
 describe("linkReceiptToTransaction", () => {
   it("updates both receipts and transactions tables", async () => {
-    await linkReceiptToTransaction(
-      "receipt-1",
-      "tx-1",
-      "https://example.com/receipt.jpg"
-    );
+    await linkReceiptToTransaction("receipt-1", "tx-1", "https://example.com/receipt.jpg");
 
     // First call: update receipts table
     expect(mockFrom).toHaveBeenCalledWith("receipts");
@@ -869,7 +766,7 @@ describe("linkReceiptToTransaction", () => {
       "tx-1",
       "https://example.com/receipt.jpg",
       23.5, // vatAmount
-      0.23 // vatRate
+      0.23, // vatRate
     );
 
     // The transaction update should include VAT fields
@@ -881,13 +778,7 @@ describe("linkReceiptToTransaction", () => {
   });
 
   it("omits VAT fields when they are null/undefined", async () => {
-    await linkReceiptToTransaction(
-      "receipt-1",
-      "tx-1",
-      "https://example.com/receipt.jpg",
-      null,
-      null
-    );
+    await linkReceiptToTransaction("receipt-1", "tx-1", "https://example.com/receipt.jpg", null, null);
 
     // Transaction update should only have receipt_url
     expect(mockUpdate).toHaveBeenCalledWith({
@@ -899,9 +790,9 @@ describe("linkReceiptToTransaction", () => {
     // Make the chain return an error for the receipt update
     mockResolvedData = { data: null, error: { message: "receipt update failed" } };
 
-    await expect(
-      linkReceiptToTransaction("r-1", "t-1", "https://example.com/img.jpg")
-    ).rejects.toThrow("Failed to link receipt: receipt update failed");
+    await expect(linkReceiptToTransaction("r-1", "t-1", "https://example.com/img.jpg")).rejects.toThrow(
+      "Failed to link receipt: receipt update failed",
+    );
   });
 
   it("throws when transaction update fails (line 201)", async () => {
@@ -910,14 +801,38 @@ describe("linkReceiptToTransaction", () => {
     mockFrom.mockImplementation((table: string) => {
       const isReceipts = table === "receipts";
       const chain: Record<string, unknown> = {
-        select: (...a: unknown[]) => { mockSelect(...a); return chain; },
-        update: (...a: unknown[]) => { mockUpdate(...a); return chain; },
-        eq: (...a: unknown[]) => { mockEq(...a); return chain; },
-        is: (...a: unknown[]) => { mockIs(...a); return chain; },
-        gte: (...a: unknown[]) => { mockGte(...a); return chain; },
-        lte: (...a: unknown[]) => { mockLte(...a); return chain; },
-        order: (...a: unknown[]) => { mockOrder(...a); return chain; },
-        single: () => { mockSingle(); return chain; },
+        select: (...a: unknown[]) => {
+          mockSelect(...a);
+          return chain;
+        },
+        update: (...a: unknown[]) => {
+          mockUpdate(...a);
+          return chain;
+        },
+        eq: (...a: unknown[]) => {
+          mockEq(...a);
+          return chain;
+        },
+        is: (...a: unknown[]) => {
+          mockIs(...a);
+          return chain;
+        },
+        gte: (...a: unknown[]) => {
+          mockGte(...a);
+          return chain;
+        },
+        lte: (...a: unknown[]) => {
+          mockLte(...a);
+          return chain;
+        },
+        order: (...a: unknown[]) => {
+          mockOrder(...a);
+          return chain;
+        },
+        single: () => {
+          mockSingle();
+          return chain;
+        },
         then: (resolve: (value: unknown) => void) => {
           if (isReceipts) {
             resolve({ error: null });
@@ -929,8 +844,8 @@ describe("linkReceiptToTransaction", () => {
       return chain;
     });
 
-    await expect(
-      linkReceiptToTransaction("r-1", "t-1", "https://example.com/img.jpg")
-    ).rejects.toThrow("Failed to update transaction: tx update failed");
+    await expect(linkReceiptToTransaction("r-1", "t-1", "https://example.com/img.jpg")).rejects.toThrow(
+      "Failed to update transaction: tx update failed",
+    );
   });
 });

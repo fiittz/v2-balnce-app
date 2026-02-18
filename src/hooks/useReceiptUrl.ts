@@ -19,7 +19,9 @@ export function useReceiptUrl(receiptPath: string | null): string | null {
       if (!cancelled) setUrl(signed);
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [receiptPath]);
 
   return url;

@@ -49,19 +49,14 @@ export interface VehicleDepreciation {
  * @param vehicle  Vehicle asset details from director onboarding.
  * @param taxYear  The tax year (calendar year) to calculate for.
  */
-export function calculateVehicleDepreciation(
-  vehicle: VehicleAsset,
-  taxYear: number
-): VehicleDepreciation {
+export function calculateVehicleDepreciation(vehicle: VehicleAsset, taxYear: number): VehicleDepreciation {
   const cost = vehicle.purchaseCost;
   const qualifyingCost = Math.min(cost, MOTOR_VEHICLE_CAP);
   const businessPct = Math.max(0, Math.min(100, vehicle.businessUsePct)) / 100;
 
   // Calculate years owned: count of full or partial years in which the asset
   // was owned. Year of acquisition counts as year 1.
-  const acquiredYear = vehicle.dateAcquired
-    ? new Date(vehicle.dateAcquired).getFullYear()
-    : taxYear;
+  const acquiredYear = vehicle.dateAcquired ? new Date(vehicle.dateAcquired).getFullYear() : taxYear;
 
   const yearsOwned = Math.max(0, taxYear - acquiredYear + 1);
 
@@ -71,11 +66,10 @@ export function calculateVehicleDepreciation(
   const annualAllowanceFull = Math.round(qualifyingCost * ANNUAL_RATE * 100) / 100;
   const annualAllowance = Math.round(annualAllowanceFull * businessPct * 100) / 100;
 
-  const cumulativeAllowances = Math.round(
-    Math.min(claimableYears * annualAllowanceFull * businessPct, qualifyingCost * businessPct) * 100
-  ) / 100;
+  const cumulativeAllowances =
+    Math.round(Math.min(claimableYears * annualAllowanceFull * businessPct, qualifyingCost * businessPct) * 100) / 100;
 
-  const netBookValue = Math.max(0, Math.round((qualifyingCost - (claimableYears * annualAllowanceFull)) * 100) / 100);
+  const netBookValue = Math.max(0, Math.round((qualifyingCost - claimableYears * annualAllowanceFull) * 100) / 100);
 
   return {
     cost,

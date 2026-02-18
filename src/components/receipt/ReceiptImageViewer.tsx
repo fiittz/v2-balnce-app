@@ -15,11 +15,7 @@ export function ReceiptImageViewer({ open, onOpenChange, imageUrl, title }: Rece
           <DialogTitle>{title || "Receipt"}</DialogTitle>
         </DialogHeader>
         <div className="flex items-center justify-center overflow-auto max-h-[75vh]">
-          <img
-            src={imageUrl}
-            alt={title || "Receipt"}
-            className="max-w-full max-h-[70vh] object-contain rounded-lg"
-          />
+          <img src={imageUrl} alt={title || "Receipt"} className="max-w-full max-h-[70vh] object-contain rounded-lg" />
         </div>
       </DialogContent>
     </Dialog>

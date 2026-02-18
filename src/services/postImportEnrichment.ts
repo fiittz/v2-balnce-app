@@ -48,9 +48,7 @@ function mapAiVatRate(suggestion: string): { vat_type: string; vat_deductible: b
  * 5. Saves results to vendor_cache with source='ai'
  * 6. Updates transactions with enriched categories
  */
-export async function enrichLowConfidenceTransactions(
-  options: EnrichmentOptions
-): Promise<EnrichmentProgress> {
+export async function enrichLowConfidenceTransactions(options: EnrichmentOptions): Promise<EnrichmentProgress> {
   const { userId, transactionIds, vendorCache, userIndustry, userBusinessType, onProgress } = options;
 
   const progress: EnrichmentProgress = {
@@ -112,12 +110,7 @@ export async function enrichLowConfidenceTransactions(
 
           // 3b. Call AI vendor lookup
           try {
-            const aiResult = await lookupVendor(
-              vendor.description,
-              vendor.amount,
-              userIndustry,
-              userBusinessType
-            );
+            const aiResult = await lookupVendor(vendor.description, vendor.amount, userIndustry, userBusinessType);
 
             if (aiResult.confidence < 30) {
               progress.skipped++;
@@ -148,9 +141,7 @@ export async function enrichLowConfidenceTransactions(
               .limit(1);
 
             if (categories && categories.length > 0) {
-              const vatRate = parseFloat(
-                aiResult.vat_rate_suggestion.replace(/[^0-9.]/g, "")
-              ) || 0;
+              const vatRate = parseFloat(aiResult.vat_rate_suggestion.replace(/[^0-9.]/g, "")) || 0;
 
               await supabase
                 .from("transactions")
@@ -171,7 +162,7 @@ export async function enrichLowConfidenceTransactions(
             progress.failed++;
             return null;
           }
-        })
+        }),
       );
 
       progress.processed += batch.length;

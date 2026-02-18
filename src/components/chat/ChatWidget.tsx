@@ -46,11 +46,7 @@ function AssistantMessage({ content }: { content: string }) {
   return (
     <>
       {parts.map((part, i) =>
-        typeof part === "string" ? (
-          <ChatMarkdown key={i} content={part} />
-        ) : (
-          <ChatChart key={i} chart={part} />
-        )
+        typeof part === "string" ? <ChatMarkdown key={i} content={part} /> : <ChatChart key={i} chart={part} />,
       )}
     </>
   );
@@ -60,9 +56,17 @@ function AssistantMessage({ content }: { content: string }) {
 const FOLLOW_UPS: Record<string, string[]> = {
   show_tax_summary: ["Show my expense breakdown", "How can I reduce this?", "What if I contributed to pension?"],
   show_expense_breakdown: ["Show expenses as a chart", "Which of these are disallowed?", "Run a company health check"],
-  calculate_pension_savings: ["Compare salary vs dividend vs pension", "Show me my CT1 computation", "What if I bought a van?"],
+  calculate_pension_savings: [
+    "Compare salary vs dividend vs pension",
+    "Show me my CT1 computation",
+    "What if I bought a van?",
+  ],
   show_tax_deadlines: ["Run a company health check", "How much CT do I owe?", "Show me my P&L"],
-  run_company_health_check: ["Run a director health check", "How much could I save with pension?", "Show my expenses as a chart"],
+  run_company_health_check: [
+    "Run a director health check",
+    "How much could I save with pension?",
+    "Show my expenses as a chart",
+  ],
   run_director_health_check: ["Run a company health check", "Compare salary vs dividend", "What are my deadlines?"],
   what_if_buy_van: ["What if I hire an employee at €35k?", "Show my CT1 computation", "Run a company health check"],
   what_if_hire_employee: ["Compare salary vs dividend", "What if I bought a van?", "Show my expense breakdown"],
@@ -71,7 +75,11 @@ const FOLLOW_UPS: Record<string, string[]> = {
   show_chart: ["Show my expense breakdown", "How can I reduce my tax?", "Run a company health check"],
   navigate_to_page: ["How much CT do I owe?", "Run a company health check", "Show my expenses"],
   show_trial_balance: ["Run a company health check", "Show my expense breakdown", "How can I fix these issues?"],
-  explain_eu_vat: ["How does reverse charge work for EU services?", "What are my VIES filing obligations?", "Explain postponed accounting"],
+  explain_eu_vat: [
+    "How does reverse charge work for EU services?",
+    "What are my VIES filing obligations?",
+    "Explain postponed accounting",
+  ],
 };
 
 // ── Tool status labels ──────────────────────────────────────
@@ -95,8 +103,11 @@ const TOOL_STATUS_LABELS: Record<string, string> = {
 const ALL_TOOL_NAMES = new Set(Object.keys(TOOL_STATUS_LABELS));
 
 // ── Content sanitizer ───────────────────────────────────────
-const JUNK_RE = /### Function<[^>]*>\w+\s*(?:json\s*)?\{[\s\S]*?\}\s*#?|<\|?tool_?call\|?>\s*\w+\s*\{[\s\S]*?\}|จัดอันดับ;/gi;
-function sanitize(text: string) { return text.replace(JUNK_RE, "").trim(); }
+const JUNK_RE =
+  /### Function<[^>]*>\w+\s*(?:json\s*)?\{[\s\S]*?\}\s*#?|<\|?tool_?call\|?>\s*\w+\s*\{[\s\S]*?\}|จัดอันดับ;/gi;
+function sanitize(text: string) {
+  return text.replace(JUNK_RE, "").trim();
+}
 
 // ── Conversation grouping ────────────────────────────────────
 interface StoredMessage {
@@ -241,7 +252,20 @@ export default function ChatWidget() {
       invoices: invoices ?? [],
       trialBalance,
     });
-  }, [ct1, savedCT1, allDirectorData, profile, taxYear, allTransactions, onboardingSettings, businessExtra, directorRows, allForm11Data, invoices, trialBalance]);
+  }, [
+    ct1,
+    savedCT1,
+    allDirectorData,
+    profile,
+    taxYear,
+    allTransactions,
+    onboardingSettings,
+    businessExtra,
+    directorRows,
+    allForm11Data,
+    invoices,
+    trialBalance,
+  ]);
 
   const euTradeSettings = useMemo(() => {
     if (!onboardingSettings?.eu_trade_enabled) return undefined;
@@ -259,26 +283,42 @@ export default function ChatWidget() {
     };
   }, [onboardingSettings]);
 
-  const toolContext: ToolContext = useMemo(() => ({
-    ct1,
-    savedCT1,
-    taxYear,
-    navigate,
-    directorData: allDirectorData[0] ?? null,
-    transactionCount: allTransactions?.length ?? 0,
-    invoiceCount: invoices?.length ?? 0,
-    transactions: allTransactions ?? [],
-    invoices: invoices ?? [],
-    incorporationDate: profile?.incorporation_date ?? null,
-    allForm11Data,
-    trialBalance,
-    euTradeSettings,
-  }), [ct1, savedCT1, taxYear, navigate, allDirectorData, allTransactions, invoices, profile, allForm11Data, trialBalance, euTradeSettings]);
+  const toolContext: ToolContext = useMemo(
+    () => ({
+      ct1,
+      savedCT1,
+      taxYear,
+      navigate,
+      directorData: allDirectorData[0] ?? null,
+      transactionCount: allTransactions?.length ?? 0,
+      invoiceCount: invoices?.length ?? 0,
+      transactions: allTransactions ?? [],
+      invoices: invoices ?? [],
+      incorporationDate: profile?.incorporation_date ?? null,
+      allForm11Data,
+      trialBalance,
+      euTradeSettings,
+    }),
+    [
+      ct1,
+      savedCT1,
+      taxYear,
+      navigate,
+      allDirectorData,
+      allTransactions,
+      invoices,
+      profile,
+      allForm11Data,
+      trialBalance,
+      euTradeSettings,
+    ],
+  );
 
   // ── Proactive personalized opener ─────────────────────────
   const proactiveGreeting = useMemo(() => {
     if (ct1.isLoading || !allTransactions) return null;
-    const eur = (n: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(n);
+    const eur = (n: number) =>
+      new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", minimumFractionDigits: 0 }).format(n);
 
     const totalIncome = ct1.detectedIncome.reduce((s, i) => s + i.amount, 0);
     if (totalIncome === 0) return null;
@@ -296,14 +336,16 @@ export default function ChatWidget() {
     const parts: string[] = [];
     parts.push(`I can see **${eur(totalIncome)}** income and **${eur(totalCT)}** CT liability for ${taxYear}.`);
 
-    const anyPension = allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
+    const anyPension = allForm11Data?.some((f) => Number(f.data?.pensionContributions) > 0);
     if (!anyPension && tradingProfit > 10000) {
       const suggestedPension = Math.min(tradingProfit * 0.3, 50000);
       const saving = suggestedPension * 0.125 + suggestedPension * 0.492;
       parts.push(`You're missing ~**${eur(saving)}** in pension relief.`);
     }
 
-    const uncategorized = allTransactions.filter((t: { category?: string | Record<string, unknown> | null }) => !t.category || t.category === "Uncategorized").length;
+    const uncategorized = allTransactions.filter(
+      (t: { category?: string | Record<string, unknown> | null }) => !t.category || t.category === "Uncategorized",
+    ).length;
     if (uncategorized > 5) {
       parts.push(`${uncategorized} transactions need categorizing.`);
     }
@@ -320,13 +362,16 @@ export default function ChatWidget() {
   const suggestedQuestions = useMemo(() => {
     const questions: string[] = [];
     const txCount = allTransactions?.length ?? 0;
-    const uncategorized = allTransactions?.filter((t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category).length ?? 0;
+    const uncategorized =
+      allTransactions?.filter(
+        (t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category,
+      ).length ?? 0;
 
     if (uncategorized > 0) {
       questions.push(`I have ${uncategorized} uncategorized transactions — can you help?`);
     }
 
-    const anyPension = allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
+    const anyPension = allForm11Data?.some((f) => Number(f.data?.pensionContributions) > 0);
     if (!anyPension && txCount > 0) {
       questions.push("How much could I save with a pension contribution?");
     }
@@ -353,9 +398,12 @@ export default function ChatWidget() {
   // ── Insight badge count ───────────────────────────────────
   const insightCount = useMemo(() => {
     let count = 0;
-    const uncategorized = allTransactions?.filter((t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category).length ?? 0;
+    const uncategorized =
+      allTransactions?.filter(
+        (t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category,
+      ).length ?? 0;
     if (uncategorized > 5) count++;
-    const anyPension = allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
+    const anyPension = allForm11Data?.some((f) => Number(f.data?.pensionContributions) > 0);
     if (!anyPension && (allTransactions?.length ?? 0) > 0) count++;
     const today = new Date();
     const oct31 = new Date(taxYear, 9, 31);
@@ -387,81 +435,102 @@ export default function ChatWidget() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  useEffect(() => { scrollToBottom(); }, [messages, scrollToBottom]);
-  useEffect(() => { if (isOpen && inputRef.current) inputRef.current.focus(); }, [isOpen]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+  useEffect(() => {
+    if (isOpen && inputRef.current) inputRef.current.focus();
+  }, [isOpen]);
 
   // ── Raw tool-call detection ───────────────────────────────
-  const filterRawToolCalls = useCallback((accumulated: string): {
-    cleanText: string;
-    parsedCall: { id: string; name: string; arguments: string } | null;
-  } => {
-    const RAW_TOOL_PATTERNS = [
-      /### Function<[^>]*>(\w+)\s*(?:json\s*)?\s*(\{[\s\S]*?\})\s*#?/i,
-      /<\|tool_call\|>\s*(\w+)\s*(\{[\s\S]*?\})/i,
-      /<tool_call>\s*(\w+)\s*(\{[\s\S]*?\})/i,
-      /\u{FF1C}[^>]*tool[^>]*\u{FF1E}\s*(\w+)\s*(\{[\s\S]*?\})/iu,
-    ];
-    for (const pattern of RAW_TOOL_PATTERNS) {
-      const match = accumulated.match(pattern);
-      if (match && ALL_TOOL_NAMES.has(match[1])) {
-        return {
-          cleanText: accumulated.replace(pattern, "").trim(),
-          parsedCall: { id: `raw_${Date.now()}`, name: match[1], arguments: match[2] },
-        };
-      }
-    }
-    const junkPatterns = /### Function<[｜|]tool[▁_]sep[｜|]>|<[|]tool_call[|]>|<tool_call>|จัดอันดับ;/g;
-    if (junkPatterns.test(accumulated)) {
-      return { cleanText: accumulated.replace(junkPatterns, "").trim(), parsedCall: null };
-    }
-    return { cleanText: accumulated, parsedCall: null };
-  }, []);
-
-  // ── Stream reader ─────────────────────────────────────────
-  const readStream = useCallback(async (
-    response: Response,
-    onContent: (text: string) => void,
-    onToolCalls: (calls: { id: string; name: string; arguments: string }[]) => void,
-    signal: AbortSignal
-  ) => {
-    const reader = response.body!.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let accumulated = "";
-
-    try {
-      while (true) {
-        if (signal.aborted) break;
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith("event: tool_calls") || line.startsWith("event: error")) continue;
-          if (!line.startsWith("data: ")) continue;
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") {
-            const { cleanText, parsedCall } = filterRawToolCalls(accumulated);
-            if (parsedCall) onToolCalls([parsedCall]);
-            if (cleanText !== accumulated) { accumulated = cleanText; onContent(""); }
-            return;
-          }
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) {
-              accumulated += parsed.content;
-              const { cleanText, parsedCall } = filterRawToolCalls(accumulated);
-              if (parsedCall) { accumulated = cleanText; onToolCalls([parsedCall]); }
-              else onContent(parsed.content);
-            }
-            if (Array.isArray(parsed) && parsed[0]?.name) onToolCalls(parsed);
-          } catch { /* skip */ }
+  const filterRawToolCalls = useCallback(
+    (
+      accumulated: string,
+    ): {
+      cleanText: string;
+      parsedCall: { id: string; name: string; arguments: string } | null;
+    } => {
+      const RAW_TOOL_PATTERNS = [
+        /### Function<[^>]*>(\w+)\s*(?:json\s*)?\s*(\{[\s\S]*?\})\s*#?/i,
+        /<\|tool_call\|>\s*(\w+)\s*(\{[\s\S]*?\})/i,
+        /<tool_call>\s*(\w+)\s*(\{[\s\S]*?\})/i,
+        /\u{FF1C}[^>]*tool[^>]*\u{FF1E}\s*(\w+)\s*(\{[\s\S]*?\})/iu,
+      ];
+      for (const pattern of RAW_TOOL_PATTERNS) {
+        const match = accumulated.match(pattern);
+        if (match && ALL_TOOL_NAMES.has(match[1])) {
+          return {
+            cleanText: accumulated.replace(pattern, "").trim(),
+            parsedCall: { id: `raw_${Date.now()}`, name: match[1], arguments: match[2] },
+          };
         }
       }
-    } finally { reader.releaseLock(); }
-  }, [filterRawToolCalls]);
+      const junkPatterns = /### Function<[｜|]tool[▁_]sep[｜|]>|<[|]tool_call[|]>|<tool_call>|จัดอันดับ;/g;
+      if (junkPatterns.test(accumulated)) {
+        return { cleanText: accumulated.replace(junkPatterns, "").trim(), parsedCall: null };
+      }
+      return { cleanText: accumulated, parsedCall: null };
+    },
+    [],
+  );
+
+  // ── Stream reader ─────────────────────────────────────────
+  const readStream = useCallback(
+    async (
+      response: Response,
+      onContent: (text: string) => void,
+      onToolCalls: (calls: { id: string; name: string; arguments: string }[]) => void,
+      signal: AbortSignal,
+    ) => {
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let accumulated = "";
+
+      try {
+        while (true) {
+          if (signal.aborted) break;
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+
+          for (const line of lines) {
+            if (line.startsWith("event: tool_calls") || line.startsWith("event: error")) continue;
+            if (!line.startsWith("data: ")) continue;
+            const data = line.slice(6).trim();
+            if (data === "[DONE]") {
+              const { cleanText, parsedCall } = filterRawToolCalls(accumulated);
+              if (parsedCall) onToolCalls([parsedCall]);
+              if (cleanText !== accumulated) {
+                accumulated = cleanText;
+                onContent("");
+              }
+              return;
+            }
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                accumulated += parsed.content;
+                const { cleanText, parsedCall } = filterRawToolCalls(accumulated);
+                if (parsedCall) {
+                  accumulated = cleanText;
+                  onToolCalls([parsedCall]);
+                } else onContent(parsed.content);
+              }
+              if (Array.isArray(parsed) && parsed[0]?.name) onToolCalls(parsed);
+            } catch {
+              /* skip */
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    },
+    [filterRawToolCalls],
+  );
 
   // ── Send message with streaming ───────────────────────────
   const sendMessage = async (text?: string) => {
@@ -483,7 +552,9 @@ export default function ChatWidget() {
     abortRef.current = abortController;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const token = session?.access_token;
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const currentPage = getPageLabel(location.pathname);
@@ -542,7 +613,11 @@ export default function ChatWidget() {
             });
 
             let args: Record<string, unknown> = {};
-            try { args = JSON.parse(tc.arguments || "{}"); } catch { /* empty */ }
+            try {
+              args = JSON.parse(tc.arguments || "{}");
+            } catch {
+              /* empty */
+            }
 
             const { result, navigated } = executeToolCall(toolName, args, toolContext);
 
@@ -568,7 +643,11 @@ export default function ChatWidget() {
               const historyForToolTurn = [
                 ...messages.slice(-30),
                 { role: "user", content: messageText },
-                { role: "assistant", content: "", tool_calls: [{ id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments } }] },
+                {
+                  role: "assistant",
+                  content: "",
+                  tool_calls: [{ id: tc.id, type: "function", function: { name: tc.name, arguments: tc.arguments } }],
+                },
               ];
 
               const toolResponse = await fetch(`${supabaseUrl}/functions/v1/chat-assistant`, {
@@ -602,7 +681,7 @@ export default function ChatWidget() {
                     });
                   },
                   () => {},
-                  abortController.signal
+                  abortController.signal,
                 );
               } else {
                 // Tool response failed — show the tool result directly
@@ -617,14 +696,17 @@ export default function ChatWidget() {
             }
           }
         },
-        abortController.signal
+        abortController.signal,
       );
 
       const finalContent = displayContent || fullContent;
       if (!finalContent && !toolWasUsed) {
         setMessages((prev) => {
           const updated = [...prev];
-          updated[updated.length - 1] = { role: "assistant", content: "Sorry, I couldn't generate a response. Please try again." };
+          updated[updated.length - 1] = {
+            role: "assistant",
+            content: "Sorry, I couldn't generate a response. Please try again.",
+          };
           return updated;
         });
       }
@@ -636,7 +718,7 @@ export default function ChatWidget() {
       console.error("Chat error:", err);
       const errMsg = err instanceof Error ? err.message : "Unknown error";
       setMessages((prev) => [
-        ...prev.filter(m => m.content !== ""),
+        ...prev.filter((m) => m.content !== ""),
         { role: "assistant", content: `Sorry, something went wrong: ${errMsg}` },
       ]);
     } finally {
@@ -646,7 +728,10 @@ export default function ChatWidget() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   if (!user) return null;
@@ -717,194 +802,196 @@ export default function ChatWidget() {
 
           {/* Main chat area */}
           <div className="flex-1 flex flex-col min-w-0">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-4 py-3 flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="text-white/70 hover:text-white transition-colors"
-              aria-label="Chat history"
-            >
-              <History className="w-5 h-5" />
-            </button>
-            <div className="w-9 h-9 rounded-full bg-[#FFD700] flex items-center justify-center">
-              <PenguinIcon className="w-7 h-7" />
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-900 to-blue-800 px-4 py-3 flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="Chat history"
+              >
+                <History className="w-5 h-5" />
+              </button>
+              <div className="w-9 h-9 rounded-full bg-[#FFD700] flex items-center justify-center">
+                <PenguinIcon className="w-7 h-7" />
+              </div>
+              <div className="flex-1">
+                <p className="text-white font-semibold text-sm">Balnce</p>
+                <p className="text-blue-200 text-xs">AI tax assistant</p>
+              </div>
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setLastToolUsed(null);
+                }}
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="New chat"
+              >
+                <MessageSquarePlus className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setMessages([]);
+                  setLastToolUsed(null);
+                  if (user?.id) {
+                    supabase.from("chat_messages").delete().eq("user_id", user.id).then();
+                    setConversations([]);
+                  }
+                }}
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="Clear all history"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-white/70 hover:text-white transition-colors"
+                aria-label="Close chat"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
-            <div className="flex-1">
-              <p className="text-white font-semibold text-sm">Balnce</p>
-              <p className="text-blue-200 text-xs">AI tax assistant</p>
-            </div>
-            <button
-              onClick={() => {
-                setMessages([]);
-                setLastToolUsed(null);
-              }}
-              className="text-white/70 hover:text-white transition-colors"
-              aria-label="New chat"
-            >
-              <MessageSquarePlus className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => {
-                setMessages([]);
-                setLastToolUsed(null);
-                if (user?.id) {
-                  supabase.from("chat_messages").delete().eq("user_id", user.id).then();
-                  setConversations([]);
-                }
-              }}
-              className="text-white/70 hover:text-white transition-colors"
-              aria-label="Clear all history"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white/70 hover:text-white transition-colors"
-              aria-label="Close chat"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
-            {messages.length === 0 && (
-              <div className="space-y-3">
-                {/* Proactive personalized opener */}
-                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-3">
-                  {proactiveGreeting ? (
-                    <div className="text-sm text-foreground">
-                      <ChatMarkdown content={`Hi! I'm **Balnce**, your AI tax assistant. ${proactiveGreeting} Want me to run a **company health check** or **director health check**?`} />
-                    </div>
-                  ) : (
-                    <p className="text-sm text-foreground">
-                      Hi! I'm Balnce, your AI tax assistant. I can see your financial data, run calculations, and navigate the app. Ask me anything!
-                    </p>
-                  )}
-                </div>
-
-                {/* Insight cards */}
-                {insightCount > 0 && (
-                  <div className="space-y-2">
-                    {(() => {
-                      const cards: { text: string; question: string }[] = [];
-                      const uncategorized = allTransactions?.filter((t: { category?: string | Record<string, unknown> | null }) => t.category === "Uncategorized" || !t.category).length ?? 0;
-                      if (uncategorized > 5) {
-                        cards.push({
-                          text: `${uncategorized} transactions need categorizing`,
-                          question: `I have ${uncategorized} uncategorized transactions — what should I do?`,
-                        });
-                      }
-                      const anyPension = allForm11Data?.some(f => Number(f.data?.pensionContributions) > 0);
-                      if (!anyPension && (allTransactions?.length ?? 0) > 0) {
-                        cards.push({
-                          text: "No pension contributions — you could save thousands",
-                          question: "How much could I save with a €10,000 pension contribution?",
-                        });
-                      }
-                      return cards.map((card, i) => (
-                        <button
-                          key={i}
-                          onClick={() => sendMessage(card.question)}
-                          className="flex items-center gap-2 w-full text-left bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
-                        >
-                          <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                          <span className="text-xs text-foreground">{card.text}</span>
-                        </button>
-                      ));
-                    })()}
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+              {messages.length === 0 && (
+                <div className="space-y-3">
+                  {/* Proactive personalized opener */}
+                  <div className="bg-blue-50 dark:bg-blue-950/30 rounded-xl p-3">
+                    {proactiveGreeting ? (
+                      <div className="text-sm text-foreground">
+                        <ChatMarkdown
+                          content={`Hi! I'm **Balnce**, your AI tax assistant. ${proactiveGreeting} Want me to run a **company health check** or **director health check**?`}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-sm text-foreground">
+                        Hi! I'm Balnce, your AI tax assistant. I can see your financial data, run calculations, and
+                        navigate the app. Ask me anything!
+                      </p>
+                    )}
                   </div>
-                )}
 
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground font-medium">Try asking:</p>
-                  {suggestedQuestions.map((q) => (
+                  {/* Insight cards */}
+                  {insightCount > 0 && (
+                    <div className="space-y-2">
+                      {(() => {
+                        const cards: { text: string; question: string }[] = [];
+                        const uncategorized =
+                          allTransactions?.filter(
+                            (t: { category?: string | Record<string, unknown> | null }) =>
+                              t.category === "Uncategorized" || !t.category,
+                          ).length ?? 0;
+                        if (uncategorized > 5) {
+                          cards.push({
+                            text: `${uncategorized} transactions need categorizing`,
+                            question: `I have ${uncategorized} uncategorized transactions — what should I do?`,
+                          });
+                        }
+                        const anyPension = allForm11Data?.some((f) => Number(f.data?.pensionContributions) > 0);
+                        if (!anyPension && (allTransactions?.length ?? 0) > 0) {
+                          cards.push({
+                            text: "No pension contributions — you could save thousands",
+                            question: "How much could I save with a €10,000 pension contribution?",
+                          });
+                        }
+                        return cards.map((card, i) => (
+                          <button
+                            key={i}
+                            onClick={() => sendMessage(card.question)}
+                            className="flex items-center gap-2 w-full text-left bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors"
+                          >
+                            <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span className="text-xs text-foreground">{card.text}</span>
+                          </button>
+                        ));
+                      })()}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium">Try asking:</p>
+                    {suggestedQuestions.map((q) => (
+                      <button
+                        key={q}
+                        onClick={() => sendMessage(q)}
+                        className="block w-full text-left text-xs bg-muted/50 hover:bg-muted rounded-lg px-3 py-2 transition-colors text-foreground"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {messages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div
+                    className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
+                      msg.role === "user" ? "bg-blue-900 text-white" : "bg-muted text-foreground"
+                    }`}
+                  >
+                    {msg.role === "assistant" ? (
+                      <AssistantMessage content={msg.content} />
+                    ) : (
+                      <div className="whitespace-pre-wrap break-words">{msg.content}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Follow-up suggestions after last assistant message */}
+              {followUpSuggestions.length > 0 && !isLoading && (
+                <div className="flex flex-wrap gap-1.5 pl-1">
+                  {followUpSuggestions.map((q) => (
                     <button
                       key={q}
                       onClick={() => sendMessage(q)}
-                      className="block w-full text-left text-xs bg-muted/50 hover:bg-muted rounded-lg px-3 py-2 transition-colors text-foreground"
+                      className="inline-flex items-center gap-1 text-[11px] bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-full px-2.5 py-1 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors"
                     >
+                      <ChevronRight className="w-3 h-3" />
                       {q}
                     </button>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
 
-            {messages.map((msg, i) => (
-              <div
-                key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-xl px-3 py-2 text-sm ${
-                    msg.role === "user"
-                      ? "bg-blue-900 text-white"
-                      : "bg-muted text-foreground"
-                  }`}
-                >
-                  {msg.role === "assistant" ? (
-                    <AssistantMessage content={msg.content} />
-                  ) : (
-                    <div className="whitespace-pre-wrap break-words">{msg.content}</div>
-                  )}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-muted rounded-xl px-3 py-2">
+                    <BouncingDots text={loadingText} />
+                  </div>
                 </div>
-              </div>
-            ))}
+              )}
 
-            {/* Follow-up suggestions after last assistant message */}
-            {followUpSuggestions.length > 0 && !isLoading && (
-              <div className="flex flex-wrap gap-1.5 pl-1">
-                {followUpSuggestions.map((q) => (
-                  <button
-                    key={q}
-                    onClick={() => sendMessage(q)}
-                    className="inline-flex items-center gap-1 text-[11px] bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-full px-2.5 py-1 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors"
-                  >
-                    <ChevronRight className="w-3 h-3" />
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-muted rounded-xl px-3 py-2">
-                  <BouncingDots text={loadingText} />
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="border-t px-3 py-2 shrink-0">
-            <div className="flex items-center gap-2">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask about your tax..."
-                className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-900/20 placeholder:text-muted-foreground"
-                disabled={isLoading}
-              />
-              <Button
-                size="icon"
-                onClick={() => sendMessage()}
-                disabled={!input.trim() || isLoading}
-                className="shrink-0 bg-blue-900 hover:bg-blue-800 h-9 w-9"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
+              <div ref={messagesEndRef} />
             </div>
-            <p className="text-[10px] text-muted-foreground text-center mt-1">
-              AI-generated — verify with a professional before filing
-            </p>
-          </div>
+
+            {/* Input */}
+            <div className="border-t px-3 py-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask about your tax..."
+                  className="flex-1 bg-muted rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-900/20 placeholder:text-muted-foreground"
+                  disabled={isLoading}
+                />
+                <Button
+                  size="icon"
+                  onClick={() => sendMessage()}
+                  disabled={!input.trim() || isLoading}
+                  className="shrink-0 bg-blue-900 hover:bg-blue-800 h-9 w-9"
+                >
+                  <Send className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-[10px] text-muted-foreground text-center mt-1">
+                AI-generated — verify with a professional before filing
+              </p>
+            </div>
           </div>
         </div>
       )}

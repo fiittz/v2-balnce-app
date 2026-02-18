@@ -1,12 +1,12 @@
 // Vendor matching engine: exact → fuzzy → MCC fallback.
 // All synchronous, no network calls. Performance target: <1ms per transaction.
 
-import { vendorDatabase, type VendorEntry } from './vendorDatabase';
-import { lookupMCCWithFallback, type MCCMapping } from './mccCodes';
+import { vendorDatabase, type VendorEntry } from "./vendorDatabase";
+import { lookupMCCWithFallback, type MCCMapping } from "./mccCodes";
 
 export interface VendorMatchResult {
   vendor: VendorEntry;
-  matchType: 'exact' | 'fuzzy' | 'mcc';
+  matchType: "exact" | "fuzzy" | "mcc";
   matchedPattern?: string;
   confidence: number; // 0-100, adjusted based on match type
   /** For fuzzy matches, the similarity score (0-1) */
@@ -50,9 +50,9 @@ function levenshteinDistance(a: string, b: string): number {
     for (let j = 1; j <= n; j++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       curr[j] = Math.min(
-        curr[j - 1] + 1,       // insertion
-        prev[j] + 1,           // deletion
-        prev[j - 1] + cost     // substitution
+        curr[j - 1] + 1, // insertion
+        prev[j] + 1, // deletion
+        prev[j - 1] + cost, // substitution
       );
     }
     [prev, curr] = [curr, prev];
@@ -95,7 +95,7 @@ export function matchVendor(
   description: string,
   merchantName?: string,
   amount: number = 0,
-  mccCode?: number
+  mccCode?: number,
 ): VendorMatchResult | null {
   const haystack = normalise(`${description} ${merchantName ?? ""}`);
   if (!haystack) return null;
@@ -124,7 +124,7 @@ function matchExact(haystack: string, amount: number): VendorMatchResult | null 
       if (haystack.includes(pattern)) {
         const result: VendorMatchResult = {
           vendor,
-          matchType: 'exact',
+          matchType: "exact",
           matchedPattern: pattern,
           confidence: BASE_EXACT_CONFIDENCE,
         };
@@ -150,7 +150,7 @@ function matchExact(haystack: string, amount: number): VendorMatchResult | null 
 /** Phase 2: Fuzzy match — split description into tokens, compare each to vendor patterns. */
 function matchFuzzy(haystack: string, amount: number): VendorMatchResult | null {
   // Split into tokens (words)
-  const tokens = haystack.split(/\s+/).filter(t => t.length >= 3);
+  const tokens = haystack.split(/\s+/).filter((t) => t.length >= 3);
   if (tokens.length === 0) return null;
 
   let bestMatch: VendorMatchResult | null = null;
@@ -172,7 +172,7 @@ function matchFuzzy(haystack: string, amount: number): VendorMatchResult | null 
             bestSimilarity = sim;
             bestMatch = {
               vendor,
-              matchType: 'fuzzy',
+              matchType: "fuzzy",
               matchedPattern: pattern,
               confidence: BASE_FUZZY_CONFIDENCE,
               similarity: sim,
@@ -188,7 +188,7 @@ function matchFuzzy(haystack: string, amount: number): VendorMatchResult | null 
             bestSimilarity = sim;
             bestMatch = {
               vendor,
-              matchType: 'fuzzy',
+              matchType: "fuzzy",
               matchedPattern: pattern,
               confidence: BASE_FUZZY_CONFIDENCE,
               similarity: sim,
@@ -233,7 +233,7 @@ function matchMCC(mccCode: number): VendorMatchResult | null {
 
   return {
     vendor,
-    matchType: 'mcc',
+    matchType: "mcc",
     confidence: BASE_MCC_CONFIDENCE,
   };
 }

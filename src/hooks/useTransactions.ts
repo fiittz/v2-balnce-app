@@ -25,10 +25,12 @@ export const useTransactions = (filters?: {
 
       let query = supabase
         .from("transactions")
-        .select(`
+        .select(
+          `
           *,
           category:categories(id, name)
-        `)
+        `,
+        )
         .eq("user_id", user.id)
         .order("transaction_date", { ascending: false });
 
@@ -82,10 +84,12 @@ export const useUnmatchedTransactions = () => {
 
       const { data, error } = await supabase
         .from("transactions")
-        .select(`
+        .select(
+          `
           *,
           category:categories(id, name)
-        `)
+        `,
+        )
         .eq("user_id", user.id)
         .eq("is_reconciled", false)
         .order("transaction_date", { ascending: false });
@@ -137,16 +141,8 @@ export const useUpdateTransaction = (options?: { silent?: boolean }) => {
   const silent = options?.silent ?? false;
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      ...updates
-    }: Partial<Transaction> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("transactions")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
+    mutationFn: async ({ id, ...updates }: Partial<Transaction> & { id: string }) => {
+      const { data, error } = await supabase.from("transactions").update(updates).eq("id", id).select().single();
 
       if (error) throw error;
       return data;
@@ -174,15 +170,9 @@ export const useDeleteTransaction = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       // Unlink any receipts referencing this transaction
-      await supabase
-        .from("receipts")
-        .update({ transaction_id: null })
-        .eq("transaction_id", id);
+      await supabase.from("receipts").update({ transaction_id: null }).eq("transaction_id", id);
 
-      const { error } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
 
       if (error) throw error;
       return id;
@@ -206,15 +196,9 @@ export const useBulkDeleteTransactions = () => {
   return useMutation({
     mutationFn: async (ids: string[]) => {
       // Unlink any receipts referencing these transactions
-      await supabase
-        .from("receipts")
-        .update({ transaction_id: null })
-        .in("transaction_id", ids);
+      await supabase.from("receipts").update({ transaction_id: null }).in("transaction_id", ids);
 
-      const { error } = await supabase
-        .from("transactions")
-        .delete()
-        .in("id", ids);
+      const { error } = await supabase.from("transactions").delete().in("id", ids);
 
       if (error) throw error;
       return ids.length;
@@ -241,31 +225,25 @@ export const useDeleteAllTransactions = () => {
       if (!user?.id) throw new Error("Not authenticated");
 
       // Unlink any receipts referencing user's transactions
-      const { data: userTxIds } = await supabase
-        .from("transactions")
-        .select("id")
-        .eq("user_id", user.id);
+      const { data: userTxIds } = await supabase.from("transactions").select("id").eq("user_id", user.id);
 
       if (userTxIds?.length) {
         await supabase
           .from("receipts")
           .update({ transaction_id: null })
-          .in("transaction_id", userTxIds.map((t) => t.id));
+          .in(
+            "transaction_id",
+            userTxIds.map((t) => t.id),
+          );
       }
 
       // Delete transactions first (they reference import_batches via FK)
-      const { error: txError } = await supabase
-        .from("transactions")
-        .delete()
-        .eq("user_id", user.id);
+      const { error: txError } = await supabase.from("transactions").delete().eq("user_id", user.id);
 
       if (txError) throw txError;
 
       // Then delete import batches (now safe, no FK references)
-      const { error: batchError } = await supabase
-        .from("import_batches")
-        .delete()
-        .eq("user_id", user.id);
+      const { error: batchError } = await supabase.from("import_batches").delete().eq("user_id", user.id);
 
       if (batchError) throw batchError;
       return true;
@@ -295,10 +273,7 @@ export const useBulkUpdateTransactions = () => {
       ids: string[];
       updates: Partial<Pick<Transaction, "category_id" | "is_reconciled" | "account_id">>;
     }) => {
-      const { error } = await supabase
-        .from("transactions")
-        .update(updates)
-        .in("id", ids);
+      const { error } = await supabase.from("transactions").update(updates).in("id", ids);
 
       if (error) throw error;
       return ids.length;

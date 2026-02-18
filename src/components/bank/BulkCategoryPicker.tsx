@@ -11,11 +11,7 @@ interface BulkCategoryPickerProps {
   onSelect: (categoryId: string) => void;
 }
 
-export default function BulkCategoryPicker({
-  open,
-  onOpenChange,
-  onSelect,
-}: BulkCategoryPickerProps) {
+export default function BulkCategoryPicker({ open, onOpenChange, onSelect }: BulkCategoryPickerProps) {
   const { data: categories } = useCategories();
 
   return (

@@ -45,7 +45,7 @@ describe("generateInvoiceHTML – basic generation", () => {
     const html = generateInvoiceHTML(makeData());
 
     expect(html).toContain("<!DOCTYPE html>");
-    expect(html).toContain("<html lang=\"en\">");
+    expect(html).toContain('<html lang="en">');
     expect(html).toContain("</html>");
   });
 
@@ -155,7 +155,7 @@ describe("generateInvoiceHTML – VAT rate labels", () => {
               total_amount: 100,
             },
           ],
-        })
+        }),
       );
       expect(html).toContain(`>${expectedLabel}</td>`);
     });
@@ -175,7 +175,7 @@ describe("generateInvoiceHTML – VAT rate labels", () => {
             total_amount: 115,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain(">special_15</td>");
   });
@@ -208,7 +208,7 @@ describe("generateInvoiceHTML – currency formatting", () => {
             total_amount: 0,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain("€0.00");
   });
@@ -227,7 +227,7 @@ describe("generateInvoiceHTML – currency formatting", () => {
             total_amount: 368.96,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain("€99.99");
     expect(html).toContain("€368.96");
@@ -255,24 +255,18 @@ describe("generateInvoiceHTML – date formatting", () => {
   });
 
   it("shows supply date when different from invoice date", () => {
-    const html = generateInvoiceHTML(
-      makeData({ invoiceDate: "2025-03-15", supplyDate: "2025-03-10" })
-    );
+    const html = generateInvoiceHTML(makeData({ invoiceDate: "2025-03-15", supplyDate: "2025-03-10" }));
     expect(html).toContain("Date of Supply");
     expect(html).toContain("10 March 2025");
   });
 
   it("hides supply date when it equals the invoice date", () => {
-    const html = generateInvoiceHTML(
-      makeData({ invoiceDate: "2025-03-15", supplyDate: "2025-03-15" })
-    );
+    const html = generateInvoiceHTML(makeData({ invoiceDate: "2025-03-15", supplyDate: "2025-03-15" }));
     expect(html).not.toContain("Date of Supply");
   });
 
   it("hides supply date when not provided", () => {
-    const html = generateInvoiceHTML(
-      makeData({ supplyDate: undefined })
-    );
+    const html = generateInvoiceHTML(makeData({ supplyDate: undefined }));
     expect(html).not.toContain("Date of Supply");
   });
 });
@@ -298,9 +292,7 @@ describe("generateInvoiceHTML – RCT handling", () => {
 
   it("shows the reverse charge legal note", () => {
     const html = generateInvoiceHTML(makeData(rctData));
-    expect(html).toContain(
-      "VAT reverse charge applies per s.12(1)(b) VATCA 2010"
-    );
+    expect(html).toContain("VAT reverse charge applies per s.12(1)(b) VATCA 2010");
   });
 
   it("shows the RCT deduction row with rate and amount", () => {
@@ -448,34 +440,26 @@ describe("generateInvoiceHTML – optional field handling", () => {
 // ══════════════════════════════════════════════════════════════
 describe("generateInvoiceHTML – notes and comments", () => {
   it("renders a notes section when comment is provided", () => {
-    const html = generateInvoiceHTML(
-      makeData({ comment: "Payment within 14 days please." })
-    );
+    const html = generateInvoiceHTML(makeData({ comment: "Payment within 14 days please." }));
     expect(html).toContain('class="notes-section"');
     expect(html).toContain("<h3>Notes</h3>");
     expect(html).toContain("Payment within 14 days please.");
   });
 
   it("renders a notes section when notes is provided", () => {
-    const html = generateInvoiceHTML(
-      makeData({ comment: undefined, notes: "Stage 2 of 3 payments." })
-    );
+    const html = generateInvoiceHTML(makeData({ comment: undefined, notes: "Stage 2 of 3 payments." }));
     expect(html).toContain('class="notes-section"');
     expect(html).toContain("Stage 2 of 3 payments.");
   });
 
   it("prefers comment over notes when both are provided", () => {
-    const html = generateInvoiceHTML(
-      makeData({ comment: "Use comment", notes: "Use notes" })
-    );
+    const html = generateInvoiceHTML(makeData({ comment: "Use comment", notes: "Use notes" }));
     expect(html).toContain("Use comment");
     expect(html).not.toContain("Use notes");
   });
 
   it("does not render notes section when both comment and notes are absent", () => {
-    const html = generateInvoiceHTML(
-      makeData({ comment: undefined, notes: undefined })
-    );
+    const html = generateInvoiceHTML(makeData({ comment: undefined, notes: undefined }));
     expect(html).not.toContain('class="notes-section"');
   });
 
@@ -539,7 +523,7 @@ describe("generateInvoiceHTML – items table", () => {
             total_amount: 250,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain("Framing");
     expect(html).toContain("Finishing");
@@ -577,17 +561,13 @@ describe("generateInvoiceHTML – default due date", () => {
   });
 
   it("uses a +30-day due date when dueDate is not provided", () => {
-    const html = generateInvoiceHTML(
-      makeData({ dueDate: undefined })
-    );
+    const html = generateInvoiceHTML(makeData({ dueDate: undefined }));
     // 2025-06-01 + 30 days = 2025-07-01
     expect(html).toContain("1 July 2025");
   });
 
   it("uses the explicit dueDate when provided", () => {
-    const html = generateInvoiceHTML(
-      makeData({ dueDate: "2025-12-25" })
-    );
+    const html = generateInvoiceHTML(makeData({ dueDate: "2025-12-25" }));
     expect(html).toContain("25 December 2025");
     expect(html).not.toContain("1 July 2025");
   });
@@ -628,9 +608,9 @@ describe("generateInvoiceHTML – structural HTML correctness", () => {
     // This test documents the current behavior; a real app should sanitize.
     const html = generateInvoiceHTML(
       makeData({
-        supplierName: 'O\'Brien & Sons',
+        supplierName: "O'Brien & Sons",
         customerName: "Test <b>bold</b>",
-      })
+      }),
     );
     // The values are embedded directly via template literal
     expect(html).toContain("O'Brien & Sons");
@@ -659,7 +639,7 @@ describe("generateInvoiceHTML – empty items array", () => {
         subtotal: 0,
         vatAmount: 0,
         total: 0,
-      })
+      }),
     );
     expect(html).toContain("<!DOCTYPE html>");
     expect(html).toContain("</html>");
@@ -674,7 +654,7 @@ describe("generateInvoiceHTML – empty items array", () => {
         subtotal: 0,
         vatAmount: 0,
         total: 0,
-      })
+      }),
     );
     const tbodyStart = html.indexOf("<tbody>");
     const tbodyEnd = html.indexOf("</tbody>");
@@ -689,7 +669,7 @@ describe("generateInvoiceHTML – empty items array", () => {
         subtotal: 0,
         vatAmount: 0,
         total: 0,
-      })
+      }),
     );
     expect(html).toContain("Net Amount");
     expect(html).toContain("Total Due");
@@ -703,7 +683,7 @@ describe("generateInvoiceHTML – empty items array", () => {
         subtotal: 0,
         vatAmount: 0,
         total: 0,
-      })
+      }),
     );
     expect(html).toContain("<th>Description</th>");
     expect(html).toContain("<th>Qty</th>");
@@ -731,7 +711,7 @@ describe("generateInvoiceHTML – additional edge cases", () => {
         subtotal: -200,
         vatAmount: -46,
         total: -246,
-      })
+      }),
     );
     expect(html).toContain("-€200.00");
     expect(html).toContain("-€246.00");
@@ -762,7 +742,7 @@ describe("generateInvoiceHTML – additional edge cases", () => {
         rctRate: 0,
         rctAmount: 0,
         total: 615,
-      })
+      }),
     );
     expect(html).toContain("RCT Deduction (0%)");
     expect(html).toContain("Net Receivable");
@@ -790,7 +770,7 @@ describe("generateInvoiceHTML – unit type labels", () => {
             total_amount: 738,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain(">Hours</td>");
   });
@@ -810,7 +790,7 @@ describe("generateInvoiceHTML – unit type labels", () => {
             total_amount: 1135,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain(">Sq M</td>");
   });
@@ -830,7 +810,7 @@ describe("generateInvoiceHTML – unit type labels", () => {
             total_amount: 61.5,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain(">Items</td>");
   });
@@ -849,7 +829,7 @@ describe("generateInvoiceHTML – unit type labels", () => {
             total_amount: 123,
           },
         ],
-      })
+      }),
     );
     expect(html).toContain(">Items</td>");
   });
@@ -876,9 +856,7 @@ describe("generateInvoiceHTML – PO number", () => {
 // ══════════════════════════════════════════════════════════════
 describe("generateInvoiceHTML – payment details", () => {
   it("shows IBAN and BIC when both provided", () => {
-    const html = generateInvoiceHTML(
-      makeData({ supplierIban: "IE29AIBK93115212345678", supplierBic: "AIBKIE2D" })
-    );
+    const html = generateInvoiceHTML(makeData({ supplierIban: "IE29AIBK93115212345678", supplierBic: "AIBKIE2D" }));
     expect(html).toContain("Payment Details");
     expect(html).toContain("IBAN");
     expect(html).toContain("IE29AIBK93115212345678");
@@ -887,9 +865,7 @@ describe("generateInvoiceHTML – payment details", () => {
   });
 
   it("shows IBAN without BIC when BIC is empty", () => {
-    const html = generateInvoiceHTML(
-      makeData({ supplierIban: "IE29AIBK93115212345678", supplierBic: "" })
-    );
+    const html = generateInvoiceHTML(makeData({ supplierIban: "IE29AIBK93115212345678", supplierBic: "" }));
     expect(html).toContain("IBAN");
     expect(html).toContain("IE29AIBK93115212345678");
     expect(html).not.toContain("BIC");

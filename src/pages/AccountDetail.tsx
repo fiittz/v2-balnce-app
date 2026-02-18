@@ -1,6 +1,17 @@
 import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Wallet, BarChart3, FileText, Scale, Download, Printer, ChevronDown, ChevronRight, Receipt } from "lucide-react";
+import {
+  ArrowLeft,
+  Wallet,
+  BarChart3,
+  FileText,
+  Scale,
+  Download,
+  Printer,
+  ChevronDown,
+  ChevronRight,
+  Receipt,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -33,11 +44,19 @@ const dateRangeLabels: Record<DateRangeOption, string> = {
 const DIRECT_COST_KEYWORDS = ["cost of goods", "cogs", "direct cost", "materials", "stock", "inventory"];
 
 const formatCurrency = (value: number) => {
-  return value.toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return value.toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-function TravelBreakdown({ mileage, subsistence, reimbursed, netOwed }: {
-  mileage: number; subsistence: number; reimbursed: number; netOwed: number;
+function TravelBreakdown({
+  mileage,
+  subsistence,
+  reimbursed,
+  netOwed,
+}: {
+  mileage: number;
+  subsistence: number;
+  reimbursed: number;
+  netOwed: number;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -81,17 +100,17 @@ const AccountDetail = () => {
   const { accountId } = useParams();
   const [activeTab, setActiveTab] = useState("pnl");
   const [dateRange, setDateRange] = useState<DateRangeOption>("this_month");
-  
+
   const { data: supabaseAccounts } = useAccounts();
-  const account = supabaseAccounts?.find(a => a.id === accountId);
-  
+  const account = supabaseAccounts?.find((a) => a.id === accountId);
+
   const { data: transactions = [] } = useTransactions();
   const { data: categories = [] } = useCategories();
   const { invoiceTrips } = useInvoiceTripMatcher();
   const { data: invoices = [] } = useInvoices();
   const ct1 = useCT1Data();
   const { user } = useAuth();
-  
+
   // Get date range bounds
   const dateRangeBounds = useMemo(() => {
     const now = new Date();
@@ -118,13 +137,13 @@ const AccountDetail = () => {
     }
     return dateRangeLabels[dateRange];
   }, [dateRange, dateRangeBounds]);
-  
+
   // Filter transactions for this account
   const accountTransactions = useMemo(() => {
-    return transactions.filter(t => {
+    return transactions.filter((t) => {
       const matchesAccount = t.account_id === accountId;
       if (!matchesAccount) return false;
-      
+
       if (dateRangeBounds.start && dateRangeBounds.end) {
         const txDate = new Date(t.transaction_date);
         return txDate >= dateRangeBounds.start && txDate <= dateRangeBounds.end;
@@ -136,7 +155,7 @@ const AccountDetail = () => {
   // Create category lookup map
   const categoryMap = useMemo(() => {
     const map = new Map<string, { name: string; type: string }>();
-    categories.forEach(cat => {
+    categories.forEach((cat) => {
       map.set(cat.id, { name: cat.name, type: cat.type });
     });
     return map;
@@ -145,18 +164,23 @@ const AccountDetail = () => {
   // Check if a category is a direct cost
   const isDirectCost = (categoryName: string) => {
     const lowerName = categoryName.toLowerCase();
-    return DIRECT_COST_KEYWORDS.some(keyword => lowerName.includes(keyword));
+    return DIRECT_COST_KEYWORDS.some((keyword) => lowerName.includes(keyword));
   };
-  
+
   // Check if a transaction is a Revenue refund (by category or description)
   const isRevenueRefund = (categoryName: string, description: string) => {
     if (categoryName === "Tax Refund") return true;
     const desc = (description || "").toLowerCase();
-    return categoryName === "Uncategorised" && (
-      desc.includes("revenue") || desc.includes("collector general") ||
-      desc.includes("tax refund") || desc.includes("vat refund") ||
-      desc.includes("paye refund") || desc.includes("ct refund") ||
-      desc.includes("rct refund") || desc.includes("ros refund")
+    return (
+      categoryName === "Uncategorised" &&
+      (desc.includes("revenue") ||
+        desc.includes("collector general") ||
+        desc.includes("tax refund") ||
+        desc.includes("vat refund") ||
+        desc.includes("paye refund") ||
+        desc.includes("ct refund") ||
+        desc.includes("rct refund") ||
+        desc.includes("ros refund"))
     );
   };
 
@@ -176,11 +200,11 @@ const AccountDetail = () => {
     let totalDirectCosts = 0;
     let totalExpenses = 0;
 
-    accountTransactions.forEach(t => {
-      const isIncome = t.type === 'income' || t.amount > 0;
+    accountTransactions.forEach((t) => {
+      const isIncome = t.type === "income" || t.amount > 0;
       const amount = Math.abs(t.amount);
       const categoryInfo = t.category_id ? categoryMap.get(t.category_id) : null;
-      const categoryName = categoryInfo?.name || 'Uncategorised';
+      const categoryName = categoryInfo?.name || "Uncategorised";
 
       // Revenue refunds get their own heading regardless of income/expense
       if (isRevenueRefund(categoryName, t.description || "")) {
@@ -209,11 +233,13 @@ const AccountDetail = () => {
     const travelMileage = invoiceTrips.reduce((s, t) => s + t.suggestedMileage.allowance, 0);
     const travelSubsistence = invoiceTrips.reduce((s, t) => s + t.suggestedSubsistence.allowance, 0);
     const travelTotalAllowance = Math.round((travelMileage + travelSubsistence) * 100) / 100;
-    const travelAlreadyReimbursed = Math.round(invoiceTrips.reduce((s, t) => s + t.totalExpensesFromCsv, 0) * 100) / 100;
+    const travelAlreadyReimbursed =
+      Math.round(invoiceTrips.reduce((s, t) => s + t.totalExpensesFromCsv, 0) * 100) / 100;
     const travelNetOwed = Math.round(Math.max(0, travelTotalAllowance - travelAlreadyReimbursed) * 100) / 100;
 
     if (travelTotalAllowance > 0) {
-      expensesByCategory["Travel & Accommodation"] = (expensesByCategory["Travel & Accommodation"] || 0) + travelTotalAllowance;
+      expensesByCategory["Travel & Accommodation"] =
+        (expensesByCategory["Travel & Accommodation"] || 0) + travelTotalAllowance;
       totalExpenses += travelTotalAllowance;
     }
 
@@ -240,22 +266,22 @@ const AccountDetail = () => {
       travelNetOwed,
     };
   }, [accountTransactions, categoryMap, invoiceTrips]);
-  
+
   // Calculate balance sheet data
   const balanceData = useMemo(() => {
     const totalCredits = accountTransactions
-      .filter(t => t.type === 'income' || t.amount > 0)
+      .filter((t) => t.type === "income" || t.amount > 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    
+
     const totalDebits = accountTransactions
-      .filter(t => t.type === 'expense' || t.amount < 0)
+      .filter((t) => t.type === "expense" || t.amount < 0)
       .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-    
+
     const balance = totalCredits - totalDebits;
-    
+
     return { totalCredits, totalDebits, balance };
   }, [accountTransactions]);
-  
+
   // Balance sheet sections — assets, liabilities, capital from CT1 questionnaire
   const bsSections = useMemo(() => {
     const now = new Date();
@@ -269,7 +295,8 @@ const AccountDetail = () => {
     if (q?.fixedAssetsPlantMachinery) assets.push({ label: "Plant & Machinery", amount: q.fixedAssetsPlantMachinery });
     const motorNBV = ct1.vehicleAsset ? ct1.vehicleAsset.depreciation.netBookValue : (q?.fixedAssetsMotorVehicles ?? 0);
     if (motorNBV > 0) assets.push({ label: "Motor Vehicles", amount: motorNBV });
-    if (q?.fixedAssetsFixturesFittings) assets.push({ label: "Fixtures & Fittings", amount: q.fixedAssetsFixturesFittings });
+    if (q?.fixedAssetsFixturesFittings)
+      assets.push({ label: "Fixtures & Fittings", amount: q.fixedAssetsFixturesFittings });
     if (q?.currentAssetsStock) assets.push({ label: "Stock", amount: q.currentAssetsStock });
     const debtors = q?.currentAssetsDebtors ?? q?.tradeDebtorsTotal ?? 0;
     if (debtors > 0) assets.push({ label: "Debtors", amount: debtors });
@@ -311,9 +338,9 @@ const AccountDetail = () => {
     const vatOnSales = 0;
     let vatOnPurchases = 0;
 
-    accountTransactions.forEach(t => {
-      if (t.type === 'expense' || t.amount < 0) {
-        vatOnPurchases += (t.vat_amount || 0);
+    accountTransactions.forEach((t) => {
+      if (t.type === "expense" || t.amount < 0) {
+        vatOnPurchases += t.vat_amount || 0;
       }
     });
 
@@ -321,16 +348,16 @@ const AccountDetail = () => {
 
     return { vatOnSales, vatOnPurchases, netVat };
   }, [accountTransactions]);
-  
+
   // Calculate ratios
   const ratios = useMemo(() => {
     const { totalIncome, totalExpenses, netProfit, grossProfit, totalDirectCosts } = pnlData;
-    
+
     const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
     const grossMargin = totalIncome > 0 ? (grossProfit / totalIncome) * 100 : 0;
     const expenseRatio = totalIncome > 0 ? (totalExpenses / totalIncome) * 100 : 0;
-    const incomeToExpense = (totalExpenses + totalDirectCosts) > 0 ? totalIncome / (totalExpenses + totalDirectCosts) : 0;
-    
+    const incomeToExpense = totalExpenses + totalDirectCosts > 0 ? totalIncome / (totalExpenses + totalDirectCosts) : 0;
+
     return { profitMargin, grossMargin, expenseRatio, incomeToExpense };
   }, [pnlData]);
 
@@ -363,10 +390,13 @@ const AccountDetail = () => {
             <div>
               <h1 className="font-semibold text-xl">{account.name}</h1>
               <p className="text-sm text-muted-foreground">
-                {account.account_type === "limited_company" ? "Limited Company" :
-                 account.account_type === "sole_trader" ? "Sole Trader" :
-                 account.account_type === "directors_personal_tax" ? "Director's Personal Tax" :
-                 account.account_type}
+                {account.account_type === "limited_company"
+                  ? "Limited Company"
+                  : account.account_type === "sole_trader"
+                    ? "Sole Trader"
+                    : account.account_type === "directors_personal_tax"
+                      ? "Director's Personal Tax"
+                      : account.account_type}
               </p>
             </div>
           </div>
@@ -400,9 +430,7 @@ const AccountDetail = () => {
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-lg font-semibold tracking-tight">
-                      Profit & Loss Statement
-                    </CardTitle>
+                    <CardTitle className="text-lg font-semibold tracking-tight">Profit & Loss Statement</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">{periodLabel}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -415,8 +443,8 @@ const AccountDetail = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-popover">
                         {(Object.keys(dateRangeLabels) as DateRangeOption[]).map((key) => (
-                          <DropdownMenuItem 
-                            key={key} 
+                          <DropdownMenuItem
+                            key={key}
                             onClick={() => setDateRange(key)}
                             className={dateRange === key ? "bg-accent" : ""}
                           >
@@ -466,7 +494,9 @@ const AccountDetail = () => {
                     </div>
                   </div>
                   <div className="flex justify-end border-t border-border/50 mt-2 pt-1">
-                    <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(pnlData.totalIncome)}</span>
+                    <span className="tabular-nums font-medium w-28 text-right">
+                      {formatCurrency(pnlData.totalIncome)}
+                    </span>
                   </div>
                 </div>
 
@@ -490,7 +520,9 @@ const AccountDetail = () => {
                       </div>
                     </div>
                     <div className="flex justify-end border-t border-amber-200/40 dark:border-amber-800/30 mt-2 pt-1">
-                      <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(pnlData.totalRevenueRefunds)}</span>
+                      <span className="tabular-nums font-medium w-28 text-right">
+                        {formatCurrency(pnlData.totalRevenueRefunds)}
+                      </span>
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1 italic">
                       Return of previously overpaid tax — excluded from taxable income
@@ -511,14 +543,18 @@ const AccountDetail = () => {
                       ))}
                       {Object.keys(pnlData.directCostsByCategory).length === 0 && pnlData.totalDirectCosts === 0 && (
                         <div className="flex justify-end">
-                          <span className="tabular-nums w-28 text-right">{formatCurrency(pnlData.totalDirectCosts)}</span>
+                          <span className="tabular-nums w-28 text-right">
+                            {formatCurrency(pnlData.totalDirectCosts)}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
                   {Object.keys(pnlData.directCostsByCategory).length > 0 && (
                     <div className="flex justify-end border-t border-border/50 mt-2 pt-1">
-                      <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(pnlData.totalDirectCosts)}</span>
+                      <span className="tabular-nums font-medium w-28 text-right">
+                        {formatCurrency(pnlData.totalDirectCosts)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -528,7 +564,9 @@ const AccountDetail = () => {
                   <div className="flex items-baseline">
                     <span className="font-semibold w-28">Gross profit</span>
                     <div className="flex-1 flex justify-end">
-                      <span className="tabular-nums font-semibold w-28 text-right">{formatCurrency(pnlData.grossProfit)}</span>
+                      <span className="tabular-nums font-semibold w-28 text-right">
+                        {formatCurrency(pnlData.grossProfit)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -566,7 +604,9 @@ const AccountDetail = () => {
                   )}
                   <div className="flex justify-end border-t border-border/50 mt-3 pt-2">
                     <span className="text-muted-foreground mr-4">Total Expenses</span>
-                    <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(pnlData.totalExpenses)}</span>
+                    <span className="tabular-nums font-medium w-28 text-right">
+                      {formatCurrency(pnlData.totalExpenses)}
+                    </span>
                   </div>
                 </div>
 
@@ -575,14 +615,16 @@ const AccountDetail = () => {
                   <div className="flex items-baseline">
                     <span className="font-bold w-28">Net profit</span>
                     <div className="flex-1 flex justify-end">
-                      <span className={`tabular-nums font-bold w-28 text-right ${
-                        pnlData.netProfit >= 0 
-                          ? 'text-emerald-600 dark:text-emerald-400' 
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {pnlData.netProfit < 0 && '('}
+                      <span
+                        className={`tabular-nums font-bold w-28 text-right ${
+                          pnlData.netProfit >= 0
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {pnlData.netProfit < 0 && "("}
                         {formatCurrency(Math.abs(pnlData.netProfit))}
-                        {pnlData.netProfit < 0 && ')'}
+                        {pnlData.netProfit < 0 && ")"}
                       </span>
                     </div>
                   </div>
@@ -596,7 +638,9 @@ const AccountDetail = () => {
                 </div>
 
                 {/* Assets / Liabilities / Capital sections */}
-                {(bsSections.assets.length > 0 || bsSections.liabilities.length > 0 || bsSections.capital.length > 0) && (
+                {(bsSections.assets.length > 0 ||
+                  bsSections.liabilities.length > 0 ||
+                  bsSections.capital.length > 0) && (
                   <>
                     <div className="border-t border-border/30 mt-8 pt-4 mb-4">
                       <div className="flex items-baseline">
@@ -604,7 +648,7 @@ const AccountDetail = () => {
                         <div className="flex-1" />
                       </div>
                       <div className="mt-2 space-y-0.5">
-                        {bsSections.assets.map(a => (
+                        {bsSections.assets.map((a) => (
                           <div key={a.label} className="flex justify-between py-0.5">
                             <span className="text-muted-foreground pl-8">{a.label}</span>
                             <span className="tabular-nums w-28 text-right">{formatCurrency(a.amount)}</span>
@@ -619,7 +663,9 @@ const AccountDetail = () => {
                       </div>
                       <div className="flex justify-end border-t border-border/50 mt-3 pt-2">
                         <span className="text-muted-foreground mr-4">Total Assets</span>
-                        <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(bsSections.totalAssets)}</span>
+                        <span className="tabular-nums font-medium w-28 text-right">
+                          {formatCurrency(bsSections.totalAssets)}
+                        </span>
                       </div>
                     </div>
 
@@ -629,7 +675,7 @@ const AccountDetail = () => {
                         <div className="flex-1" />
                       </div>
                       <div className="mt-2 space-y-0.5">
-                        {bsSections.liabilities.map(l => (
+                        {bsSections.liabilities.map((l) => (
                           <div key={l.label} className="flex justify-between py-0.5">
                             <span className="text-muted-foreground pl-8">{l.label}</span>
                             <span className="tabular-nums w-28 text-right">{formatCurrency(l.amount)}</span>
@@ -644,7 +690,9 @@ const AccountDetail = () => {
                       </div>
                       <div className="flex justify-end border-t border-border/50 mt-3 pt-2">
                         <span className="text-muted-foreground mr-4">Total Liabilities</span>
-                        <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(bsSections.totalLiabilities)}</span>
+                        <span className="tabular-nums font-medium w-28 text-right">
+                          {formatCurrency(bsSections.totalLiabilities)}
+                        </span>
                       </div>
                     </div>
 
@@ -654,7 +702,7 @@ const AccountDetail = () => {
                         <div className="flex-1" />
                       </div>
                       <div className="mt-2 space-y-0.5">
-                        {bsSections.capital.map(c => (
+                        {bsSections.capital.map((c) => (
                           <div key={c.label} className="flex justify-between py-0.5">
                             <span className="text-muted-foreground pl-8">{c.label}</span>
                             <span className="tabular-nums w-28 text-right">{formatCurrency(c.amount)}</span>
@@ -663,17 +711,21 @@ const AccountDetail = () => {
                       </div>
                       <div className="flex justify-end border-t border-border/50 mt-3 pt-2">
                         <span className="text-muted-foreground mr-4">Total Capital</span>
-                        <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(bsSections.totalCapital)}</span>
+                        <span className="tabular-nums font-medium w-28 text-right">
+                          {formatCurrency(bsSections.totalCapital)}
+                        </span>
                       </div>
                     </div>
                   </>
                 )}
 
-                {accountTransactions.length === 0 && bsSections.assets.length === 0 && bsSections.capital.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground border-t mt-6">
-                    <p className="text-sm font-sans">No transactions in this period.</p>
-                  </div>
-                )}
+                {accountTransactions.length === 0 &&
+                  bsSections.assets.length === 0 &&
+                  bsSections.capital.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground border-t mt-6">
+                      <p className="text-sm font-sans">No transactions in this period.</p>
+                    </div>
+                  )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -686,9 +738,7 @@ const AccountDetail = () => {
                   <Scale className="w-5 h-5" />
                   Balance Sheet
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Assets, liabilities, and account balance
-                </p>
+                <p className="text-sm text-muted-foreground">Assets, liabilities, and account balance</p>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-4">
@@ -711,11 +761,13 @@ const AccountDetail = () => {
                     </span>
                   </div>
                 </div>
-                
+
                 <div className="bg-primary/5 rounded-xl p-4">
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-medium">Current Balance</span>
-                    <span className={`text-3xl font-bold ${balanceData.balance >= 0 ? 'text-primary' : 'text-red-600 dark:text-red-400'}`}>
+                    <span
+                      className={`text-3xl font-bold ${balanceData.balance >= 0 ? "text-primary" : "text-red-600 dark:text-red-400"}`}
+                    >
                       €{balanceData.balance.toFixed(2)}
                     </span>
                   </div>
@@ -745,8 +797,8 @@ const AccountDetail = () => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="bg-popover">
                       {(Object.keys(dateRangeLabels) as DateRangeOption[]).map((key) => (
-                        <DropdownMenuItem 
-                          key={key} 
+                        <DropdownMenuItem
+                          key={key}
                           onClick={() => setDateRange(key)}
                           className={dateRange === key ? "bg-accent" : ""}
                         >
@@ -778,16 +830,20 @@ const AccountDetail = () => {
                     </span>
                   </div>
                 </div>
-                
-                <div className={`rounded-xl p-4 ${vatData.netVat >= 0 ? 'bg-red-50 dark:bg-red-950/30' : 'bg-emerald-50 dark:bg-emerald-950/30'}`}>
+
+                <div
+                  className={`rounded-xl p-4 ${vatData.netVat >= 0 ? "bg-red-50 dark:bg-red-950/30" : "bg-emerald-50 dark:bg-emerald-950/30"}`}
+                >
                   <div className="flex items-center justify-between">
                     <div>
                       <span className="text-lg font-medium">Net VAT</span>
                       <p className="text-sm text-muted-foreground">
-                        {vatData.netVat >= 0 ? 'Amount owed to Revenue' : 'Refund due from Revenue'}
+                        {vatData.netVat >= 0 ? "Amount owed to Revenue" : "Refund due from Revenue"}
                       </p>
                     </div>
-                    <span className={`text-3xl font-bold ${vatData.netVat >= 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                    <span
+                      className={`text-3xl font-bold ${vatData.netVat >= 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400"}`}
+                    >
                       €{Math.abs(vatData.netVat).toFixed(2)}
                     </span>
                   </div>
@@ -811,41 +867,35 @@ const AccountDetail = () => {
                   <BarChart3 className="w-5 h-5" />
                   Financial Ratios
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Key performance indicators for this account
-                </p>
+                <p className="text-sm text-muted-foreground">Key performance indicators for this account</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="bg-muted/50 rounded-xl p-4">
                     <p className="text-sm text-muted-foreground mb-1">Profit Margin</p>
-                    <p className={`text-2xl font-bold ${ratios.profitMargin >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <p
+                      className={`text-2xl font-bold ${ratios.profitMargin >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+                    >
                       {ratios.profitMargin.toFixed(1)}%
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Net profit as % of income
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Net profit as % of income</p>
                   </div>
                   <div className="bg-muted/50 rounded-xl p-4">
                     <p className="text-sm text-muted-foreground mb-1">Expense Ratio</p>
-                    <p className="text-2xl font-bold">
-                      {ratios.expenseRatio.toFixed(1)}%
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Expenses as % of income
-                    </p>
+                    <p className="text-2xl font-bold">{ratios.expenseRatio.toFixed(1)}%</p>
+                    <p className="text-xs text-muted-foreground mt-1">Expenses as % of income</p>
                   </div>
                   <div className="bg-muted/50 rounded-xl p-4">
                     <p className="text-sm text-muted-foreground mb-1">Income/Expense</p>
-                    <p className={`text-2xl font-bold ${ratios.incomeToExpense >= 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <p
+                      className={`text-2xl font-bold ${ratios.incomeToExpense >= 1 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+                    >
                       {ratios.incomeToExpense.toFixed(2)}x
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Income to expense ratio
-                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Income to expense ratio</p>
                   </div>
                 </div>
-                
+
                 {accountTransactions.length === 0 && (
                   <div className="text-center py-6 text-muted-foreground">
                     <p>No transactions found for this account.</p>

@@ -11,9 +11,7 @@ import { IRISH_TOWNS } from "@/lib/irishTowns";
 // ── Town → County mapping (derived from irishTowns.ts) ────────────────
 // Single source of truth for all 200+ Irish towns.
 
-const COUNTY_MAP: Record<string, string> = Object.fromEntries(
-  IRISH_TOWNS.map((t) => [t.name, t.county])
-);
+const COUNTY_MAP: Record<string, string> = Object.fromEntries(IRISH_TOWNS.map((t) => [t.name, t.county]));
 
 // ── Irish location dictionary ──────────────────────────────────────────
 // Maps common bank-statement abbreviations → canonical location name.
@@ -144,7 +142,11 @@ export interface DetectedTrip {
 // ── Helpers ─────────────────────────────────────────────────────────────
 
 function normalise(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9\s&.]/g, " ").replace(/\s+/g, " ").trim();
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s&.]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Extract the user's base city from their profile address string. */
@@ -171,10 +173,7 @@ export function extractCountyFromAddress(address: string): string | null {
   const norm = normalise(address);
 
   // Direct "co. <county>" or "county <county>" pattern
-  const countyPatterns = [
-    /\bco\.?\s+(\w+)\b/,
-    /\bcounty\s+(\w+)\b/,
-  ];
+  const countyPatterns = [/\bco\.?\s+(\w+)\b/, /\bcounty\s+(\w+)\b/];
   const allCounties = new Set(Object.values(COUNTY_MAP));
   for (const pattern of countyPatterns) {
     const match = norm.match(pattern);
@@ -252,10 +251,7 @@ export interface DetectTripsInput {
  *  - OR 1 hotel/accommodation booking at a non-base location
  *  - Consecutive-day clusters at the same location are merged into one trip
  */
-export function detectTrips(
-  transactions: DetectTripsInput[],
-  baseLocation: string | null
-): DetectedTrip[] {
+export function detectTrips(transactions: DetectTripsInput[], baseLocation: string | null): DetectedTrip[] {
   // Only consider expenses
   const expenses = transactions.filter((t) => t.type === "expense");
 
@@ -305,11 +301,7 @@ export function detectTrips(
   } | null = null;
 
   for (const day of qualifiedDays) {
-    if (
-      current &&
-      current.location === day.location &&
-      dayDiff(current.endDate, day.date) <= 1
-    ) {
+    if (current && current.location === day.location && dayDiff(current.endDate, day.date) <= 1) {
       // Extend current trip
       current.endDate = day.date;
       current.txns.push(...day.txns);

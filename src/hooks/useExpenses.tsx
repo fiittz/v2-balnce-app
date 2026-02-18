@@ -15,11 +15,13 @@ export function useExpenses(options?: { limit?: number; status?: string }) {
     queryFn: async () => {
       let query = supabase
         .from("expenses")
-        .select(`
+        .select(
+          `
           *,
           category:categories(id, name),
           supplier:suppliers(id, name)
-        `)
+        `,
+        )
         .eq("user_id", user!.id)
         .order("expense_date", { ascending: false });
 
@@ -69,10 +71,7 @@ export function useExpenseStats(periodStart?: string, periodEnd?: string) {
   return useQuery({
     queryKey: ["expense-stats", user?.id, periodStart, periodEnd],
     queryFn: async () => {
-      let query = supabase
-        .from("expenses")
-        .select("amount, vat_amount")
-        .eq("user_id", user!.id);
+      let query = supabase.from("expenses").select("amount, vat_amount").eq("user_id", user!.id);
 
       if (periodStart) {
         query = query.gte("expense_date", periodStart);

@@ -7,15 +7,15 @@ import type { Database } from "@/integrations/supabase/types";
 
 export type Account = Database["public"]["Tables"]["accounts"]["Row"];
 
-export type AccountType = 
-  | "Income" 
-  | "Cost of Sales" 
-  | "Expense" 
-  | "VAT" 
-  | "Payroll" 
-  | "Fixed Assets" 
-  | "Current Assets" 
-  | "Current Liabilities" 
+export type AccountType =
+  | "Income"
+  | "Cost of Sales"
+  | "Expense"
+  | "VAT"
+  | "Payroll"
+  | "Fixed Assets"
+  | "Current Assets"
+  | "Current Liabilities"
   | "Equity"
   | "bank"; // Default from DB
 
@@ -28,26 +28,29 @@ export interface AccountSuggestion {
 
 // Map autocat categories to Chart of Accounts entries
 // Format: { autocatCategory: { accountName, accountType, vatRateOverride? } }
-const CATEGORY_TO_ACCOUNT_MAP: Record<string, { 
-  expense: { name: string; type: AccountType }[];
-  income: { name: string; type: AccountType }[];
-}> = {
+const CATEGORY_TO_ACCOUNT_MAP: Record<
+  string,
+  {
+    expense: { name: string; type: AccountType }[];
+    income: { name: string; type: AccountType }[];
+  }
+> = {
   // === MATERIALS & SUPPLIES ===
-  "Materials": {
+  Materials: {
     expense: [
       { name: "Materials Purchased", type: "Cost of Sales" },
       { name: "Stock Purchases", type: "Cost of Sales" },
     ],
     income: [],
   },
-  "Tools": {
+  Tools: {
     expense: [
       { name: "Small Tools & Equipment", type: "Expense" },
       { name: "Tools & Machinery", type: "Fixed Assets" },
     ],
     income: [],
   },
-  "Equipment": {
+  Equipment: {
     expense: [
       { name: "Computer Equipment", type: "Expense" },
       { name: "Office Equipment", type: "Fixed Assets" },
@@ -63,10 +66,8 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<string, {
     ],
     income: [],
   },
-  "Fuel": {
-    expense: [
-      { name: "Motor – Fuel", type: "Expense" },
-    ],
+  Fuel: {
+    expense: [{ name: "Motor – Fuel", type: "Expense" }],
     income: [],
   },
   "Motor Vehicle Expenses": {
@@ -90,7 +91,7 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<string, {
     ],
     income: [],
   },
-  "Subsistence": {
+  Subsistence: {
     expense: [
       { name: "Travel & Subsistence", type: "Expense" },
       { name: "Accommodation", type: "Expense" },
@@ -99,20 +100,18 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<string, {
   },
 
   // === SOFTWARE & TECH ===
-  "Software": {
+  Software: {
     expense: [
       { name: "Software & Subscriptions", type: "Expense" },
       { name: "Computer Equipment", type: "Expense" },
     ],
     income: [],
   },
-  "Phone": {
-    expense: [
-      { name: "Telephone & Internet", type: "Expense" },
-    ],
+  Phone: {
+    expense: [{ name: "Telephone & Internet", type: "Expense" }],
     income: [],
   },
-  "Marketing": {
+  Marketing: {
     expense: [
       { name: "Website Hosting", type: "Expense" },
       { name: "Advertising", type: "Expense" },
@@ -129,10 +128,8 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<string, {
     ],
     income: [],
   },
-  "Insurance": {
-    expense: [
-      { name: "Insurance", type: "Expense" },
-    ],
+  Insurance: {
+    expense: [{ name: "Insurance", type: "Expense" }],
     income: [],
   },
 
@@ -161,12 +158,10 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<string, {
     income: [],
   },
   "Sub Con": {
-    expense: [
-      { name: "Subcontractors", type: "Cost of Sales" },
-    ],
+    expense: [{ name: "Subcontractors", type: "Cost of Sales" }],
     income: [],
   },
-  "Wages": {
+  Wages: {
     expense: [
       { name: "Wages & Salaries", type: "Expense" },
       { name: "Employer PRSI", type: "Expense" },
@@ -175,39 +170,33 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<string, {
   },
 
   // === OFFICE & GENERAL ===
-  "Office": {
+  Office: {
     expense: [
       { name: "Office Supplies", type: "Expense" },
       { name: "Printing & Stationery", type: "Expense" },
     ],
     income: [],
   },
-  "Rent": {
-    expense: [
-      { name: "Rent", type: "Expense" },
-    ],
+  Rent: {
+    expense: [{ name: "Rent", type: "Expense" }],
     income: [],
   },
-  "Cleaning": {
-    expense: [
-      { name: "Cleaning", type: "Expense" },
-    ],
+  Cleaning: {
+    expense: [{ name: "Cleaning", type: "Expense" }],
     income: [],
   },
-  "Training": {
-    expense: [
-      { name: "Staff Training", type: "Expense" },
-    ],
+  Training: {
+    expense: [{ name: "Staff Training", type: "Expense" }],
     income: [],
   },
-  "Workwear": {
+  Workwear: {
     expense: [
       { name: "PPE / Protective Gear", type: "Expense" },
       { name: "Uniforms", type: "Expense" },
     ],
     income: [],
   },
-  "Advertising": {
+  Advertising: {
     expense: [
       { name: "Advertising", type: "Expense" },
       { name: "Social Media Ads", type: "Expense" },
@@ -215,82 +204,62 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<string, {
     income: [],
   },
   "General Expenses": {
-    expense: [
-      { name: "General Expenses", type: "Expense" },
-    ],
+    expense: [{ name: "General Expenses", type: "Expense" }],
     income: [],
   },
-  "other": {
-    expense: [
-      { name: "General Expenses", type: "Expense" },
-    ],
-    income: [
-      { name: "Other Income", type: "Income" },
-    ],
+  other: {
+    expense: [{ name: "General Expenses", type: "Expense" }],
+    income: [{ name: "Other Income", type: "Income" }],
   },
-  "Drawings": {
-    expense: [
-      { name: "Owner's Drawings", type: "Equity" },
-    ],
+  Drawings: {
+    expense: [{ name: "Owner's Drawings", type: "Equity" }],
     income: [],
   },
-  "Medical": {
-    expense: [
-      { name: "General Expenses", type: "Expense" },
-    ],
+  Medical: {
+    expense: [{ name: "General Expenses", type: "Expense" }],
     income: [],
   },
 
   // === INTERNAL TRANSFERS ===
   "Internal Transfer": {
-    expense: [
-      { name: "Internal Transfers", type: "Current Assets" },
-    ],
-    income: [
-      { name: "Internal Transfers", type: "Current Assets" },
-    ],
+    expense: [{ name: "Internal Transfers", type: "Current Assets" }],
+    income: [{ name: "Internal Transfers", type: "Current Assets" }],
   },
 
   // === INCOME CATEGORIES ===
-  "Sales": {
+  Sales: {
     expense: [],
     income: [
       { name: "Sales Ireland 23%", type: "Income" },
       { name: "Other Income", type: "Income" },
     ],
   },
-  "RCT": {
+  RCT: {
     expense: [],
-    income: [
-      { name: "Sales Ireland 13.5%", type: "Income" },
-    ],
+    income: [{ name: "Sales Ireland 13.5%", type: "Income" }],
   },
   "Interest Income": {
     expense: [],
-    income: [
-      { name: "Other Income", type: "Income" },
-    ],
+    income: [{ name: "Other Income", type: "Income" }],
   },
   "Subscription Income": {
     expense: [],
-    income: [
-      { name: "Sales Ireland 23%", type: "Income" },
-    ],
+    income: [{ name: "Sales Ireland 23%", type: "Income" }],
   },
 };
 
 // VAT rate to income account mapping
 const VAT_RATE_TO_INCOME_ACCOUNT: Record<string, string> = {
   "Standard 23%": "Sales Ireland 23%",
-  "standard_23": "Sales Ireland 23%",
+  standard_23: "Sales Ireland 23%",
   "Reduced 13.5%": "Sales Ireland 13.5%",
-  "reduced_13_5": "Sales Ireland 13.5%",
+  reduced_13_5: "Sales Ireland 13.5%",
   "Second Reduced 9%": "Sales Ireland 9%",
-  "second_reduced_9": "Sales Ireland 9%",
-  "Zero": "Zero Rated Sales",
-  "zero_rated": "Zero Rated Sales",
-  "Exempt": "Exempt Sales",
-  "exempt": "Exempt Sales",
+  second_reduced_9: "Sales Ireland 9%",
+  Zero: "Zero Rated Sales",
+  zero_rated: "Zero Rated Sales",
+  Exempt: "Exempt Sales",
+  exempt: "Exempt Sales",
   "Reverse Charge": "Sales Ireland 13.5%", // RCT income
 };
 
@@ -301,15 +270,13 @@ export function findMatchingAccount(
   autocatCategory: string,
   transactionType: "income" | "expense",
   vatRate: string | undefined,
-  accounts: Account[]
+  accounts: Account[],
 ): Account | null {
   // For income, try VAT rate mapping first
   if (transactionType === "income" && vatRate) {
     const vatAccountName = VAT_RATE_TO_INCOME_ACCOUNT[vatRate];
     if (vatAccountName) {
-      const vatAccount = accounts.find(
-        a => a.name.toLowerCase() === vatAccountName.toLowerCase()
-      );
+      const vatAccount = accounts.find((a) => a.name.toLowerCase() === vatAccountName.toLowerCase());
       if (vatAccount) return vatAccount;
     }
   }
@@ -324,8 +291,7 @@ export function findMatchingAccount(
         const candidates = transactionType === "income" ? value.income : value.expense;
         for (const candidate of candidates) {
           const match = accounts.find(
-            a => a.name.toLowerCase() === candidate.name.toLowerCase() && 
-                 a.account_type === candidate.type
+            (a) => a.name.toLowerCase() === candidate.name.toLowerCase() && a.account_type === candidate.type,
           );
           if (match) return match;
         }
@@ -336,12 +302,11 @@ export function findMatchingAccount(
 
   // Get candidates for the transaction type
   const candidates = transactionType === "income" ? mapping.income : mapping.expense;
-  
+
   // Find first matching account
   for (const candidate of candidates) {
     const match = accounts.find(
-      a => a.name.toLowerCase() === candidate.name.toLowerCase() && 
-           a.account_type === candidate.type
+      (a) => a.name.toLowerCase() === candidate.name.toLowerCase() && a.account_type === candidate.type,
     );
     if (match) return match;
   }
@@ -349,9 +314,10 @@ export function findMatchingAccount(
   // Fallback: try partial name matching
   for (const candidate of candidates) {
     const partialMatch = accounts.find(
-      a => (a.name.toLowerCase().includes(candidate.name.toLowerCase().split(" ")[0]) ||
-            candidate.name.toLowerCase().includes(a.name.toLowerCase().split(" ")[0])) &&
-           a.account_type === candidate.type
+      (a) =>
+        (a.name.toLowerCase().includes(candidate.name.toLowerCase().split(" ")[0]) ||
+          candidate.name.toLowerCase().includes(a.name.toLowerCase().split(" ")[0])) &&
+        a.account_type === candidate.type,
     );
     if (partialMatch) return partialMatch;
   }
@@ -365,7 +331,7 @@ export function findMatchingAccount(
 export function getAccountSuggestion(
   autocatCategory: string,
   transactionType: "income" | "expense",
-  vatRate: string | undefined
+  vatRate: string | undefined,
 ): AccountSuggestion | null {
   // For income, use VAT rate mapping
   if (transactionType === "income" && vatRate) {
@@ -399,21 +365,18 @@ export function getAccountSuggestion(
 /**
  * Get default account for transaction type (fallback)
  */
-export function getDefaultAccount(
-  transactionType: "income" | "expense",
-  accounts: Account[]
-): Account | null {
+export function getDefaultAccount(transactionType: "income" | "expense", accounts: Account[]): Account | null {
   if (transactionType === "income") {
-    return accounts.find(
-      a => a.name === "Other Income" && a.account_type === "Income"
-    ) || accounts.find(
-      a => a.account_type === "Income"
-    ) || null;
+    return (
+      accounts.find((a) => a.name === "Other Income" && a.account_type === "Income") ||
+      accounts.find((a) => a.account_type === "Income") ||
+      null
+    );
   } else {
-    return accounts.find(
-      a => a.name === "General Expenses" && a.account_type === "Expense"
-    ) || accounts.find(
-      a => a.account_type === "Expense"
-    ) || null;
+    return (
+      accounts.find((a) => a.name === "General Expenses" && a.account_type === "Expense") ||
+      accounts.find((a) => a.account_type === "Expense") ||
+      null
+    );
   }
 }

@@ -94,12 +94,8 @@ describe("getPageLabel", () => {
   });
 
   it("returns Form 11 label with director number for /tax/form11/:num", () => {
-    expect(getPageLabel("/tax/form11/2")).toBe(
-      "Form 11 Income Tax Return — Director 2"
-    );
-    expect(getPageLabel("/tax/form11/99")).toBe(
-      "Form 11 Income Tax Return — Director 99"
-    );
+    expect(getPageLabel("/tax/form11/2")).toBe("Form 11 Income Tax Return — Director 2");
+    expect(getPageLabel("/tax/form11/99")).toBe("Form 11 Income Tax Return — Director 99");
   });
 
   it('returns "Account Detail" for /accounts/:id paths', () => {
@@ -161,11 +157,7 @@ describe("TOOL_DEFINITIONS", () => {
 describe("executeToolCall — navigate_to_page", () => {
   it("calls navigate and returns navigated: true for a known page", () => {
     const ctx = makeCtx();
-    const result = executeToolCall(
-      "navigate_to_page",
-      { page: "dashboard" },
-      ctx
-    );
+    const result = executeToolCall("navigate_to_page", { page: "dashboard" }, ctx);
     expect(ctx.navigate).toHaveBeenCalledWith("/dashboard");
     expect(result.navigated).toBe(true);
     expect(result.result).toContain("Dashboard");
@@ -173,11 +165,7 @@ describe("executeToolCall — navigate_to_page", () => {
 
   it("returns an error string for an unknown page", () => {
     const ctx = makeCtx();
-    const result = executeToolCall(
-      "navigate_to_page",
-      { page: "nonexistent_page" },
-      ctx
-    );
+    const result = executeToolCall("navigate_to_page", { page: "nonexistent_page" }, ctx);
     expect(ctx.navigate).not.toHaveBeenCalled();
     expect(result.result).toContain("Unknown page");
     expect(result.navigated).toBeUndefined();
@@ -269,11 +257,7 @@ describe("executeToolCall — show_expense_breakdown", () => {
         flaggedCapitalItems: [],
       } as unknown as ToolContext["ct1"],
     });
-    const { result } = executeToolCall(
-      "show_expense_breakdown",
-      { limit: 2 },
-      ctx
-    );
+    const { result } = executeToolCall("show_expense_breakdown", { limit: 2 }, ctx);
 
     // Only top 2 categories (Materials, Rent) should appear as data rows
     // The table header, separator, 2 data rows, total row = 5 lines with "|"
@@ -290,11 +274,7 @@ describe("executeToolCall — show_expense_breakdown", () => {
 describe("executeToolCall — calculate_pension_savings", () => {
   it("returns before/after comparison with CT and personal savings", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "calculate_pension_savings",
-      { amount: 20000 },
-      ctx
-    );
+    const { result } = executeToolCall("calculate_pension_savings", { amount: 20000 }, ctx);
 
     expect(result).toContain("Employer pension contribution");
     expect(result).toContain("Before");
@@ -332,11 +312,7 @@ describe("executeToolCall — show_tax_deadlines", () => {
 describe("executeToolCall — what_if_buy_van", () => {
   it("returns capital allowances table over 8 years", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "what_if_buy_van",
-      { cost: 40000 },
-      ctx
-    );
+    const { result } = executeToolCall("what_if_buy_van", { cost: 40000 }, ctx);
 
     expect(result).toContain("buys a van");
     expect(result).toContain("12.5% per year");
@@ -358,11 +334,7 @@ describe("executeToolCall — what_if_buy_van", () => {
 describe("executeToolCall — what_if_hire_employee", () => {
   it("returns cost breakdown with employer PRSI and CT impact", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "what_if_hire_employee",
-      { salary: 40000 },
-      ctx
-    );
+    const { result } = executeToolCall("what_if_hire_employee", { salary: 40000 }, ctx);
 
     expect(result).toContain("hire an employee");
     expect(result).toContain("Gross Salary");
@@ -376,11 +348,7 @@ describe("executeToolCall — what_if_hire_employee", () => {
 
   it("includes start-up relief note when company is young", () => {
     const ctx = makeCtx({ incorporationDate: "2024-01-01" });
-    const { result } = executeToolCall(
-      "what_if_hire_employee",
-      { salary: 40000 },
-      ctx
-    );
+    const { result } = executeToolCall("what_if_hire_employee", { salary: 40000 }, ctx);
     expect(result).toContain("Start-up Company Relief");
   });
 });
@@ -391,11 +359,7 @@ describe("executeToolCall — what_if_hire_employee", () => {
 describe("executeToolCall — what_if_salary_vs_dividend", () => {
   it("returns 3-way comparison: salary vs dividend vs pension", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "what_if_salary_vs_dividend",
-      { amount: 50000 },
-      ctx
-    );
+    const { result } = executeToolCall("what_if_salary_vs_dividend", { amount: 50000 }, ctx);
 
     expect(result).toContain("Salary");
     expect(result).toContain("Dividend");
@@ -441,11 +405,7 @@ describe("executeToolCall — search_transactions", () => {
       ],
     });
 
-    const { result } = executeToolCall(
-      "search_transactions",
-      { query: "timber" },
-      ctx
-    );
+    const { result } = executeToolCall("search_transactions", { query: "timber" }, ctx);
 
     expect(result).toContain('Found 1 transaction matching "timber"');
     expect(result).toContain("ACME Timber Supplies");
@@ -466,11 +426,7 @@ describe("executeToolCall — search_transactions", () => {
         },
       ],
     });
-    const { result } = executeToolCall(
-      "search_transactions",
-      { query: "fuel" },
-      ctx
-    );
+    const { result } = executeToolCall("search_transactions", { query: "fuel" }, ctx);
     expect(result).toContain("Found 1 transaction");
   });
 
@@ -487,11 +443,7 @@ describe("executeToolCall — search_transactions", () => {
         },
       ],
     });
-    const { result } = executeToolCall(
-      "search_transactions",
-      { query: "toolstation" },
-      ctx
-    );
+    const { result } = executeToolCall("search_transactions", { query: "toolstation" }, ctx);
     expect(result).toContain("Found 1 transaction");
   });
 
@@ -508,11 +460,7 @@ describe("executeToolCall — search_transactions", () => {
         },
       ],
     });
-    const { result } = executeToolCall(
-      "search_transactions",
-      { query: "nonexistent" },
-      ctx
-    );
+    const { result } = executeToolCall("search_transactions", { query: "nonexistent" }, ctx);
     expect(result).toContain('No transactions found matching "nonexistent"');
   });
 });
@@ -523,11 +471,7 @@ describe("executeToolCall — search_transactions", () => {
 describe("executeToolCall — show_chart", () => {
   it("returns chart JSON for expenses_pie", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "show_chart",
-      { chart_type: "expenses_pie" },
-      ctx
-    );
+    const { result } = executeToolCall("show_chart", { chart_type: "expenses_pie" }, ctx);
 
     expect(result).toContain("```chart");
     const jsonStr = result.match(/```chart\n([\s\S]+?)\n```/)?.[1];
@@ -541,11 +485,7 @@ describe("executeToolCall — show_chart", () => {
 
   it("returns chart JSON for expenses_bar", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "show_chart",
-      { chart_type: "expenses_bar" },
-      ctx
-    );
+    const { result } = executeToolCall("show_chart", { chart_type: "expenses_bar" }, ctx);
 
     const jsonStr = result.match(/```chart\n([\s\S]+?)\n```/)?.[1];
     const chart = JSON.parse(jsonStr!);
@@ -554,11 +494,7 @@ describe("executeToolCall — show_chart", () => {
 
   it("returns chart JSON for income_vs_expenses", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "show_chart",
-      { chart_type: "income_vs_expenses" },
-      ctx
-    );
+    const { result } = executeToolCall("show_chart", { chart_type: "income_vs_expenses" }, ctx);
 
     const jsonStr = result.match(/```chart\n([\s\S]+?)\n```/)?.[1];
     const chart = JSON.parse(jsonStr!);
@@ -579,11 +515,7 @@ describe("executeToolCall — show_chart", () => {
         { date: "2025-01-20", amount: -100, type: "expense" },
       ],
     });
-    const { result } = executeToolCall(
-      "show_chart",
-      { chart_type: "monthly_spending" },
-      ctx
-    );
+    const { result } = executeToolCall("show_chart", { chart_type: "monthly_spending" }, ctx);
 
     const jsonStr = result.match(/```chart\n([\s\S]+?)\n```/)?.[1];
     const chart = JSON.parse(jsonStr!);
@@ -595,11 +527,7 @@ describe("executeToolCall — show_chart", () => {
 
   it("returns error for unknown chart type", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "show_chart",
-      { chart_type: "unknown_chart" },
-      ctx
-    );
+    const { result } = executeToolCall("show_chart", { chart_type: "unknown_chart" }, ctx);
     expect(result).toContain("Unknown chart type");
     expect(result).toContain("expenses_pie");
   });
@@ -725,9 +653,7 @@ describe("executeToolCall — run_director_health_check", () => {
   it("recognises existing pension contributions as a win", () => {
     const ctx = makeCtx({
       directorData: { name: "Test", salary: 50000 },
-      allForm11Data: [
-        { directorNumber: 1, data: { pensionContributions: 10000 } },
-      ],
+      allForm11Data: [{ directorNumber: 1, data: { pensionContributions: 10000 } }],
     });
     const { result } = executeToolCall("run_director_health_check", {}, ctx);
     expect(result).toContain("Pension contributions active");
@@ -795,11 +721,7 @@ describe("executeToolCall — navigate_to_page (additional)", () => {
   it("navigates to each known page without error", () => {
     for (const page of Object.keys(PAGE_ROUTES)) {
       const ctx = makeCtx();
-      const { result, navigated } = executeToolCall(
-        "navigate_to_page",
-        { page },
-        ctx
-      );
+      const { result, navigated } = executeToolCall("navigate_to_page", { page }, ctx);
       expect(navigated).toBe(true);
       expect(ctx.navigate).toHaveBeenCalledWith(PAGE_ROUTES[page].path);
       expect(result).toContain(PAGE_ROUTES[page].label);
@@ -844,22 +766,12 @@ describe("executeToolCall — search_transactions respects limit", () => {
       vendor_name: "",
     }));
     const ctx = makeCtx({ transactions: txs });
-    const { result } = executeToolCall(
-      "search_transactions",
-      { query: "payment", limit: 5 },
-      ctx
-    );
+    const { result } = executeToolCall("search_transactions", { query: "payment", limit: 5 }, ctx);
 
     // Count data rows (exclude header, separator, total)
     const dataRows = result
       .split("\n")
-      .filter(
-        (l) =>
-          l.startsWith("|") &&
-          !l.includes("Date") &&
-          !l.includes("---") &&
-          !l.includes("Total")
-      );
+      .filter((l) => l.startsWith("|") && !l.includes("Date") && !l.includes("---") && !l.includes("Total"));
     expect(dataRows.length).toBe(5);
   });
 });
@@ -896,9 +808,7 @@ describe("executeToolCall — show_trial_balance", () => {
         imbalanceAmount: -20000,
         orphanedTransactions: 2,
         uncategorizedAmount: 1200,
-        issues: [
-          { severity: "error", title: "Imbalanced", description: "Off by 20k" },
-        ],
+        issues: [{ severity: "error", title: "Imbalanced", description: "Off by 20k" }],
       },
     } as Partial<ToolContext>);
     const { result } = executeToolCall("show_trial_balance", {}, ctx);
@@ -916,9 +826,7 @@ describe("executeToolCall — show_trial_balance", () => {
     const ctx = makeCtx({
       trialBalance: {
         isLoading: false,
-        accounts: [
-          { accountName: "Sales", accountType: "Income", debit: 0, credit: 10000 },
-        ],
+        accounts: [{ accountName: "Sales", accountType: "Income", debit: 0, credit: 10000 }],
         totalDebits: 10000,
         totalCredits: 10000,
         isBalanced: true,
@@ -954,11 +862,7 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns ICS content for intra_community_supplies topic", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "intra_community_supplies" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "intra_community_supplies" }, ctx);
     expect(result).toContain("Intra-Community Supplies");
     expect(result).toContain("E1");
     expect(result).toContain("VIES");
@@ -966,11 +870,7 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns reverse charge content for reverse_charge_services topic", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "reverse_charge_services" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "reverse_charge_services" }, ctx);
     expect(result).toContain("Reverse Charge");
     expect(result).toContain("ES2");
     expect(result).toContain("Article 196");
@@ -978,11 +878,7 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns OSS content for oss_distance_selling topic", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "oss_distance_selling" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "oss_distance_selling" }, ctx);
     expect(result).toContain("One Stop Shop");
     expect(result).toContain("€10,000");
     expect(result).toContain("IOSS");
@@ -990,11 +886,7 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns imports/exports content", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "imports_exports" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "imports_exports" }, ctx);
     expect(result).toContain("Imports & Exports");
     expect(result).toContain("E2");
     expect(result).toContain("PA1");
@@ -1002,11 +894,7 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns place of supply content", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "place_of_supply" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "place_of_supply" }, ctx);
     expect(result).toContain("Place of Supply");
     expect(result).toContain("B2B");
     expect(result).toContain("B2C");
@@ -1014,11 +902,7 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns VIES/Intrastat content", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "vies_intrastat" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "vies_intrastat" }, ctx);
     expect(result).toContain("VIES");
     expect(result).toContain("Intrastat");
     expect(result).toContain("€750,000");
@@ -1026,11 +910,7 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns UK post-Brexit content", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "uk_post_brexit" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "uk_post_brexit" }, ctx);
     expect(result).toContain("Post-Brexit");
     expect(result).toContain("Northern Ireland");
     expect(result).toContain("XI");
@@ -1038,22 +918,14 @@ describe("executeToolCall — explain_eu_vat", () => {
 
   it("returns postponed accounting content", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "postponed_accounting" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "postponed_accounting" }, ctx);
     expect(result).toContain("Postponed Accounting");
     expect(result).toContain("PA1");
   });
 
   it("returns section 56 content", () => {
     const ctx = makeCtx();
-    const { result } = executeToolCall(
-      "explain_eu_vat",
-      { topic: "section_56" },
-      ctx
-    );
+    const { result } = executeToolCall("explain_eu_vat", { topic: "section_56" }, ctx);
     expect(result).toContain("Section 56");
     expect(result).toContain("75%");
   });
@@ -1063,7 +935,7 @@ describe("executeToolCall — explain_eu_vat", () => {
     const { result } = executeToolCall(
       "explain_eu_vat",
       { topic: "general", scenario: "selling SaaS to Germany" },
-      ctx
+      ctx,
     );
     expect(result).toContain("selling SaaS to Germany");
   });

@@ -1,14 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Use vi.hoisted so mock variables are available inside vi.mock factories
-const {
-  mockCell,
-  mockRow,
-  mockColumn,
-  mockWorksheet,
-  mockWorkbook,
-  mockSaveAs,
-} = vi.hoisted(() => {
+const { mockCell, mockRow, mockColumn, mockWorksheet, mockWorkbook, mockSaveAs } = vi.hoisted(() => {
   const mockCell = { border: null, alignment: null, value: "test" };
   const mockRow = {
     font: null as unknown,
@@ -163,7 +156,7 @@ describe("addHeaderRows", () => {
     const meta = makeMeta({ preparer: undefined });
     addHeaderRows(mockWorksheet as never, meta, "Report");
     const preparerCalls = mockWorksheet.addRow.mock.calls.filter(
-      (call: unknown[][]) => typeof call[0]?.[0] === "string" && (call[0][0] as string).startsWith("Prepared by")
+      (call: unknown[][]) => typeof call[0]?.[0] === "string" && (call[0][0] as string).startsWith("Prepared by"),
     );
     expect(preparerCalls.length).toBe(0);
   });
@@ -282,9 +275,6 @@ describe("saveWorkbook", () => {
   it("calls writeBuffer and saveAs with correct filename", async () => {
     await saveWorkbook(mockWorkbook as never, "test_report.xlsx");
     expect(mockWorkbook.xlsx.writeBuffer).toHaveBeenCalled();
-    expect(mockSaveAs).toHaveBeenCalledWith(
-      expect.any(Blob),
-      "test_report.xlsx"
-    );
+    expect(mockSaveAs).toHaveBeenCalledWith(expect.any(Blob), "test_report.xlsx");
   });
 });

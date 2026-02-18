@@ -31,45 +31,88 @@ interface TransactionRow {
 
 // ── Qualifying patterns ────────────────────────────────────────
 
-const HEALTH_INSURANCE_PATTERNS = [
-  "vhi", "laya healthcare", "laya health", "irish life health", "glo health",
-];
+const HEALTH_INSURANCE_PATTERNS = ["vhi", "laya healthcare", "laya health", "irish life health", "glo health"];
 
 const MEDICAL_PATTERNS = [
-  "physio", "physiotherapy", "dental surgery", "orthodont", "oral surgery",
-  "hospital", "consultant", "surgeon", "dermatolog", "fertility", "ivf",
-  "mater private", "blackrock clinic", "beacon hospital", "bon secours",
-  "st vincent", "galway clinic", "gp visit", "doctor",
+  "physio",
+  "physiotherapy",
+  "dental surgery",
+  "orthodont",
+  "oral surgery",
+  "hospital",
+  "consultant",
+  "surgeon",
+  "dermatolog",
+  "fertility",
+  "ivf",
+  "mater private",
+  "blackrock clinic",
+  "beacon hospital",
+  "bon secours",
+  "st vincent",
+  "galway clinic",
+  "gp visit",
+  "doctor",
 ];
 
-const PENSION_PATTERNS = [
-  "irish life pension", "zurich pension", "aviva pension", "new ireland",
-  "standard life",
-];
+const PENSION_PATTERNS = ["irish life pension", "zurich pension", "aviva pension", "new ireland", "standard life"];
 
 const CHARITABLE_PATTERNS = [
-  "trocaire", "concern worldwide", "goal", "svp", "st vincent de paul",
-  "unicef ireland", "irish cancer society", "pieta house", "barnardos",
+  "trocaire",
+  "concern worldwide",
+  "goal",
+  "svp",
+  "st vincent de paul",
+  "unicef ireland",
+  "irish cancer society",
+  "pieta house",
+  "barnardos",
 ];
 
-const RENT_PATTERNS = [
-  "rent payment", "monthly rent", "residential tenancies", "rtb registration",
-];
+const RENT_PATTERNS = ["rent payment", "monthly rent", "residential tenancies", "rtb registration"];
 
 const TUITION_PATTERNS = [
-  "ucd", "tcd", "trinity college", "dcu", "nuig", "university of galway",
-  "ucc", "maynooth university", "tu dublin", "technological university",
-  "griffith college", "ncad", "rcsi", "dit", "athlone it", "waterford it",
-  "letterkenny it", "sligo it", "carlow it", "dundalk it", "limerick it",
+  "ucd",
+  "tcd",
+  "trinity college",
+  "dcu",
+  "nuig",
+  "university of galway",
+  "ucc",
+  "maynooth university",
+  "tu dublin",
+  "technological university",
+  "griffith college",
+  "ncad",
+  "rcsi",
+  "dit",
+  "athlone it",
+  "waterford it",
+  "letterkenny it",
+  "sligo it",
+  "carlow it",
+  "dundalk it",
+  "limerick it",
   "tuition",
 ];
 
 // ── Exclusion patterns (routine / cosmetic — NOT qualifying) ───
 
 const MEDICAL_EXCLUSIONS = [
-  "teeth whitening", "teeth cleaning", "dental checkup", "dental check-up",
-  "dental check up", "routine dental", "botox", "cosmetic", "filler",
-  "laser hair", "liposuction", "rhinoplasty", "breast augment", "tanning",
+  "teeth whitening",
+  "teeth cleaning",
+  "dental checkup",
+  "dental check-up",
+  "dental check up",
+  "routine dental",
+  "botox",
+  "cosmetic",
+  "filler",
+  "laser hair",
+  "liposuction",
+  "rhinoplasty",
+  "breast augment",
+  "tanning",
 ];
 
 // ── Helpers ────────────────────────────────────────────────────

@@ -1,7 +1,18 @@
 /* eslint-disable react-refresh/only-export-components */
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
-const COLORS = ["#1e3a5f", "#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe", "#f59e0b", "#10b981", "#ef4444"];
+const COLORS = [
+  "#1e3a5f",
+  "#2563eb",
+  "#3b82f6",
+  "#60a5fa",
+  "#93c5fd",
+  "#bfdbfe",
+  "#dbeafe",
+  "#f59e0b",
+  "#10b981",
+  "#ef4444",
+];
 
 interface ChartData {
   type: "pie" | "bar";

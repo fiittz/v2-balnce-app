@@ -35,7 +35,7 @@ describe("Formatters", () => {
   });
 
   it("formats percentages", () => {
-    expect(fmtPercent(0.20)).toBe("20%");
+    expect(fmtPercent(0.2)).toBe("20%");
     expect(fmtPercent(0.125)).toBe("13%"); // rounds
   });
 
@@ -99,20 +99,20 @@ describe("assembleBalanceSheetData", () => {
 
   it("includes long-term liabilities section when > 0", () => {
     const result = assembleBalanceSheetData(input, META);
-    const ltSection = result.sections.find(s => s.title === "Long-term Liabilities");
+    const ltSection = result.sections.find((s) => s.title === "Long-term Liabilities");
     expect(ltSection).toBeDefined();
   });
 
   it("omits long-term liabilities section when zero", () => {
     const noLoans = { ...input, bankLoans: 0, directorsLoans: 0 };
     const result = assembleBalanceSheetData(noLoans, META);
-    const ltSection = result.sections.find(s => s.title === "Long-term Liabilities");
+    const ltSection = result.sections.find((s) => s.title === "Long-term Liabilities");
     expect(ltSection).toBeUndefined();
   });
 
   it("snapshot: sections structure is stable", () => {
     const result = assembleBalanceSheetData(input, META);
-    expect(result.sections.map(s => s.title)).toMatchSnapshot();
+    expect(result.sections.map((s) => s.title)).toMatchSnapshot();
   });
 });
 
@@ -128,9 +128,7 @@ describe("assembleVATReportData", () => {
       { rate: "13.5%", net: 50000, vat: 6750 },
       { rate: "23%", net: 10000, vat: 2300 },
     ],
-    purchasesByRate: [
-      { rate: "23%", net: 20000, vat: 4600 },
-    ],
+    purchasesByRate: [{ rate: "23%", net: 20000, vat: 4600 }],
   };
 
   it("calculates T1 (VAT on sales)", () => {
@@ -166,7 +164,7 @@ describe("assembleVATReportData", () => {
       purchasesByRate: [],
     };
     const result = assembleVATReportData(noVatInput, META);
-    const vatRow = result.sections[0].rows.find(r => r.label === "VAT Number");
+    const vatRow = result.sections[0].rows.find((r) => r.label === "VAT Number");
     expect(vatRow?.value).toBe("Not specified");
   });
 
@@ -180,13 +178,13 @@ describe("assembleVATReportData", () => {
       purchasesByRate: [],
     };
     const result = assembleVATReportData(cashInput, META);
-    const basisRow = result.sections[0].rows.find(r => r.label === "Accounting Basis");
+    const basisRow = result.sections[0].rows.find((r) => r.label === "Accounting Basis");
     expect(basisRow?.value).toBe("Cash basis");
   });
 
   it("snapshot: sections structure is stable", () => {
     const result = assembleVATReportData(input, META);
-    expect(result.sections.map(s => s.title)).toMatchSnapshot();
+    expect(result.sections.map((s) => s.title)).toMatchSnapshot();
   });
 });
 
@@ -253,7 +251,7 @@ describe("assembleAbridgedAccountsData", () => {
 
   it("includes directors responsibility and audit exemption", () => {
     const result = assembleAbridgedAccountsData(input, META);
-    const titles = result.sections.map(s => s.title);
+    const titles = result.sections.map((s) => s.title);
     expect(titles).toContain("Directors' Responsibility Statement");
     expect(titles).toContain("Audit Exemption Statement");
     expect(titles).toContain("Accounting Policies");
@@ -261,13 +259,13 @@ describe("assembleAbridgedAccountsData", () => {
 
   it("includes directors loan note when present", () => {
     const result = assembleAbridgedAccountsData(input, META);
-    const notes = result.sections.find(s => s.title === "Notes to the Financial Statements");
-    expect(notes?.rows.some(r => r.label.includes("Directors' Loans"))).toBe(true);
+    const notes = result.sections.find((s) => s.title === "Notes to the Financial Statements");
+    expect(notes?.rows.some((r) => r.label.includes("Directors' Loans"))).toBe(true);
   });
 
   it("snapshot: sections structure is stable", () => {
     const result = assembleAbridgedAccountsData(input, META);
-    expect(result.sections.map(s => s.title)).toMatchSnapshot();
+    expect(result.sections.map((s) => s.title)).toMatchSnapshot();
   });
 });
 
@@ -315,15 +313,15 @@ describe("assembleForm11ReportData", () => {
   it("includes personal details section", () => {
     const calcResult = calculateForm11(form11Input);
     const report = assembleForm11ReportData(form11Input, calcResult, META);
-    const personal = report.sections.find(s => s.title === "Personal Details");
+    const personal = report.sections.find((s) => s.title === "Personal Details");
     expect(personal).toBeDefined();
-    expect(personal?.rows.some(r => r.value === "John Smith")).toBe(true);
+    expect(personal?.rows.some((r) => r.value === "John Smith")).toBe(true);
   });
 
   it("includes income tax and USC tables", () => {
     const calcResult = calculateForm11(form11Input);
     const report = assembleForm11ReportData(form11Input, calcResult, META);
-    const titles = report.tables.map(t => t.title);
+    const titles = report.tables.map((t) => t.title);
     expect(titles).toContain("Income Tax Calculation");
     expect(titles).toContain("Tax Credits");
     expect(titles).toContain("Universal Social Charge");
@@ -332,7 +330,7 @@ describe("assembleForm11ReportData", () => {
   it("includes CGT section when applicable", () => {
     const calcResult = calculateForm11(form11Input);
     const report = assembleForm11ReportData(form11Input, calcResult, META);
-    const cgt = report.sections.find(s => s.title === "Capital Gains Tax");
+    const cgt = report.sections.find((s) => s.title === "Capital Gains Tax");
     expect(cgt).toBeDefined();
   });
 
@@ -344,7 +342,7 @@ describe("assembleForm11ReportData", () => {
         { category: "Tools", amount: 2000 },
       ],
     });
-    const expTable = report.tables.find(t => t.title === "Business Expense Breakdown");
+    const expTable = report.tables.find((t) => t.title === "Business Expense Breakdown");
     expect(expTable).toBeDefined();
     expect(expTable?.rows.length).toBe(3); // 2 categories + total
   });
@@ -353,8 +351,8 @@ describe("assembleForm11ReportData", () => {
     const calcResult = calculateForm11(form11Input);
     const report = assembleForm11ReportData(form11Input, calcResult, META);
     expect({
-      sections: report.sections.map(s => s.title),
-      tables: report.tables.map(t => t.title),
+      sections: report.sections.map((s) => s.title),
+      tables: report.tables.map((t) => t.title),
     }).toMatchSnapshot();
   });
 });
@@ -385,8 +383,8 @@ describe("assembleBalanceSheetData — conditional rows", () => {
   it("includes RCT prepayment row when rctPrepayment > 0", () => {
     const input = { ...baseInput, rctPrepayment: 1500 };
     const result = assembleBalanceSheetData(input, META);
-    const currentAssetsSection = result.sections.find(s => s.title === "Current Assets")!;
-    const rctRow = currentAssetsSection.rows.find(r => r.label === "RCT Prepayment");
+    const currentAssetsSection = result.sections.find((s) => s.title === "Current Assets")!;
+    const rctRow = currentAssetsSection.rows.find((r) => r.label === "RCT Prepayment");
     expect(rctRow).toBeDefined();
     // rctPrepayment is included in the current assets total
     expect(result.currentAssets).toBe(3000 + 8000 + 500 + 12000 + 1500);
@@ -395,16 +393,16 @@ describe("assembleBalanceSheetData — conditional rows", () => {
   it("omits RCT prepayment row when rctPrepayment is 0", () => {
     const input = { ...baseInput, rctPrepayment: 0 };
     const result = assembleBalanceSheetData(input, META);
-    const currentAssetsSection = result.sections.find(s => s.title === "Current Assets")!;
-    const rctRow = currentAssetsSection.rows.find(r => r.label === "RCT Prepayment");
+    const currentAssetsSection = result.sections.find((s) => s.title === "Current Assets")!;
+    const rctRow = currentAssetsSection.rows.find((r) => r.label === "RCT Prepayment");
     expect(rctRow).toBeUndefined();
   });
 
   it("includes Director's Loan row when directorsLoanTravel > 0", () => {
     const input = { ...baseInput, directorsLoanTravel: 800 };
     const result = assembleBalanceSheetData(input, META);
-    const clSection = result.sections.find(s => s.title === "Current Liabilities")!;
-    const dlRow = clSection.rows.find(r => r.label === "Director's Loan");
+    const clSection = result.sections.find((s) => s.title === "Current Liabilities")!;
+    const dlRow = clSection.rows.find((r) => r.label === "Director's Loan");
     expect(dlRow).toBeDefined();
     // directorsLoanTravel is included in current liabilities total
     expect(result.currentLiabilities).toBe(6000 + 3000 + 0 + 800);
@@ -413,8 +411,8 @@ describe("assembleBalanceSheetData — conditional rows", () => {
   it("omits Director's Loan row when directorsLoanTravel is 0", () => {
     const input = { ...baseInput, directorsLoanTravel: 0 };
     const result = assembleBalanceSheetData(input, META);
-    const clSection = result.sections.find(s => s.title === "Current Liabilities")!;
-    const dlRow = clSection.rows.find(r => r.label === "Director's Loan");
+    const clSection = result.sections.find((s) => s.title === "Current Liabilities")!;
+    const dlRow = clSection.rows.find((r) => r.label === "Director's Loan");
     expect(dlRow).toBeUndefined();
   });
 });
@@ -447,93 +445,93 @@ describe("assembleAbridgedAccountsData — conditional rows", () => {
   it("includes WIP row when wip > 0", () => {
     const input = { ...baseInput, wip: 1500 };
     const result = assembleAbridgedAccountsData(input, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const wipRow = bs.rows.find(r => r.label === "  Work-in-progress");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const wipRow = bs.rows.find((r) => r.label === "  Work-in-progress");
     expect(wipRow).toBeDefined();
   });
 
   it("omits WIP row when wip is 0", () => {
     const result = assembleAbridgedAccountsData(baseInput, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const wipRow = bs.rows.find(r => r.label === "  Work-in-progress");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const wipRow = bs.rows.find((r) => r.label === "  Work-in-progress");
     expect(wipRow).toBeUndefined();
   });
 
   it("includes Prepayments row when prepayments > 0", () => {
     const input = { ...baseInput, prepayments: 500 };
     const result = assembleAbridgedAccountsData(input, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const row = bs.rows.find(r => r.label === "  Prepayments and accrued income");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find((r) => r.label === "  Prepayments and accrued income");
     expect(row).toBeDefined();
   });
 
   it("omits Prepayments row when prepayments is 0", () => {
     const result = assembleAbridgedAccountsData(baseInput, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const row = bs.rows.find(r => r.label === "  Prepayments and accrued income");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find((r) => r.label === "  Prepayments and accrued income");
     expect(row).toBeUndefined();
   });
 
   it("includes Accruals row when accruals > 0", () => {
     const input = { ...baseInput, accruals: 1000 };
     const result = assembleAbridgedAccountsData(input, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const row = bs.rows.find(r => r.label === "  Accruals and deferred income");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find((r) => r.label === "  Accruals and deferred income");
     expect(row).toBeDefined();
   });
 
   it("omits Accruals row when accruals is 0", () => {
     const result = assembleAbridgedAccountsData(baseInput, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const row = bs.rows.find(r => r.label === "  Accruals and deferred income");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find((r) => r.label === "  Accruals and deferred income");
     expect(row).toBeUndefined();
   });
 
   it("includes Taxation row when taxation > 0", () => {
     const input = { ...baseInput, taxation: 2000 };
     const result = assembleAbridgedAccountsData(input, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const row = bs.rows.find(r => r.label === "  Taxation");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find((r) => r.label === "  Taxation");
     expect(row).toBeDefined();
   });
 
   it("omits Taxation row when taxation is 0", () => {
     const result = assembleAbridgedAccountsData(baseInput, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const row = bs.rows.find(r => r.label === "  Taxation");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const row = bs.rows.find((r) => r.label === "  Taxation");
     expect(row).toBeUndefined();
   });
 
   it("includes long-term liabilities section when longTermLiabilities > 0", () => {
     const input = { ...baseInput, bankLoans: 8000, directorsLoans: 3000 };
     const result = assembleAbridgedAccountsData(input, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const header = bs.rows.find(r => r.label === "CREDITORS: amounts falling due after more than one year");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const header = bs.rows.find((r) => r.label === "CREDITORS: amounts falling due after more than one year");
     expect(header).toBeDefined();
-    const bankLoansRow = bs.rows.find(r => r.label === "  Bank loans");
+    const bankLoansRow = bs.rows.find((r) => r.label === "  Bank loans");
     expect(bankLoansRow).toBeDefined();
   });
 
   it("omits long-term liabilities section when all zero", () => {
     const result = assembleAbridgedAccountsData(baseInput, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const header = bs.rows.find(r => r.label === "CREDITORS: amounts falling due after more than one year");
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const header = bs.rows.find((r) => r.label === "CREDITORS: amounts falling due after more than one year");
     expect(header).toBeUndefined();
   });
 
   it("shows directorsLoanDirection 'from_company' label", () => {
     const input = { ...baseInput, directorsLoans: 5000, directorsLoanDirection: "from_company" as const };
     const result = assembleAbridgedAccountsData(input, META);
-    const bs = result.sections.find(s => s.title === "Abridged Balance Sheet")!;
-    const dlRow = bs.rows.find(r => r.label.includes("Directors' loan") && r.label.includes("due from company"));
+    const bs = result.sections.find((s) => s.title === "Abridged Balance Sheet")!;
+    const dlRow = bs.rows.find((r) => r.label.includes("Directors' loan") && r.label.includes("due from company"));
     expect(dlRow).toBeDefined();
   });
 
   it("shows directorsLoanDirection 'to_company' note text", () => {
     const input = { ...baseInput, directorsLoans: 5000, directorsLoanDirection: "to_company" as const };
     const result = assembleAbridgedAccountsData(input, META);
-    const notes = result.sections.find(s => s.title === "Notes to the Financial Statements")!;
-    const dlNote = notes.rows.find(r => r.label.includes("Directors' Loans"));
+    const notes = result.sections.find((s) => s.title === "Notes to the Financial Statements")!;
+    const dlNote = notes.rows.find((r) => r.label.includes("Directors' Loans"));
     expect(dlNote).toBeDefined();
     expect(dlNote!.value).toContain("owed to the company by the directors");
   });
@@ -541,8 +539,8 @@ describe("assembleAbridgedAccountsData — conditional rows", () => {
   it("shows generic note text when no directorsLoanDirection", () => {
     const input = { ...baseInput, directorsLoans: 5000 };
     const result = assembleAbridgedAccountsData(input, META);
-    const notes = result.sections.find(s => s.title === "Notes to the Financial Statements")!;
-    const dlNote = notes.rows.find(r => r.label.includes("Directors' Loans"));
+    const notes = result.sections.find((s) => s.title === "Notes to the Financial Statements")!;
+    const dlNote = notes.rows.find((r) => r.label.includes("Directors' Loans"));
     expect(dlNote).toBeDefined();
     // Ends with just a period, no direction specified
     expect(dlNote!.value).not.toContain("owed by the company");
@@ -551,8 +549,8 @@ describe("assembleAbridgedAccountsData — conditional rows", () => {
 
   it("omits directors loan note when directorsLoans is 0", () => {
     const result = assembleAbridgedAccountsData(baseInput, META);
-    const notes = result.sections.find(s => s.title === "Notes to the Financial Statements")!;
-    const dlNote = notes.rows.find(r => r.label.includes("Directors' Loans"));
+    const notes = result.sections.find((s) => s.title === "Notes to the Financial Statements")!;
+    const dlNote = notes.rows.find((r) => r.label.includes("Directors' Loans"));
     expect(dlNote).toBeUndefined();
   });
 });
@@ -606,7 +604,7 @@ describe("assembleForm11ReportData — conditional sections", () => {
     const calcResult = calculateForm11(lowIncomeInput);
     expect(calcResult.uscExempt).toBe(true);
     const report = assembleForm11ReportData(lowIncomeInput, calcResult, META);
-    const uscSection = report.sections.find(s => s.title === "Universal Social Charge");
+    const uscSection = report.sections.find((s) => s.title === "Universal Social Charge");
     expect(uscSection).toBeDefined();
     expect(uscSection!.rows[0].value).toContain("Exempt");
     expect(uscSection!.rows[0].value).toContain("13,000");
@@ -624,7 +622,7 @@ describe("assembleForm11ReportData — conditional sections", () => {
     const calcResult = calculateForm11(splitInput);
     expect(calcResult.splitYearApplied).toBe(true);
     const report = assembleForm11ReportData(splitInput, calcResult, META);
-    const splitSection = report.sections.find(s => s.title === "Split-Year Assessment");
+    const splitSection = report.sections.find((s) => s.title === "Split-Year Assessment");
     expect(splitSection).toBeDefined();
     expect(splitSection!.rows[0].value).toContain("changed on");
   });
@@ -638,7 +636,7 @@ describe("assembleForm11ReportData — conditional sections", () => {
     const calcResult = calculateForm11(warnInput);
     expect(calcResult.warnings.length).toBeGreaterThan(0);
     const report = assembleForm11ReportData(warnInput, calcResult, META);
-    const warningsSection = report.sections.find(s => s.title === "Warnings");
+    const warningsSection = report.sections.find((s) => s.title === "Warnings");
     expect(warningsSection).toBeDefined();
     expect(warningsSection!.rows.length).toBeGreaterThan(0);
   });
@@ -653,7 +651,7 @@ describe("assembleForm11ReportData — conditional sections", () => {
     const calcResult = calculateForm11(noWarnInput);
     expect(calcResult.warnings.length).toBe(0);
     const report = assembleForm11ReportData(noWarnInput, calcResult, META);
-    const warningsSection = report.sections.find(s => s.title === "Warnings");
+    const warningsSection = report.sections.find((s) => s.title === "Warnings");
     expect(warningsSection).toBeUndefined();
   });
 
@@ -665,7 +663,7 @@ describe("assembleForm11ReportData — conditional sections", () => {
         { category: "Consultancy", amount: 5000 },
       ],
     });
-    const incTable = report.tables.find(t => t.title === "Business Income Breakdown");
+    const incTable = report.tables.find((t) => t.title === "Business Income Breakdown");
     expect(incTable).toBeDefined();
     expect(incTable!.rows.length).toBe(3); // 2 categories + total
   });
@@ -680,11 +678,11 @@ describe("assembleForm11ReportData — conditional sections", () => {
     };
     const calcResult = calculateForm11(rentalInput);
     const report = assembleForm11ReportData(rentalInput, calcResult, META);
-    const rentalSection = report.sections.find(s => s.title === "Rental / Investment Income");
+    const rentalSection = report.sections.find((s) => s.title === "Rental / Investment Income");
     expect(rentalSection).toBeDefined();
-    expect(rentalSection!.rows.some(r => r.label === "Rental Profit")).toBe(true);
-    expect(rentalSection!.rows.some(r => r.label === "Foreign Income")).toBe(true);
-    expect(rentalSection!.rows.some(r => r.label === "Other Income")).toBe(true);
+    expect(rentalSection!.rows.some((r) => r.label === "Rental Profit")).toBe(true);
+    expect(rentalSection!.rows.some((r) => r.label === "Foreign Income")).toBe(true);
+    expect(rentalSection!.rows.some((r) => r.label === "Other Income")).toBe(true);
   });
 
   it("omits Schedule E section when no employment income", () => {
@@ -697,7 +695,7 @@ describe("assembleForm11ReportData — conditional sections", () => {
     };
     const calcResult = calculateForm11(noEmploymentInput);
     const report = assembleForm11ReportData(noEmploymentInput, calcResult, META);
-    const scheduleE = report.sections.find(s => s.title === "Schedule E — Employment Income");
+    const scheduleE = report.sections.find((s) => s.title === "Schedule E — Employment Income");
     // scheduleE is 0 and scheduleERows has only 1 row (the Net Schedule E line),
     // so the section is omitted because length <= 1
     expect(scheduleE).toBeUndefined();

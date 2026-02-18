@@ -12,7 +12,7 @@ export function useDashboardStats() {
       const now = new Date();
       const month = now.getMonth();
       const year = now.getFullYear();
-      
+
       // Determine period start (bi-monthly)
       const periodMonth = month % 2 === 0 ? month : month - 1;
       const periodStart = new Date(year, periodMonth, 1).toISOString().split("T")[0];
@@ -41,7 +41,7 @@ export function useDashboardStats() {
       // Calculate totals
       const totalIncome = invoices?.reduce((sum, inv) => sum + Number(inv.total || 0), 0) || 0;
       const vatOnSales = invoices?.reduce((sum, inv) => sum + Number(inv.vat_amount || 0), 0) || 0;
-      
+
       const totalExpenses = expenses?.reduce((sum, exp) => sum + Number(exp.amount || 0), 0) || 0;
       const vatOnPurchases = expenses?.reduce((sum, exp) => sum + Number(exp.vat_amount || 0), 0) || 0;
 
@@ -97,18 +97,19 @@ export function useIncomeHistory() {
       // Group by month for last 7 months
       const monthlyTotals: number[] = [];
       const now = new Date();
-      
+
       for (let i = 6; i >= 0; i--) {
         const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-        
-        const monthTotal = data
-          ?.filter((inv) => {
-            const date = new Date(inv.invoice_date);
-            return date >= monthStart && date <= monthEnd;
-          })
-          .reduce((sum, inv) => sum + Number(inv.total || 0), 0) || 0;
-        
+
+        const monthTotal =
+          data
+            ?.filter((inv) => {
+              const date = new Date(inv.invoice_date);
+              return date >= monthStart && date <= monthEnd;
+            })
+            .reduce((sum, inv) => sum + Number(inv.total || 0), 0) || 0;
+
         monthlyTotals.push(monthTotal);
       }
 
@@ -136,18 +137,19 @@ export function useExpenseHistory() {
       // Group by month for last 7 months
       const monthlyTotals: number[] = [];
       const now = new Date();
-      
+
       for (let i = 6; i >= 0; i--) {
         const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-        
-        const monthTotal = data
-          ?.filter((exp) => {
-            const date = new Date(exp.expense_date);
-            return date >= monthStart && date <= monthEnd;
-          })
-          .reduce((sum, exp) => sum + Number(exp.amount || 0), 0) || 0;
-        
+
+        const monthTotal =
+          data
+            ?.filter((exp) => {
+              const date = new Date(exp.expense_date);
+              return date >= monthStart && date <= monthEnd;
+            })
+            .reduce((sum, exp) => sum + Number(exp.amount || 0), 0) || 0;
+
         monthlyTotals.push(monthTotal);
       }
 

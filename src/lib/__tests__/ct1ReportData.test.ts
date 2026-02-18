@@ -28,9 +28,7 @@ function makeCT1(overrides: Partial<CT1Data> = {}): CT1Data {
     detectedPayments: [],
     closingBalance: 0,
     vatPosition: { type: "payable", amount: 2500 },
-    flaggedCapitalItems: [
-      { description: "DeWalt Table Saw", date: "2024-03-15", amount: 1200 },
-    ],
+    flaggedCapitalItems: [{ description: "DeWalt Table Saw", date: "2024-03-15", amount: 1200 }],
     vehicleAsset: null,
     rctPrepayment: 0,
     travelAllowance: 0,

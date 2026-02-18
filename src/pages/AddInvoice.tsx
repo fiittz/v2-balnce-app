@@ -51,14 +51,17 @@ const AddInvoice = () => {
   const { user, profile } = useAuth();
 
   // Set correct default VAT rate based on business settings
-  const rctActive = !!(onboarding as Record<string, unknown>)?.rct_status && (onboarding as Record<string, unknown>).rct_status !== "not_applicable";
+  const rctActive =
+    !!(onboarding as Record<string, unknown>)?.rct_status &&
+    (onboarding as Record<string, unknown>).rct_status !== "not_applicable";
   const businessChargesVAT = (onboarding as Record<string, unknown>)?.vat_registered === true && !rctActive;
   const defaultVatRate: VatRate = businessChargesVAT ? "standard_23" : "zero_rated";
 
   // Determine if business is site-based (construction, transport, etc.)
   const primaryActivity = (onboarding as Record<string, unknown>)?.primary_activity || "";
   const secondaryActivities: string[] = (onboarding as Record<string, unknown>)?.secondary_activities || [];
-  const isSiteBasedBusiness = (SITE_BASED_ACTIVITIES as readonly string[]).includes(primaryActivity as string) ||
+  const isSiteBasedBusiness =
+    (SITE_BASED_ACTIVITIES as readonly string[]).includes(primaryActivity as string) ||
     secondaryActivities.some((a: string) => (SITE_BASED_ACTIVITIES as readonly string[]).includes(a));
 
   // Fetch all accounts for selector + bank accounts for payment details
@@ -70,7 +73,7 @@ const AddInvoice = () => {
   // Auto-select default account when accounts load
   useEffect(() => {
     if (allAccounts && allAccounts.length > 0 && !selectedAccountId) {
-      const defaultAccount = allAccounts.find(a => a.is_default) || allAccounts[0];
+      const defaultAccount = allAccounts.find((a) => a.is_default) || allAccounts[0];
       setSelectedAccountId(defaultAccount.id);
     }
   }, [allAccounts, selectedAccountId]);
@@ -94,7 +97,7 @@ const AddInvoice = () => {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [lineItems, setLineItems] = useState<LineItem[]>([
-    { id: 1, description: "", qty: 1, price: 0, vatRate: defaultVatRate, unitType: "items" }
+    { id: 1, description: "", qty: 1, price: 0, vatRate: defaultVatRate, unitType: "items" },
   ]);
 
   // Supplier details state (your business) - pre-filled from onboarding
@@ -160,14 +163,16 @@ const AddInvoice = () => {
 
         const items = notesObj.line_items;
         if (Array.isArray(items) && items.length > 0) {
-          setLineItems(items.map((item: Record<string, unknown>, idx: number) => ({
-            id: idx + 1,
-            description: item.description || "",
-            qty: item.qty || 1,
-            price: item.price || 0,
-            vatRate: item.vatRate || defaultVatRate,
-            unitType: item.unitType || "items",
-          })));
+          setLineItems(
+            items.map((item: Record<string, unknown>, idx: number) => ({
+              id: idx + 1,
+              description: item.description || "",
+              qty: item.qty || 1,
+              price: item.price || 0,
+              vatRate: item.vatRate || defaultVatRate,
+              unitType: item.unitType || "items",
+            })),
+          );
         }
       }
     }
@@ -179,7 +184,7 @@ const AddInvoice = () => {
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerTaxNumber, setCustomerTaxNumber] = useState("");
-  
+
   // Date of supply (tax point)
   const [supplyDate, setSupplyDate] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
@@ -218,35 +223,38 @@ const AddInvoice = () => {
   };
 
   const addLineItem = () => {
-    setLineItems([...lineItems, { id: Date.now(), description: "", qty: 1, price: 0, vatRate: defaultVatRate, unitType: "items" }]);
+    setLineItems([
+      ...lineItems,
+      { id: Date.now(), description: "", qty: 1, price: 0, vatRate: defaultVatRate, unitType: "items" },
+    ]);
   };
 
   const removeLineItem = (id: number) => {
     if (lineItems.length > 1) {
-      setLineItems(lineItems.filter(item => item.id !== id));
+      setLineItems(lineItems.filter((item) => item.id !== id));
     }
   };
 
   const updateLineItem = (id: number, field: keyof LineItem, value: string | number) => {
-    setLineItems(lineItems.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
+    setLineItems(lineItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
   };
 
   // Calculate totals
   // When RCT applies, VAT reverse charge means subcontractor does NOT charge VAT
-  const subtotal = lineItems.reduce((sum, item) => sum + (item.qty * item.price), 0);
+  const subtotal = lineItems.reduce((sum, item) => sum + item.qty * item.price, 0);
 
-  const vatAmount = rctEnabled ? 0 : lineItems.reduce((sum, item) => {
-    const lineTotal = item.qty * item.price;
-    const vatRate = VAT_RATES[item.vatRate] || 0;
-    return sum + (lineTotal * vatRate);
-  }, 0);
+  const vatAmount = rctEnabled
+    ? 0
+    : lineItems.reduce((sum, item) => {
+        const lineTotal = item.qty * item.price;
+        const vatRate = VAT_RATES[item.vatRate] || 0;
+        return sum + lineTotal * vatRate;
+      }, 0);
 
   const total = subtotal + vatAmount;
 
   // RCT is deducted from the gross payment (subtotal when reverse charge applies)
-  const rctAmount = rctEnabled ? (subtotal * (rctRate / 100)) : 0;
+  const rctAmount = rctEnabled ? subtotal * (rctRate / 100) : 0;
   const netReceivable = total - rctAmount;
 
   const handleSave = async () => {
@@ -265,12 +273,12 @@ const AddInvoice = () => {
       return;
     }
 
-    if (lineItems.every(item => !item.description || item.price <= 0)) {
+    if (lineItems.every((item) => !item.description || item.price <= 0)) {
       toast.error("Please add at least one line item");
       return;
     }
 
-    const validItems = lineItems.filter(item => item.description && item.price > 0);
+    const validItems = lineItems.filter((item) => item.description && item.price > 0);
 
     try {
       // Upsert customer record
@@ -313,7 +321,7 @@ const AddInvoice = () => {
       }
 
       // Calculate due date from payment terms
-      const termDef = PAYMENT_TERMS.find(t => t.value === paymentTerms);
+      const termDef = PAYMENT_TERMS.find((t) => t.value === paymentTerms);
       let calculatedDueDate: string;
       if (paymentTerms === "custom" && customDueDate) {
         calculatedDueDate = customDueDate;
@@ -337,7 +345,7 @@ const AddInvoice = () => {
         payment_terms: paymentTerms,
         custom_due_date: paymentTerms === "custom" ? customDueDate : null,
         po_number: poNumber || null,
-        line_items: validItems.map(item => ({
+        line_items: validItems.map((item) => ({
           description: item.description,
           qty: item.qty,
           price: item.price,
@@ -378,7 +386,7 @@ const AddInvoice = () => {
       return;
     }
 
-    if (lineItems.every(item => !item.description || item.price <= 0)) {
+    if (lineItems.every((item) => !item.description || item.price <= 0)) {
       toast.error("Please add at least one line item");
       return;
     }
@@ -386,10 +394,10 @@ const AddInvoice = () => {
     setIsGeneratingPdf(true);
 
     try {
-      const validItems = lineItems.filter(item => item.description && item.price > 0);
+      const validItems = lineItems.filter((item) => item.description && item.price > 0);
 
       // Calculate due date for preview
-      const termDef = PAYMENT_TERMS.find(t => t.value === paymentTerms);
+      const termDef = PAYMENT_TERMS.find((t) => t.value === paymentTerms);
       let previewDueDate: string;
       if (paymentTerms === "custom" && customDueDate) {
         previewDueDate = customDueDate;
@@ -400,15 +408,15 @@ const AddInvoice = () => {
         previewDueDate = base.toISOString().split("T")[0];
       }
 
-      const items = validItems.map(item => {
+      const items = validItems.map((item) => {
         const lineTotal = item.qty * item.price;
-        const vatRate = rctEnabled ? 0 : (VAT_RATES[item.vatRate] || 0);
+        const vatRate = rctEnabled ? 0 : VAT_RATES[item.vatRate] || 0;
         const itemVat = lineTotal * vatRate;
         return {
           description: item.description,
           qty: item.qty,
           price: item.price,
-          vatRate: rctEnabled ? "zero_rated" as VatRate : item.vatRate,
+          vatRate: rctEnabled ? ("zero_rated" as VatRate) : item.vatRate,
           unitType: item.unitType,
           lineTotal,
           vat_amount: itemVat,
@@ -471,449 +479,447 @@ const AddInvoice = () => {
         </header>
 
         <main className="px-6 py-6 pb-32 max-w-2xl mx-auto space-y-6">
-        {/* Logo Upload */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
-          <Label className="font-medium mb-3 block">Company Logo</Label>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleLogoUpload}
-            accept="image/*"
-            className="hidden"
-          />
-          {logo ? (
-            <div className="relative inline-block">
-              <img
-                src={logo}
-                alt="Company logo"
-                className="h-20 max-w-[200px] object-contain rounded-lg border border-border"
-              />
+          {/* Logo Upload */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
+            <Label className="font-medium mb-3 block">Company Logo</Label>
+            <input type="file" ref={fileInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
+            {logo ? (
+              <div className="relative inline-block">
+                <img
+                  src={logo}
+                  alt="Company logo"
+                  className="h-20 max-w-[200px] object-contain rounded-lg border border-border"
+                />
+                <button
+                  type="button"
+                  onClick={removeLogo}
+                  className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
               <button
                 type="button"
-                onClick={removeLogo}
-                className="absolute -top-2 -right-2 p-1 bg-destructive text-destructive-foreground rounded-full"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-border rounded-xl hover:border-foreground/40 transition-colors"
               >
-                <X className="w-3 h-3" />
+                <Upload className="w-5 h-5 text-muted-foreground" />
+                <span className="text-muted-foreground">Upload logo</span>
               </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex items-center gap-3 px-4 py-3 border-2 border-dashed border-border rounded-xl hover:border-foreground/40 transition-colors"
-            >
-              <Upload className="w-5 h-5 text-muted-foreground" />
-              <span className="text-muted-foreground">Upload logo</span>
-            </button>
-          )}
-          <p className="text-xs text-muted-foreground mt-2">PNG, JPG up to 2MB</p>
-        </div>
-
-
-
-
-        {/* Account Selector */}
-        {allAccounts && allAccounts.length > 1 && (
-          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
-            <div className="space-y-2">
-              <Label className="font-medium">Account</Label>
-              <Select value={selectedAccountId || ""} onValueChange={setSelectedAccountId}>
-                <SelectTrigger className="h-14 rounded-xl text-base">
-                  <SelectValue placeholder="Select account" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            )}
+            <p className="text-xs text-muted-foreground mt-2">PNG, JPG up to 2MB</p>
           </div>
-        )}
 
-        {/* Customer & Invoice Details */}
-        <div className="bg-card rounded-2xl p-6 card-shadow space-y-5 animate-fade-in">
-          <h2 className="font-semibold text-lg">Customer Details</h2>
-          
-          <div className="space-y-2">
-            <Label className="font-medium">Type</Label>
-            <div className="flex gap-2">
-              {(["quote", "invoice"] as const).map((type) => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setInvoiceType(type)}
-                  className={`flex-1 px-4 py-3 rounded-xl border-2 font-medium capitalize transition-all ${
-                    invoiceType === type
-                      ? "bg-foreground text-background border-foreground"
-                      : "border-border hover:border-foreground/40"
-                  }`}
-                >
-                  {type}
-                </button>
+          {/* Account Selector */}
+          {allAccounts && allAccounts.length > 1 && (
+            <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in">
+              <div className="space-y-2">
+                <Label className="font-medium">Account</Label>
+                <Select value={selectedAccountId || ""} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger className="h-14 rounded-xl text-base">
+                    <SelectValue placeholder="Select account" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {/* Customer & Invoice Details */}
+          <div className="bg-card rounded-2xl p-6 card-shadow space-y-5 animate-fade-in">
+            <h2 className="font-semibold text-lg">Customer Details</h2>
+
+            <div className="space-y-2">
+              <Label className="font-medium">Type</Label>
+              <div className="flex gap-2">
+                {(["quote", "invoice"] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => setInvoiceType(type)}
+                    className={`flex-1 px-4 py-3 rounded-xl border-2 font-medium capitalize transition-all ${
+                      invoiceType === type
+                        ? "bg-foreground text-background border-foreground"
+                        : "border-border hover:border-foreground/40"
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-medium">Customer Name *</Label>
+              <Input
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="Customer name"
+                className="h-14 rounded-xl text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-medium">Customer Email</Label>
+              <Input
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="customer@example.com"
+                className="h-14 rounded-xl text-base"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-medium">Phone</Label>
+                <Input
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="+353 1234567"
+                  className="h-14 rounded-xl text-base"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="font-medium">Invoice Date *</Label>
+                <Input
+                  type="date"
+                  value={invoiceDate}
+                  onChange={(e) => setInvoiceDate(e.target.value)}
+                  className="h-14 rounded-xl text-base"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-medium">Customer Address *</Label>
+              <AddressAutocomplete
+                value={customerAddress}
+                onChange={setCustomerAddress}
+                placeholder="Start typing a town or address..."
+                className="h-14 rounded-xl text-base"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-medium">Company Tax No.</Label>
+              <Input
+                value={customerTaxNumber}
+                onChange={(e) => setCustomerTaxNumber(e.target.value)}
+                placeholder="e.g. IE1234567X"
+                className="h-14 rounded-xl text-base"
+              />
+              <p className="text-xs text-muted-foreground">If applicable</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-medium">Date of Supply (Tax Point)</Label>
+              <Input
+                type="date"
+                value={supplyDate}
+                onChange={(e) => setSupplyDate(e.target.value)}
+                className="h-14 rounded-xl text-base"
+              />
+              <p className="text-xs text-muted-foreground">Leave blank if same as invoice date</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-medium">PO Number</Label>
+              <Input
+                value={poNumber}
+                onChange={(e) => setPoNumber(e.target.value)}
+                placeholder="e.g. PO-12345"
+                className="h-14 rounded-xl text-base"
+              />
+              <p className="text-xs text-muted-foreground">Optional — for B2B purchase order reference</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="font-medium">Payment Terms</Label>
+                <Select value={paymentTerms} onValueChange={(v) => setPaymentTerms(v as PaymentTerm)}>
+                  <SelectTrigger className="h-14 rounded-xl text-base">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAYMENT_TERMS.map((term) => (
+                      <SelectItem key={term.value} value={term.value}>
+                        {term.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {paymentTerms === "custom" && (
+                <div className="space-y-2">
+                  <Label className="font-medium">Custom Due Date</Label>
+                  <Input
+                    type="date"
+                    value={customDueDate}
+                    onChange={(e) => setCustomDueDate(e.target.value)}
+                    className="h-14 rounded-xl text-base"
+                  />
+                </div>
+              )}
+            </div>
+
+            {isSiteBasedBusiness && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-medium">Job Start Date</Label>
+                    <Input
+                      type="date"
+                      value={jobStartDate}
+                      onChange={(e) => setJobStartDate(e.target.value)}
+                      className="h-14 rounded-xl text-base"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="font-medium">Job End Date</Label>
+                    <Input
+                      type="date"
+                      value={jobEndDate}
+                      onChange={(e) => setJobEndDate(e.target.value)}
+                      className="h-14 rounded-xl text-base"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Used for trip detection — matches expenses within this date range
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Line Items */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.1s" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-lg">Line Items</h2>
+              <Button onClick={addLineItem} variant="outline" size="sm" className="rounded-lg">
+                <Plus className="w-4 h-4 mr-1" /> Add
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {lineItems.map((item, index) => (
+                <div key={item.id} className="p-4 bg-muted rounded-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Item {index + 1}</span>
+                    {lineItems.length > 1 && (
+                      <button onClick={() => removeLineItem(item.id)} className="text-destructive p-1">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  <Input
+                    placeholder="Description"
+                    value={item.description}
+                    onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
+                    className="h-12 rounded-lg"
+                  />
+                  <div className="grid grid-cols-4 gap-3">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Qty</Label>
+                      <Input
+                        type="number"
+                        value={item.qty}
+                        onChange={(e) => updateLineItem(item.id, "qty", parseInt(e.target.value) || 0)}
+                        className="h-12 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Unit</Label>
+                      <Select
+                        value={item.unitType}
+                        onValueChange={(v) => updateLineItem(item.id, "unitType", v as UnitType)}
+                      >
+                        <SelectTrigger className="h-12 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {UNIT_TYPES.map((u) => (
+                            <SelectItem key={u.value} value={u.value}>
+                              {u.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">Price (€)</Label>
+                      <Input
+                        type="number"
+                        value={item.price}
+                        onChange={(e) => updateLineItem(item.id, "price", parseFloat(e.target.value) || 0)}
+                        className="h-12 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">VAT</Label>
+                      <Select
+                        value={item.vatRate}
+                        onValueChange={(v) => updateLineItem(item.id, "vatRate", v as VatRate)}
+                      >
+                        <SelectTrigger className="h-12 rounded-lg">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {(Object.entries(availableVatRates) as [VatRate, string][]).map(([rate, label]) => (
+                            <SelectItem key={rate} value={rate}>
+                              {label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label className="font-medium">Customer Name *</Label>
-            <Input
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Customer name"
-              className="h-14 rounded-xl text-base"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="font-medium">Customer Email</Label>
-            <Input
-              type="email"
-              value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
-              placeholder="customer@example.com"
-              className="h-14 rounded-xl text-base"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="font-medium">Phone</Label>
-              <Input
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="+353 1234567"
-                className="h-14 rounded-xl text-base"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-medium">Invoice Date *</Label>
-              <Input 
-                type="date" 
-                value={invoiceDate}
-                onChange={(e) => setInvoiceDate(e.target.value)}
-                className="h-14 rounded-xl text-base"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="font-medium">Customer Address *</Label>
-            <AddressAutocomplete
-              value={customerAddress}
-              onChange={setCustomerAddress}
-              placeholder="Start typing a town or address..."
-              className="h-14 rounded-xl text-base"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label className="font-medium">Company Tax No.</Label>
-            <Input
-              value={customerTaxNumber}
-              onChange={(e) => setCustomerTaxNumber(e.target.value)}
-              placeholder="e.g. IE1234567X"
-              className="h-14 rounded-xl text-base"
-            />
-            <p className="text-xs text-muted-foreground">If applicable</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="font-medium">Date of Supply (Tax Point)</Label>
-            <Input
-              type="date"
-              value={supplyDate}
-              onChange={(e) => setSupplyDate(e.target.value)}
-              className="h-14 rounded-xl text-base"
-            />
-            <p className="text-xs text-muted-foreground">Leave blank if same as invoice date</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="font-medium">PO Number</Label>
-            <Input
-              value={poNumber}
-              onChange={(e) => setPoNumber(e.target.value)}
-              placeholder="e.g. PO-12345"
-              className="h-14 rounded-xl text-base"
-            />
-            <p className="text-xs text-muted-foreground">Optional — for B2B purchase order reference</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="font-medium">Payment Terms</Label>
-              <Select value={paymentTerms} onValueChange={(v) => setPaymentTerms(v as PaymentTerm)}>
-                <SelectTrigger className="h-14 rounded-xl text-base">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAYMENT_TERMS.map((term) => (
-                    <SelectItem key={term.value} value={term.value}>{term.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {paymentTerms === "custom" && (
-              <div className="space-y-2">
-                <Label className="font-medium">Custom Due Date</Label>
-                <Input
-                  type="date"
-                  value={customDueDate}
-                  onChange={(e) => setCustomDueDate(e.target.value)}
-                  className="h-14 rounded-xl text-base"
-                />
-              </div>
-            )}
-          </div>
-
+          {/* RCT Toggle — only visible for site-based trades */}
           {isSiteBasedBusiness && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="font-medium">Job Start Date</Label>
-                  <Input
-                    type="date"
-                    value={jobStartDate}
-                    onChange={(e) => setJobStartDate(e.target.value)}
-                    className="h-14 rounded-xl text-base"
-                  />
+            <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold">RCT Applies</h3>
+                  <p className="text-sm text-muted-foreground">Enable for relevant contract tax</p>
                 </div>
-                <div className="space-y-2">
-                  <Label className="font-medium">Job End Date</Label>
-                  <Input
-                    type="date"
-                    value={jobEndDate}
-                    onChange={(e) => setJobEndDate(e.target.value)}
-                    className="h-14 rounded-xl text-base"
-                  />
-                </div>
+                <Switch checked={rctEnabled} onCheckedChange={setRctEnabled} />
               </div>
-              <p className="text-xs text-muted-foreground">Used for trip detection — matches expenses within this date range</p>
-            </>
-          )}
-        </div>
 
-        {/* Line Items */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.1s" }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg">Line Items</h2>
-            <Button 
-              onClick={addLineItem}
-              variant="outline"
-              size="sm"
-              className="rounded-lg"
-            >
-              <Plus className="w-4 h-4 mr-1" /> Add
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {lineItems.map((item, index) => (
-              <div key={item.id} className="p-4 bg-muted rounded-xl space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Item {index + 1}</span>
-                  {lineItems.length > 1 && (
-                    <button onClick={() => removeLineItem(item.id)} className="text-destructive p-1">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-                <Input 
-                  placeholder="Description"
-                  value={item.description}
-                  onChange={(e) => updateLineItem(item.id, "description", e.target.value)}
-                  className="h-12 rounded-lg"
-                />
-                <div className="grid grid-cols-4 gap-3">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Qty</Label>
-                    <Input
-                      type="number"
-                      value={item.qty}
-                      onChange={(e) => updateLineItem(item.id, "qty", parseInt(e.target.value) || 0)}
-                      className="h-12 rounded-lg"
-                    />
+              {rctEnabled && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <Label className="text-sm font-medium mb-2 block">RCT Rate</Label>
+                  <div className="flex gap-2">
+                    {[0, 20, 35].map((rate) => (
+                      <button
+                        key={rate}
+                        onClick={() => setRctRate(rate)}
+                        className={`px-4 py-2 rounded-lg border-2 font-medium transition-all ${
+                          rctRate === rate
+                            ? "bg-foreground text-background border-foreground"
+                            : "border-foreground/20 hover:border-foreground/40"
+                        }`}
+                      >
+                        {rate}%
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Unit</Label>
-                    <Select
-                      value={item.unitType}
-                      onValueChange={(v) => updateLineItem(item.id, "unitType", v as UnitType)}
-                    >
-                      <SelectTrigger className="h-12 rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {UNIT_TYPES.map((u) => (
-                          <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Price (€)</Label>
-                    <Input
-                      type="number"
-                      value={item.price}
-                      onChange={(e) => updateLineItem(item.id, "price", parseFloat(e.target.value) || 0)}
-                      className="h-12 rounded-lg"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">VAT</Label>
-                    <Select
-                      value={item.vatRate}
-                      onValueChange={(v) => updateLineItem(item.id, "vatRate", v as VatRate)}
-                    >
-                      <SelectTrigger className="h-12 rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(Object.entries(availableVatRates) as [VatRate, string][]).map(([rate, label]) => (
-                          <SelectItem key={rate} value={rate}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* RCT Toggle — only visible for site-based trades */}
-        {isSiteBasedBusiness && <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.15s" }}>
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold">RCT Applies</h3>
-              <p className="text-sm text-muted-foreground">Enable for relevant contract tax</p>
-            </div>
-            <Switch checked={rctEnabled} onCheckedChange={setRctEnabled} />
-          </div>
-          
-          {rctEnabled && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <Label className="text-sm font-medium mb-2 block">RCT Rate</Label>
-              <div className="flex gap-2">
-                {[0, 20, 35].map((rate) => (
-                  <button
-                    key={rate}
-                    onClick={() => setRctRate(rate)}
-                    className={`px-4 py-2 rounded-lg border-2 font-medium transition-all ${
-                      rctRate === rate
-                        ? "bg-foreground text-background border-foreground"
-                        : "border-foreground/20 hover:border-foreground/40"
-                    }`}
-                  >
-                    {rate}%
-                  </button>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {rctRate === 0 && "Subcontractor is fully tax compliant"}
-                {rctRate === 20 && "Standard RCT rate"}
-                {rctRate === 35 && "Non-compliant or unknown subcontractor"}
-              </p>
-            </div>
-          )}
-        </div>}
-
-        {/* Comments */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.18s" }}>
-          <Label className="font-semibold text-lg mb-3 block">Notes / Comments</Label>
-          <Textarea
-            placeholder="Add any notes or comments for this invoice..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="min-h-[100px] rounded-xl resize-none"
-          />
-        </div>
-
-        {/* Bank Details */}
-        {primaryBank?.iban && (
-          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.19s" }}>
-            <h2 className="font-semibold text-lg mb-3">Bank Details</h2>
-            <p className="text-xs text-muted-foreground mb-3">Shown on invoice for payment. Edit in Settings &gt; Accounts.</p>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Account</span>
-                <span className="font-medium">{primaryBank.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">IBAN</span>
-                <span className="font-mono font-medium">{primaryBank.iban}</span>
-              </div>
-              {primaryBank.bic && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">BIC</span>
-                  <span className="font-mono font-medium">{primaryBank.bic}</span>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {rctRate === 0 && "Subcontractor is fully tax compliant"}
+                    {rctRate === 20 && "Standard RCT rate"}
+                    {rctRate === 35 && "Non-compliant or unknown subcontractor"}
+                  </p>
                 </div>
               )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Summary */}
-        <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.2s" }}>
-          <h2 className="font-semibold text-lg mb-4">Summary</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-medium">€{subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">VAT</span>
-              <span className="font-medium">
-                {rctEnabled ? "€0.00 (Reverse Charge)" : `€${vatAmount.toFixed(2)}`}
-              </span>
-            </div>
-            {rctEnabled && (
-              <p className="text-xs text-amber-600">
-                VAT reverse charge applies — principal contractor accounts for VAT
+          {/* Comments */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.18s" }}>
+            <Label className="font-semibold text-lg mb-3 block">Notes / Comments</Label>
+            <Textarea
+              placeholder="Add any notes or comments for this invoice..."
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              className="min-h-[100px] rounded-xl resize-none"
+            />
+          </div>
+
+          {/* Bank Details */}
+          {primaryBank?.iban && (
+            <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.19s" }}>
+              <h2 className="font-semibold text-lg mb-3">Bank Details</h2>
+              <p className="text-xs text-muted-foreground mb-3">
+                Shown on invoice for payment. Edit in Settings &gt; Accounts.
               </p>
-            )}
-            {rctEnabled && (
-              <div className="flex justify-between text-amber-600">
-                <span>RCT Deduction ({rctRate}%)</span>
-                <span className="font-medium">-€{rctAmount.toFixed(2)}</span>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Account</span>
+                  <span className="font-medium">{primaryBank.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">IBAN</span>
+                  <span className="font-mono font-medium">{primaryBank.iban}</span>
+                </div>
+                {primaryBank.bic && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">BIC</span>
+                    <span className="font-mono font-medium">{primaryBank.bic}</span>
+                  </div>
+                )}
               </div>
-            )}
-            <div className="flex justify-between pt-3 border-t border-border">
-              <span className="font-semibold text-lg">
-                {rctEnabled ? "Net Receivable" : "Total"}
-              </span>
-              <span className="font-bold text-2xl">
-                €{(rctEnabled ? netReceivable : total).toFixed(2)}
-              </span>
+            </div>
+          )}
+
+          {/* Summary */}
+          <div className="bg-card rounded-2xl p-6 card-shadow animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <h2 className="font-semibold text-lg mb-4">Summary</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium">€{subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">VAT</span>
+                <span className="font-medium">
+                  {rctEnabled ? "€0.00 (Reverse Charge)" : `€${vatAmount.toFixed(2)}`}
+                </span>
+              </div>
+              {rctEnabled && (
+                <p className="text-xs text-amber-600">
+                  VAT reverse charge applies — principal contractor accounts for VAT
+                </p>
+              )}
+              {rctEnabled && (
+                <div className="flex justify-between text-amber-600">
+                  <span>RCT Deduction ({rctRate}%)</span>
+                  <span className="font-medium">-€{rctAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-3 border-t border-border">
+                <span className="font-semibold text-lg">{rctEnabled ? "Net Receivable" : "Total"}</span>
+                <span className="font-bold text-2xl">€{(rctEnabled ? netReceivable : total).toFixed(2)}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
 
-      {/* Action Buttons */}
-      <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-background border-t border-border p-4 z-40">
-        <div className="max-w-2xl mx-auto flex gap-3">
-          <Button 
-            onClick={handlePreviewPdf}
-            disabled={isGeneratingPdf}
-            variant="outline"
-            className="flex-1 h-14 rounded-xl text-lg font-semibold"
-          >
-            <FileText className="w-5 h-5 mr-2" />
-            {isGeneratingPdf ? "Generating..." : "Preview PDF"}
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={createInvoice.isPending || updateInvoice.isPending}
-            className="flex-1 h-14 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-lg font-semibold disabled:opacity-50"
-          >
-            {(createInvoice.isPending || updateInvoice.isPending) ? "Saving..." : isEditMode ? "Update Invoice" : "Save Invoice"}
-          </Button>
+        {/* Action Buttons */}
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-background border-t border-border p-4 z-40">
+          <div className="max-w-2xl mx-auto flex gap-3">
+            <Button
+              onClick={handlePreviewPdf}
+              disabled={isGeneratingPdf}
+              variant="outline"
+              className="flex-1 h-14 rounded-xl text-lg font-semibold"
+            >
+              <FileText className="w-5 h-5 mr-2" />
+              {isGeneratingPdf ? "Generating..." : "Preview PDF"}
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={createInvoice.isPending || updateInvoice.isPending}
+              className="flex-1 h-14 bg-foreground text-background hover:bg-foreground/90 rounded-xl text-lg font-semibold disabled:opacity-50"
+            >
+              {createInvoice.isPending || updateInvoice.isPending
+                ? "Saving..."
+                : isEditMode
+                  ? "Update Invoice"
+                  : "Save Invoice"}
+            </Button>
+          </div>
         </div>
-      </div>
       </div>
     </AppLayout>
   );

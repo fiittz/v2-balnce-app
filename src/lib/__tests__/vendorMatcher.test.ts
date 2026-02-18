@@ -565,13 +565,26 @@ describe("matchVendor — confidence", () => {
 describe("matchVendor — performance", () => {
   it("processes 500 transactions in under 500ms", () => {
     const descriptions = [
-      "SCREWFIX IRELAND", "TESCO EXTRA", "MCDONALDS DUBLIN",
-      "REVOLUT FEE", "UNKNOWN VENDOR XYZ", "CIRCLE K SWORDS",
-      "OPENAI CHATGPT", "THREE IRELAND", "AXA INSURANCE",
-      "RANDOM UNKNOWN", "CHADWICKS BUILDERS", "MAXOL STATION",
-      "WOODIES DIY", "EFLOW TOLL", "VHI DIRECT DEBIT",
-      "SAFE PASS BOOKING", "SPOTIFY PREMIUM", "LIDL GROCERIES",
-      "JUST EAT ORDER", "NCP CAR PARK",
+      "SCREWFIX IRELAND",
+      "TESCO EXTRA",
+      "MCDONALDS DUBLIN",
+      "REVOLUT FEE",
+      "UNKNOWN VENDOR XYZ",
+      "CIRCLE K SWORDS",
+      "OPENAI CHATGPT",
+      "THREE IRELAND",
+      "AXA INSURANCE",
+      "RANDOM UNKNOWN",
+      "CHADWICKS BUILDERS",
+      "MAXOL STATION",
+      "WOODIES DIY",
+      "EFLOW TOLL",
+      "VHI DIRECT DEBIT",
+      "SAFE PASS BOOKING",
+      "SPOTIFY PREMIUM",
+      "LIDL GROCERIES",
+      "JUST EAT ORDER",
+      "NCP CAR PARK",
     ];
 
     const start = performance.now();
@@ -651,12 +664,12 @@ describe("matchVendor — amountLogic on exact match", () => {
   };
 
   afterEach(() => {
-    const idx = vendorDatabase.indexOf(testVendor as typeof vendorDatabase[number]);
+    const idx = vendorDatabase.indexOf(testVendor as (typeof vendorDatabase)[number]);
     if (idx !== -1) vendorDatabase.splice(idx, 1);
   });
 
   it("applies amountLogic adjustments when amount threshold is met (exact match)", () => {
-    vendorDatabase.push(testVendor as typeof vendorDatabase[number]);
+    vendorDatabase.push(testVendor as (typeof vendorDatabase)[number]);
     const result = matchVendor("AMOUNTLOGICTESTVENDOR PURCHASE", undefined, 600);
     expect(result).not.toBeNull();
     expect(result!.matchType).toBe("exact");
@@ -667,7 +680,7 @@ describe("matchVendor — amountLogic on exact match", () => {
   });
 
   it("does NOT apply amountLogic adjustments when amountLogic returns null (exact match)", () => {
-    vendorDatabase.push(testVendor as typeof vendorDatabase[number]);
+    vendorDatabase.push(testVendor as (typeof vendorDatabase)[number]);
     const result = matchVendor("AMOUNTLOGICTESTVENDOR PURCHASE", undefined, 100);
     expect(result).not.toBeNull();
     expect(result!.matchType).toBe("exact");
@@ -706,12 +719,12 @@ describe("matchVendor — amountLogic on fuzzy match", () => {
   };
 
   afterEach(() => {
-    const idx = vendorDatabase.indexOf(testVendor as typeof vendorDatabase[number]);
+    const idx = vendorDatabase.indexOf(testVendor as (typeof vendorDatabase)[number]);
     if (idx !== -1) vendorDatabase.splice(idx, 1);
   });
 
   it("applies amountLogic adjustments on fuzzy match when threshold is met", () => {
-    vendorDatabase.push(testVendor as typeof vendorDatabase[number]);
+    vendorDatabase.push(testVendor as (typeof vendorDatabase)[number]);
     // "fuzzamtlogictes" is 1 char off from "fuzzamtlogictest" — triggers fuzzy, not exact
     const result = matchVendor("FUZZAMTLOGICTES SOMETHINGELSE", undefined, 300);
     expect(result).not.toBeNull();
@@ -723,7 +736,7 @@ describe("matchVendor — amountLogic on fuzzy match", () => {
   });
 
   it("does NOT apply amountLogic adjustments on fuzzy match when amountLogic returns null", () => {
-    vendorDatabase.push(testVendor as typeof vendorDatabase[number]);
+    vendorDatabase.push(testVendor as (typeof vendorDatabase)[number]);
     const result = matchVendor("FUZZAMTLOGICTES SOMETHINGELSE", undefined, 50);
     expect(result).not.toBeNull();
     expect(result!.matchType).toBe("fuzzy");

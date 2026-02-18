@@ -53,11 +53,7 @@ export const ReceiptPreview = ({
     <div className="flex-1 flex flex-col animate-fade-in">
       {/* Image Preview */}
       <div className="h-40 mx-6 mb-4 rounded-2xl overflow-hidden bg-muted">
-        <img 
-          src={imageData} 
-          alt="Captured receipt" 
-          className="w-full h-full object-cover"
-        />
+        <img src={imageData} alt="Captured receipt" className="w-full h-full object-cover" />
       </div>
 
       {/* Confidence Score */}
@@ -126,7 +122,9 @@ export const ReceiptPreview = ({
           <div className="space-y-1">
             <Label className="text-sm text-muted-foreground">Total Amount</Label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-muted-foreground">€</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-medium text-muted-foreground">
+                €
+              </span>
               <Input
                 type="number"
                 step="0.01"
@@ -141,16 +139,15 @@ export const ReceiptPreview = ({
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label className="text-sm text-muted-foreground">VAT Rate</Label>
-              <Select
-                value={receiptData.vat_rate || "standard_23"}
-                onValueChange={(v) => updateField("vat_rate", v)}
-              >
+              <Select value={receiptData.vat_rate || "standard_23"} onValueChange={(v) => updateField("vat_rate", v)}>
                 <SelectTrigger className="h-12 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(vatRateLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>{label}</SelectItem>
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -215,11 +212,7 @@ export const ReceiptPreview = ({
 
       {/* Action Buttons */}
       <div className="flex gap-3 mx-6 mt-4 mb-6">
-        <Button
-          onClick={onRetake}
-          variant="outline"
-          className="flex-1 h-14 rounded-xl font-semibold border-2"
-        >
+        <Button onClick={onRetake} variant="outline" className="flex-1 h-14 rounded-xl font-semibold border-2">
           Retake
         </Button>
         <Button

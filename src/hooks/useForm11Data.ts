@@ -4,12 +4,7 @@ import { useTransactions } from "@/hooks/useTransactions";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useReliefScan } from "@/hooks/useReliefScan";
 import { useDirectorOnboarding } from "@/hooks/useDirectorOnboarding";
-import {
-  calculateForm11,
-  calculateVehicleBIK,
-  type Form11Input,
-  type Form11Result,
-} from "@/lib/form11Calculator";
+import { calculateForm11, calculateVehicleBIK, type Form11Input, type Form11Result } from "@/lib/form11Calculator";
 import { calculateAnnualCommuteMileage } from "@/lib/revenueRates";
 
 /**
@@ -41,15 +36,19 @@ export function useForm11Data(directorNumber: number) {
   const businessAccountType = hasPersonalAccounts ? "limited_company" : undefined;
 
   // Fetch transactions for the tax year
-  const {
-    data: incomeTransactions,
-    isLoading: incomeLoading,
-  } = useTransactions({ type: "income", startDate, endDate, accountType: businessAccountType });
+  const { data: incomeTransactions, isLoading: incomeLoading } = useTransactions({
+    type: "income",
+    startDate,
+    endDate,
+    accountType: businessAccountType,
+  });
 
-  const {
-    data: expenseTransactions,
-    isLoading: expenseLoading,
-  } = useTransactions({ type: "expense", startDate, endDate, accountType: businessAccountType });
+  const { data: expenseTransactions, isLoading: expenseLoading } = useTransactions({
+    type: "expense",
+    startDate,
+    endDate,
+    accountType: businessAccountType,
+  });
 
   // When personal accounts exist, scan only personal account expenses for reliefs
   const reliefAccountType = hasPersonalAccounts ? "directors_personal_tax" : undefined;
@@ -69,20 +68,12 @@ export function useForm11Data(directorNumber: number) {
     if (!onboarding) return { input: null, result: null };
 
     // ── 2. Questionnaire Data ────────────────────────────
-    const questionnaireRaw = localStorage.getItem(
-      `form11_questionnaire_${user.id}_${directorNumber}`
-    );
+    const questionnaireRaw = localStorage.getItem(`form11_questionnaire_${user.id}_${directorNumber}`);
     const questionnaire = questionnaireRaw ? JSON.parse(questionnaireRaw) : null;
 
     // ── 3. Transaction Totals ────────────────────────────
-    const businessIncome = (incomeTransactions ?? []).reduce(
-      (sum, t) => sum + Math.abs(Number(t.amount) || 0),
-      0
-    );
-    const businessExpenses = (expenseTransactions ?? []).reduce(
-      (sum, t) => sum + Math.abs(Number(t.amount) || 0),
-      0
-    );
+    const businessIncome = (incomeTransactions ?? []).reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
+    const businessExpenses = (expenseTransactions ?? []).reduce((sum, t) => sum + Math.abs(Number(t.amount) || 0), 0);
 
     // ── Map marital status ───────────────────────────────
     const rawMarital = questionnaire?.changes?.assessmentStatus
@@ -96,19 +87,22 @@ export function useForm11Data(directorNumber: number) {
 
     // ── Change effective date for split-year ────────────
     const changeEffectiveDate = questionnaire?.changeEffectiveDate
-      ? (typeof questionnaire.changeEffectiveDate === "string"
-          ? questionnaire.changeEffectiveDate.slice(0, 10)
-          : new Date(questionnaire.changeEffectiveDate).toISOString().slice(0, 10))
+      ? typeof questionnaire.changeEffectiveDate === "string"
+        ? questionnaire.changeEffectiveDate.slice(0, 10)
+        : new Date(questionnaire.changeEffectiveDate).toISOString().slice(0, 10)
       : undefined;
 
     // Pre-change assessment basis (if assessment status changed mid-year)
-    const preChangeAssessmentBasis = questionnaire?.changes?.assessmentStatus && changeEffectiveDate
-      ? normalizeAssessmentBasis(onboarding.assessment_basis)
-      : undefined;
+    const preChangeAssessmentBasis =
+      questionnaire?.changes?.assessmentStatus && changeEffectiveDate
+        ? normalizeAssessmentBasis(onboarding.assessment_basis)
+        : undefined;
 
     // ── Salary with pre/post split support ──────────────
-    const hasEmploymentSplit = questionnaire?.changes?.employmentStatus && changeEffectiveDate
-      && (questionnaire?.preSalaryAmount || questionnaire?.postSalaryAmount);
+    const hasEmploymentSplit =
+      questionnaire?.changes?.employmentStatus &&
+      changeEffectiveDate &&
+      (questionnaire?.preSalaryAmount || questionnaire?.postSalaryAmount);
 
     // ── Salary / Dividends (questionnaire overrides) ─────
     const salary = hasEmploymentSplit
@@ -129,41 +123,27 @@ export function useForm11Data(directorNumber: number) {
       onboarding.bik_types?.includes("company_vehicle") &&
       onboarding.company_vehicle_value
     ) {
-      bik = calculateVehicleBIK(
-        onboarding.company_vehicle_value,
-        onboarding.company_vehicle_business_km ?? 24_000
-      );
+      bik = calculateVehicleBIK(onboarding.company_vehicle_value, onboarding.company_vehicle_business_km ?? 24_000);
     }
 
     // ── Mileage Allowance (personal vehicle commute) ─────
     let mileageAllowance = 0;
-    if (
-      onboarding.commute_method === "personal_vehicle" &&
-      onboarding.commute_distance_km > 0
-    ) {
-      mileageAllowance = calculateAnnualCommuteMileage(
-        onboarding.commute_distance_km
-      );
+    if (onboarding.commute_method === "personal_vehicle" && onboarding.commute_distance_km > 0) {
+      mileageAllowance = calculateAnnualCommuteMileage(onboarding.commute_distance_km);
     }
 
     // ── Reliefs (questionnaire overrides auto-detected) ──
-    const pensionContributions =
-      questionnaire?.pensionContributionsAmount || reliefs?.pension.total || 0;
-    const medicalExpenses =
-      questionnaire?.medicalExpensesAmount || reliefs?.medical.total || 0;
-    const rentPaid =
-      questionnaire?.rentReliefAmount || reliefs?.rent.total || 0;
-    const charitableDonations =
-      questionnaire?.charitableDonationsAmount || reliefs?.charitable.total || 0;
+    const pensionContributions = questionnaire?.pensionContributionsAmount || reliefs?.pension.total || 0;
+    const medicalExpenses = questionnaire?.medicalExpensesAmount || reliefs?.medical.total || 0;
+    const rentPaid = questionnaire?.rentReliefAmount || reliefs?.rent.total || 0;
+    const charitableDonations = questionnaire?.charitableDonationsAmount || reliefs?.charitable.total || 0;
     const remoteWorkingCosts = questionnaire?.remoteWorkingDays
-      ? questionnaire.remoteWorkingDays * 3.20 // Revenue flat rate per day
+      ? questionnaire.remoteWorkingDays * 3.2 // Revenue flat rate per day
       : 0;
 
     // ── Spouse ───────────────────────────────────────────
     const spouseIncome =
-      assessmentBasis === "joint" && questionnaire?.spouseHasIncome
-        ? (questionnaire?.spouseIncomeAmount ?? 0)
-        : 0;
+      assessmentBasis === "joint" && questionnaire?.spouseHasIncome ? (questionnaire?.spouseIncomeAmount ?? 0) : 0;
 
     // ── Preliminary tax ──────────────────────────────────
     const preliminaryTaxPaid =
@@ -229,16 +209,12 @@ export function useForm11Data(directorNumber: number) {
 
 // ── Normalizers ──────────────────────────────────────────────
 
-function normalizeMaritalStatus(
-  raw: string | null | undefined
-): Form11Input["maritalStatus"] {
+function normalizeMaritalStatus(raw: string | null | undefined): Form11Input["maritalStatus"] {
   const valid = ["single", "married", "civil_partner", "widowed", "separated"];
   return valid.includes(raw ?? "") ? (raw as Form11Input["maritalStatus"]) : "single";
 }
 
-function normalizeAssessmentBasis(
-  raw: string | null | undefined
-): Form11Input["assessmentBasis"] {
+function normalizeAssessmentBasis(raw: string | null | undefined): Form11Input["assessmentBasis"] {
   const valid = ["single", "joint", "separate"];
   return valid.includes(raw ?? "") ? (raw as Form11Input["assessmentBasis"]) : "single";
 }

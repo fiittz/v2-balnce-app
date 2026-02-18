@@ -13,7 +13,11 @@ import { loadVendorCache, type VendorCacheEntry } from "@/services/vendorCacheSe
 export function useVendorCache() {
   const { user } = useAuth();
 
-  const { data: vendorCache, isLoading, error } = useQuery({
+  const {
+    data: vendorCache,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ["vendor-cache", user?.id],
     queryFn: () => loadVendorCache(user!.id),
     enabled: !!user?.id,

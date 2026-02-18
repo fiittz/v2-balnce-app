@@ -150,9 +150,7 @@ export function DeadlinesWidget() {
   const now = new Date();
 
   return (
-    <Card
-      className="border-0 shadow-lg rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300"
-    >
+    <Card className="border-0 shadow-lg rounded-3xl overflow-hidden hover:shadow-xl transition-all duration-300">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
@@ -182,16 +180,12 @@ export function DeadlinesWidget() {
                   <p className="text-xs text-muted-foreground">{formatDate(d.date)}</p>
                 </div>
               </div>
-              <Badge className={`shrink-0 ml-2 ${getStatusClasses(d.status)}`}>
-                {getDaysLabel(d.date, now)}
-              </Badge>
+              <Badge className={`shrink-0 ml-2 ${getStatusClasses(d.status)}`}>{getDaysLabel(d.date, now)}</Badge>
             </button>
           ))}
 
           {deadlines.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No upcoming deadlines
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-4">No upcoming deadlines</p>
           )}
         </div>
       </CardContent>

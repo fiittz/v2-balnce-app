@@ -3,11 +3,7 @@ import React, { createContext, useContext, useState, useCallback, useRef } from 
 import { supabase } from "@/integrations/supabase/client";
 import { processReceipt, type ReceiptData } from "@/services/aiServices";
 import { useExpenseCategories } from "@/hooks/useCategories";
-import {
-  matchReceiptToTransaction,
-  linkReceiptToTransaction,
-  type MatchResult,
-} from "@/lib/receiptMatcher";
+import { matchReceiptToTransaction, linkReceiptToTransaction, type MatchResult } from "@/lib/receiptMatcher";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useCreateJob } from "@/hooks/useProcessingJobs";
@@ -111,23 +107,21 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     return data.path;
   }, []);
 
-  const saveReceiptRecord = async (
-    uid: string,
-    imageUrl: string,
-    receiptData: ReceiptData
-  ): Promise<string> => {
+  const saveReceiptRecord = async (uid: string, imageUrl: string, receiptData: ReceiptData): Promise<string> => {
     const { data, error } = await supabase
       .from("receipts")
-      .insert([{
-        user_id: uid,
-        image_url: imageUrl,
-        vendor_name: receiptData.supplier_name,
-        amount: receiptData.total_amount,
-        vat_amount: receiptData.vat_amount,
-        vat_rate: receiptData.vat_rate ? parseFloat(receiptData.vat_rate.replace(/[^0-9.]/g, "")) || null : null,
-        receipt_date: receiptData.date,
-        ocr_data: JSON.parse(JSON.stringify(receiptData)),
-      }])
+      .insert([
+        {
+          user_id: uid,
+          image_url: imageUrl,
+          vendor_name: receiptData.supplier_name,
+          amount: receiptData.total_amount,
+          vat_amount: receiptData.vat_amount,
+          vat_rate: receiptData.vat_rate ? parseFloat(receiptData.vat_rate.replace(/[^0-9.]/g, "")) || null : null,
+          receipt_date: receiptData.date,
+          ocr_data: JSON.parse(JSON.stringify(receiptData)),
+        },
+      ])
       .select("id")
       .single();
 
@@ -148,9 +142,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     });
 
     if (validFiles.length < newFiles.length) {
-      toast.warning(
-        `${newFiles.length - validFiles.length} file(s) skipped (unsupported format or >10MB)`
-      );
+      toast.warning(`${newFiles.length - validFiles.length} file(s) skipped (unsupported format or >10MB)`);
     }
 
     const entries: BulkReceiptFile[] = validFiles.map((file, i) => ({
@@ -183,78 +175,79 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     });
   }, []);
 
-  const runMatching = useCallback(async (uid: string) => {
-    setState((prev) => ({ ...prev, phase: "matching" }));
+  const runMatching = useCallback(
+    async (uid: string) => {
+      setState((prev) => ({ ...prev, phase: "matching" }));
 
-    let matched = 0;
-    let notMatched = 0;
+      let matched = 0;
+      let notMatched = 0;
 
-    const snapshot = await new Promise<BulkReceiptFile[]>((resolve) => {
-      setState((prev) => {
-        resolve(prev.files);
-        return prev;
+      const snapshot = await new Promise<BulkReceiptFile[]>((resolve) => {
+        setState((prev) => {
+          resolve(prev.files);
+          return prev;
+        });
       });
-    });
 
-    const doneFiles = snapshot.filter(
-      (f) => f.status === "done" && f.receiptData && f.receiptDbId
-    );
+      const doneFiles = snapshot.filter((f) => f.status === "done" && f.receiptData && f.receiptDbId);
 
-    for (const entry of doneFiles) {
-      if (abortRef.current) break;
+      for (const entry of doneFiles) {
+        if (abortRef.current) break;
 
-      updateFile(entry.id, { status: "matching" });
+        updateFile(entry.id, { status: "matching" });
 
-      try {
-        const result = await matchReceiptToTransaction(
-          uid,
-          entry.receiptDbId!,
-          entry.receiptData!.total_amount,
-          entry.receiptData!.supplier_name,
-          entry.receiptData!.date
-        );
-
-        if (result.autoMatched && result.transactionId) {
-          await linkReceiptToTransaction(
+        try {
+          const result = await matchReceiptToTransaction(
+            uid,
             entry.receiptDbId!,
-            result.transactionId,
-            entry.imageUrl!,
-            entry.receiptData!.vat_amount,
-            entry.receiptData!.vat_rate
-              ? parseFloat(entry.receiptData!.vat_rate.replace(/[^0-9.]/g, "")) || null
-              : null
+            entry.receiptData!.total_amount,
+            entry.receiptData!.supplier_name,
+            entry.receiptData!.date,
           );
-          updateFile(entry.id, { status: "matched", matchResult: result });
-          matched++;
-        } else {
-          updateFile(entry.id, { status: "not_matched", matchResult: result });
+
+          if (result.autoMatched && result.transactionId) {
+            await linkReceiptToTransaction(
+              entry.receiptDbId!,
+              result.transactionId,
+              entry.imageUrl!,
+              entry.receiptData!.vat_amount,
+              entry.receiptData!.vat_rate
+                ? parseFloat(entry.receiptData!.vat_rate.replace(/[^0-9.]/g, "")) || null
+                : null,
+            );
+            updateFile(entry.id, { status: "matched", matchResult: result });
+            matched++;
+          } else {
+            updateFile(entry.id, { status: "not_matched", matchResult: result });
+            notMatched++;
+          }
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : "Matching failed";
+          updateFile(entry.id, {
+            status: "not_matched",
+            matchResult: {
+              receiptId: entry.receiptDbId!,
+              transactionId: null,
+              score: 0,
+              explanation: msg,
+              autoMatched: false,
+            },
+          });
           notMatched++;
         }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Matching failed";
-        updateFile(entry.id, {
-          status: "not_matched",
-          matchResult: {
-            receiptId: entry.receiptDbId!,
-            transactionId: null,
-            score: 0,
-            explanation: msg,
-            autoMatched: false,
-          },
-        });
-        notMatched++;
       }
-    }
 
-    setState((prev) => ({
-      ...prev,
-      phase: "done",
-      matchedCount: matched,
-      notMatchedCount: notMatched,
-    }));
+      setState((prev) => ({
+        ...prev,
+        phase: "done",
+        matchedCount: matched,
+        notMatchedCount: notMatched,
+      }));
 
-    toast.success(`Matching complete: ${matched} matched, ${notMatched} need review`);
-  }, [updateFile]);
+      toast.success(`Matching complete: ${matched} matched, ${notMatched} need review`);
+    },
+    [updateFile],
+  );
 
   const startReceiptProcessing = useCallback(async () => {
     if (!userId) {
@@ -373,9 +366,7 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
           transactionId,
           entry.imageUrl,
           entry.receiptData?.vat_amount,
-          entry.receiptData?.vat_rate
-            ? parseFloat(entry.receiptData.vat_rate.replace(/[^0-9.]/g, "")) || null
-            : null
+          entry.receiptData?.vat_rate ? parseFloat(entry.receiptData.vat_rate.replace(/[^0-9.]/g, "")) || null : null,
         );
 
         updateFile(fileId, {
@@ -401,13 +392,13 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
         toast.error(msg);
       }
     },
-    [updateFile]
+    [updateFile],
   );
 
   const totalFiles = state.files.length;
   const queuedFiles = state.files.filter((f) => f.status === "queued").length;
   const processedFiles = state.files.filter((f) =>
-    ["done", "matched", "not_matched", "matching"].includes(f.status)
+    ["done", "matched", "not_matched", "matching"].includes(f.status),
   ).length;
   const errorFiles = state.files.filter((f) => f.status === "error").length;
 
@@ -425,9 +416,5 @@ export function BackgroundTasksProvider({ children }: { children: React.ReactNod
     manualMatch,
   };
 
-  return (
-    <BackgroundTasksContext.Provider value={value}>
-      {children}
-    </BackgroundTasksContext.Provider>
-  );
+  return <BackgroundTasksContext.Provider value={value}>{children}</BackgroundTasksContext.Provider>;
 }

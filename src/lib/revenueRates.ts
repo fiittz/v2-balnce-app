@@ -15,13 +15,13 @@ export interface MileageBand {
 
 export const MILEAGE_RATES = {
   motor_car: [
-    { upTo: 1_500, rate: 0.5182 },     // Band 1: up to 1,500 km (1501cc+)
-    { upTo: 5_500, rate: 0.9063 },     // Band 2: 1,501–5,500 km (1501cc+)
-    { upTo: 25_000, rate: 0.3922 },    // Band 3: 5,501–25,000 km (1501cc+)
-    { upTo: Infinity, rate: 0.2587 },  // Band 4: 25,001+ km (1501cc+)
+    { upTo: 1_500, rate: 0.5182 }, // Band 1: up to 1,500 km (1501cc+)
+    { upTo: 5_500, rate: 0.9063 }, // Band 2: 1,501–5,500 km (1501cc+)
+    { upTo: 25_000, rate: 0.3922 }, // Band 3: 5,501–25,000 km (1501cc+)
+    { upTo: Infinity, rate: 0.2587 }, // Band 4: 25,001+ km (1501cc+)
   ] as readonly MileageBand[],
   motorcycle: [
-    { upTo: 6_437, rate: 0.2372 },     // 251–600cc band
+    { upTo: 6_437, rate: 0.2372 }, // 251–600cc band
     { upTo: Infinity, rate: 0.1529 },
   ] as readonly MileageBand[],
   bicycle: { rate: 0.08 },
@@ -32,14 +32,14 @@ export const MILEAGE_RATES = {
 
 export const SUBSISTENCE_RATES = {
   overnight: {
-    normal: 205.53,             // accommodation + meals (overnight, 24+ hours)
-    reduced: 184.98,            // reduced overnight rate
-    vouched_accommodation: 0,   // claim actual accommodation + day rate
-    day_rate: 46.17,            // meals only when accommodation vouched separately
+    normal: 205.53, // accommodation + meals (overnight, 24+ hours)
+    reduced: 184.98, // reduced overnight rate
+    vouched_accommodation: 0, // claim actual accommodation + day rate
+    day_rate: 46.17, // meals only when accommodation vouched separately
   },
   day_trip: {
-    ten_hours: 46.17,           // 10+ hours away, no overnight
-    five_hours: 19.25,          // 5–10 hours away
+    ten_hours: 46.17, // 10+ hours away, no overnight
+    five_hours: 19.25, // 5–10 hours away
   },
 } as const;
 
@@ -51,7 +51,7 @@ export const SUBSISTENCE_RATES = {
  */
 export function calculateMileageAllowance(
   distanceKm: number,
-  vehicleType: "motor_car" | "motorcycle" | "bicycle"
+  vehicleType: "motor_car" | "motorcycle" | "bicycle",
 ): number {
   if (distanceKm <= 0) return 0;
 
@@ -86,7 +86,7 @@ export function calculateMileageAllowance(
  */
 export function calculateSubsistenceAllowance(
   nightsAway: number,
-  daysAway: number
+  daysAway: number,
 ): { accommodation: number; meals: number; total: number } {
   // Overnight rate covers accommodation + meals
   const overnightTotal = nightsAway * SUBSISTENCE_RATES.overnight.normal;
@@ -106,10 +106,7 @@ export function calculateSubsistenceAllowance(
  * Revenue allows civil service rates for business mileage.
  * Commute distance × 2 (return) × working days × banded rate.
  */
-export function calculateAnnualCommuteMileage(
-  oneWayKm: number,
-  workingDaysPerYear: number = 230
-): number {
+export function calculateAnnualCommuteMileage(oneWayKm: number, workingDaysPerYear: number = 230): number {
   const totalAnnualKm = oneWayKm * 2 * workingDaysPerYear;
   return calculateMileageAllowance(totalAnnualKm, "motor_car");
 }

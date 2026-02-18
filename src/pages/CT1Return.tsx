@@ -65,7 +65,7 @@ const CT1Return = () => {
           vatStatusBefore: savedCT1.vatStatus === "not_registered" ? "not_registered" : undefined,
           vatStatusAfter: savedCT1.vatStatus,
         }
-      : undefined
+      : undefined,
   );
 
   const getReportMeta = (): ReportMeta => ({
@@ -91,9 +91,11 @@ const CT1Return = () => {
   const motorVehicleAllowance = ct1.vehicleAsset
     ? ct1.vehicleAsset.depreciation.annualAllowance
     : (savedCT1?.capitalAllowancesMotorVehicles ?? 0);
-  const capitalAllowancesTotal =
-    (savedCT1?.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
-  const tradingProfit = Math.max(0, totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel);
+  const capitalAllowancesTotal = (savedCT1?.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
+  const tradingProfit = Math.max(
+    0,
+    totalIncome - ct1.expenseSummary.allowable - capitalAllowancesTotal - ct1.directorsLoanTravel,
+  );
   const lossesForward = savedCT1?.lossesForward ?? 0;
   const taxableProfit = Math.max(0, tradingProfit - lossesForward);
   const ctAt125 = taxableProfit * 0.125;
@@ -139,19 +141,12 @@ const CT1Return = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/tax")}
-                className="shrink-0"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/tax")} className="shrink-0">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
                 <h1 className="font-semibold text-xl">CT1 Return — {profile?.business_name || "Company"}</h1>
-                <p className="text-sm text-muted-foreground">
-                  Tax Year {taxYearStr} &bull; Corporation Tax
-                </p>
+                <p className="text-sm text-muted-foreground">Tax Year {taxYearStr} &bull; Corporation Tax</p>
               </div>
               <ExportButtons onPdf={handlePdf} onExcel={handleExcel} />
             </div>
@@ -159,7 +154,6 @@ const CT1Return = () => {
         </header>
 
         <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
           {/* Re-evaluation Warning */}
           {ct1.reEvaluationApplied && (
             <Card className="border-0 shadow-lg rounded-3xl overflow-hidden bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800">
@@ -232,17 +226,17 @@ const CT1Return = () => {
                 {(savedCT1?.capitalAllowancesPlant ?? 0) > 0 && (
                   <Row label="Plant & Machinery" amount={savedCT1.capitalAllowancesPlant} />
                 )}
-                {motorVehicleAllowance > 0 && (
-                  <Row label="Motor Vehicles" amount={motorVehicleAllowance} />
-                )}
+                {motorVehicleAllowance > 0 && <Row label="Motor Vehicles" amount={motorVehicleAllowance} />}
                 {ct1.vehicleAsset && (
                   <div className="text-xs text-muted-foreground pl-1 pb-1 space-y-0.5">
-                    <p>{ct1.vehicleAsset.description} ({ct1.vehicleAsset.reg})</p>
+                    <p>
+                      {ct1.vehicleAsset.description} ({ct1.vehicleAsset.reg})
+                    </p>
                     <p>
                       12.5% of {eur(ct1.vehicleAsset.depreciation.qualifyingCost)}
                       {ct1.vehicleAsset.depreciation.businessUsePct < 100 &&
-                        ` × ${ct1.vehicleAsset.depreciation.businessUsePct}% business use`}
-                      {" "}— Year {ct1.vehicleAsset.depreciation.yearsOwned} of 8
+                        ` × ${ct1.vehicleAsset.depreciation.businessUsePct}% business use`}{" "}
+                      — Year {ct1.vehicleAsset.depreciation.yearsOwned} of 8
                       {ct1.vehicleAsset.depreciation.fullyDepreciated && " (fully depreciated)"}
                     </p>
                     <p>Net Book Value: {eur(ct1.vehicleAsset.depreciation.netBookValue)}</p>
@@ -255,9 +249,11 @@ const CT1Return = () => {
           )}
 
           {/* CT Computation */}
-          <Card className={`border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ${
-            balanceDue <= 0 ? "ring-green-500/30" : "ring-primary/20"
-          }`}>
+          <Card
+            className={`border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ${
+              balanceDue <= 0 ? "ring-green-500/30" : "ring-primary/20"
+            }`}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Calculator className="w-5 h-5 text-primary" />
@@ -270,35 +266,27 @@ const CT1Return = () => {
               {ct1.directorsLoanTravel > 0 && (
                 <Row label="Less: Travel & Accommodation (owed to director)" amount={ct1.directorsLoanTravel} />
               )}
-              {capitalAllowancesTotal > 0 && (
-                <Row label="Less: Capital Allowances" amount={capitalAllowancesTotal} />
-              )}
+              {capitalAllowancesTotal > 0 && <Row label="Less: Capital Allowances" amount={capitalAllowancesTotal} />}
               <Divider />
               <Row label="Trading Profit" amount={tradingProfit} bold />
-              {lossesForward > 0 && (
-                <Row label="Less: Losses B/F" amount={lossesForward} />
-              )}
+              {lossesForward > 0 && <Row label="Less: Losses B/F" amount={lossesForward} />}
               <Row label="Taxable Profit" amount={taxableProfit} bold />
               <Divider />
               <Row label="CT @ 12.5% (trading)" amount={ctAt125} />
-              {surcharge > 0 && (
-                <Row label="Close Company Surcharge" amount={surcharge} />
-              )}
+              {surcharge > 0 && <Row label="Close Company Surcharge" amount={surcharge} />}
               <Row label="Total CT Liability" amount={totalCT} bold />
-              {rctCredit > 0 && (
-                <Row label="Less: RCT Credit" amount={rctCredit} />
-              )}
+              {rctCredit > 0 && <Row label="Less: RCT Credit" amount={rctCredit} />}
               {prelimPaid > 0 && (
                 <>
                   <Row label="Less: Preliminary CT Paid" amount={prelimPaid} />
                   <div className="border-t-2 border-foreground/20 mt-3 pt-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold text-base">
-                        {balanceDue <= 0 ? "Refund Due" : "Balance Due"}
-                      </span>
-                      <span className={`font-semibold text-lg font-mono tabular-nums ${
-                        balanceDue <= 0 ? "text-green-600" : "text-destructive"
-                      }`}>
+                      <span className="font-semibold text-base">{balanceDue <= 0 ? "Refund Due" : "Balance Due"}</span>
+                      <span
+                        className={`font-semibold text-lg font-mono tabular-nums ${
+                          balanceDue <= 0 ? "text-green-600" : "text-destructive"
+                        }`}
+                      >
                         {eur(Math.abs(balanceDue))}
                       </span>
                     </div>
@@ -308,12 +296,12 @@ const CT1Return = () => {
               {prelimPaid === 0 && (
                 <div className="border-t-2 border-foreground/20 mt-3 pt-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-base">
-                      {balanceDue <= 0 ? "Refund Due" : "Total CT Due"}
-                    </span>
-                    <span className={`font-semibold text-lg font-mono tabular-nums ${
-                      balanceDue <= 0 ? "text-green-600" : "text-destructive"
-                    }`}>
+                    <span className="font-semibold text-base">{balanceDue <= 0 ? "Refund Due" : "Total CT Due"}</span>
+                    <span
+                      className={`font-semibold text-lg font-mono tabular-nums ${
+                        balanceDue <= 0 ? "text-green-600" : "text-destructive"
+                      }`}
+                    >
                       {eur(Math.abs(balanceDue))}
                     </span>
                   </div>

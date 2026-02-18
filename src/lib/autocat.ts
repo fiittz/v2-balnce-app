@@ -5,11 +5,11 @@ import {
   RCT_RULES,
   INDUSTRY_VAT_RULES,
   determineVatTreatment,
-  applyTwoThirdsRule
-} from './irishVatRules';
-import { matchVendor, type VendorMatchResult } from './vendorMatcher';
-import type { VendorCacheEntry } from '@/services/vendorCacheService';
-import { extractVendorPattern, getCorrectionConfidence, type UserCorrection } from './correctionUtils';
+  applyTwoThirdsRule,
+} from "./irishVatRules";
+import { matchVendor, type VendorMatchResult } from "./vendorMatcher";
+import type { VendorCacheEntry } from "@/services/vendorCacheService";
+import { extractVendorPattern, getCorrectionConfidence, type UserCorrection } from "./correctionUtils";
 
 export type TransactionDirection = "income" | "expense";
 
@@ -52,57 +52,99 @@ export { VAT_RATES, DISALLOWED_VAT_CREDITS, ALLOWED_VAT_CREDITS, RCT_RULES, INDU
 export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   // ── Expense categories ──
   "Motor Vehicle Expenses": ["Vehicle Expenses", "Fuel", "Vehicle Maintenance & Repairs", "Travel & Accommodation"],
-  "Motor/travel": ["Van Costs", "Vehicle Expenses", "Vehicle Maintenance & Repairs", "Travel & Accommodation", "Fuel", "Tolls & Parking"],
-  "Tools": ["Power Tools", "Tools & Equipment", "Hardware & Equipment"],
-  "Purchases": ["Materials & Supplies", "Cost of Goods Sold", "Raw Materials"],
-  "Materials": ["Timber & Sheet Materials", "Fixings & Consumables", "Materials & Supplies", "Raw Materials"],
+  "Motor/travel": [
+    "Van Costs",
+    "Vehicle Expenses",
+    "Vehicle Maintenance & Repairs",
+    "Travel & Accommodation",
+    "Fuel",
+    "Tolls & Parking",
+  ],
+  Tools: ["Power Tools", "Tools & Equipment", "Hardware & Equipment"],
+  Purchases: ["Materials & Supplies", "Cost of Goods Sold", "Raw Materials"],
+  Materials: ["Timber & Sheet Materials", "Fixings & Consumables", "Materials & Supplies", "Raw Materials"],
   "Cost of Goods Sold": ["Cost of Goods Sold", "Materials & Supplies", "Raw Materials"],
-  "Software": ["Subscriptions & Software", "Software & Licenses", "Office Expenses"],
-  "Cloud Hosting": ["Cloud Hosting & Infrastructure", "Subscriptions & Software", "Software & Licenses", "API & Third-Party Services"],
+  Software: ["Subscriptions & Software", "Software & Licenses", "Office Expenses"],
+  "Cloud Hosting": [
+    "Cloud Hosting & Infrastructure",
+    "Subscriptions & Software",
+    "Software & Licenses",
+    "API & Third-Party Services",
+  ],
   "Payment Processing": ["Payment Processing Fees", "Bank Charges"],
-  "Phone": ["Telephone & Internet", "Subscriptions & Software"],
-  "Insurance": ["Insurance", "Vehicle Insurance"],
+  Phone: ["Telephone & Internet", "Subscriptions & Software"],
+  Insurance: ["Insurance", "Vehicle Insurance"],
   "Bank fees": ["Bank Charges"],
   "Bank Fees": ["Bank Charges"],
-  "Medical": ["Medical Expenses"],
-  "Drawings": ["Director's Drawings"],
+  Medical: ["Medical Expenses"],
+  Drawings: ["Director's Drawings"],
   "Meals & Entertainment": ["Meals & Entertainment"],
   "Consulting & Accounting": ["Professional Fees"],
-  "Wages": ["Subcontractor Payments", "Staff Wages", "Contractor Payments", "Driver Wages"],
+  Wages: ["Subcontractor Payments", "Staff Wages", "Contractor Payments", "Driver Wages"],
   "Labour costs": ["Subcontractor Payments", "Staff Wages", "Contractor Payments"],
   "Sub Con": ["Subcontractor Payments", "Contractor Payments"],
   "Repairs and Maintenance": ["Repairs & Maintenance", "Vehicle Maintenance & Repairs"],
-  "Cleaning": ["Cleaning & Hygiene"],
+  Cleaning: ["Cleaning & Hygiene"],
   "General Expenses": [],
-  "Advertising": ["Advertising & Marketing"],
-  "Marketing": ["Advertising & Marketing"],
-  "Subsistence": ["Subsistence", "Travel & Accommodation", "Meals & Entertainment"],
-  "Workwear": ["Protective Clothing & PPE"],
+  Advertising: ["Advertising & Marketing"],
+  Marketing: ["Advertising & Marketing"],
+  Subsistence: ["Subsistence", "Travel & Accommodation", "Meals & Entertainment"],
+  Workwear: ["Protective Clothing & PPE"],
   "Tolls & Parking": ["Tolls & Parking", "Vehicle Expenses", "Travel & Accommodation"],
-  "Training": ["Training & Certifications", "Training & Conferences", "Training & CPD"],
-  "Rent": ["Rent & Rates", "Rent & Co-working"],
-  "Equipment": ["Tools & Equipment", "Hardware & Equipment", "Equipment & Furniture", "Machinery & Equipment", "Kitchen Equipment", "Shop Fittings & Equipment", "Audio/Visual Equipment"],
-  "Office": ["Office Expenses", "Subscriptions & Software"],
-  "other": [],
+  Training: ["Training & Certifications", "Training & Conferences", "Training & CPD"],
+  Rent: ["Rent & Rates", "Rent & Co-working"],
+  Equipment: [
+    "Tools & Equipment",
+    "Hardware & Equipment",
+    "Equipment & Furniture",
+    "Machinery & Equipment",
+    "Kitchen Equipment",
+    "Shop Fittings & Equipment",
+    "Audio/Visual Equipment",
+  ],
+  Office: ["Office Expenses", "Subscriptions & Software"],
+  other: [],
   // Waste
-  "Waste": [],
+  Waste: [],
   // Internal transfers — no matching category, will fall through
   "Internal Transfer": ["Internal Transfers"],
   // Travel & Subsistence
   "Travel & Subsistence": ["Travel & Accommodation", "Vehicle Expenses"],
   // ── Income categories ──
-  "Sales": [
-    "Contract Work", "Labour Income", "Other Income", "Consultation Fees", "Materials Charged",
-    "SaaS Subscription Revenue", "Consulting & Services", "Product Sales", "Food Sales",
-    "Delivery Services", "Haulage Income", "Rental Income", "Services",
-    "Project Fees", "Retainer Income", "Online Sales", "Wholesale Revenue",
-    "Contract Manufacturing", "Catering Income", "Beverage Sales",
-    "Management Fees", "Plant Hire Income", "Membership & Subscriptions",
+  Sales: [
+    "Contract Work",
+    "Labour Income",
+    "Other Income",
+    "Consultation Fees",
+    "Materials Charged",
+    "SaaS Subscription Revenue",
+    "Consulting & Services",
+    "Product Sales",
+    "Food Sales",
+    "Delivery Services",
+    "Haulage Income",
+    "Rental Income",
+    "Services",
+    "Project Fees",
+    "Retainer Income",
+    "Online Sales",
+    "Wholesale Revenue",
+    "Contract Manufacturing",
+    "Catering Income",
+    "Beverage Sales",
+    "Management Fees",
+    "Plant Hire Income",
+    "Membership & Subscriptions",
     "Implementation & Onboarding Fees",
-    "Software Sales & Licensing", "Development Services", "Maintenance & Support",
-    "Event Tickets & Admissions", "Sponsorship Income", "Venue Hire Income", "Catering & Bar Revenue",
+    "Software Sales & Licensing",
+    "Development Services",
+    "Maintenance & Support",
+    "Event Tickets & Admissions",
+    "Sponsorship Income",
+    "Venue Hire Income",
+    "Catering & Bar Revenue",
   ],
-  "RCT": ["Contract Work", "Labour Income"],
+  RCT: ["Contract Work", "Labour Income"],
   "Interest Income": ["Other Income"],
   "Subscription Income": ["Other Income", "SaaS Subscription Revenue", "Membership & Subscriptions"],
   "Tax Refund": ["Other Income"],
@@ -114,7 +156,7 @@ export function findMatchingCategory<T extends { name: string; type?: string; ac
   autocatCategory: string,
   dbCategories: T[],
   transactionType?: "income" | "expense",
-  accountType?: string
+  accountType?: string,
 ): T | null {
   const normalizedAutocat = autocatCategory.toLowerCase().trim();
 
@@ -134,8 +176,7 @@ export function findMatchingCategory<T extends { name: string; type?: string; ac
 
   // First try exact match in filtered set
   const exactMatch = filteredCategories.find(
-    (c) => c.name.toLowerCase() === normalizedAutocat &&
-    (!transactionType || c.type === transactionType)
+    (c) => c.name.toLowerCase() === normalizedAutocat && (!transactionType || c.type === transactionType),
   );
   if (exactMatch) return exactMatch;
 
@@ -143,8 +184,7 @@ export function findMatchingCategory<T extends { name: string; type?: string; ac
   const possibleNames = CATEGORY_NAME_MAP[autocatCategory] || [];
   for (const possibleName of possibleNames) {
     const mapped = filteredCategories.find(
-      (c) => c.name.toLowerCase() === possibleName.toLowerCase() &&
-      (!transactionType || c.type === transactionType)
+      (c) => c.name.toLowerCase() === possibleName.toLowerCase() && (!transactionType || c.type === transactionType),
     );
     if (mapped) return mapped;
   }
@@ -152,15 +192,13 @@ export function findMatchingCategory<T extends { name: string; type?: string; ac
   // Fallback: try all categories if filtered set had no match
   if (accountType) {
     const fallbackExact = dbCategories.find(
-      (c) => c.name.toLowerCase() === normalizedAutocat &&
-      (!transactionType || c.type === transactionType)
+      (c) => c.name.toLowerCase() === normalizedAutocat && (!transactionType || c.type === transactionType),
     );
     if (fallbackExact) return fallbackExact;
 
     for (const possibleName of possibleNames) {
       const mapped = dbCategories.find(
-        (c) => c.name.toLowerCase() === possibleName.toLowerCase() &&
-        (!transactionType || c.type === transactionType)
+        (c) => c.name.toLowerCase() === possibleName.toLowerCase() && (!transactionType || c.type === transactionType),
       );
       if (mapped) return mapped;
     }
@@ -178,15 +216,23 @@ export function findMatchingCategory<T extends { name: string; type?: string; ac
 
 // Trade industries that should get boosted confidence for trade suppliers
 const TRADE_INDUSTRIES = [
-  "construction", "carpentry_joinery", "carpentry", "joinery", "electrical",
-  "plumbing_heating", "plumbing", "heating", "landscaping_groundworks",
-  "painting_decorating", "manufacturing", "maintenance_facilities", "trades"
+  "construction",
+  "carpentry_joinery",
+  "carpentry",
+  "joinery",
+  "electrical",
+  "plumbing_heating",
+  "plumbing",
+  "heating",
+  "landscaping_groundworks",
+  "painting_decorating",
+  "manufacturing",
+  "maintenance_facilities",
+  "trades",
 ];
 
 // Tech/SaaS industries that should get boosted confidence for tech suppliers
-const TECH_INDUSTRIES = [
-  "technology_it", "technology", "software", "saas", "professional_services"
-];
+const TECH_INDUSTRIES = ["technology_it", "technology", "software", "saas", "professional_services"];
 
 function normalise(text: string | undefined | null): string {
   return (text ?? "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -205,14 +251,22 @@ function inferIncomeCategory(tx: TransactionInput): {
   const industry = normalise(tx.user_industry);
   const bizDesc = normalise(tx.user_business_description);
   const industryContext = `${industry} ${bizDesc}`;
-  const userInConstruction = !!industryContext.match(/construct|carpentry|trades|electrical|plumbing|building|joinery|kitchen|wardrobe|fitting|renovation/);
+  const userInConstruction = !!industryContext.match(
+    /construct|carpentry|trades|electrical|plumbing|building|joinery|kitchen|wardrobe|fitting|renovation/,
+  );
 
   // Check for RCT income (construction company payments)
-  const isFromCompany = desc.includes("limited") || desc.includes("ltd") ||
-                        desc.includes("from") || desc.includes("caracon") ||
-                        desc.includes("contractors") || desc.includes("holdings") ||
-                        desc.includes("developments") || desc.includes("builders") ||
-                        desc.includes("plc") || desc.includes("group");
+  const isFromCompany =
+    desc.includes("limited") ||
+    desc.includes("ltd") ||
+    desc.includes("from") ||
+    desc.includes("caracon") ||
+    desc.includes("contractors") ||
+    desc.includes("holdings") ||
+    desc.includes("developments") ||
+    desc.includes("builders") ||
+    desc.includes("plc") ||
+    desc.includes("group");
 
   if (isFromCompany && userInConstruction) {
     return {
@@ -319,11 +373,13 @@ function refineWithReceipt(base: AutoCatResult, tx: TransactionInput): AutoCatRe
 function isPaymentToIndividual(desc: string): boolean {
   const normalised = normalise(desc);
   // Transfers "To [Name]" that don't contain company indicators
-  if (normalised.startsWith("to ") &&
-      !normalised.includes("limited") &&
-      !normalised.includes("ltd") &&
-      !normalised.includes("group") &&
-      !normalised.includes("company")) {
+  if (
+    normalised.startsWith("to ") &&
+    !normalised.includes("limited") &&
+    !normalised.includes("ltd") &&
+    !normalised.includes("group") &&
+    !normalised.includes("company")
+  ) {
     return true;
   }
   return false;
@@ -332,7 +388,7 @@ function isPaymentToIndividual(desc: string): boolean {
 export function autoCategorise(
   tx: TransactionInput,
   vendorCache?: Map<string, VendorCacheEntry>,
-  userCorrections?: Map<string, UserCorrection>
+  userCorrections?: Map<string, UserCorrection>,
 ): AutoCatResult {
   const desc = normalise(tx.description);
   const merchant = normalise(tx.merchant_name ?? tx.description);
@@ -357,35 +413,52 @@ export function autoCategorise(
   // 1) Income handling
   if (tx.direction === "income") {
     // Check if this is a Revenue Commissioners refund — NOT taxable income
-    const isRevenueRefund = desc.includes("revenue") || desc.includes("collector general") || desc.includes("collector-general") || desc.includes("rev comm") || desc.includes("ros refund") || desc.includes("tax refund") || desc.includes("vat refund") || desc.includes("paye refund") || desc.includes("ct refund") || desc.includes("rct refund");
+    const isRevenueRefund =
+      desc.includes("revenue") ||
+      desc.includes("collector general") ||
+      desc.includes("collector-general") ||
+      desc.includes("rev comm") ||
+      desc.includes("ros refund") ||
+      desc.includes("tax refund") ||
+      desc.includes("vat refund") ||
+      desc.includes("paye refund") ||
+      desc.includes("ct refund") ||
+      desc.includes("rct refund");
     if (isRevenueRefund) {
-      return finalizeResult({
-        category: "Tax Refund",
-        vat_type: "Exempt",
-        vat_deductible: false,
-        business_purpose: "Tax refund from Revenue Commissioners. Not taxable income — return of overpaid tax.",
-        confidence_score: 95,
-        notes: "Revenue refund — excluded from taxable income. Not subject to CT or income tax.",
-        needs_review: false,
-        needs_receipt: false,
-        is_business_expense: true,
-      }, tx);
+      return finalizeResult(
+        {
+          category: "Tax Refund",
+          vat_type: "Exempt",
+          vat_deductible: false,
+          business_purpose: "Tax refund from Revenue Commissioners. Not taxable income — return of overpaid tax.",
+          confidence_score: 95,
+          notes: "Revenue refund — excluded from taxable income. Not subject to CT or income tax.",
+          needs_review: false,
+          needs_receipt: false,
+          is_business_expense: true,
+        },
+        tx,
+      );
     }
 
     // Check if this is a commercial refund — classify as Other Income
-    const isRefund = desc.includes("refund") || desc.includes("reversal") || desc.includes("cashback") || desc.includes("rebate");
+    const isRefund =
+      desc.includes("refund") || desc.includes("reversal") || desc.includes("cashback") || desc.includes("rebate");
     if (isRefund) {
-      return finalizeResult({
-        category: "Interest Income", // maps to "Other Income" in DB
-        vat_type: "Exempt",
-        vat_deductible: false,
-        business_purpose: "Refund received. Classified as other income.",
-        confidence_score: 85,
-        notes: "Refund/reversal detected — categorised as Other Income.",
-        needs_review: false,
-        needs_receipt: false,
-        is_business_expense: true,
-      }, tx);
+      return finalizeResult(
+        {
+          category: "Interest Income", // maps to "Other Income" in DB
+          vat_type: "Exempt",
+          vat_deductible: false,
+          business_purpose: "Refund received. Classified as other income.",
+          confidence_score: 85,
+          notes: "Refund/reversal detected — categorised as Other Income.",
+          needs_review: false,
+          needs_receipt: false,
+          is_business_expense: true,
+        },
+        tx,
+      );
     }
 
     const incomeGuess = inferIncomeCategory(tx);
@@ -403,7 +476,8 @@ export function autoCategorise(
       const outputRate = industryRules?.defaultOutputRate || "standard_23";
 
       category = "Sales";
-      vat_type = VAT_RATES[outputRate.toUpperCase().replace("_", "_") as keyof typeof VAT_RATES]?.label || "Standard Rate (23%)";
+      vat_type =
+        VAT_RATES[outputRate.toUpperCase().replace("_", "_") as keyof typeof VAT_RATES]?.label || "Standard Rate (23%)";
       vat_deductible = false;
       business_purpose = `Income received. ${industryRules?.specialRules?.[0] || ""}`;
       confidence = 60;
@@ -411,22 +485,38 @@ export function autoCategorise(
       is_business_expense = true; // Income is always business
     }
 
-    return finalizeResult({ category, vat_type, vat_deductible, business_purpose, confidence_score: confidence, notes, needs_review, needs_receipt, is_business_expense }, tx);
+    return finalizeResult(
+      {
+        category,
+        vat_type,
+        vat_deductible,
+        business_purpose,
+        confidence_score: confidence,
+        notes,
+        needs_review,
+        needs_receipt,
+        is_business_expense,
+      },
+      tx,
+    );
   }
 
   // 2) Check for payment to individual (no VAT invoice possible)
   if (isPaymentToIndividual(desc)) {
-    return finalizeResult({
-      category: "Labour costs",
-      vat_type: "N/A",
-      vat_deductible: false,
-      business_purpose: "Payment to individual. Cannot claim VAT without valid VAT invoice.",
-      confidence_score: 75,
-      notes: "Transfer to individual - no VAT deduction possible without invoice.",
-      needs_review: true,
-      needs_receipt: true,
-      is_business_expense: null, // Uncertain - could be personal transfer
-    }, tx);
+    return finalizeResult(
+      {
+        category: "Labour costs",
+        vat_type: "N/A",
+        vat_deductible: false,
+        business_purpose: "Payment to individual. Cannot claim VAT without valid VAT invoice.",
+        confidence_score: 75,
+        notes: "Transfer to individual - no VAT deduction possible without invoice.",
+        needs_review: true,
+        needs_receipt: true,
+        is_business_expense: null, // Uncertain - could be personal transfer
+      },
+      tx,
+    );
   }
 
   // 2.5) User corrections lookup — highest priority after statutory rules
@@ -444,22 +534,30 @@ export function autoCategorise(
 
   if (correctionHit) {
     const correctionConfidence = getCorrectionConfidence(correctionHit);
-    return finalizeResult({
-      category: correctionHit.corrected_category,
-      vat_type: correctionHit.corrected_vat_rate != null
-        ? correctionHit.corrected_vat_rate === 23 ? "Standard 23%"
-          : correctionHit.corrected_vat_rate === 13.5 ? "Reduced 13.5%"
-          : correctionHit.corrected_vat_rate === 9 ? "Second Reduced 9%"
-          : correctionHit.corrected_vat_rate === 0 ? "Zero"
-          : "Standard 23%"
-        : "N/A",
-      vat_deductible: correctionHit.corrected_vat_rate != null && correctionHit.corrected_vat_rate > 0,
-      business_purpose: `User-corrected category (${correctionHit.transaction_count} corrections).`,
-      confidence_score: correctionConfidence,
-      notes: `Applied user correction for "${correctionHit.vendor_pattern}".`,
-      needs_review: false,
-      is_business_expense: true,
-    }, tx);
+    return finalizeResult(
+      {
+        category: correctionHit.corrected_category,
+        vat_type:
+          correctionHit.corrected_vat_rate != null
+            ? correctionHit.corrected_vat_rate === 23
+              ? "Standard 23%"
+              : correctionHit.corrected_vat_rate === 13.5
+                ? "Reduced 13.5%"
+                : correctionHit.corrected_vat_rate === 9
+                  ? "Second Reduced 9%"
+                  : correctionHit.corrected_vat_rate === 0
+                    ? "Zero"
+                    : "Standard 23%"
+            : "N/A",
+        vat_deductible: correctionHit.corrected_vat_rate != null && correctionHit.corrected_vat_rate > 0,
+        business_purpose: `User-corrected category (${correctionHit.transaction_count} corrections).`,
+        confidence_score: correctionConfidence,
+        notes: `Applied user correction for "${correctionHit.vendor_pattern}".`,
+        needs_review: false,
+        is_business_expense: true,
+      },
+      tx,
+    );
   }
 
   // 3) Vendor cache lookup — check cached entries before hardcoded rules
@@ -489,7 +587,7 @@ export function autoCategorise(
           purpose: cacheHit.business_purpose ?? "",
           sector: cacheHit.sector ?? undefined,
         },
-        matchType: 'exact',
+        matchType: "exact",
         matchedPattern: cacheHit.vendor_pattern,
         confidence: cacheHit.confidence,
       }
@@ -501,7 +599,7 @@ export function autoCategorise(
     tx.description,
     amountAbs,
     userIndustry || userBusinessType || "general",
-    "expense"
+    "expense",
   );
 
   const foodWordBoundary = DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.wordBoundaryKeywords || [];
@@ -511,87 +609,113 @@ export function autoCategorise(
   // Separate accommodation from food/drink — both have VAT blocked under Section 60,
   // but accommodation is a legitimate business expense categorised as Travel & Subsistence,
   // while food/drink falls under "other".
-  const ACCOMMODATION_KEYWORDS = ["hotel", "accommodation", "airbnb", "b&b", "guesthouse", "guest house", "hostel", "lodge", "booking.com"];
-  const isAccommodation = ACCOMMODATION_KEYWORDS.some(k => desc.includes(k));
-  const isFoodDrink = !isAccommodation && (foodWordMatch || allFoodAccomKeywords.some(k => desc.includes(k)));
+  const ACCOMMODATION_KEYWORDS = [
+    "hotel",
+    "accommodation",
+    "airbnb",
+    "b&b",
+    "guesthouse",
+    "guest house",
+    "hostel",
+    "lodge",
+    "booking.com",
+  ];
+  const isAccommodation = ACCOMMODATION_KEYWORDS.some((k) => desc.includes(k));
+  const isFoodDrink = !isAccommodation && (foodWordMatch || allFoodAccomKeywords.some((k) => desc.includes(k)));
 
-  const isDisallowedEntertainment = DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some(k => desc.includes(k));
-  const isDisallowedPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some(k => desc.includes(k));
-  const isDiesel = ALLOWED_VAT_CREDITS.DIESEL.keywords!.some(k => desc.includes(k));
+  const isDisallowedEntertainment = DISALLOWED_VAT_CREDITS.ENTERTAINMENT.keywords.some((k) => desc.includes(k));
+  const isDisallowedPetrol = DISALLOWED_VAT_CREDITS.PETROL.keywords.some((k) => desc.includes(k));
+  const isDiesel = ALLOWED_VAT_CREDITS.DIESEL.keywords!.some((k) => desc.includes(k));
 
   // Check for DIESEL specifically first - VAT IS recoverable
   if (isDiesel) {
-    return finalizeResult({
-      category: "Motor Vehicle Expenses",
-      vat_type: "Standard 23%",
-      vat_deductible: true,
-      business_purpose: "Diesel fuel - VAT IS recoverable (unlike petrol). Section 59.",
-      confidence_score: 90,
-      notes: "Diesel purchase - VAT deductible.",
-      needs_review: false,
-      needs_receipt: true,
-      is_business_expense: true,
-    }, tx);
+    return finalizeResult(
+      {
+        category: "Motor Vehicle Expenses",
+        vat_type: "Standard 23%",
+        vat_deductible: true,
+        business_purpose: "Diesel fuel - VAT IS recoverable (unlike petrol). Section 59.",
+        confidence_score: 90,
+        notes: "Diesel purchase - VAT deductible.",
+        needs_review: false,
+        needs_receipt: true,
+        is_business_expense: true,
+      },
+      tx,
+    );
   }
 
   // Accommodation: categorise as Travel & Subsistence (maps to "Travel & Accommodation" in DB)
   // VAT rate is 9% (second reduced rate for accommodation in Ireland)
   // VAT is blocked per Section 60, but the expense IS deductible for Corporation Tax
   if (isAccommodation) {
-    return finalizeResult({
-      category: "Travel & Subsistence",
-      vat_type: "Second Reduced 9%",
-      vat_deductible: false,
-      business_purpose: "Business accommodation - 9% VAT rate, not recoverable under Section 60(2)(a)(i).",
-      confidence_score: 90,
-      notes: "Section 60(2)(a)(i) - Accommodation VAT not recoverable. Expense is deductible for Corporation Tax / Income Tax.",
-      needs_review: false,
-      needs_receipt: true,
-      is_business_expense: true,
-    }, tx);
+    return finalizeResult(
+      {
+        category: "Travel & Subsistence",
+        vat_type: "Second Reduced 9%",
+        vat_deductible: false,
+        business_purpose: "Business accommodation - 9% VAT rate, not recoverable under Section 60(2)(a)(i).",
+        confidence_score: 90,
+        notes:
+          "Section 60(2)(a)(i) - Accommodation VAT not recoverable. Expense is deductible for Corporation Tax / Income Tax.",
+        needs_review: false,
+        needs_receipt: true,
+        is_business_expense: true,
+      },
+      tx,
+    );
   }
 
   // Food & drink: not a business expense category, falls to "other"
   if (isFoodDrink) {
-    return finalizeResult({
-      category: "other",
-      vat_type: "Standard 23%",
-      vat_deductible: false,
-      business_purpose: vatTreatment.explanation,
-      confidence_score: 90,
-      notes: "Section 60(2)(a)(i) - Food/drink VAT not recoverable.",
-      needs_review: false,
-      needs_receipt: false,
-      is_business_expense: false,
-    }, tx);
+    return finalizeResult(
+      {
+        category: "other",
+        vat_type: "Standard 23%",
+        vat_deductible: false,
+        business_purpose: vatTreatment.explanation,
+        confidence_score: 90,
+        notes: "Section 60(2)(a)(i) - Food/drink VAT not recoverable.",
+        needs_review: false,
+        needs_receipt: false,
+        is_business_expense: false,
+      },
+      tx,
+    );
   }
 
   if (isDisallowedEntertainment) {
-    return finalizeResult({
-      category: "other",
-      vat_type: "Standard 23%",
-      vat_deductible: false,
-      business_purpose: vatTreatment.explanation,
-      confidence_score: 90,
-      notes: "Section 60(2)(a)(iii) - Entertainment VAT not recoverable.",
-      needs_review: false,
-      needs_receipt: false,
-      is_business_expense: false,
-    }, tx);
+    return finalizeResult(
+      {
+        category: "other",
+        vat_type: "Standard 23%",
+        vat_deductible: false,
+        business_purpose: vatTreatment.explanation,
+        confidence_score: 90,
+        notes: "Section 60(2)(a)(iii) - Entertainment VAT not recoverable.",
+        needs_review: false,
+        needs_receipt: false,
+        is_business_expense: false,
+      },
+      tx,
+    );
   }
 
   if (isDisallowedPetrol) {
-    return finalizeResult({
-      category: "Motor Vehicle Expenses",
-      vat_type: "Standard 23%",
-      vat_deductible: false,
-      business_purpose: vatTreatment.explanation,
-      confidence_score: 85,
-      notes: "Section 60(2)(a)(v) - Petrol VAT not recoverable (diesel IS recoverable).",
-      needs_review: false,
-      needs_receipt: true,
-      is_business_expense: true,
-    }, tx);
+    return finalizeResult(
+      {
+        category: "Motor Vehicle Expenses",
+        vat_type: "Standard 23%",
+        vat_deductible: false,
+        business_purpose: vatTreatment.explanation,
+        confidence_score: 85,
+        notes: "Section 60(2)(a)(v) - Petrol VAT not recoverable (diesel IS recoverable).",
+        needs_review: false,
+        needs_receipt: true,
+        is_business_expense: true,
+      },
+      tx,
+    );
   }
 
   // 5) Apply vendor match if found
@@ -604,17 +728,17 @@ export function autoCategorise(
     business_purpose = adjustedPurpose || vendor.purpose;
     confidence = adjustedConfidence || vendorMatch.confidence;
     notes = vendorMatch.matchedPattern
-      ? `Matched vendor: ${vendorMatch.matchedPattern}${vendorMatch.matchType === 'fuzzy' ? ` (fuzzy ~${Math.round((vendorMatch.similarity ?? 0) * 100)}%)` : ''}.`
+      ? `Matched vendor: ${vendorMatch.matchedPattern}${vendorMatch.matchType === "fuzzy" ? ` (fuzzy ~${Math.round((vendorMatch.similarity ?? 0) * 100)}%)` : ""}.`
       : `Matched via MCC code.`;
     needs_receipt = vendor.needs_receipt ?? false;
     relief_type = vendor.relief_type ?? null;
 
     // INDUSTRY-AWARE BOOST: If trade/tech supplier + user in matching industry = 95% confidence + definitely business
-    const isTradeUser = TRADE_INDUSTRIES.some(ti =>
-      userIndustry.includes(ti) || userBusinessType.includes(ti) || userBizDesc.includes(ti)
+    const isTradeUser = TRADE_INDUSTRIES.some(
+      (ti) => userIndustry.includes(ti) || userBusinessType.includes(ti) || userBizDesc.includes(ti),
     );
-    const isTechUser = TECH_INDUSTRIES.some(ti =>
-      userIndustry.includes(ti) || userBusinessType.includes(ti) || userBizDesc.includes(ti)
+    const isTechUser = TECH_INDUSTRIES.some(
+      (ti) => userIndustry.includes(ti) || userBusinessType.includes(ti) || userBizDesc.includes(ti),
     );
 
     const industryLabel = tx.user_industry || tx.user_business_type;
@@ -652,7 +776,13 @@ export function autoCategorise(
       }
 
       // Determine business vs personal based on merchant category
-      is_business_expense = determineBusinessExpense(category, vat_deductible, needs_receipt, userIndustry, userBusinessType);
+      is_business_expense = determineBusinessExpense(
+        category,
+        vat_deductible,
+        needs_receipt,
+        userIndustry,
+        userBusinessType,
+      );
     }
 
     // Flag non-deductible expenses for review
@@ -677,7 +807,13 @@ export function autoCategorise(
       confidence = 70;
       notes = "Description suggests subscription.";
       is_business_expense = true; // Software is business
-    } else if (desc.includes("physio") || desc.includes("dental") || desc.includes("medical") || desc.includes("pharmacy") || desc.includes("chemist")) {
+    } else if (
+      desc.includes("physio") ||
+      desc.includes("dental") ||
+      desc.includes("medical") ||
+      desc.includes("pharmacy") ||
+      desc.includes("chemist")
+    ) {
       category = "Medical";
       vat_type = "Exempt";
       vat_deductible = false;
@@ -713,7 +849,12 @@ export function autoCategorise(
       notes = "Description suggests tuition fees.";
       is_business_expense = false;
       relief_type = "tuition";
-    } else if (desc.includes("rent") && !desc.includes("car rent") && !desc.includes("tool rent") && !desc.includes("equipment rent")) {
+    } else if (
+      desc.includes("rent") &&
+      !desc.includes("car rent") &&
+      !desc.includes("tool rent") &&
+      !desc.includes("equipment rent")
+    ) {
       category = "Rent";
       vat_type = "Exempt";
       vat_deductible = false;
@@ -753,7 +894,21 @@ export function autoCategorise(
     }
   }
 
-  return finalizeResult({ category, vat_type, vat_deductible, business_purpose, confidence_score: confidence, notes, needs_review, needs_receipt, is_business_expense, relief_type }, tx);
+  return finalizeResult(
+    {
+      category,
+      vat_type,
+      vat_deductible,
+      business_purpose,
+      confidence_score: confidence,
+      notes,
+      needs_review,
+      needs_receipt,
+      is_business_expense,
+      relief_type,
+    },
+    tx,
+  );
 }
 
 // Helper function to determine if expense is business or personal
@@ -763,23 +918,43 @@ function determineBusinessExpense(
   vatDeductible: boolean,
   needsReceipt: boolean,
   userIndustry?: string,
-  userBusinessType?: string
+  userBusinessType?: string,
 ): boolean | null {
   // DEFINITELY BUSINESS (TRUE)
   const businessCategories = [
-    "Materials", "Tools", "Software", "Phone", "Insurance", "Bank fees", "Bank Fees",
-    "Consulting & Accounting", "Motor/travel", "Tolls & Parking", "Repairs and Maintenance",
-    "Workwear", "Training", "Office", "Equipment", "Advertising", "Marketing",
-    "Fuel", "Rent", "Cleaning", "Labour costs", "Sub Con", "Wages", "Motor Vehicle Expenses"
+    "Materials",
+    "Tools",
+    "Software",
+    "Phone",
+    "Insurance",
+    "Bank fees",
+    "Bank Fees",
+    "Consulting & Accounting",
+    "Motor/travel",
+    "Tolls & Parking",
+    "Repairs and Maintenance",
+    "Workwear",
+    "Training",
+    "Office",
+    "Equipment",
+    "Advertising",
+    "Marketing",
+    "Fuel",
+    "Rent",
+    "Cleaning",
+    "Labour costs",
+    "Sub Con",
+    "Wages",
+    "Motor Vehicle Expenses",
   ];
 
-  if (businessCategories.some(bc => category.toLowerCase().includes(bc.toLowerCase()))) {
+  if (businessCategories.some((bc) => category.toLowerCase().includes(bc.toLowerCase()))) {
     return true;
   }
 
   // Industry-specific business expense detection
   const industry = normalise(userIndustry || userBusinessType || "");
-  const isTradeUser = TRADE_INDUSTRIES.some(ti => industry.includes(ti));
+  const isTradeUser = TRADE_INDUSTRIES.some((ti) => industry.includes(ti));
 
   // For trade users, materials and tools are always business
   if (isTradeUser && (category.toLowerCase().includes("material") || category.toLowerCase().includes("tool"))) {
@@ -788,7 +963,7 @@ function determineBusinessExpense(
 
   // DEFINITELY PERSONAL (FALSE) - Form 11 relief categories are personal expenses (not business)
   const personalReliefCategories = ["Medical", "Pension", "Health Insurance", "Charitable", "Tuition"];
-  if (personalReliefCategories.some(pc => category.toLowerCase().includes(pc.toLowerCase()))) {
+  if (personalReliefCategories.some((pc) => category.toLowerCase().includes(pc.toLowerCase()))) {
     return false; // Personal — Form 11 relief
   }
 
@@ -813,10 +988,25 @@ function determineBusinessExpense(
 
 // Categories that suggest a business expense when seen on a personal account
 const BUSINESS_INDICATOR_CATEGORIES = [
-  "materials", "tools", "subcontractor", "vehicle expenses", "fuel",
-  "office", "telephone", "training", "advertising", "travel",
-  "subsistence", "repairs", "protective clothing", "ppe", "workwear",
-  "software", "subscriptions", "equipment", "motor"
+  "materials",
+  "tools",
+  "subcontractor",
+  "vehicle expenses",
+  "fuel",
+  "office",
+  "telephone",
+  "training",
+  "advertising",
+  "travel",
+  "subsistence",
+  "repairs",
+  "protective clothing",
+  "ppe",
+  "workwear",
+  "software",
+  "subscriptions",
+  "equipment",
+  "motor",
 ];
 
 function finalizeResult(base: AutoCatResult, tx: TransactionInput): AutoCatResult {
@@ -837,7 +1027,7 @@ function finalizeResult(base: AutoCatResult, tx: TransactionInput): AutoCatResul
   let looksLikeBusiness = false;
   if (tx.account_type === "directors_personal_tax") {
     const catLower = withReceipt.category.toLowerCase();
-    looksLikeBusiness = BUSINESS_INDICATOR_CATEGORIES.some(bc => catLower.includes(bc));
+    looksLikeBusiness = BUSINESS_INDICATOR_CATEGORIES.some((bc) => catLower.includes(bc));
     // Also flag if a trade supplier was matched
     if (withReceipt.is_business_expense === true) {
       looksLikeBusiness = true;

@@ -138,12 +138,7 @@ const Form11Return = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/tax")}
-                className="shrink-0"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/tax")} className="shrink-0">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
@@ -152,17 +147,12 @@ const Form11Return = () => {
                   Tax Year {taxYear} &bull; PPS {input.ppsNumber || "Not provided"}
                 </p>
               </div>
-              <ExportButtons
-                onPdf={handlePdf}
-                onExcel={handleExcel}
-                disabled={!result}
-              />
+              <ExportButtons onPdf={handlePdf} onExcel={handleExcel} disabled={!result} />
             </div>
           </div>
         </header>
 
         <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
           {/* ── Split-Year Warning ────────────────────────── */}
           {result.splitYearApplied && (
             <Card className="border-0 shadow-lg rounded-3xl overflow-hidden bg-yellow-50 dark:bg-yellow-950/30 border border-yellow-200 dark:border-yellow-800">
@@ -173,9 +163,7 @@ const Form11Return = () => {
                     <p className="font-semibold text-sm text-yellow-800 dark:text-yellow-200">
                       Split-Year Assessment Applied
                     </p>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-                      {result.splitYearNote}
-                    </p>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">{result.splitYearNote}</p>
                   </div>
                 </div>
               </CardContent>
@@ -191,24 +179,12 @@ const Form11Return = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
-              {result.scheduleE > 0 && (
-                <Row label="Schedule E (employment)" amount={result.scheduleE} />
-              )}
-              {result.scheduleD > 0 && (
-                <Row label="Schedule D (business)" amount={result.scheduleD} />
-              )}
-              {result.rentalProfit > 0 && (
-                <Row label="Rental profit" amount={result.rentalProfit} />
-              )}
-              {result.foreignIncome > 0 && (
-                <Row label="Foreign income" amount={result.foreignIncome} />
-              )}
-              {result.otherIncome > 0 && (
-                <Row label="Other income" amount={result.otherIncome} />
-              )}
-              {result.spouseIncome > 0 && (
-                <Row label="Spouse income (joint)" amount={result.spouseIncome} />
-              )}
+              {result.scheduleE > 0 && <Row label="Schedule E (employment)" amount={result.scheduleE} />}
+              {result.scheduleD > 0 && <Row label="Schedule D (business)" amount={result.scheduleD} />}
+              {result.rentalProfit > 0 && <Row label="Rental profit" amount={result.rentalProfit} />}
+              {result.foreignIncome > 0 && <Row label="Foreign income" amount={result.foreignIncome} />}
+              {result.otherIncome > 0 && <Row label="Other income" amount={result.otherIncome} />}
+              {result.spouseIncome > 0 && <Row label="Spouse income (joint)" amount={result.spouseIncome} />}
               <Divider />
               <Row label="Total Gross Income" amount={result.totalGrossIncome} bold />
             </CardContent>
@@ -228,9 +204,7 @@ const Form11Return = () => {
                   <span className="text-sm text-muted-foreground">
                     Pension relief ({(result.pensionAgeLimit * 100).toFixed(0)}% age-based limit)
                   </span>
-                  <span className="text-sm font-mono tabular-nums">
-                    {eur(result.pensionRelief)}
-                  </span>
+                  <span className="text-sm font-mono tabular-nums">{eur(result.pensionRelief)}</span>
                 </div>
                 <Divider />
                 <Row label="Assessable Income" amount={result.assessableIncome} bold />
@@ -281,14 +255,14 @@ const Form11Return = () => {
                 Universal Social Charge
               </CardTitle>
               {result.uscExempt && (
-                <Badge variant="secondary" className="w-fit">Exempt</Badge>
+                <Badge variant="secondary" className="w-fit">
+                  Exempt
+                </Badge>
               )}
             </CardHeader>
             <CardContent className="space-y-1">
               {result.uscExempt ? (
-                <p className="text-sm text-muted-foreground py-2">
-                  Total income below €13,000 — USC does not apply.
-                </p>
+                <p className="text-sm text-muted-foreground py-2">Total income below €13,000 — USC does not apply.</p>
               ) : (
                 <>
                   {result.uscBands.map((band, i) => (
@@ -333,9 +307,7 @@ const Form11Return = () => {
               </CardHeader>
               <CardContent className="space-y-1">
                 <Row label="Total gains" amount={result.cgtGains} />
-                {result.cgtLosses > 0 && (
-                  <Row label="Less: Losses" amount={-result.cgtLosses} />
-                )}
+                {result.cgtLosses > 0 && <Row label="Less: Losses" amount={-result.cgtLosses} />}
                 <Row label="Less: Annual exemption" amount={-result.cgtExemption} />
                 <Divider />
                 <Row label="CGT Payable (33%)" amount={result.cgtPayable} bold />
@@ -344,9 +316,11 @@ const Form11Return = () => {
           )}
 
           {/* ── 8. Summary ───────────────────────────────── */}
-          <Card className={`border-0 shadow-lg rounded-3xl overflow-hidden ${
-            isRefund ? "ring-2 ring-green-500/30" : "ring-2 ring-primary/20"
-          }`}>
+          <Card
+            className={`border-0 shadow-lg rounded-3xl overflow-hidden ${
+              isRefund ? "ring-2 ring-green-500/30" : "ring-2 ring-primary/20"
+            }`}
+          >
             <CardHeader className="pb-2">
               <CardTitle className="text-lg flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
@@ -357,9 +331,7 @@ const Form11Return = () => {
               <Row label="Net Income Tax" amount={result.netIncomeTax} />
               <Row label="USC" amount={result.totalUSC} />
               <Row label="PRSI" amount={result.prsiPayable} />
-              {result.cgtApplicable && (
-                <Row label="CGT" amount={result.cgtPayable} />
-              )}
+              {result.cgtApplicable && <Row label="CGT" amount={result.cgtPayable} />}
               <Divider />
               <Row label="Total Liability" amount={result.totalLiability} bold />
 
@@ -369,12 +341,12 @@ const Form11Return = () => {
 
               <div className="border-t-2 border-foreground/20 mt-3 pt-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-base">
-                    {isRefund ? "Refund Due" : "Balance Due"}
-                  </span>
-                  <span className={`font-semibold text-lg font-mono tabular-nums ${
-                    isRefund ? "text-green-600" : "text-destructive"
-                  }`}>
+                  <span className="font-semibold text-base">{isRefund ? "Refund Due" : "Balance Due"}</span>
+                  <span
+                    className={`font-semibold text-lg font-mono tabular-nums ${
+                      isRefund ? "text-green-600" : "text-destructive"
+                    }`}
+                  >
                     {eur(Math.abs(result.balanceDue))}
                   </span>
                 </div>
@@ -410,22 +382,14 @@ const Form11Return = () => {
 
           {/* ── 10. Disclaimer ───────────────────────────── */}
           <div className="text-center text-xs text-muted-foreground py-6 space-y-1">
-            <p>
-              AI-generated calculations require professional review.
-            </p>
+            <p>AI-generated calculations require professional review.</p>
             <p>
               Verify current rates at{" "}
-              <a
-                href="https://www.revenue.ie"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline"
-              >
+              <a href="https://www.revenue.ie" target="_blank" rel="noopener noreferrer" className="underline">
                 Revenue.ie
               </a>
             </p>
           </div>
-
         </main>
       </div>
     </AppLayout>

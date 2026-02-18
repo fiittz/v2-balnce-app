@@ -146,9 +146,7 @@ describe("migrateLocalAccounts", () => {
   });
 
   it("valid accounts: queries existing accounts from supabase", async () => {
-    localStore["balnce_financial_accounts"] = JSON.stringify([
-      { id: "1", name: "Business Account" },
-    ]);
+    localStore["balnce_financial_accounts"] = JSON.stringify([{ id: "1", name: "Business Account" }]);
     selectResolvedData = { data: [], error: null };
     await migrateLocalAccounts(USER_ID);
     expect(mockFrom).toHaveBeenCalledWith("accounts");
@@ -170,9 +168,7 @@ describe("migrateLocalAccounts", () => {
   });
 
   it("supabase error in outer try: catches and sets migration flag", async () => {
-    localStore["balnce_financial_accounts"] = JSON.stringify([
-      { id: "1", name: "Business" },
-    ]);
+    localStore["balnce_financial_accounts"] = JSON.stringify([{ id: "1", name: "Business" }]);
     // Make the from call throw
     mockFrom.mockImplementationOnce(() => {
       throw new Error("connection failed");

@@ -1,23 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  IRISH_TOWNS,
-  formatTownDisplay,
-  type IrishTown,
-} from "@/lib/irishTowns";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { IRISH_TOWNS, formatTownDisplay, type IrishTown } from "@/lib/irishTowns";
 import { cn } from "@/lib/utils";
 import { useGooglePlaces } from "@/hooks/useGooglePlaces";
 
@@ -46,9 +32,7 @@ function normalizeCounty(raw: string): string {
 /** Look up distanceFromDublin from static list; 0 if not found */
 function lookupDistance(townName: string, county: string): number {
   const match = IRISH_TOWNS.find(
-    (t) =>
-      t.name.toLowerCase() === townName.toLowerCase() &&
-      t.county.toLowerCase() === county.toLowerCase()
+    (t) => t.name.toLowerCase() === townName.toLowerCase() && t.county.toLowerCase() === county.toLowerCase(),
   );
   return match?.distanceFromDublin ?? 0;
 }
@@ -100,9 +84,7 @@ export function AddressAutocomplete({
   const filteredTowns =
     !useGoogle && searchTerm.length >= 2
       ? IRISH_TOWNS.filter(
-          (town) =>
-            town.name.toLowerCase().includes(searchTerm) ||
-            town.county.toLowerCase().includes(searchTerm)
+          (town) => town.name.toLowerCase().includes(searchTerm) || town.county.toLowerCase().includes(searchTerm),
         ).slice(0, 15)
       : [];
 
@@ -123,25 +105,22 @@ export function AddressAutocomplete({
           sessionToken: getSessionToken(),
         },
         (results, status) => {
-          if (
-            status === google.maps.places.PlacesServiceStatus.OK &&
-            results
-          ) {
+          if (status === google.maps.places.PlacesServiceStatus.OK && results) {
             setPredictions(
               results.map((r) => ({
                 placeId: r.place_id,
                 mainText: r.structured_formatting.main_text,
                 secondaryText: r.structured_formatting.secondary_text ?? "",
                 description: r.description,
-              }))
+              })),
             );
           } else {
             setPredictions([]);
           }
-        }
+        },
       );
     },
-    [getAutocompleteService, getSessionToken]
+    [getAutocompleteService, getSessionToken],
   );
 
   // ---- Google place selection ----
@@ -156,8 +135,7 @@ export function AddressAutocomplete({
       }
 
       // Fetch full details to extract county
-      const div =
-        attrDivRef.current ?? document.createElement("div");
+      const div = attrDivRef.current ?? document.createElement("div");
       attrDivRef.current = div;
       const service = getPlacesService(div);
       if (!service) {
@@ -174,10 +152,7 @@ export function AddressAutocomplete({
         (place, detailStatus) => {
           resetSessionToken(); // end billing session
 
-          if (
-            detailStatus !== google.maps.places.PlacesServiceStatus.OK ||
-            !place?.address_components
-          ) {
+          if (detailStatus !== google.maps.places.PlacesServiceStatus.OK || !place?.address_components) {
             return;
           }
 
@@ -188,11 +163,7 @@ export function AddressAutocomplete({
             if (comp.types.includes("administrative_area_level_1")) {
               county = normalizeCounty(comp.long_name);
             }
-            if (
-              !townName &&
-              (comp.types.includes("locality") ||
-                comp.types.includes("postal_town"))
-            ) {
+            if (!townName && (comp.types.includes("locality") || comp.types.includes("postal_town"))) {
               townName = comp.long_name;
             }
           }
@@ -201,18 +172,15 @@ export function AddressAutocomplete({
             onTownSelect({
               name: townName || prediction.mainText,
               county,
-              distanceFromDublin: lookupDistance(
-                townName || prediction.mainText,
-                county
-              ),
+              distanceFromDublin: lookupDistance(townName || prediction.mainText, county),
             });
           }
-        }
+        },
       );
 
       setTimeout(() => inputRef.current?.focus(), 0);
     },
-    [onChange, onTownSelect, getPlacesService, getSessionToken, resetSessionToken]
+    [onChange, onTownSelect, getPlacesService, getSessionToken, resetSessionToken],
   );
 
   // ---- Static fallback selection ----
@@ -240,10 +208,7 @@ export function AddressAutocomplete({
       // Debounce Google requests (300ms)
       if (debounceRef.current) clearTimeout(debounceRef.current);
       if (newValue.length >= 3) {
-        debounceRef.current = setTimeout(
-          () => fetchPredictions(newValue),
-          300
-        );
+        debounceRef.current = setTimeout(() => fetchPredictions(newValue), 300);
       } else {
         setPredictions([]);
       }
@@ -312,9 +277,7 @@ export function AddressAutocomplete({
                       >
                         <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span className="font-medium">{pred.mainText}</span>
-                        <span className="ml-auto text-sm text-muted-foreground truncate">
-                          {pred.secondaryText}
-                        </span>
+                        <span className="ml-auto text-sm text-muted-foreground truncate">{pred.secondaryText}</span>
                       </CommandItem>
                     ))
                   : filteredTowns.map((town) => (
@@ -326,17 +289,13 @@ export function AddressAutocomplete({
                       >
                         <MapPin className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <span>{town.name}</span>
-                        <span className="ml-auto text-sm text-muted-foreground">
-                          Co. {town.county}
-                        </span>
+                        <span className="ml-auto text-sm text-muted-foreground">Co. {town.county}</span>
                       </CommandItem>
                     ))}
               </CommandGroup>
             </CommandList>
             {useGoogle && (
-              <div className="px-3 py-1.5 text-[10px] text-muted-foreground text-right border-t">
-                Powered by Google
-              </div>
+              <div className="px-3 py-1.5 text-[10px] text-muted-foreground text-right border-t">Powered by Google</div>
             )}
           </Command>
         </PopoverContent>

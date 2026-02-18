@@ -1,12 +1,20 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, ArrowUpRight, ArrowDownLeft, CheckCircle2, Link2, Loader2, MessageSquare, Pencil, Camera } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  ArrowUpRight,
+  ArrowDownLeft,
+  CheckCircle2,
+  Link2,
+  Loader2,
+  MessageSquare,
+  Pencil,
+  Camera,
+} from "lucide-react";
 import { useReceiptUrl } from "@/hooks/useReceiptUrl";
 import { format, parseISO } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import TransactionEditDialog from "./TransactionEditDialog";
 import TransactionRowActions from "./TransactionRowActions";
 import InlineCategoryPicker from "./InlineCategoryPicker";
@@ -70,25 +78,23 @@ export default function CategoryLedgerSection({
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full p-4 flex items-center gap-3 hover:bg-muted/50 transition-colors"
       >
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-          isUncategorized
-            ? "bg-amber-100 dark:bg-amber-950/40"
-            : isIncome
-              ? "bg-green-100 dark:bg-green-950/40"
-              : "bg-red-100 dark:bg-red-950/40"
-        }`}>
+        <div
+          className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+            isUncategorized
+              ? "bg-amber-100 dark:bg-amber-950/40"
+              : isIncome
+                ? "bg-green-100 dark:bg-green-950/40"
+                : "bg-red-100 dark:bg-red-950/40"
+          }`}
+        >
           {isExpanded ? (
-            <ChevronDown className={`w-5 h-5 ${
-              isUncategorized
-                ? "text-amber-600"
-                : isIncome ? "text-green-600" : "text-red-600"
-            }`} />
+            <ChevronDown
+              className={`w-5 h-5 ${isUncategorized ? "text-amber-600" : isIncome ? "text-green-600" : "text-red-600"}`}
+            />
           ) : (
-            <ChevronRight className={`w-5 h-5 ${
-              isUncategorized
-                ? "text-amber-600"
-                : isIncome ? "text-green-600" : "text-red-600"
-            }`} />
+            <ChevronRight
+              className={`w-5 h-5 ${isUncategorized ? "text-amber-600" : isIncome ? "text-green-600" : "text-red-600"}`}
+            />
           )}
         </div>
 
@@ -116,7 +122,9 @@ export default function CategoryLedgerSection({
               } ${selectedIds.has(transaction.id) ? "bg-primary/5" : ""} ${
                 !selectionMode ? "cursor-pointer hover:bg-muted/50" : ""
               }`}
-              onClick={selectionMode ? () => onToggleSelection(transaction.id) : () => setEditingTransaction(transaction)}
+              onClick={
+                selectionMode ? () => onToggleSelection(transaction.id) : () => setEditingTransaction(transaction)
+              }
             >
               {selectionMode && (
                 <Checkbox
@@ -126,9 +134,11 @@ export default function CategoryLedgerSection({
                 />
               )}
 
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                transaction.type === "income" ? "bg-green-100" : "bg-red-100"
-              }`}>
+              <div
+                className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                  transaction.type === "income" ? "bg-green-100" : "bg-red-100"
+                }`}
+              >
                 {transaction.type === "income" ? (
                   <ArrowDownLeft className="w-4 h-4 text-green-600" />
                 ) : (
@@ -171,22 +181,24 @@ export default function CategoryLedgerSection({
                           <CheckCircle2 className="w-3 h-3" />
                           Matched
                         </span>
-                      ) : onMatchSingle && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onMatchSingle(transaction.id);
-                          }}
-                          disabled={matchingTxId === transaction.id}
-                          className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-amber-200 transition-colors"
-                        >
-                          {matchingTxId === transaction.id ? (
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                          ) : (
-                            <Link2 className="w-3 h-3" />
-                          )}
-                          Match
-                        </button>
+                      ) : (
+                        onMatchSingle && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onMatchSingle(transaction.id);
+                            }}
+                            disabled={matchingTxId === transaction.id}
+                            className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium flex items-center gap-1 hover:bg-amber-200 transition-colors"
+                          >
+                            {matchingTxId === transaction.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Link2 className="w-3 h-3" />
+                            )}
+                            Match
+                          </button>
+                        )
                       )}
                       {transaction.receipt_url && (
                         <button
@@ -218,9 +230,7 @@ export default function CategoryLedgerSection({
                   {transaction.type === "income" ? "+" : "-"}€{Math.abs(transaction.amount).toFixed(2)}
                 </p>
                 {transaction.vat_amount && transaction.vat_amount > 0 && (
-                  <span className="text-xs text-muted-foreground">
-                    VAT €{transaction.vat_amount.toFixed(2)}
-                  </span>
+                  <span className="text-xs text-muted-foreground">VAT €{transaction.vat_amount.toFixed(2)}</span>
                 )}
               </div>
             </div>
@@ -238,11 +248,7 @@ export default function CategoryLedgerSection({
       <Dialog open={!!receiptPreviewPath} onOpenChange={(open) => !open && setReceiptPreviewPath(null)}>
         <DialogContent className="sm:max-w-lg">
           {receiptPreviewUrl ? (
-            <img
-              src={receiptPreviewUrl}
-              alt="Receipt"
-              className="w-full rounded-lg"
-            />
+            <img src={receiptPreviewUrl} alt="Receipt" className="w-full rounded-lg" />
           ) : receiptPreviewPath ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

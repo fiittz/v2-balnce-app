@@ -1,23 +1,13 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { CalendarIcon, User, CheckCircle2 } from "lucide-react";
@@ -196,27 +186,18 @@ export function DirectorExportQuestionnaire({
   const [data, setData] = useState<DirectorQuestionnaireData>(initialData);
   const [currentSection, setCurrentSection] = useState(1);
 
-  const updateData = <K extends keyof DirectorQuestionnaireData>(
-    key: K,
-    value: DirectorQuestionnaireData[K]
-  ) => {
+  const updateData = <K extends keyof DirectorQuestionnaireData>(key: K, value: DirectorQuestionnaireData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const updateChange = (
-    key: keyof DirectorQuestionnaireData["changes"],
-    value: boolean
-  ) => {
+  const updateChange = (key: keyof DirectorQuestionnaireData["changes"], value: boolean) => {
     setData((prev) => ({
       ...prev,
       changes: { ...prev.changes, [key]: value },
     }));
   };
 
-  const updateEdgeCase = (
-    key: keyof DirectorQuestionnaireData["edgeCases"],
-    value: boolean
-  ) => {
+  const updateEdgeCase = (key: keyof DirectorQuestionnaireData["edgeCases"], value: boolean) => {
     if (key === "none" && value) {
       setData((prev) => ({
         ...prev,
@@ -302,8 +283,7 @@ export function DirectorExportQuestionnaire({
               Change Detection Since Onboarding
             </h3>
             <p className="text-sm text-muted-foreground">
-              Since onboarding, has anything changed that affects your personal
-              tax position?
+              Since onboarding, has anything changed that affects your personal tax position?
             </p>
 
             <div className="space-y-3">
@@ -359,15 +339,8 @@ export function DirectorExportQuestionnaire({
                     <div key={key} className="flex items-center space-x-2">
                       <Checkbox
                         id={key}
-                        checked={
-                          data.changes[key as keyof typeof data.changes]
-                        }
-                        onCheckedChange={(checked) =>
-                          updateChange(
-                            key as keyof typeof data.changes,
-                            checked === true
-                          )
-                        }
+                        checked={data.changes[key as keyof typeof data.changes]}
+                        onCheckedChange={(checked) => updateChange(key as keyof typeof data.changes, checked === true)}
                       />
                       <Label htmlFor={key} className="text-sm">
                         {label}
@@ -386,22 +359,18 @@ export function DirectorExportQuestionnaire({
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal mt-2",
-                          !data.changeEffectiveDate && "text-muted-foreground"
+                          !data.changeEffectiveDate && "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {data.changeEffectiveDate
-                          ? format(data.changeEffectiveDate, "PPP")
-                          : "Select date"}
+                        {data.changeEffectiveDate ? format(data.changeEffectiveDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={data.changeEffectiveDate}
-                        onSelect={(date) =>
-                          updateData("changeEffectiveDate", date)
-                        }
+                        onSelect={(date) => updateData("changeEffectiveDate", date)}
                         className="pointer-events-auto"
                       />
                     </PopoverContent>
@@ -422,8 +391,7 @@ export function DirectorExportQuestionnaire({
               Income Source Reconciliation
             </h3>
             <p className="text-sm text-muted-foreground">
-              Based on linked accounts, the platform detected the following
-              income sources:
+              Based on linked accounts, the platform detected the following income sources:
             </p>
 
             {detectedIncomeSources.length > 0 ? (
@@ -431,9 +399,7 @@ export function DirectorExportQuestionnaire({
                 {detectedIncomeSources.map((item, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span>{item.source}</span>
-                    <span className="font-mono">
-                      {formatCurrency(item.amount)}
-                    </span>
+                    <span className="font-mono">{formatCurrency(item.amount)}</span>
                   </div>
                 ))}
               </div>
@@ -449,9 +415,7 @@ export function DirectorExportQuestionnaire({
                 <Checkbox
                   id="incomeYes"
                   checked={data.incomeComplete}
-                  onCheckedChange={(checked) =>
-                    updateData("incomeComplete", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("incomeComplete", checked === true)}
                 />
                 <Label htmlFor="incomeYes">Yes</Label>
               </div>
@@ -504,9 +468,7 @@ export function DirectorExportQuestionnaire({
                 <Checkbox
                   id="salaryCorrect"
                   checked={data.salaryCorrect}
-                  onCheckedChange={(checked) =>
-                    updateData("salaryCorrect", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("salaryCorrect", checked === true)}
                 />
                 <Label htmlFor="salaryCorrect">Salary amount is correct</Label>
               </div>
@@ -560,9 +522,7 @@ export function DirectorExportQuestionnaire({
                 <Checkbox
                   id="dividendsReceived"
                   checked={data.dividendsReceived}
-                  onCheckedChange={(checked) =>
-                    updateData("dividendsReceived", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("dividendsReceived", checked === true)}
                 />
                 <Label htmlFor="dividendsReceived">Dividends received during this period</Label>
               </div>
@@ -601,18 +561,14 @@ export function DirectorExportQuestionnaire({
               </span>
               Benefits in Kind Confirmation
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Confirm any non-cash benefits received from the company.
-            </p>
+            <p className="text-sm text-muted-foreground">Confirm any non-cash benefits received from the company.</p>
 
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="bikApplicable"
                   checked={data.bikApplicable}
-                  onCheckedChange={(checked) =>
-                    updateData("bikApplicable", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("bikApplicable", checked === true)}
                 />
                 <Label htmlFor="bikApplicable">Benefits in kind received</Label>
               </div>
@@ -634,9 +590,7 @@ export function DirectorExportQuestionnaire({
                     <Checkbox
                       id="bikCorrect"
                       checked={data.bikCorrect}
-                      onCheckedChange={(checked) =>
-                        updateData("bikCorrect", checked === true)
-                      }
+                      onCheckedChange={(checked) => updateData("bikCorrect", checked === true)}
                     />
                     <Label htmlFor="bikCorrect">BIK values are correct</Label>
                   </div>
@@ -672,18 +626,14 @@ export function DirectorExportQuestionnaire({
               </span>
               Business Link Validation
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Linked businesses detected:
-            </p>
+            <p className="text-sm text-muted-foreground">Linked businesses detected:</p>
 
             {linkedBusinesses.length > 0 ? (
               <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                 {linkedBusinesses.map((business, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span>{business.name}</span>
-                    <span className="text-muted-foreground">
-                      {business.type}
-                    </span>
+                    <span className="text-muted-foreground">{business.type}</span>
                   </div>
                 ))}
               </div>
@@ -694,8 +644,7 @@ export function DirectorExportQuestionnaire({
             )}
 
             <p className="text-sm font-medium">
-              Have all drawings, salary, or other income from these businesses
-              been included?
+              Have all drawings, salary, or other income from these businesses been included?
             </p>
             <div className="space-y-2">
               {[
@@ -709,10 +658,7 @@ export function DirectorExportQuestionnaire({
                     checked={data.businessLinksStatus === value}
                     onCheckedChange={(checked) => {
                       if (checked)
-                        updateData(
-                          "businessLinksStatus",
-                          value as DirectorQuestionnaireData["businessLinksStatus"]
-                        );
+                        updateData("businessLinksStatus", value as DirectorQuestionnaireData["businessLinksStatus"]);
                     }}
                   />
                   <Label htmlFor={`business-${value}`}>{label}</Label>
@@ -724,9 +670,7 @@ export function DirectorExportQuestionnaire({
               <Textarea
                 placeholder="Please describe what is missing..."
                 value={data.businessLinkNotes}
-                onChange={(e) =>
-                  updateData("businessLinkNotes", e.target.value)
-                }
+                onChange={(e) => updateData("businessLinkNotes", e.target.value)}
                 className="mt-2"
               />
             )}
@@ -751,9 +695,7 @@ export function DirectorExportQuestionnaire({
                 {assumedReliefs.map((relief, idx) => (
                   <div key={idx} className="flex justify-between text-sm">
                     <span>{relief.relief}</span>
-                    <span className="font-mono text-green-600">
-                      {formatCurrency(relief.amount)}
-                    </span>
+                    <span className="font-mono text-green-600">{formatCurrency(relief.amount)}</span>
                   </div>
                 ))}
               </div>
@@ -769,9 +711,7 @@ export function DirectorExportQuestionnaire({
                 <Checkbox
                   id="reliefsYes"
                   checked={data.reliefsCorrect}
-                  onCheckedChange={(checked) =>
-                    updateData("reliefsCorrect", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("reliefsCorrect", checked === true)}
                 />
                 <Label htmlFor="reliefsYes">Yes</Label>
               </div>
@@ -871,9 +811,7 @@ export function DirectorExportQuestionnaire({
                 <Checkbox
                   id="spouseHasIncome"
                   checked={data.spouseHasIncome}
-                  onCheckedChange={(checked) =>
-                    updateData("spouseHasIncome", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("spouseHasIncome", checked === true)}
                 />
                 <Label htmlFor="spouseHasIncome">Spouse/partner has income</Label>
               </div>
@@ -892,11 +830,13 @@ export function DirectorExportQuestionnaire({
                               const current = data.spouseIncomeType;
                               const newTypes = checked
                                 ? [...current, type.value]
-                                : current.filter(v => v !== type.value);
+                                : current.filter((v) => v !== type.value);
                               updateData("spouseIncomeType", newTypes);
                             }}
                           />
-                          <Label htmlFor={`spouse-${type.value}`} className="text-sm">{type.label}</Label>
+                          <Label htmlFor={`spouse-${type.value}`} className="text-sm">
+                            {type.label}
+                          </Label>
                         </div>
                       ))}
                     </div>
@@ -938,8 +878,7 @@ export function DirectorExportQuestionnaire({
               Preliminary Tax (Personal)
             </h3>
             <p className="text-sm text-muted-foreground">
-              Was preliminary tax paid in respect of your personal tax for this
-              year?
+              Was preliminary tax paid in respect of your personal tax for this year?
             </p>
 
             <div className="space-y-2">
@@ -954,10 +893,7 @@ export function DirectorExportQuestionnaire({
                     checked={data.preliminaryTaxPaid === value}
                     onCheckedChange={(checked) => {
                       if (checked)
-                        updateData(
-                          "preliminaryTaxPaid",
-                          value as DirectorQuestionnaireData["preliminaryTaxPaid"]
-                        );
+                        updateData("preliminaryTaxPaid", value as DirectorQuestionnaireData["preliminaryTaxPaid"]);
                     }}
                   />
                   <Label htmlFor={`prelim-${value}`}>{label}</Label>
@@ -973,9 +909,7 @@ export function DirectorExportQuestionnaire({
                     type="text"
                     placeholder="€0.00"
                     value={data.preliminaryTaxAmount}
-                    onChange={(e) =>
-                      updateData("preliminaryTaxAmount", e.target.value)
-                    }
+                    onChange={(e) => updateData("preliminaryTaxAmount", e.target.value)}
                     className="mt-2"
                   />
                 </div>
@@ -987,22 +921,18 @@ export function DirectorExportQuestionnaire({
                         variant="outline"
                         className={cn(
                           "w-full justify-start text-left font-normal mt-2",
-                          !data.preliminaryTaxDate && "text-muted-foreground"
+                          !data.preliminaryTaxDate && "text-muted-foreground",
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {data.preliminaryTaxDate
-                          ? format(data.preliminaryTaxDate, "PPP")
-                          : "Select date"}
+                        {data.preliminaryTaxDate ? format(data.preliminaryTaxDate, "PPP") : "Select date"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
                         selected={data.preliminaryTaxDate}
-                        onSelect={(date) =>
-                          updateData("preliminaryTaxDate", date)
-                        }
+                        onSelect={(date) => updateData("preliminaryTaxDate", date)}
                         className="pointer-events-auto"
                       />
                     </PopoverContent>
@@ -1022,9 +952,7 @@ export function DirectorExportQuestionnaire({
               </span>
               Revenue Edge Cases
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Select any that apply to your tax position this year:
-            </p>
+            <p className="text-sm text-muted-foreground">Select any that apply to your tax position this year:</p>
 
             <div className="space-y-3">
               {[
@@ -1036,15 +964,8 @@ export function DirectorExportQuestionnaire({
                 <div key={key} className="flex items-center space-x-2">
                   <Checkbox
                     id={key}
-                    checked={
-                      data.edgeCases[key as keyof typeof data.edgeCases]
-                    }
-                    onCheckedChange={(checked) =>
-                      updateEdgeCase(
-                        key as keyof typeof data.edgeCases,
-                        checked === true
-                      )
-                    }
+                    checked={data.edgeCases[key as keyof typeof data.edgeCases]}
+                    onCheckedChange={(checked) => updateEdgeCase(key as keyof typeof data.edgeCases, checked === true)}
                   />
                   <Label htmlFor={key}>{label}</Label>
                 </div>
@@ -1061,7 +982,9 @@ export function DirectorExportQuestionnaire({
                   checked={data.propertyDisposals}
                   onCheckedChange={(checked) => updateData("propertyDisposals", checked === true)}
                 />
-                <Label htmlFor="propertyDisposals" className="text-sm">Property disposals</Label>
+                <Label htmlFor="propertyDisposals" className="text-sm">
+                  Property disposals
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -1069,7 +992,9 @@ export function DirectorExportQuestionnaire({
                   checked={data.shareDisposals}
                   onCheckedChange={(checked) => updateData("shareDisposals", checked === true)}
                 />
-                <Label htmlFor="shareDisposals" className="text-sm">Share disposals</Label>
+                <Label htmlFor="shareDisposals" className="text-sm">
+                  Share disposals
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -1077,7 +1002,9 @@ export function DirectorExportQuestionnaire({
                   checked={data.cryptoDisposals}
                   onCheckedChange={(checked) => updateData("cryptoDisposals", checked === true)}
                 />
-                <Label htmlFor="cryptoDisposals" className="text-sm">Cryptocurrency disposals</Label>
+                <Label htmlFor="cryptoDisposals" className="text-sm">
+                  Cryptocurrency disposals
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -1085,7 +1012,9 @@ export function DirectorExportQuestionnaire({
                   checked={data.inheritanceReceived}
                   onCheckedChange={(checked) => updateData("inheritanceReceived", checked === true)}
                 />
-                <Label htmlFor="inheritanceReceived" className="text-sm">Inheritance / gift received</Label>
+                <Label htmlFor="inheritanceReceived" className="text-sm">
+                  Inheritance / gift received
+                </Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -1093,7 +1022,9 @@ export function DirectorExportQuestionnaire({
                   checked={data.rentalIncomeDetails}
                   onCheckedChange={(checked) => updateData("rentalIncomeDetails", checked === true)}
                 />
-                <Label htmlFor="rentalIncomeDetails" className="text-sm">Rental income</Label>
+                <Label htmlFor="rentalIncomeDetails" className="text-sm">
+                  Rental income
+                </Label>
               </div>
 
               {data.rentalIncomeDetails && (
@@ -1139,18 +1070,12 @@ export function DirectorExportQuestionnaire({
                 <Checkbox
                   id="finalDeclaration"
                   checked={data.finalDeclaration}
-                  onCheckedChange={(checked) =>
-                    updateData("finalDeclaration", checked === true)
-                  }
+                  onCheckedChange={(checked) => updateData("finalDeclaration", checked === true)}
                   className="mt-1"
                 />
-                <Label
-                  htmlFor="finalDeclaration"
-                  className="text-sm leading-relaxed cursor-pointer"
-                >
-                  I confirm that Balnce's automated treatment of my personal
-                  income, expenses, and tax position is accurate for Form 11
-                  purposes for this tax year, to the best of my knowledge.
+                <Label htmlFor="finalDeclaration" className="text-sm leading-relaxed cursor-pointer">
+                  I confirm that Balnce's automated treatment of my personal income, expenses, and tax position is
+                  accurate for Form 11 purposes for this tax year, to the best of my knowledge.
                 </Label>
               </div>
             </div>
@@ -1190,7 +1115,7 @@ export function DirectorExportQuestionnaire({
               key={idx}
               className={cn(
                 "h-1.5 flex-1 rounded-full transition-colors",
-                idx + 1 <= currentSection ? "bg-primary" : "bg-muted"
+                idx + 1 <= currentSection ? "bg-primary" : "bg-muted",
               )}
             />
           ))}
@@ -1199,11 +1124,7 @@ export function DirectorExportQuestionnaire({
         <ScrollArea className="max-h-[50vh] pr-4">{renderSection()}</ScrollArea>
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            disabled={currentSection === 1}
-          >
+          <Button variant="outline" onClick={handleBack} disabled={currentSection === 1}>
             Back
           </Button>
           <Button onClick={handleNext} disabled={!canProceed()}>

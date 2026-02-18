@@ -11,7 +11,7 @@ export function assembleForm11ReportData(
   input: Form11Input,
   result: Form11Result,
   meta: ReportMeta,
-  options?: Form11ReportOptions
+  options?: Form11ReportOptions,
 ): Form11ReportData {
   const sections: ReportSection[] = [];
   const tables: ReportTable[] = [];
@@ -32,7 +32,8 @@ export function assembleForm11ReportData(
   if (input.salary > 0) scheduleERows.push({ label: "Salary", value: fmtEuro(input.salary) });
   if (input.dividends > 0) scheduleERows.push({ label: "Dividends", value: fmtEuro(input.dividends) });
   if (input.bik > 0) scheduleERows.push({ label: "Benefit in Kind", value: fmtEuro(input.bik) });
-  if (input.mileageAllowance > 0) scheduleERows.push({ label: "Less: Mileage Allowance", value: `(${fmtEuro(input.mileageAllowance)})` });
+  if (input.mileageAllowance > 0)
+    scheduleERows.push({ label: "Less: Mileage Allowance", value: `(${fmtEuro(input.mileageAllowance)})` });
   scheduleERows.push({ label: "Net Schedule E", value: fmtEuro(result.scheduleE) });
 
   if (scheduleERows.length > 1) {
@@ -58,10 +59,7 @@ export function assembleForm11ReportData(
     tables.push({
       title: "Business Income Breakdown",
       headers: ["Category", "Amount"],
-      rows: [
-        ...options.incomeByCategory.map((e) => [e.category, fmtEuro(e.amount)]),
-        ["Total", fmtEuro(totalInc)],
-      ],
+      rows: [...options.incomeByCategory.map((e) => [e.category, fmtEuro(e.amount)]), ["Total", fmtEuro(totalInc)]],
     });
   }
 
@@ -71,10 +69,7 @@ export function assembleForm11ReportData(
     tables.push({
       title: "Business Expense Breakdown",
       headers: ["Category", "Amount"],
-      rows: [
-        ...options.expenseByCategory.map((e) => [e.category, fmtEuro(e.amount)]),
-        ["Total", fmtEuro(totalExp)],
-      ],
+      rows: [...options.expenseByCategory.map((e) => [e.category, fmtEuro(e.amount)]), ["Total", fmtEuro(totalExp)]],
     });
   }
 
@@ -101,7 +96,12 @@ export function assembleForm11ReportData(
     rows: [
       { label: "Total Gross Income", value: fmtEuro(result.totalGrossIncome) },
       ...(result.pensionRelief > 0
-        ? [{ label: `Less: Pension Relief (${fmtPercent(result.pensionAgeLimit)} limit)`, value: `(${fmtEuro(result.pensionRelief)})` }]
+        ? [
+            {
+              label: `Less: Pension Relief (${fmtPercent(result.pensionAgeLimit)} limit)`,
+              value: `(${fmtEuro(result.pensionRelief)})`,
+            },
+          ]
         : []),
       { label: "Assessable Income", value: fmtEuro(result.assessableIncome) },
     ],
@@ -112,12 +112,7 @@ export function assembleForm11ReportData(
     title: "Income Tax Calculation",
     headers: ["Band", "Amount", "Rate", "Tax"],
     rows: [
-      ...result.incomeTaxBands.map((b) => [
-        b.label,
-        fmtEuro(b.amount),
-        fmtPercent(b.rate),
-        fmtEuro(b.tax),
-      ]),
+      ...result.incomeTaxBands.map((b) => [b.label, fmtEuro(b.amount), fmtPercent(b.rate), fmtEuro(b.tax)]),
       ["Gross Income Tax", "", "", fmtEuro(result.grossIncomeTax)],
     ],
   });
@@ -126,10 +121,7 @@ export function assembleForm11ReportData(
   tables.push({
     title: "Tax Credits",
     headers: ["Credit", "Amount"],
-    rows: [
-      ...result.credits.map((c) => [c.label, fmtEuro(c.amount)]),
-      ["Total Credits", fmtEuro(result.totalCredits)],
-    ],
+    rows: [...result.credits.map((c) => [c.label, fmtEuro(c.amount)]), ["Total Credits", fmtEuro(result.totalCredits)]],
   });
 
   sections.push({
@@ -152,12 +144,7 @@ export function assembleForm11ReportData(
       title: "Universal Social Charge",
       headers: ["Band", "Amount", "Rate", "USC"],
       rows: [
-        ...result.uscBands.map((b) => [
-          b.label,
-          fmtEuro(b.amount),
-          fmtPercent(b.rate),
-          fmtEuro(b.tax),
-        ]),
+        ...result.uscBands.map((b) => [b.label, fmtEuro(b.amount), fmtPercent(b.rate), fmtEuro(b.tax)]),
         ["Total USC", "", "", fmtEuro(result.totalUSC)],
       ],
     });

@@ -34,10 +34,7 @@ export async function migrateLocalAccounts(userId: string): Promise<void> {
       return;
     }
 
-    const { data: existing } = await supabase
-      .from("accounts")
-      .select("name")
-      .eq("user_id", userId);
+    const { data: existing } = await supabase.from("accounts").select("name").eq("user_id", userId);
 
     const existingNames = new Set((existing ?? []).map((a) => a.name.toLowerCase()));
 

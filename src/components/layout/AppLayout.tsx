@@ -37,9 +37,7 @@ const AppLayout = ({ children }: AppLayoutProps) => {
       <div className="relative z-10 flex flex-col min-h-screen w-full">
         {showDemoBanner && <DemoModeBanner />}
         <TopNavbar />
-        <main className="flex-1 w-full pb-20 md:pb-0">
-          {children}
-        </main>
+        <main className="flex-1 w-full pb-20 md:pb-0">{children}</main>
         <BottomNav />
         <JobProgressIndicator />
         <ChatWidget />

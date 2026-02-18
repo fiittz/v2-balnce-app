@@ -10,7 +10,7 @@ export function useAccountLookup() {
 
   const accountsByName = useMemo(() => {
     const map = new Map<string, Account>();
-    (accounts as Account[]).forEach(a => {
+    (accounts as Account[]).forEach((a) => {
       map.set(a.name.toLowerCase(), a);
     });
     return map;
@@ -18,7 +18,7 @@ export function useAccountLookup() {
 
   const accountsByCode = useMemo(() => {
     const map = new Map<string, Account>();
-    (accounts as Account[]).forEach(a => {
+    (accounts as Account[]).forEach((a) => {
       if (a.account_number) {
         map.set(a.account_number.toLowerCase(), a);
       }
@@ -37,7 +37,7 @@ export function useAccountLookup() {
   const findForTransaction = (
     autocatCategory: string,
     transactionType: "income" | "expense",
-    vatRate?: string
+    vatRate?: string,
   ): Account | null => {
     return findMatchingAccount(autocatCategory, transactionType, vatRate, accounts as Account[]);
   };

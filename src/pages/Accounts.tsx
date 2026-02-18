@@ -24,13 +24,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import AppLayout from "@/components/layout/AppLayout";
 import { toast } from "sonner";
@@ -106,7 +100,7 @@ const Accounts = () => {
     }
   };
 
-  const startEdit = (account: typeof accounts[number]) => {
+  const startEdit = (account: (typeof accounts)[number]) => {
     setEditingId(account.id);
     setEditName(account.name);
     setEditDescription("");
@@ -200,9 +194,12 @@ const Accounts = () => {
       <AlertDialog open={showBulkDeleteConfirm} onOpenChange={setShowBulkDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete {selectedIds.size} account{selectedIds.size !== 1 ? "s" : ""}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Delete {selectedIds.size} account{selectedIds.size !== 1 ? "s" : ""}?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove the selected accounts from your list. Any linked transactions will be unlinked but not deleted.
+              This will remove the selected accounts from your list. Any linked transactions will be unlinked but not
+              deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -247,57 +244,57 @@ const Accounts = () => {
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Account</DialogTitle>
-                <DialogDescription>
-                  Add a bank account or financial account to track and analyze separately.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 pt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Account Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., AIB Current Account"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
+                <DialogHeader>
+                  <DialogTitle>Add New Account</DialogTitle>
+                  <DialogDescription>
+                    Add a bank account or financial account to track and analyze separately.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Account Name</Label>
+                    <Input
+                      id="name"
+                      placeholder="e.g., AIB Current Account"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="type">Account Type</Label>
+                    <Select value={accountType} onValueChange={(value: AccountType) => setAccountType(value)}>
+                      <SelectTrigger id="type">
+                        <SelectValue placeholder="Select account type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="limited_company">Limited Company</SelectItem>
+                        <SelectItem value="sole_trader">Sole Trader</SelectItem>
+                        <SelectItem value="directors_personal_tax">Director's Personal Tax</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="e.g., Main business current account for day-to-day operations"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleAdd} disabled={createAccount.isPending}>
+                      {createAccount.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Add Account
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="type">Account Type</Label>
-                  <Select value={accountType} onValueChange={(value: AccountType) => setAccountType(value)}>
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Select account type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="limited_company">Limited Company</SelectItem>
-                      <SelectItem value="sole_trader">Sole Trader</SelectItem>
-                      <SelectItem value="directors_personal_tax">Director's Personal Tax</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="e.g., Main business current account for day-to-day operations"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAdd} disabled={createAccount.isPending}>
-                    {createAccount.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Add Account
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </header>
@@ -326,10 +323,7 @@ const Accounts = () => {
             {/* Select All */}
             {accounts.length > 1 && (
               <div className="flex items-center gap-3 px-1">
-                <Checkbox
-                  checked={selectedIds.size === accounts.length}
-                  onCheckedChange={toggleSelectAll}
-                />
+                <Checkbox checked={selectedIds.size === accounts.length} onCheckedChange={toggleSelectAll} />
                 <span className="text-sm text-muted-foreground">
                   {selectedIds.size === accounts.length ? "Deselect all" : "Select all"}
                 </span>
@@ -339,9 +333,7 @@ const Accounts = () => {
             {accounts.map((account) => (
               <Card
                 key={account.id}
-                className={`animate-fade-in transition-all ${
-                  selectedIds.has(account.id) ? "ring-2 ring-primary" : ""
-                }`}
+                className={`animate-fade-in transition-all ${selectedIds.has(account.id) ? "ring-2 ring-primary" : ""}`}
               >
                 <CardContent className="p-5">
                   {editingId === account.id ? (
@@ -381,10 +373,13 @@ const Accounts = () => {
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-lg">{account.name}</h3>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {account.account_type === "limited_company" ? "Limited Company" :
-                             account.account_type === "sole_trader" ? "Sole Trader" :
-                             account.account_type === "directors_personal_tax" ? "Director's Personal Tax" :
-                             account.account_type}
+                            {account.account_type === "limited_company"
+                              ? "Limited Company"
+                              : account.account_type === "sole_trader"
+                                ? "Sole Trader"
+                                : account.account_type === "directors_personal_tax"
+                                  ? "Director's Personal Tax"
+                                  : account.account_type}
                           </p>
                         </div>
                       </div>
@@ -408,12 +403,7 @@ const Accounts = () => {
                           >
                             <BarChart3 className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => startEdit(account)}
-                            className="h-9 w-9"
-                          >
+                          <Button variant="ghost" size="icon" onClick={() => startEdit(account)} className="h-9 w-9">
                             <Edit2 className="w-4 h-4" />
                           </Button>
                           <Button
@@ -442,9 +432,7 @@ const Accounts = () => {
       {isSelectMode && (
         <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-foreground text-background p-4 z-40 animate-fade-in">
           <div className="max-w-2xl mx-auto flex items-center justify-between">
-            <span className="font-medium">
-              {selectedIds.size} selected
-            </span>
+            <span className="font-medium">{selectedIds.size} selected</span>
             <Button
               variant="secondary"
               onClick={() => setShowBulkDeleteConfirm(true)}

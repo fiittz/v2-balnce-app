@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { autoCategorise, findMatchingCategory } from "@/lib/autocat";
+import { calculateVATFromGross } from "@/lib/vatDeductibility";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
 import { useVendorCache } from "@/hooks/useVendorCache";
 import { useUserCorrections } from "@/hooks/useUserCorrections";
@@ -25,7 +26,7 @@ export function useBulkRecategorize() {
   const { vendorCache } = useVendorCache();
   const { userCorrections } = useUserCorrections();
   const queryClient = useQueryClient();
-  
+
   const [isRunning, setIsRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<RecategorizeResult | null>(null);
@@ -99,38 +100,49 @@ export function useBulkRecategorize() {
           batch.map(async (txn) => {
             try {
               const txnDirection = txn.type === "income" ? "income" : "expense";
-              
-              const engineResult = autoCategorise({
-                amount: txn.amount,
-                date: txn.transaction_date,
-                currency: "EUR",
-                description: txn.description,
-                merchant_name: txn.description,
-                transaction_type: undefined,
-                direction: txnDirection,
-                user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
-                user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
-                receipt_text: undefined,
-              }, vendorCache, userCorrections);
 
-              const matchedCategory = findMatchingCategory(
-                engineResult.category,
-                categories,
-                txnDirection
+              const engineResult = autoCategorise(
+                {
+                  amount: txn.amount,
+                  date: txn.transaction_date,
+                  currency: "EUR",
+                  description: txn.description,
+                  merchant_name: txn.description,
+                  transaction_type: undefined,
+                  direction: txnDirection,
+                  user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                  user_business_type:
+                    (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                  receipt_text: undefined,
+                },
+                vendorCache,
+                userCorrections,
               );
 
+              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection);
+
               if (!matchedCategory || engineResult.confidence_score < 50) {
+                // Still set vat_rate/vat_amount even without category match
+                const vatRate = mapVatTypeToRate(engineResult.vat_type);
+                if (vatRate > 0) {
+                  const vatCalc = calculateVATFromGross(Math.abs(txn.amount), vatRate);
+                  await supabase
+                    .from("transactions")
+                    .update({ vat_rate: vatRate, vat_amount: vatCalc.vatAmount })
+                    .eq("id", txn.id);
+                }
                 return { status: "skipped" as const };
               }
 
               const vatRate = mapVatTypeToRate(engineResult.vat_type);
+              const vatCalc = vatRate > 0 ? calculateVATFromGross(Math.abs(txn.amount), vatRate) : { vatAmount: 0 };
 
               const { error: updateError } = await supabase
                 .from("transactions")
                 .update({
                   category_id: matchedCategory.id,
-                  // Do NOT overwrite account_id — it holds the bank account reference
                   vat_rate: vatRate,
+                  vat_amount: vatCalc.vatAmount,
                   notes: engineResult.notes || null,
                 })
                 .eq("id", txn.id);
@@ -140,7 +152,7 @@ export function useBulkRecategorize() {
             } catch {
               return { status: "failed" as const };
             }
-          })
+          }),
         );
 
         batchResults.forEach((r) => {
@@ -297,24 +309,25 @@ export function useBulkRecategorize() {
             try {
               const txnDirection = txn.type === "income" ? "income" : "expense";
 
-              const engineResult = autoCategorise({
-                amount: txn.amount,
-                date: txn.transaction_date,
-                currency: "EUR",
-                description: txn.description,
-                merchant_name: txn.description,
-                transaction_type: undefined,
-                direction: txnDirection,
-                user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
-                user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
-                receipt_text: undefined,
-              }, vendorCache, userCorrections);
-
-              const matchedCategory = findMatchingCategory(
-                engineResult.category,
-                categories,
-                txnDirection
+              const engineResult = autoCategorise(
+                {
+                  amount: txn.amount,
+                  date: txn.transaction_date,
+                  currency: "EUR",
+                  description: txn.description,
+                  merchant_name: txn.description,
+                  transaction_type: undefined,
+                  direction: txnDirection,
+                  user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                  user_business_type:
+                    (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                  receipt_text: undefined,
+                },
+                vendorCache,
+                userCorrections,
               );
+
+              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection);
 
               // Only update if the new category is different from Miscellaneous
               if (!matchedCategory || matchedCategory.id === miscCatId || engineResult.confidence_score < 40) {
@@ -322,13 +335,14 @@ export function useBulkRecategorize() {
               }
 
               const vatRate = mapVatTypeToRate(engineResult.vat_type);
+              const vatCalc = vatRate > 0 ? calculateVATFromGross(Math.abs(txn.amount), vatRate) : { vatAmount: 0 };
 
               const { error: updateError } = await supabase
                 .from("transactions")
                 .update({
                   category_id: matchedCategory.id,
-                  // Do NOT overwrite account_id — it holds the bank account reference
                   vat_rate: vatRate,
+                  vat_amount: vatCalc.vatAmount,
                   notes: engineResult.notes || null,
                 })
                 .eq("id", txn.id);
@@ -338,7 +352,7 @@ export function useBulkRecategorize() {
             } catch {
               return { status: "failed" as const };
             }
-          })
+          }),
         );
 
         batchResults.forEach((r) => {
@@ -441,42 +455,51 @@ export function useBulkRecategorize() {
             try {
               const txnDirection = txn.type === "income" ? "income" : "expense";
 
-              const engineResult = autoCategorise({
-                amount: txn.amount,
-                date: txn.transaction_date,
-                currency: "EUR",
-                description: txn.description,
-                merchant_name: txn.description,
-                transaction_type: undefined,
-                direction: txnDirection,
-                user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
-                user_business_type: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
-                receipt_text: undefined,
-              }, vendorCache, userCorrections);
-
-              const matchedCategory = findMatchingCategory(
-                engineResult.category,
-                categories,
-                txnDirection
+              const engineResult = autoCategorise(
+                {
+                  amount: txn.amount,
+                  date: txn.transaction_date,
+                  currency: "EUR",
+                  description: txn.description,
+                  merchant_name: txn.description,
+                  transaction_type: undefined,
+                  direction: txnDirection,
+                  user_industry: (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                  user_business_type:
+                    (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
+                  receipt_text: undefined,
+                },
+                vendorCache,
+                userCorrections,
               );
 
+              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection);
+
               if (!matchedCategory || engineResult.confidence_score < 40) {
-                // Clear category so it shows as uncategorized for manual review
+                // Clear category but still set vat_rate/vat_amount
+                const vatRate = mapVatTypeToRate(engineResult.vat_type);
+                const vatCalc = vatRate > 0 ? calculateVATFromGross(Math.abs(txn.amount), vatRate) : { vatAmount: 0 };
                 await supabase
                   .from("transactions")
-                  .update({ category_id: null, notes: "Auto-categorization uncertain — needs manual review." })
+                  .update({
+                    category_id: null,
+                    vat_rate: vatRate,
+                    vat_amount: vatCalc.vatAmount,
+                    notes: "Auto-categorization uncertain — needs manual review.",
+                  })
                   .eq("id", txn.id);
                 return { status: "skipped" as const };
               }
 
               const vatRate = mapVatTypeToRate(engineResult.vat_type);
+              const vatCalc = vatRate > 0 ? calculateVATFromGross(Math.abs(txn.amount), vatRate) : { vatAmount: 0 };
 
               const { error: updateError } = await supabase
                 .from("transactions")
                 .update({
                   category_id: matchedCategory.id,
-                  // Do NOT overwrite account_id — it holds the bank account reference
                   vat_rate: vatRate,
+                  vat_amount: vatCalc.vatAmount,
                   notes: engineResult.notes || null,
                 })
                 .eq("id", txn.id);
@@ -486,7 +509,7 @@ export function useBulkRecategorize() {
             } catch {
               return { status: "failed" as const };
             }
-          })
+          }),
         );
 
         batchResults.forEach((r) => {
@@ -528,7 +551,8 @@ export function useBulkRecategorize() {
           for (const txn of trip.transactions) {
             const expenseType = classifyTripExpense(txn.description);
             const descLower = txn.description.toLowerCase();
-            const isParking = descLower.includes("parking") || descLower.includes("eflow") || descLower.includes("toll");
+            const isParking =
+              descLower.includes("parking") || descLower.includes("eflow") || descLower.includes("toll");
             // Only include subsistence items: food, drink, hotel, parking
             // Skip unrelated expenses (hardware, phone, etc.) that happen to be at the trip location
             if (expenseType === "other") continue;
@@ -581,7 +605,9 @@ export function useBulkRecategorize() {
                 jobStart = notesObj.job_start_date || null;
                 jobEnd = notesObj.job_end_date || null;
               }
-            } catch { /* not JSON */ }
+            } catch {
+              /* not JSON */
+            }
 
             if (jobStart && jobEnd) {
               invoiceRanges.push({ start: jobStart, end: jobEnd });
@@ -600,9 +626,7 @@ export function useBulkRecategorize() {
           }
 
           // Find expense transactions currently in Drawings that fall within a trip period
-          const drawingsCatIds = categories
-            .filter((c) => c.name.toLowerCase().includes("drawing"))
-            .map((c) => c.id);
+          const drawingsCatIds = categories.filter((c) => c.name.toLowerCase().includes("drawing")).map((c) => c.id);
 
           if (drawingsCatIds.length > 0) {
             let invoiceTripOverrides = 0;
@@ -612,9 +636,7 @@ export function useBulkRecategorize() {
               const txDate = txn.transaction_date;
               if (!txDate) continue;
 
-              const isInTripPeriod = invoiceRanges.some(
-                (r) => txDate >= r.start && txDate <= r.end
-              );
+              const isInTripPeriod = invoiceRanges.some((r) => txDate >= r.start && txDate <= r.end);
               if (!isInTripPeriod) continue;
 
               // Override to Travel & Accommodation

@@ -24,12 +24,10 @@ export function ComplianceSection({ data, onUpdate }: ComplianceSectionProps) {
         <div className="flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5" />
           <div className="flex-1">
-            <Label className="text-base font-medium">
-              Flagged Transactions Review
-            </Label>
+            <Label className="text-base font-medium">Flagged Transactions Review</Label>
             <p className="text-sm text-muted-foreground mt-1">
-              You must confirm that you have reviewed all transactions that were flagged 
-              for attention during this VAT period.
+              You must confirm that you have reviewed all transactions that were flagged for attention during this VAT
+              period.
             </p>
           </div>
         </div>
@@ -50,9 +48,7 @@ export function ComplianceSection({ data, onUpdate }: ComplianceSectionProps) {
         <div className="flex items-start gap-3">
           <ShieldCheck className="w-5 h-5 text-green-600 mt-0.5" />
           <div className="flex-1">
-            <Label className="text-base font-medium">
-              Accuracy Confirmation
-            </Label>
+            <Label className="text-base font-medium">Accuracy Confirmation</Label>
             <p className="text-sm text-muted-foreground mt-1">
               Confirm that the VAT calculations are accurate to the best of your knowledge.
             </p>
@@ -75,12 +71,10 @@ export function ComplianceSection({ data, onUpdate }: ComplianceSectionProps) {
         <div className="flex items-start gap-3">
           <Lock className="w-5 h-5 text-blue-600 mt-0.5" />
           <div className="flex-1">
-            <Label className="text-base font-medium">
-              Lock VAT Period
-            </Label>
+            <Label className="text-base font-medium">Lock VAT Period</Label>
             <p className="text-sm text-muted-foreground mt-1">
-              Locking the period will prevent any further edits to transactions within this 
-              VAT period. This is recommended once you've filed your return.
+              Locking the period will prevent any further edits to transactions within this VAT period. This is
+              recommended once you've filed your return.
             </p>
           </div>
         </div>
@@ -111,9 +105,7 @@ export function ComplianceSection({ data, onUpdate }: ComplianceSectionProps) {
       {/* Final Declarations */}
       <div className="p-4 bg-muted rounded-lg space-y-4">
         <h4 className="font-semibold">Required Declarations</h4>
-        <p className="text-sm text-muted-foreground">
-          By finalising this VAT return, you confirm:
-        </p>
+        <p className="text-sm text-muted-foreground">By finalising this VAT return, you confirm:</p>
 
         <div className="space-y-3">
           <div className="flex items-start space-x-3">
@@ -124,8 +116,8 @@ export function ComplianceSection({ data, onUpdate }: ComplianceSectionProps) {
               className="mt-0.5"
             />
             <Label htmlFor="declaration-true" className="cursor-pointer text-sm">
-              I declare that the information provided in this VAT return is true and complete 
-              to the best of my knowledge and belief.
+              I declare that the information provided in this VAT return is true and complete to the best of my
+              knowledge and belief.
             </Label>
           </div>
 
@@ -137,8 +129,8 @@ export function ComplianceSection({ data, onUpdate }: ComplianceSectionProps) {
               className="mt-0.5"
             />
             <Label htmlFor="declaration-penalties" className="cursor-pointer text-sm">
-              I understand that submitting false or misleading information may result in 
-              penalties, interest charges, and prosecution by Revenue.
+              I understand that submitting false or misleading information may result in penalties, interest charges,
+              and prosecution by Revenue.
             </Label>
           </div>
 
@@ -150,8 +142,8 @@ export function ComplianceSection({ data, onUpdate }: ComplianceSectionProps) {
               className="mt-0.5"
             />
             <Label htmlFor="declaration-lock" className="cursor-pointer text-sm">
-              I understand that once finalised, transactions in this period may be locked 
-              from editing and any corrections will require a manual adjustment.
+              I understand that once finalised, transactions in this period may be locked from editing and any
+              corrections will require a manual adjustment.
             </Label>
           </div>
         </div>

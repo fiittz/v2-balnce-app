@@ -87,7 +87,9 @@ export default function BankCsvWizard() {
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-semibold">Review transactions</h2>
-                <p className="text-sm text-muted-foreground">Filter, adjust categories and confirm anything that needs review.</p>
+                <p className="text-sm text-muted-foreground">
+                  Filter, adjust categories and confirm anything that needs review.
+                </p>
               </div>
               <div className="text-xs text-muted-foreground">Legend: High / Medium / Needs review</div>
             </div>

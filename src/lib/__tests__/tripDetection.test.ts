@@ -178,9 +178,7 @@ describe("detectTrips", () => {
   });
 
   it("detects a trip with a single hotel booking", () => {
-    const txns = [
-      makeExpense("1", "MALDRON HOTEL GALWAY", "2024-03-15", 120),
-    ];
+    const txns = [makeExpense("1", "MALDRON HOTEL GALWAY", "2024-03-15", 120)];
     const trips = detectTrips(txns, "Dublin");
     expect(trips).toHaveLength(1);
     expect(trips[0].location).toBe("Galway");
@@ -222,9 +220,7 @@ describe("detectTrips", () => {
   });
 
   it("does not qualify a single non-hotel expense", () => {
-    const txns = [
-      makeExpense("1", "POS CENTRA CORK", "2024-03-15", 10),
-    ];
+    const txns = [makeExpense("1", "POS CENTRA CORK", "2024-03-15", 10)];
     const trips = detectTrips(txns, "Dublin");
     expect(trips).toHaveLength(0);
   });

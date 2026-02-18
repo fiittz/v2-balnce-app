@@ -19,10 +19,7 @@ interface FloatingActionBarProps {
   onClearSelection: () => void;
 }
 
-export default function FloatingActionBar({
-  selectedIds,
-  onClearSelection,
-}: FloatingActionBarProps) {
+export default function FloatingActionBar({ selectedIds, onClearSelection }: FloatingActionBarProps) {
   const [showCategoryPicker, setShowCategoryPicker] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const bulkUpdate = useBulkUpdateTransactions();
@@ -34,21 +31,20 @@ export default function FloatingActionBar({
   const ids = Array.from(selectedIds);
 
   const handleCategorize = (categoryId: string) => {
-    bulkUpdate.mutate(
-      { ids, updates: { category_id: categoryId } },
-      { onSuccess: () => onClearSelection() }
-    );
+    bulkUpdate.mutate({ ids, updates: { category_id: categoryId } }, { onSuccess: () => onClearSelection() });
   };
 
   const handleMarkReviewed = () => {
-    bulkUpdate.mutate(
-      { ids, updates: { is_reconciled: true } },
-      { onSuccess: () => onClearSelection() }
-    );
+    bulkUpdate.mutate({ ids, updates: { is_reconciled: true } }, { onSuccess: () => onClearSelection() });
   };
 
   const handleDelete = () => {
-    bulkDelete.mutate(ids, { onSuccess: () => { onClearSelection(); setShowDeleteDialog(false); } });
+    bulkDelete.mutate(ids, {
+      onSuccess: () => {
+        onClearSelection();
+        setShowDeleteDialog(false);
+      },
+    });
   };
 
   const isLoading = bulkUpdate.isPending || bulkDelete.isPending;
@@ -57,9 +53,7 @@ export default function FloatingActionBar({
     <>
       <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-200">
         <div className="bg-foreground text-background rounded-2xl px-4 py-3 flex items-center gap-3 shadow-xl">
-          <span className="text-sm font-medium whitespace-nowrap">
-            {count} selected
-          </span>
+          <span className="text-sm font-medium whitespace-nowrap">{count} selected</span>
 
           <div className="w-px h-6 bg-background/20" />
 
@@ -69,13 +63,7 @@ export default function FloatingActionBar({
             onSelect={handleCategorize}
           />
 
-          <Button
-            variant="secondary"
-            size="sm"
-            className="gap-2"
-            onClick={handleMarkReviewed}
-            disabled={isLoading}
-          >
+          <Button variant="secondary" size="sm" className="gap-2" onClick={handleMarkReviewed} disabled={isLoading}>
             <CheckCircle2 className="w-4 h-4" />
             Reviewed
           </Button>
@@ -91,10 +79,7 @@ export default function FloatingActionBar({
             Delete
           </Button>
 
-          <button
-            onClick={onClearSelection}
-            className="p-1.5 rounded-full hover:bg-background/20 transition-colors"
-          >
+          <button onClick={onClearSelection} className="p-1.5 rounded-full hover:bg-background/20 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>

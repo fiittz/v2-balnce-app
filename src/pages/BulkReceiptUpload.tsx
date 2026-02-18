@@ -44,7 +44,7 @@ const BulkReceiptUpload = () => {
       const droppedFiles = Array.from(e.dataTransfer.files);
       addFiles(droppedFiles);
     },
-    [addFiles]
+    [addFiles],
   );
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -65,7 +65,9 @@ const BulkReceiptUpload = () => {
     if (!confirm("Delete ALL receipts from the database? This cannot be undone.")) return;
     setIsDeleting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not logged in");
 
       // Unlink receipts from transactions
@@ -76,10 +78,7 @@ const BulkReceiptUpload = () => {
         .not("receipt_url", "is", null);
 
       // Delete all receipts from DB
-      const { error } = await supabase
-        .from("receipts")
-        .delete()
-        .eq("user_id", user.id);
+      const { error } = await supabase.from("receipts").delete().eq("user_id", user.id);
 
       if (error) throw error;
 
@@ -157,22 +156,14 @@ const BulkReceiptUpload = () => {
           onChange={handleFileInput}
           className="hidden"
         />
-        <input
-          ref={setFolderRef}
-          type="file"
-          multiple
-          onChange={handleFileInput}
-          className="hidden"
-        />
+        <input ref={setFolderRef} type="file" multiple onChange={handleFileInput} className="hidden" />
 
         {/* Action bar */}
         {files.length > 0 && (
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="text-sm text-muted-foreground">
               {totalFiles} receipt{totalFiles !== 1 ? "s" : ""} added
-              {errorFiles > 0 && (
-                <span className="text-destructive ml-2">({errorFiles} failed)</span>
-              )}
+              {errorFiles > 0 && <span className="text-destructive ml-2">({errorFiles} failed)</span>}
             </div>
             <div className="flex gap-2">
               {phase === "idle" && queuedCount > 0 && (
@@ -202,7 +193,9 @@ const BulkReceiptUpload = () => {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>OCR Progress</span>
-              <span>{currentIndex} / {totalFiles - queuedCount + currentIndex}</span>
+              <span>
+                {currentIndex} / {totalFiles - queuedCount + currentIndex}
+              </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div
@@ -235,12 +228,7 @@ const BulkReceiptUpload = () => {
         )}
 
         {/* Receipt grid */}
-        <BulkReceiptGrid
-          files={files}
-          onRemove={removeFile}
-          onManualMatch={manualMatch}
-          phase={phase}
-        />
+        <BulkReceiptGrid files={files} onRemove={removeFile} onManualMatch={manualMatch} phase={phase} />
       </main>
     </AppLayout>
   );

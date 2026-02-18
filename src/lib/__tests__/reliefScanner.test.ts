@@ -25,9 +25,7 @@ describe("scanForReliefs", () => {
   });
 
   it("ignores income transactions", () => {
-    const txns = [
-      makeTransaction("VHI Payment", 1_000, "income"),
-    ];
+    const txns = [makeTransaction("VHI Payment", 1_000, "income")];
     const result = scanForReliefs(txns);
     expect(result.healthInsurance.total).toBe(0);
   });

@@ -30,9 +30,7 @@ export interface BulkMatchResult {
 /**
  * Match a single transaction to invoices/expenses
  */
-export async function matchSingleTransaction(
-  transactionId: string
-): Promise<MatchResult> {
+export async function matchSingleTransaction(transactionId: string): Promise<MatchResult> {
   const { data, error } = await supabase.functions.invoke("auto-match-transactions", {
     body: {
       action: "match_single",
@@ -51,9 +49,7 @@ export async function matchSingleTransaction(
 /**
  * Match multiple transactions
  */
-export async function matchBulkTransactions(
-  transactionIds: string[]
-): Promise<BulkMatchResult> {
+export async function matchBulkTransactions(transactionIds: string[]): Promise<BulkMatchResult> {
   const { data, error } = await supabase.functions.invoke("auto-match-transactions", {
     body: {
       action: "match_bulk",
@@ -90,9 +86,7 @@ export async function matchAllUnmatched(): Promise<BulkMatchResult> {
 /**
  * Get match suggestions for a transaction
  */
-export async function getMatchSuggestions(
-  transactionId: string
-): Promise<MatchSuggestion[]> {
+export async function getMatchSuggestions(transactionId: string): Promise<MatchSuggestion[]> {
   const { data, error } = await supabase.functions.invoke("auto-match-transactions", {
     body: {
       action: "get_suggestions",
@@ -114,7 +108,7 @@ export async function getMatchSuggestions(
 export async function applyManualMatch(
   transactionId: string,
   matchId: string,
-  matchType: "invoice" | "expense"
+  matchType: "invoice" | "expense",
 ): Promise<void> {
   // Update transaction
   const updateData: Record<string, unknown> = {
@@ -127,19 +121,13 @@ export async function applyManualMatch(
     updateData.expense_id = matchId;
   }
 
-  const { error: txError } = await supabase
-    .from("transactions")
-    .update(updateData)
-    .eq("id", transactionId);
+  const { error: txError } = await supabase.from("transactions").update(updateData).eq("id", transactionId);
 
   if (txError) throw txError;
 
   // Update the matched record
   if (matchType === "invoice") {
-    await supabase
-      .from("invoices")
-      .update({ status: "paid", matched_transaction_id: transactionId })
-      .eq("id", matchId);
+    await supabase.from("invoices").update({ status: "paid", matched_transaction_id: transactionId }).eq("id", matchId);
   } else {
     await supabase
       .from("expenses")

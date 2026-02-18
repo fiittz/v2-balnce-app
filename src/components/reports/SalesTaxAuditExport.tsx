@@ -9,18 +9,25 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { useSalesTaxAudit } from "@/hooks/useSalesTaxAudit";
 import { format, startOfYear, endOfYear, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
-type PeriodOption = "current_year" | "last_year" | "q1" | "q2" | "q3" | "q4" | "jan_feb" | "mar_apr" | "may_jun" | "jul_aug" | "sep_oct" | "nov_dec" | "custom";
+type PeriodOption =
+  | "current_year"
+  | "last_year"
+  | "q1"
+  | "q2"
+  | "q3"
+  | "q4"
+  | "jan_feb"
+  | "mar_apr"
+  | "may_jun"
+  | "jul_aug"
+  | "sep_oct"
+  | "nov_dec"
+  | "custom";
 
 const periodOptions: { value: PeriodOption; label: string }[] = [
   { value: "current_year", label: "Current Year (2024)" },
@@ -106,7 +113,8 @@ export function SalesTaxAuditExport({ variant = "outline", size = "default", cla
             Sales Tax Audit Report
           </DialogTitle>
           <DialogDescription>
-            Export your transactions grouped by VAT rate for accounting purposes. This report follows the standard Irish VAT audit format.
+            Export your transactions grouped by VAT rate for accounting purposes. This report follows the standard Irish
+            VAT audit format.
           </DialogDescription>
         </DialogHeader>
 

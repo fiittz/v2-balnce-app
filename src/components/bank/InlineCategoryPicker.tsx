@@ -42,7 +42,7 @@ export default function InlineCategoryPicker({
         currentCategory?.name ?? null,
         selectedCat.name,
         categoryId,
-        currentVatRate ?? null
+        currentVatRate ?? null,
       ).catch(() => {});
     }
 
@@ -62,9 +62,7 @@ export default function InlineCategoryPicker({
             onOpenChange(true);
           }}
           className={`px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1 transition-colors ${
-            currentCategory
-              ? "bg-muted hover:bg-muted/80"
-              : "bg-purple-100 text-purple-700 hover:bg-purple-200"
+            currentCategory ? "bg-muted hover:bg-muted/80" : "bg-purple-100 text-purple-700 hover:bg-purple-200"
           }`}
         >
           {currentCategory ? (
@@ -87,16 +85,8 @@ export default function InlineCategoryPicker({
             <CommandEmpty>No category found.</CommandEmpty>
             <CommandGroup>
               {categories?.map((cat) => (
-                <CommandItem
-                  key={cat.id}
-                  value={cat.name}
-                  onSelect={() => handleSelect(cat.id)}
-                >
-                  <Check
-                    className={`mr-2 h-4 w-4 ${
-                      currentCategoryId === cat.id ? "opacity-100" : "opacity-0"
-                    }`}
-                  />
+                <CommandItem key={cat.id} value={cat.name} onSelect={() => handleSelect(cat.id)}>
+                  <Check className={`mr-2 h-4 w-4 ${currentCategoryId === cat.id ? "opacity-100" : "opacity-0"}`} />
                   <span className="text-xs">{cat.name}</span>
                   <span className="ml-auto text-xs text-muted-foreground capitalize">{cat.type}</span>
                 </CommandItem>

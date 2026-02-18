@@ -13,13 +13,7 @@ const Logo = ({ className = "", size = "md", showTagline = false }: LogoProps) =
     lg: "h-20",
   };
 
-  return (
-    <img 
-      src={balnceLogo} 
-      alt="Balnce - Your Accounting" 
-      className={`${sizeClasses[size]} w-auto ${className}`}
-    />
-  );
+  return <img src={balnceLogo} alt="Balnce - Your Accounting" className={`${sizeClasses[size]} w-auto ${className}`} />;
 };
 
 export default Logo;

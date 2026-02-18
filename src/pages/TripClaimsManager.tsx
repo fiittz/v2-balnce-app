@@ -44,7 +44,9 @@ const TripClaimsManager = () => {
       homeCountyDisplay = biz?.place_of_work || "";
       radiusDisplay = biz?.subsistence_radius_km || 8;
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   const toggleTrip = (id: string) => {
     setOpenTrips((prev) => {
@@ -82,19 +84,12 @@ const TripClaimsManager = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/tax")}
-                className="shrink-0"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/tax")} className="shrink-0">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
                 <h1 className="font-semibold text-xl">Trip Claims</h1>
-                <p className="text-sm text-muted-foreground">
-                  Revenue civil service mileage & subsistence rates
-                </p>
+                <p className="text-sm text-muted-foreground">Revenue civil service mileage & subsistence rates</p>
               </div>
               <MapPin className="w-5 h-5 text-muted-foreground" />
             </div>
@@ -102,7 +97,6 @@ const TripClaimsManager = () => {
         </header>
 
         <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
           {/* Summary */}
           <Card className="border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ring-primary/20">
             <CardContent className="pt-6">
@@ -142,10 +136,10 @@ const TripClaimsManager = () => {
                   <span className="font-mono tabular-nums font-medium text-red-600">-{eur(totalCsvExpenses)}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-border">
-                  <span className="font-semibold">
-                    {totalDlaBalance >= 0 ? "Owed to director" : "Owed to company"}
-                  </span>
-                  <span className={`font-mono tabular-nums text-xl font-bold ${totalDlaBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  <span className="font-semibold">{totalDlaBalance >= 0 ? "Owed to director" : "Owed to company"}</span>
+                  <span
+                    className={`font-mono tabular-nums text-xl font-bold ${totalDlaBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
                     {eur(Math.abs(totalDlaBalance))}
                   </span>
                 </div>
@@ -163,15 +157,22 @@ const TripClaimsManager = () => {
                   {workshopDisplay && (
                     <p className="mb-1">
                       <strong>Workshop:</strong> {workshopDisplay}
-                      {homeCountyDisplay && <> &bull; <strong>Home:</strong> {homeCountyDisplay}</>}
-                      {" "}&bull; <strong>Subsistence radius:</strong> {radiusDisplay}km
+                      {homeCountyDisplay && (
+                        <>
+                          {" "}
+                          &bull; <strong>Home:</strong> {homeCountyDisplay}
+                        </>
+                      )}{" "}
+                      &bull; <strong>Subsistence radius:</strong> {radiusDisplay}km
                     </p>
                   )}
                   <p className="mb-1">
-                    <strong>Overnight</strong> (outside {homeCountyDisplay || "home county"}): &euro;191.00/night flat, or actual hotel + &euro;39.08/night meals if receipts exist.
+                    <strong>Overnight</strong> (outside {homeCountyDisplay || "home county"}): &euro;191.00/night flat,
+                    or actual hotel + &euro;39.08/night meals if receipts exist.
                   </p>
                   <p className="mb-1">
-                    <strong>Subsistence</strong> (beyond {radiusDisplay}km from workshop): &euro;39.08/day (10+ hours) or &euro;16.29 (5-10 hours).
+                    <strong>Subsistence</strong> (beyond {radiusDisplay}km from workshop): &euro;39.08/day (10+ hours)
+                    or &euro;16.29 (5-10 hours).
                   </p>
                   <p>
                     <strong>Mileage:</strong> 43.22c/km (first 1,500km), then banded rates. Personal vehicle only.
@@ -218,9 +219,11 @@ const TripClaimsManager = () => {
                             {trip.customerName} &bull; {trip.invoiceDate}
                           </p>
                         </div>
-                        <ChevronDown className={`w-4 h-4 transition-transform shrink-0 ${
-                          openTrips.has(trip.invoiceId) ? "rotate-180" : ""
-                        }`} />
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform shrink-0 ${
+                            openTrips.has(trip.invoiceId) ? "rotate-180" : ""
+                          }`}
+                        />
                       </CardTitle>
                     </CardHeader>
                   </CollapsibleTrigger>
@@ -232,9 +235,7 @@ const TripClaimsManager = () => {
                         <span className="flex items-center gap-1 text-green-600">
                           <Car className="w-4 h-4" />
                           {eur(trip.suggestedMileage.allowance)}
-                          <span className="text-muted-foreground">
-                            ({trip.suggestedMileage.distanceKm}km)
-                          </span>
+                          <span className="text-muted-foreground">({trip.suggestedMileage.distanceKm}km)</span>
                         </span>
                       )}
                       {trip.vehicleType === "company_vehicle" && (
@@ -272,7 +273,9 @@ const TripClaimsManager = () => {
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Mileage allowance</span>
                           <span className="font-mono tabular-nums text-green-600">
-                            {trip.vehicleType === "company_vehicle" ? "N/A — company vehicle" : eur(trip.suggestedMileage.allowance)}
+                            {trip.vehicleType === "company_vehicle"
+                              ? "N/A — company vehicle"
+                              : eur(trip.suggestedMileage.allowance)}
                           </span>
                         </div>
                         {trip.suggestedSubsistence.nights > 0 && trip.suggestedSubsistence.method === "vouched" && (
@@ -288,7 +291,9 @@ const TripClaimsManager = () => {
                               </span>
                             </div>
                             <div className="flex justify-between ml-4">
-                              <span className="text-xs text-muted-foreground">+ Meals @ &euro;39.08/night &times; {trip.suggestedSubsistence.nights}</span>
+                              <span className="text-xs text-muted-foreground">
+                                + Meals @ &euro;39.08/night &times; {trip.suggestedSubsistence.nights}
+                              </span>
                               <span className="font-mono tabular-nums text-blue-600">
                                 {eur(trip.suggestedSubsistence.mealsAllowance)}
                               </span>
@@ -302,7 +307,9 @@ const TripClaimsManager = () => {
                               <span className="font-mono tabular-nums">{trip.suggestedSubsistence.nights}</span>
                             </div>
                             <div className="flex justify-between ml-4">
-                              <span className="text-xs text-muted-foreground">@ &euro;191.00/night (accommodation + meals)</span>
+                              <span className="text-xs text-muted-foreground">
+                                @ &euro;191.00/night (accommodation + meals)
+                              </span>
                               <span className="font-mono tabular-nums text-blue-600">
                                 {eur(trip.suggestedSubsistence.nights * 191)}
                               </span>
@@ -343,10 +350,15 @@ const TripClaimsManager = () => {
                         {/* Trip expenses from CSV */}
                         {trip.tripExpenses.length > 0 && (
                           <div className="border-t mt-3 pt-3 space-y-1.5">
-                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Trip expenses from bank</p>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                              Trip expenses from bank
+                            </p>
                             {trip.tripExpenses.map((exp, i) => (
                               <div key={i} className="flex justify-between">
-                                <span className="text-muted-foreground text-xs truncate max-w-[200px]" title={exp.description}>
+                                <span
+                                  className="text-muted-foreground text-xs truncate max-w-[200px]"
+                                  title={exp.description}
+                                >
                                   {exp.description}
                                 </span>
                                 <span className="font-mono tabular-nums text-red-600">{eur(exp.amount)}</span>
@@ -354,7 +366,9 @@ const TripClaimsManager = () => {
                             ))}
                             <div className="flex justify-between pt-1 border-t border-dashed">
                               <span className="text-muted-foreground font-medium">Total expenses</span>
-                              <span className="font-mono tabular-nums text-red-600 font-medium">{eur(trip.totalExpensesFromCsv)}</span>
+                              <span className="font-mono tabular-nums text-red-600 font-medium">
+                                {eur(trip.totalExpensesFromCsv)}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -367,13 +381,17 @@ const TripClaimsManager = () => {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Less: expenses paid</span>
-                            <span className="font-mono tabular-nums text-red-600">-{eur(trip.totalExpensesFromCsv)}</span>
+                            <span className="font-mono tabular-nums text-red-600">
+                              -{eur(trip.totalExpensesFromCsv)}
+                            </span>
                           </div>
                           <div className="flex justify-between pt-1 border-t">
                             <span className="font-semibold">
                               {trip.directorsLoanBalance >= 0 ? "Owed to director" : "Owed to company"}
                             </span>
-                            <span className={`font-mono tabular-nums font-bold ${trip.directorsLoanBalance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                            <span
+                              className={`font-mono tabular-nums font-bold ${trip.directorsLoanBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+                            >
                               {eur(Math.abs(trip.directorsLoanBalance))}
                             </span>
                           </div>
@@ -382,7 +400,8 @@ const TripClaimsManager = () => {
                         {trip.matchedTrip && (
                           <div className="border-t mt-2 pt-2">
                             <p className="text-xs text-muted-foreground">
-                              Matched trip: {trip.matchedTrip.location} ({trip.matchedTrip.startDate} to {trip.matchedTrip.endDate})
+                              Matched trip: {trip.matchedTrip.location} ({trip.matchedTrip.startDate} to{" "}
+                              {trip.matchedTrip.endDate})
                             </p>
                           </div>
                         )}

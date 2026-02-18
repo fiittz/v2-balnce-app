@@ -1,12 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  Clock,
-  AlertTriangle,
-  Loader2,
-  FileText,
-} from "lucide-react";
+import { ArrowLeft, Clock, AlertTriangle, Loader2, FileText } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,7 +57,7 @@ const AgedDebtors = () => {
         return {
           id: inv.id,
           invoiceNumber: inv.invoice_number || "N/A",
-          customer: (inv.customer as Record<string, unknown>)?.name as string || "Unknown",
+          customer: ((inv.customer as Record<string, unknown>)?.name as string) || "Unknown",
           total: Number(inv.total) || 0,
           dueDate: dueDate,
           invoiceDate: inv.invoice_date || "",
@@ -73,10 +67,34 @@ const AgedDebtors = () => {
       .sort((a, b) => b.daysOverdue - a.daysOverdue);
 
     const bucketDefs = [
-      { label: "Current", min: 0, max: 30, colorClass: "text-green-600", badgeClass: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" },
-      { label: "30–60 days", min: 30, max: 60, colorClass: "text-yellow-600", badgeClass: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300" },
-      { label: "60–90 days", min: 60, max: 90, colorClass: "text-orange-600", badgeClass: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300" },
-      { label: "90+ days", min: 90, max: Infinity, colorClass: "text-red-600", badgeClass: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" },
+      {
+        label: "Current",
+        min: 0,
+        max: 30,
+        colorClass: "text-green-600",
+        badgeClass: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300",
+      },
+      {
+        label: "30–60 days",
+        min: 30,
+        max: 60,
+        colorClass: "text-yellow-600",
+        badgeClass: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
+      },
+      {
+        label: "60–90 days",
+        min: 60,
+        max: 90,
+        colorClass: "text-orange-600",
+        badgeClass: "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
+      },
+      {
+        label: "90+ days",
+        min: 90,
+        max: Infinity,
+        colorClass: "text-red-600",
+        badgeClass: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300",
+      },
     ];
 
     const result: AgingBucket[] = bucketDefs.map((def) => ({
@@ -133,19 +151,12 @@ const AgedDebtors = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/reports")}
-                className="shrink-0"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/reports")} className="shrink-0">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
                 <h1 className="font-semibold text-xl">Aged Debtors</h1>
-                <p className="text-sm text-muted-foreground">
-                  Outstanding invoices by age
-                </p>
+                <p className="text-sm text-muted-foreground">Outstanding invoices by age</p>
               </div>
               <Clock className="w-5 h-5 text-muted-foreground" />
             </div>
@@ -153,7 +164,6 @@ const AgedDebtors = () => {
         </header>
 
         <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
           {/* 90+ Warning */}
           {hasOverdue90 && (
             <Card className="border-0 shadow-lg rounded-3xl overflow-hidden bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
@@ -161,12 +171,10 @@ const AgedDebtors = () => {
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
                   <div>
-                    <p className="font-semibold text-sm text-red-800 dark:text-red-200">
-                      Overdue Invoices (90+ days)
-                    </p>
+                    <p className="font-semibold text-sm text-red-800 dark:text-red-200">Overdue Invoices (90+ days)</p>
                     <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                      You have {eur(buckets[3].total)} outstanding for more than 90 days.
-                      Consider following up with these customers or reviewing for bad debt provision.
+                      You have {eur(buckets[3].total)} outstanding for more than 90 days. Consider following up with
+                      these customers or reviewing for bad debt provision.
                     </p>
                   </div>
                 </div>
@@ -188,9 +196,7 @@ const AgedDebtors = () => {
                     <p className={`text-sm font-bold font-mono tabular-nums ${bucket.colorClass}`}>
                       {eur(bucket.total)}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {bucket.invoices.length} inv
-                    </p>
+                    <p className="text-xs text-muted-foreground">{bucket.invoices.length} inv</p>
                   </div>
                 ))}
               </div>
@@ -207,9 +213,7 @@ const AgedDebtors = () => {
                       <Clock className="w-5 h-5" />
                     </span>
                     {bucket.label}
-                    <Badge className={`ml-auto ${bucket.badgeClass}`}>
-                      {eur(bucket.total)}
-                    </Badge>
+                    <Badge className={`ml-auto ${bucket.badgeClass}`}>{eur(bucket.total)}</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
@@ -223,9 +227,7 @@ const AgedDebtors = () => {
                         <p className="text-xs text-muted-foreground">
                           Due: {inv.dueDate}
                           {inv.daysOverdue > 0 && (
-                            <span className={`ml-2 ${bucket.colorClass}`}>
-                              {inv.daysOverdue} days overdue
-                            </span>
+                            <span className={`ml-2 ${bucket.colorClass}`}>{inv.daysOverdue} days overdue</span>
                           )}
                         </p>
                       </div>
@@ -234,7 +236,7 @@ const AgedDebtors = () => {
                   ))}
                 </CardContent>
               </Card>
-            ) : null
+            ) : null,
           )}
 
           {totalOutstanding === 0 && (
@@ -242,9 +244,7 @@ const AgedDebtors = () => {
               <CardContent className="pt-6 text-center">
                 <FileText className="w-10 h-10 text-green-600 mx-auto mb-3" />
                 <p className="font-medium text-green-600">All invoices paid</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  No outstanding amounts to report.
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">No outstanding amounts to report.</p>
               </CardContent>
             </Card>
           )}

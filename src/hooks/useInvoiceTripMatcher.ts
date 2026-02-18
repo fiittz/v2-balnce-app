@@ -11,10 +11,7 @@ import {
   type DetectedTrip,
   type DetectTripsInput,
 } from "@/lib/tripDetection";
-import {
-  calculateMileageAllowance,
-  SUBSISTENCE_RATES,
-} from "@/lib/revenueRates";
+import { calculateMileageAllowance, SUBSISTENCE_RATES } from "@/lib/revenueRates";
 
 // ── Types ──────────────────────────────────────────────────────
 
@@ -56,11 +53,31 @@ export interface InvoiceTrip {
 
 /** Approximate inter-county distances (km, one-way) from Dublin. */
 const COUNTY_DISTANCE_FROM_DUBLIN: Record<string, number> = {
-  Dublin: 0, Kildare: 50, Meath: 50, Wicklow: 55, Louth: 80,
-  Westmeath: 100, Laois: 100, Offaly: 110, Carlow: 85, Kilkenny: 130,
-  Wexford: 150, Waterford: 165, Cork: 260, Kerry: 305, Limerick: 200,
-  Clare: 230, Tipperary: 175, Galway: 210, Mayo: 280, Roscommon: 190,
-  Sligo: 215, Leitrim: 235, Donegal: 275, Cavan: 130, Monaghan: 130,
+  Dublin: 0,
+  Kildare: 50,
+  Meath: 50,
+  Wicklow: 55,
+  Louth: 80,
+  Westmeath: 100,
+  Laois: 100,
+  Offaly: 110,
+  Carlow: 85,
+  Kilkenny: 130,
+  Wexford: 150,
+  Waterford: 165,
+  Cork: 260,
+  Kerry: 305,
+  Limerick: 200,
+  Clare: 230,
+  Tipperary: 175,
+  Galway: 210,
+  Mayo: 280,
+  Roscommon: 190,
+  Sligo: 215,
+  Leitrim: 235,
+  Donegal: 275,
+  Cavan: 130,
+  Monaghan: 130,
   Longford: 130,
 };
 
@@ -73,11 +90,7 @@ function estimateDistanceKm(fromCounty: string, toCounty: string): number {
 }
 
 function dayDiff(a: string, b: string): number {
-  return Math.abs(
-    Math.round(
-      (new Date(b).getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24)
-    )
-  );
+  return Math.abs(Math.round((new Date(b).getTime() - new Date(a).getTime()) / (1000 * 60 * 60 * 24)));
 }
 
 // ── Hook ───────────────────────────────────────────────────────
@@ -119,7 +132,9 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       workshopAddress = biz?.workshop_address || null;
       subsistenceRadiusKm = biz?.subsistence_radius_km || 8;
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   const baseLocation = extractBaseLocation(profile?.address);
   // Home county — for overnight detection
@@ -128,12 +143,12 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
     opts?.workshopCounty ||
     (baseLocation ? extractCountyFromAddress(baseLocation) : null);
   // Workshop county — for subsistence (may be same county but different location)
-  const workshopCounty = workshopAddress
-    ? (extractCountyFromAddress(workshopAddress) || homeCounty)
-    : homeCounty;
+  const workshopCounty = workshopAddress ? extractCountyFromAddress(workshopAddress) || homeCounty : homeCounty;
 
   // Get commute method and vehicle ownership from first director's onboarding_data
-  const director1Data = (directorRows?.[0] as Record<string, unknown>)?.onboarding_data as Record<string, unknown> | undefined;
+  const director1Data = (directorRows?.[0] as Record<string, unknown>)?.onboarding_data as
+    | Record<string, unknown>
+    | undefined;
   const commuteMethod = director1Data?.commute_method || "";
   const vehicleOwnedByDirector = director1Data?.vehicle_owned_by_director === true;
 
@@ -142,9 +157,11 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
 
     // Mileage only if director personally owns the vehicle
     const vehicleType: "personal_vehicle" | "company_vehicle" | "none" =
-      (commuteMethod === "personal_vehicle" && vehicleOwnedByDirector) ? "personal_vehicle" :
-      commuteMethod === "company_vehicle" ? "company_vehicle" :
-      "none";
+      commuteMethod === "personal_vehicle" && vehicleOwnedByDirector
+        ? "personal_vehicle"
+        : commuteMethod === "company_vehicle"
+          ? "company_vehicle"
+          : "none";
 
     // Filter invoices for tax year
     const yearInvoices = invoices.filter((inv) => {
@@ -156,7 +173,8 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
 
     for (const inv of yearInvoices) {
       // Extract location from customer address
-      const customerAddress = (inv.customer as Record<string, unknown>)?.address || (inv as Record<string, unknown>)?.customer_address;
+      const customerAddress =
+        (inv.customer as Record<string, unknown>)?.address || (inv as Record<string, unknown>)?.customer_address;
       if (!customerAddress) continue;
 
       const jobCounty = extractCountyFromAddress(customerAddress);
@@ -224,9 +242,7 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       // Determine if outside home county:
       // - Known home county: compare directly
       // - Unknown home county: use hotel evidence (overnight stays = outside county)
-      const isOutsideHomeCounty = effectiveHomeCounty
-        ? jobCounty !== effectiveHomeCounty
-        : overnightStayDetected;
+      const isOutsideHomeCounty = effectiveHomeCounty ? jobCounty !== effectiveHomeCounty : overnightStayDetected;
 
       // Build trip input for detectTrips
       const tripInput: DetectTripsInput[] = nearbyExpenses.map((exp) => ({
@@ -238,9 +254,8 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       }));
 
       const detectedTrips = detectTrips(tripInput, baseLocation);
-      const matchedTrip = detectedTrips.find(
-        (t) => extractCountyFromAddress(t.location) === jobCounty
-      ) || detectedTrips[0] || null;
+      const matchedTrip =
+        detectedTrips.find((t) => extractCountyFromAddress(t.location) === jobCounty) || detectedTrips[0] || null;
 
       // Calculate nights and days
       // Overnight stays only apply when working OUTSIDE home county
@@ -288,7 +303,7 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       //   actual accommodation (already in tripExpenses) + €39.08/day meals
       // If no receipts, use flat €191/night (covers accommodation + meals)
       const accommodationExpenses = tripExpenses
-        .filter(e => e.type === "accommodation")
+        .filter((e) => e.type === "accommodation")
         .reduce((sum, e) => sum + e.amount, 0);
 
       let subsistenceAllowance: number;
@@ -297,13 +312,14 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       if (accommodationExpenses > 0 && nights > 0) {
         // Vouched: actual accommodation + meals day rate per night + day rate for extra days
         subsistenceMethod = "vouched";
-        subsistenceAllowance = accommodationExpenses
-          + (nights * SUBSISTENCE_RATES.overnight.day_rate)
-          + (days * SUBSISTENCE_RATES.day_trip.ten_hours);
+        subsistenceAllowance =
+          accommodationExpenses +
+          nights * SUBSISTENCE_RATES.overnight.day_rate +
+          days * SUBSISTENCE_RATES.day_trip.ten_hours;
       } else if (nights > 0) {
         // Flat rate per night + day rate for extra working days
-        subsistenceAllowance = (nights * SUBSISTENCE_RATES.overnight.normal)
-          + (days * SUBSISTENCE_RATES.day_trip.ten_hours);
+        subsistenceAllowance =
+          nights * SUBSISTENCE_RATES.overnight.normal + days * SUBSISTENCE_RATES.day_trip.ten_hours;
       } else {
         // Day trip: €46.17/day (10+ hours)
         subsistenceAllowance = days * SUBSISTENCE_RATES.day_trip.ten_hours;
@@ -321,11 +337,14 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       }
 
       // Calculate meals portion for display
-      const mealsAllowance = subsistenceMethod === "vouched"
-        ? Math.round((nights * SUBSISTENCE_RATES.overnight.day_rate + days * SUBSISTENCE_RATES.day_trip.ten_hours) * 100) / 100
-        : subsistenceMethod === "flat" && nights > 0
-          ? Math.round(days * SUBSISTENCE_RATES.day_trip.ten_hours * 100) / 100 // extra day meals not included in flat overnight
-          : Math.round(days * SUBSISTENCE_RATES.day_trip.ten_hours * 100) / 100;
+      const mealsAllowance =
+        subsistenceMethod === "vouched"
+          ? Math.round(
+              (nights * SUBSISTENCE_RATES.overnight.day_rate + days * SUBSISTENCE_RATES.day_trip.ten_hours) * 100,
+            ) / 100
+          : subsistenceMethod === "flat" && nights > 0
+            ? Math.round(days * SUBSISTENCE_RATES.day_trip.ten_hours * 100) / 100 // extra day meals not included in flat overnight
+            : Math.round(days * SUBSISTENCE_RATES.day_trip.ten_hours * 100) / 100;
 
       const totalRevenueAllowance = subsistenceAllowance + mileageAllowance;
       // Positive = company owes director (director paid out of pocket more than CSV expenses)
@@ -335,7 +354,7 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
       results.push({
         invoiceId: inv.id,
         invoiceNumber: inv.invoice_number,
-        customerName: (inv.customer as Record<string, unknown>)?.name as string || "Unknown",
+        customerName: ((inv.customer as Record<string, unknown>)?.name as string) || "Unknown",
         jobLocation: jobCounty,
         invoiceDate: inv.invoice_date,
         matchedTrip,
@@ -362,7 +381,19 @@ export function useInvoiceTripMatcher(opts?: UseInvoiceTripMatcherOptions) {
     }
 
     return results;
-  }, [invoices, expenses, user?.id, baseLocation, homeCounty, workshopCounty, subsistenceRadiusKm, commuteMethod, vehicleOwnedByDirector, startDate, endDate]);
+  }, [
+    invoices,
+    expenses,
+    user?.id,
+    baseLocation,
+    homeCounty,
+    workshopCounty,
+    subsistenceRadiusKm,
+    commuteMethod,
+    vehicleOwnedByDirector,
+    startDate,
+    endDate,
+  ]);
 
   return { invoiceTrips, isLoading };
 }

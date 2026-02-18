@@ -32,7 +32,7 @@ export async function categorizeTransaction(
   transaction: Transaction,
   categories: Category[],
   businessType?: string,
-  receiptText?: string
+  receiptText?: string,
 ): Promise<CategorizationResult> {
   try {
     const { data, error } = await supabase.functions.invoke("categorize-transaction", {
@@ -64,7 +64,7 @@ export async function categorizeTransaction(
 
 export async function matchTransaction(
   transaction: Transaction,
-  candidates: unknown[]
+  candidates: unknown[],
 ): Promise<{
   match_id: string | null;
   match_type: "invoice" | "expense" | null;
@@ -95,7 +95,7 @@ export async function matchTransaction(
 
 export async function detectAnomaly(
   transaction: Transaction,
-  recentTransactions: Transaction[]
+  recentTransactions: Transaction[],
 ): Promise<{
   is_anomaly: boolean;
   anomaly_type: string;
@@ -140,15 +140,12 @@ export function calculateVat(total: number, vatRate: string): { net: number; vat
   if (rate === 0) {
     return { net: total, vat: 0 };
   }
-  const vat = Number((total * rate / (1 + rate)).toFixed(2));
+  const vat = Number(((total * rate) / (1 + rate)).toFixed(2));
   const net = Number((total - vat).toFixed(2));
   return { net, vat };
 }
 
-export function calculateRct(
-  grossAmount: number,
-  rctRate: number
-): { deducted: number; netPayable: number } {
+export function calculateRct(grossAmount: number, rctRate: number): { deducted: number; netPayable: number } {
   const deducted = Number((grossAmount * (rctRate / 100)).toFixed(2));
   const netPayable = Number((grossAmount - deducted).toFixed(2));
   return { deducted, netPayable };

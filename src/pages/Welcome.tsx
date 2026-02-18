@@ -31,8 +31,7 @@ const ALLOWED_EMAILS = [
   "markafmoore+balnce@gmail.com",
 ];
 
-const isEmailAllowed = (email: string) =>
-  ALLOWED_EMAILS.some((e) => e.toLowerCase() === email.trim().toLowerCase());
+const isEmailAllowed = (email: string) => ALLOWED_EMAILS.some((e) => e.toLowerCase() === email.trim().toLowerCase());
 
 type Screen = "welcome" | "login" | "signup" | "business-type";
 
@@ -137,7 +136,7 @@ const Welcome = () => {
               .from("profiles")
               .update({
                 business_name: businessName,
-                business_type: industryType.trim()
+                business_type: industryType.trim(),
               })
               .eq("id", data.user!.id);
             console.log("Profile updated");
@@ -185,8 +184,7 @@ const Welcome = () => {
   // Shared style constants
   const inputClass =
     "h-14 bg-transparent border border-black/20 font-['IBM_Plex_Mono'] text-sm text-foreground placeholder:text-black/30 rounded-none";
-  const labelClass =
-    "text-foreground font-medium font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest";
+  const labelClass = "text-foreground font-medium font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest";
   const primaryBtnClass =
     "w-full h-14 border border-[#E8930C] bg-[#E8930C]/10 font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest text-[#E8930C] hover:bg-[#E8930C] hover:text-white rounded-none mt-6 shadow-none";
 
@@ -239,9 +237,7 @@ const Welcome = () => {
               ))}
             </div>
           </div>
-          <p className="text-muted-foreground text-base mb-12 font-['IBM_Plex_Sans']">
-            Your AI accountant
-          </p>
+          <p className="text-muted-foreground text-base mb-12 font-['IBM_Plex_Sans']">Your AI accountant</p>
 
           <div className="w-full max-w-sm space-y-4">
             <Button
@@ -278,9 +274,17 @@ const Welcome = () => {
               </h1>
             </div>
 
-            <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleLogin();
+              }}
+              className="space-y-5"
+            >
               <div className="space-y-2">
-                <Label htmlFor="email" className={labelClass}>Email</Label>
+                <Label htmlFor="email" className={labelClass}>
+                  Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -292,7 +296,9 @@ const Welcome = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className={labelClass}>Password</Label>
+                <Label htmlFor="password" className={labelClass}>
+                  Password
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -304,17 +310,17 @@ const Welcome = () => {
                 />
               </div>
 
-              <Button
-                type="submit"
-                disabled={isLoading}
-                className={primaryBtnClass}
-              >
+              <Button type="submit" disabled={isLoading} className={primaryBtnClass}>
                 {isLoading ? "Signing in..." : "Log In"}
               </Button>
 
               <p className="text-center text-muted-foreground font-['IBM_Plex_Sans'] text-sm">
                 Don't have an account?{" "}
-                <button type="button" onClick={() => setScreen("signup")} className="font-semibold text-foreground underline">
+                <button
+                  type="button"
+                  onClick={() => setScreen("signup")}
+                  className="font-semibold text-foreground underline"
+                >
                   Sign up
                 </button>
               </p>
@@ -342,7 +348,9 @@ const Welcome = () => {
 
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="business" className={labelClass}>Business Name</Label>
+                <Label htmlFor="business" className={labelClass}>
+                  Business Name
+                </Label>
                 <Input
                   id="business"
                   type="text"
@@ -353,7 +361,9 @@ const Welcome = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-email" className={labelClass}>Email</Label>
+                <Label htmlFor="signup-email" className={labelClass}>
+                  Email
+                </Label>
                 <Input
                   id="signup-email"
                   type="email"
@@ -364,7 +374,9 @@ const Welcome = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password" className={labelClass}>Password</Label>
+                <Label htmlFor="signup-password" className={labelClass}>
+                  Password
+                </Label>
                 <Input
                   id="signup-password"
                   type="password"
@@ -375,10 +387,7 @@ const Welcome = () => {
                 />
               </div>
 
-              <Button
-                onClick={handleContinue}
-                className={primaryBtnClass}
-              >
+              <Button onClick={handleContinue} className={primaryBtnClass}>
                 Continue
               </Button>
 

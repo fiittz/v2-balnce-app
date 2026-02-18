@@ -1,13 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowLeft,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Loader2,
-  AlertTriangle,
-} from "lucide-react";
+import { ArrowLeft, TrendingUp, TrendingDown, BarChart3, Loader2, AlertTriangle } from "lucide-react";
 import AppLayout from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,7 +60,11 @@ const ProfitAndLoss = () => {
       const catName = (t.category as { id: string; name: string } | null)?.name ?? "Uncategorised";
       if (NON_TAXABLE_CATEGORIES.includes(catName)) continue;
       const desc = (t.description ?? "").toLowerCase();
-      if (catName === "Uncategorised" && (desc.includes("revenue") || desc.includes("collector general") || desc.includes("tax refund"))) continue;
+      if (
+        catName === "Uncategorised" &&
+        (desc.includes("revenue") || desc.includes("collector general") || desc.includes("tax refund"))
+      )
+        continue;
       map.set(catName, (map.get(catName) ?? 0) + Math.abs(Number(t.amount) || 0));
     }
     return Array.from(map.entries())
@@ -110,9 +107,7 @@ const ProfitAndLoss = () => {
       <AppLayout>
         <div className="flex-1 flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <AlertTriangle className="w-10 h-10 text-muted-foreground" />
-          <p className="text-muted-foreground">
-            No transaction data available. Please import bank feeds first.
-          </p>
+          <p className="text-muted-foreground">No transaction data available. Please import bank feeds first.</p>
           <Button variant="outline" onClick={() => navigate("/reports")}>
             Back to Reports
           </Button>
@@ -128,19 +123,12 @@ const ProfitAndLoss = () => {
         <header className="bg-background px-6 py-4 card-shadow sticky top-0 z-10">
           <div className="max-w-3xl mx-auto">
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/reports")}
-                className="shrink-0"
-              >
+              <Button variant="ghost" size="icon" onClick={() => navigate("/reports")} className="shrink-0">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
               <div className="flex-1">
                 <h1 className="font-semibold text-xl">Profit & Loss</h1>
-                <p className="text-sm text-muted-foreground">
-                  Tax Year {taxYear} &bull; Limited Company
-                </p>
+                <p className="text-sm text-muted-foreground">Tax Year {taxYear} &bull; Limited Company</p>
               </div>
               <BarChart3 className="w-5 h-5 text-muted-foreground" />
             </div>
@@ -148,7 +136,6 @@ const ProfitAndLoss = () => {
         </header>
 
         <main className="max-w-3xl mx-auto px-6 py-8 space-y-6">
-
           {/* Revenue */}
           <Card className="border-0 shadow-lg rounded-3xl overflow-hidden">
             <CardHeader className="pb-2">
@@ -184,18 +171,20 @@ const ProfitAndLoss = () => {
           </Card>
 
           {/* Net Profit */}
-          <Card className={`border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ${
-            isProfit ? "ring-green-500/30" : "ring-red-500/30"
-          }`}>
+          <Card
+            className={`border-0 shadow-lg rounded-3xl overflow-hidden ring-2 ${
+              isProfit ? "ring-green-500/30" : "ring-red-500/30"
+            }`}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">
-                    {isProfit ? "Net Profit" : "Net Loss"}
-                  </p>
-                  <p className={`text-3xl font-bold font-mono tabular-nums ${
-                    isProfit ? "text-green-600" : "text-red-600"
-                  }`}>
+                  <p className="text-sm text-muted-foreground">{isProfit ? "Net Profit" : "Net Loss"}</p>
+                  <p
+                    className={`text-3xl font-bold font-mono tabular-nums ${
+                      isProfit ? "text-green-600" : "text-red-600"
+                    }`}
+                  >
                     {eur(Math.abs(netProfit))}
                   </p>
                 </div>

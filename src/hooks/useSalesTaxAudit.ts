@@ -18,7 +18,8 @@ export function useSalesTaxAudit() {
     // Fetch transactions with categories and accounts for Section 59/60 deductibility
     const { data: transactions, error: txnError } = await supabase
       .from("transactions")
-      .select(`
+      .select(
+        `
         id,
         transaction_date,
         description,
@@ -31,7 +32,8 @@ export function useSalesTaxAudit() {
         is_business_expense,
         category:categories(id, name),
         account:accounts(name)
-      `)
+      `,
+      )
       .eq("user_id", user.id)
       .gte("transaction_date", startStr)
       .lte("transaction_date", endStr)
@@ -42,7 +44,8 @@ export function useSalesTaxAudit() {
     // Fetch expenses with categories and suppliers
     const { data: expenses, error: expError } = await supabase
       .from("expenses")
-      .select(`
+      .select(
+        `
         id,
         expense_date,
         description,
@@ -53,7 +56,8 @@ export function useSalesTaxAudit() {
         invoice_number,
         category:categories(id, name),
         supplier:suppliers(name)
-      `)
+      `,
+      )
       .eq("user_id", user.id)
       .gte("expense_date", startStr)
       .lte("expense_date", endStr)
@@ -64,7 +68,8 @@ export function useSalesTaxAudit() {
     // Fetch invoices with customers and items
     const { data: invoices, error: invError } = await supabase
       .from("invoices")
-      .select(`
+      .select(
+        `
         id,
         issue_date,
         invoice_number,
@@ -79,7 +84,8 @@ export function useSalesTaxAudit() {
           net_amount,
           total_amount
         )
-      `)
+      `,
+      )
       .eq("user_id", user.id)
       .gte("issue_date", startStr)
       .lte("issue_date", endStr)
@@ -97,16 +103,16 @@ export function useSalesTaxAudit() {
 
   const generateReport = async (startDate: Date, endDate: Date): Promise<SalesTaxAuditReport> => {
     const { transactions, expenses, invoices } = await fetchReportData(startDate, endDate);
-    
+
     const businessName = profile?.business_name || "Business";
-    
+
     return generateSalesTaxAuditReport(
       businessName,
       startDate,
       endDate,
       transactions as unknown[],
       expenses as unknown[],
-      invoices as unknown[]
+      invoices as unknown[],
     );
   };
 

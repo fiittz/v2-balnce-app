@@ -1,6 +1,20 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Building2, Briefcase, CreditCard, Receipt, Wallet, Landmark, Banknote, Users, Check, HardHat, UserPlus, FileSpreadsheet, Globe } from "lucide-react";
+import {
+  Building2,
+  Briefcase,
+  CreditCard,
+  Receipt,
+  Wallet,
+  Landmark,
+  Banknote,
+  Users,
+  Check,
+  HardHat,
+  UserPlus,
+  FileSpreadsheet,
+  Globe,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -126,7 +140,7 @@ interface OnboardingState {
   // Global settings
   business_count: number;
   businesses: BusinessData[];
-  
+
   // Declaration
   declaration_confirmed: boolean;
 }
@@ -200,11 +214,22 @@ const initialState: OnboardingState = {
 };
 
 const CONSTRUCTION_ACTIVITIES = [
-  "carpentry_joinery", "general_construction", "electrical_contracting",
-  "plumbing_heating", "bricklaying_masonry", "plastering_drylining",
-  "painting_decorating", "roofing", "groundworks_civil", "landscaping",
-  "tiling_stonework", "steel_fabrication_welding", "quantity_surveying",
-  "project_management", "site_supervision", "property_maintenance",
+  "carpentry_joinery",
+  "general_construction",
+  "electrical_contracting",
+  "plumbing_heating",
+  "bricklaying_masonry",
+  "plastering_drylining",
+  "painting_decorating",
+  "roofing",
+  "groundworks_civil",
+  "landscaping",
+  "tiling_stonework",
+  "steel_fabrication_welding",
+  "quantity_surveying",
+  "project_management",
+  "site_supervision",
+  "property_maintenance",
   "property_development",
 ];
 
@@ -365,7 +390,6 @@ const PAYMENT_TYPES = [
   { value: "payroll", label: "Payroll" },
   { value: "dividends", label: "Dividends" },
   { value: "contractor_payments", label: "Contractor payments" },
-  
 ];
 
 const LOAN_TYPES = [
@@ -383,21 +407,22 @@ export default function OnboardingWizard() {
   const [selectedBusinessIndex, setSelectedBusinessIndex] = useState(0);
 
   // Compute visible steps based on whether any business has a construction activity
-  const isConstructionTrade = state.businesses.some(b =>
-    CONSTRUCTION_ACTIVITIES.includes(b.primary_activity) ||
-    b.secondary_activities.some(a => CONSTRUCTION_ACTIVITIES.includes(a))
+  const isConstructionTrade = state.businesses.some(
+    (b) =>
+      CONSTRUCTION_ACTIVITIES.includes(b.primary_activity) ||
+      b.secondary_activities.some((a) => CONSTRUCTION_ACTIVITIES.includes(a)),
   );
-  const isAnyVATRegistered = state.businesses.some(b => b.vat_registered);
+  const isAnyVATRegistered = state.businesses.some((b) => b.vat_registered);
   const STEPS = useMemo(() => {
     let steps = ALL_STEPS;
-    if (!isConstructionTrade) steps = steps.filter(s => s !== "rct_subcontracting");
-    if (!isAnyVATRegistered) steps = steps.filter(s => s !== "eu_international_trade");
+    if (!isConstructionTrade) steps = steps.filter((s) => s !== "rct_subcontracting");
+    if (!isAnyVATRegistered) steps = steps.filter((s) => s !== "eu_international_trade");
     return steps;
   }, [isConstructionTrade, isAnyVATRegistered]);
 
   const step = STEPS[stepIndex];
   const progress = ((stepIndex + 1) / STEPS.length) * 100;
-  
+
   // Current business data helper
   const currentBusiness = state.businesses[selectedBusinessIndex] || state.businesses[0];
 
@@ -433,7 +458,7 @@ export default function OnboardingWizard() {
       case "business_identity":
         // All businesses must have name and structure filled
         // For limited companies, also require director count
-        return state.businesses.every(b => {
+        return state.businesses.every((b) => {
           const hasBasicInfo = b.name.trim() && b.structure;
           if (b.structure === "limited_company") {
             return hasBasicInfo && b.director_count !== null && b.director_count >= 1;
@@ -441,16 +466,18 @@ export default function OnboardingWizard() {
           return hasBasicInfo;
         });
       case "industry_select":
-        return state.businesses.every(b => b.industry.trim() !== "");
+        return state.businesses.every((b) => b.industry.trim() !== "");
       case "business_activity":
         // All businesses must have a primary activity (and description if "other")
-        return state.businesses.every(b => b.primary_activity && (b.primary_activity !== "other" || b.primary_activity_other));
+        return state.businesses.every(
+          (b) => b.primary_activity && (b.primary_activity !== "other" || b.primary_activity_other),
+        );
       case "vat_setup":
         // All businesses must have valid VAT setup
-        return state.businesses.every(b => !b.vat_registered || (b.vat_number && b.vat_basis));
+        return state.businesses.every((b) => !b.vat_registered || (b.vat_number && b.vat_basis));
       case "capitalisation":
         // All businesses must have a valid threshold
-        return state.businesses.every(b => b.capitalisation_threshold > 0);
+        return state.businesses.every((b) => b.capitalisation_threshold > 0);
       case "declaration":
         return state.declaration_confirmed;
       default:
@@ -472,9 +499,12 @@ export default function OnboardingWizard() {
     }
   };
 
-  const handleMultiSelectBusiness = (field: "payment_methods" | "payment_types" | "secondary_activities", value: string) => {
+  const handleMultiSelectBusiness = (
+    field: "payment_methods" | "payment_types" | "secondary_activities",
+    value: string,
+  ) => {
     const currentValues = currentBusiness[field] as string[];
-    
+
     // Handle "none" selection for payment_types
     if (field === "payment_types") {
       if (value === "none") {
@@ -482,23 +512,21 @@ export default function OnboardingWizard() {
         return;
       }
       // If selecting something else, remove "none"
-      const withoutNone = currentValues.filter(v => v !== "none");
-      const newValues = withoutNone.includes(value)
-        ? withoutNone.filter(v => v !== value)
-        : [...withoutNone, value];
+      const withoutNone = currentValues.filter((v) => v !== "none");
+      const newValues = withoutNone.includes(value) ? withoutNone.filter((v) => v !== value) : [...withoutNone, value];
       updateBusiness(field, newValues);
       return;
     }
-    
+
     const newValues = currentValues.includes(value)
-      ? currentValues.filter(v => v !== value)
+      ? currentValues.filter((v) => v !== value)
       : [...currentValues, value];
     updateBusiness(field, newValues);
   };
 
   const handleSkip = async () => {
     if (!user) return;
-    
+
     setSaving(true);
     try {
       // Demo mode: just navigate
@@ -516,35 +544,31 @@ export default function OnboardingWizard() {
         .maybeSingle();
 
       if (existing?.id) {
-        await supabase
-          .from("onboarding_settings")
-          .update({ onboarding_completed: true })
-          .eq("id", existing.id);
+        await supabase.from("onboarding_settings").update({ onboarding_completed: true }).eq("id", existing.id);
       } else {
-        await supabase
-          .from("onboarding_settings")
-          .insert({
-            user_id: user.id,
-            onboarding_completed: true,
-          });
+        await supabase.from("onboarding_settings").insert({
+          user_id: user.id,
+          onboarding_completed: true,
+        });
       }
 
       // Store mock director onboarding to skip that too
       try {
-        localStorage.setItem('business_onboarding_extra', JSON.stringify({ director_count: 1 }));
+        localStorage.setItem("business_onboarding_extra", JSON.stringify({ director_count: 1 }));
       } catch (e) {
         console.warn("localStorage not available");
       }
 
       // Create a minimal director_onboarding record in Supabase so auth check passes
-      await supabase
-        .from("director_onboarding")
-        .upsert({
+      await supabase.from("director_onboarding").upsert(
+        {
           user_id: user.id,
           director_number: 1,
           onboarding_completed: true,
           onboarding_data: { onboarding_completed: true },
-        }, { onConflict: 'user_id,director_number' });
+        },
+        { onConflict: "user_id,director_number" },
+      );
 
       await refreshOnboardingStatus();
       toast.success("Onboarding skipped - you can configure settings later");
@@ -559,20 +583,20 @@ export default function OnboardingWizard() {
 
   const handleFinish = async () => {
     if (!user) return;
-    
+
     setSaving(true);
     try {
       // Use the first business for legacy fields
       const primaryBusiness = state.businesses[0];
-      
+
       // Store additional fields in localStorage since they don't exist in DB yet
       const additionalSettings = {
         businesses: state.businesses,
         business_count: state.business_count,
       };
-      
+
       try {
-        localStorage.setItem('business_onboarding_extra', JSON.stringify(additionalSettings));
+        localStorage.setItem("business_onboarding_extra", JSON.stringify(additionalSettings));
       } catch (storageError) {
         console.warn("Unable to persist business_onboarding_extra to localStorage", storageError);
       }
@@ -585,7 +609,7 @@ export default function OnboardingWizard() {
       }
 
       // Persist only columns that exist in the backend schema (use first business for legacy).
-      const vatNumber = primaryBusiness.vat_registered ? (primaryBusiness.vat_number || null) : null;
+      const vatNumber = primaryBusiness.vat_registered ? primaryBusiness.vat_number || null : null;
 
       const { data: existing, error: existingError } = await supabase
         .from("onboarding_settings")
@@ -613,7 +637,10 @@ export default function OnboardingWizard() {
           .from("onboarding_settings")
           .update({
             business_name: primaryBusiness.name,
-            business_type: (primaryBusiness.primary_activity === "other" ? primaryBusiness.primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+            business_type:
+              (primaryBusiness.primary_activity === "other"
+                ? primaryBusiness.primary_activity_other || "other"
+                : primaryBusiness.primary_activity) || null,
             business_description: primaryBusiness.business_description || null,
             vat_registered: primaryBusiness.vat_registered,
             vat_number: vatNumber,
@@ -624,18 +651,19 @@ export default function OnboardingWizard() {
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
-          .from("onboarding_settings")
-          .insert({
-            user_id: user.id,
-            business_name: primaryBusiness.name,
-            business_type: (primaryBusiness.primary_activity === "other" ? primaryBusiness.primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
-            business_description: primaryBusiness.business_description || null,
-            vat_registered: primaryBusiness.vat_registered,
-            vat_number: vatNumber,
-            onboarding_completed: true,
-            ...euTradeFields,
-          });
+        const { error } = await supabase.from("onboarding_settings").insert({
+          user_id: user.id,
+          business_name: primaryBusiness.name,
+          business_type:
+            (primaryBusiness.primary_activity === "other"
+              ? primaryBusiness.primary_activity_other || "other"
+              : primaryBusiness.primary_activity) || null,
+          business_description: primaryBusiness.business_description || null,
+          vat_registered: primaryBusiness.vat_registered,
+          vat_number: vatNumber,
+          onboarding_completed: true,
+          ...euTradeFields,
+        });
 
         if (error) throw error;
       }
@@ -645,7 +673,10 @@ export default function OnboardingWizard() {
         .from("profiles")
         .update({
           business_name: primaryBusiness.name,
-          business_type: (primaryBusiness.primary_activity === "other" ? primaryBusiness.primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+          business_type:
+            (primaryBusiness.primary_activity === "other"
+              ? primaryBusiness.primary_activity_other || "other"
+              : primaryBusiness.primary_activity) || null,
           business_description: primaryBusiness.business_description || null,
         })
         .eq("id", user.id);
@@ -664,9 +695,7 @@ export default function OnboardingWizard() {
 
       // Only insert if we have valid businesses
       if (accountsToCreate.length > 0) {
-        const { error: accountsError } = await supabase
-          .from("accounts")
-          .insert(accountsToCreate);
+        const { error: accountsError } = await supabase.from("accounts").insert(accountsToCreate);
 
         if (accountsError) {
           console.warn("Accounts creation warning:", accountsError);
@@ -686,7 +715,7 @@ export default function OnboardingWizard() {
 
   const getAllActivities = () => {
     const activities: { value: string; label: string }[] = [];
-    Object.values(BUSINESS_ACTIVITIES).forEach(category => {
+    Object.values(BUSINESS_ACTIVITIES).forEach((category) => {
       activities.push(...category);
     });
     return activities;
@@ -695,7 +724,7 @@ export default function OnboardingWizard() {
   // Business tabs component for steps that need per-business data
   const BusinessTabs = () => {
     if (state.businesses.length <= 1) return null;
-    
+
     return (
       <div className="flex gap-2 mb-6 flex-wrap">
         {state.businesses.map((business, index) => (
@@ -706,7 +735,7 @@ export default function OnboardingWizard() {
               "px-4 py-2 rounded-full text-sm font-medium transition-all border",
               selectedBusinessIndex === index
                 ? "bg-primary text-primary-foreground border-primary"
-                : "bg-muted text-muted-foreground border-border hover:bg-muted/80"
+                : "bg-muted text-muted-foreground border-border hover:bg-muted/80",
             )}
           >
             {business.name || `Business ${index + 1}`}
@@ -746,7 +775,9 @@ export default function OnboardingWizard() {
                       "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border",
                       isActive && "bg-primary text-primary-foreground border-primary",
                       isComplete && "bg-muted text-foreground border-border hover:bg-muted/80",
-                      !isActive && !isComplete && "bg-transparent text-muted-foreground border-transparent hover:bg-muted/50"
+                      !isActive &&
+                        !isComplete &&
+                        "bg-transparent text-muted-foreground border-transparent hover:bg-muted/50",
                     )}
                   >
                     <span>{STEP_LABELS[s]}</span>
@@ -839,23 +870,28 @@ export default function OnboardingWizard() {
                           type="button"
                           onClick={() => {
                             const newBusinesses = [...state.businesses];
-                            newBusinesses[index] = { ...newBusinesses[index], structure: option.value as "sole_trader" | "limited_company" };
+                            newBusinesses[index] = {
+                              ...newBusinesses[index],
+                              structure: option.value as "sole_trader" | "limited_company",
+                            };
                             setState({ ...state, businesses: newBusinesses });
                           }}
                           className={cn(
                             "p-4 rounded-xl border-2 text-left transition-all",
                             business.structure === option.value
                               ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
+                              : "border-border hover:border-primary/50",
                           )}
                         >
                           <div className="flex items-start gap-3">
-                            <div className={cn(
-                              "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5",
-                              business.structure === option.value
-                                ? "border-primary bg-primary"
-                                : "border-muted-foreground"
-                            )}>
+                            <div
+                              className={cn(
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5",
+                                business.structure === option.value
+                                  ? "border-primary bg-primary"
+                                  : "border-muted-foreground",
+                              )}
+                            >
                               {business.structure === option.value && (
                                 <Check className="w-3 h-3 text-primary-foreground" />
                               )}
@@ -913,7 +949,10 @@ export default function OnboardingWizard() {
                           value={business.director_count || ""}
                           onChange={(e) => {
                             const newBusinesses = [...state.businesses];
-                            newBusinesses[index] = { ...newBusinesses[index], director_count: parseInt(e.target.value) || null };
+                            newBusinesses[index] = {
+                              ...newBusinesses[index],
+                              director_count: parseInt(e.target.value) || null,
+                            };
                             setState({ ...state, businesses: newBusinesses });
                           }}
                           placeholder="Enter number of directors"
@@ -940,16 +979,18 @@ export default function OnboardingWizard() {
                                 "p-4 rounded-xl border-2 text-left transition-all",
                                 business.has_company_secretary === option.value
                                   ? "border-primary bg-primary/5"
-                                  : "border-border hover:border-primary/50"
+                                  : "border-border hover:border-primary/50",
                               )}
                             >
                               <div className="flex items-center gap-3">
-                                <div className={cn(
-                                  "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                                  business.has_company_secretary === option.value
-                                    ? "border-primary bg-primary"
-                                    : "border-muted-foreground"
-                                )}>
+                                <div
+                                  className={cn(
+                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                                    business.has_company_secretary === option.value
+                                      ? "border-primary bg-primary"
+                                      : "border-muted-foreground",
+                                  )}
+                                >
                                   {business.has_company_secretary === option.value && (
                                     <Check className="w-3 h-3 text-primary-foreground" />
                                   )}
@@ -969,7 +1010,10 @@ export default function OnboardingWizard() {
                             value={business.company_secretary_name}
                             onChange={(e) => {
                               const newBusinesses = [...state.businesses];
-                              newBusinesses[index] = { ...newBusinesses[index], company_secretary_name: e.target.value };
+                              newBusinesses[index] = {
+                                ...newBusinesses[index],
+                                company_secretary_name: e.target.value,
+                              };
                               setState({ ...state, businesses: newBusinesses });
                             }}
                             placeholder="Enter company secretary's full name"
@@ -1061,14 +1105,18 @@ export default function OnboardingWizard() {
                       value={business.subsistence_radius_km || ""}
                       onChange={(e) => {
                         const newBusinesses = [...state.businesses];
-                        newBusinesses[index] = { ...newBusinesses[index], subsistence_radius_km: parseInt(e.target.value) || 8 };
+                        newBusinesses[index] = {
+                          ...newBusinesses[index],
+                          subsistence_radius_km: parseInt(e.target.value) || 8,
+                        };
                         setState({ ...state, businesses: newBusinesses });
                       }}
                       placeholder="8"
                       className="mt-1.5 w-24"
                     />
                     <p className="text-sm text-muted-foreground mt-1.5">
-                      Revenue civil service subsistence rates apply when working more than this distance from your workshop. Default: 8km.
+                      Revenue civil service subsistence rates apply when working more than this distance from your
+                      workshop. Default: 8km.
                     </p>
                   </div>
                 </div>
@@ -1097,16 +1145,18 @@ export default function OnboardingWizard() {
                     "rounded-xl border p-4 text-left transition-all",
                     currentBusiness.industry === industryKey
                       ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
+                      : "border-border hover:border-primary/50",
                   )}
                 >
                   <div className="flex items-start gap-3">
-                    <div className={cn(
-                      "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0",
-                      currentBusiness.industry === industryKey
-                        ? "border-primary bg-primary"
-                        : "border-muted-foreground"
-                    )}>
+                    <div
+                      className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0",
+                        currentBusiness.industry === industryKey
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground",
+                      )}
+                    >
                       {currentBusiness.industry === industryKey && (
                         <Check className="w-3 h-3 text-primary-foreground" />
                       )}
@@ -1156,40 +1206,46 @@ export default function OnboardingWizard() {
                 <div>
                   <Label className="text-base font-medium">Primary business activity *</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                    {(BUSINESS_ACTIVITIES[currentBusiness.industry as keyof typeof BUSINESS_ACTIVITIES] || []).map((activity) => (
-                      <button
-                        key={activity.value}
-                        type="button"
-                        onClick={() => updateBusiness("primary_activity", activity.value)}
-                        className={cn(
-                          "rounded-xl border p-4 text-left transition-all",
-                          currentBusiness.primary_activity === activity.value
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={cn(
-                            "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0",
+                    {(BUSINESS_ACTIVITIES[currentBusiness.industry as keyof typeof BUSINESS_ACTIVITIES] || []).map(
+                      (activity) => (
+                        <button
+                          key={activity.value}
+                          type="button"
+                          onClick={() => updateBusiness("primary_activity", activity.value)}
+                          className={cn(
+                            "rounded-xl border p-4 text-left transition-all",
                             currentBusiness.primary_activity === activity.value
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground"
-                          )}>
-                            {currentBusiness.primary_activity === activity.value && (
-                              <Check className="w-3 h-3 text-primary-foreground" />
-                            )}
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50",
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={cn(
+                                "w-5 h-5 rounded-full border-2 flex items-center justify-center mt-0.5 shrink-0",
+                                currentBusiness.primary_activity === activity.value
+                                  ? "border-primary bg-primary"
+                                  : "border-muted-foreground",
+                              )}
+                            >
+                              {currentBusiness.primary_activity === activity.value && (
+                                <Check className="w-3 h-3 text-primary-foreground" />
+                              )}
+                            </div>
+                            <span className="font-medium text-sm">{activity.label}</span>
                           </div>
-                          <span className="font-medium text-sm">{activity.label}</span>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      ),
+                    )}
                   </div>
                 </div>
               )}
 
               <div>
                 <Label className="text-base font-medium">Describe what your business does (optional)</Label>
-                <p className="text-sm text-muted-foreground mb-3">Max 40 words — helps us categorise your transactions accurately</p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Max 40 words — helps us categorise your transactions accurately
+                </p>
                 <Textarea
                   className="min-h-[80px] text-base"
                   placeholder="e.g. We build custom kitchens and wardrobes for residential clients in Dublin"
@@ -1227,7 +1283,7 @@ export default function OnboardingWizard() {
                       "w-full p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                       currentBusiness.payment_methods.includes(method.value)
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
                     <Checkbox checked={currentBusiness.payment_methods.includes(method.value)} />
@@ -1249,13 +1305,23 @@ export default function OnboardingWizard() {
 
             <BusinessTabs />
 
-            {currentBusiness.rct_status && currentBusiness.rct_status !== "" && currentBusiness.rct_status !== "not_applicable" && (
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-sm">
-                VAT is disabled because RCT is active. To enable VAT, set RCT to "Not applicable" first.
-              </div>
-            )}
+            {currentBusiness.rct_status &&
+              currentBusiness.rct_status !== "" &&
+              currentBusiness.rct_status !== "not_applicable" && (
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-800 text-sm">
+                  VAT is disabled because RCT is active. To enable VAT, set RCT to "Not applicable" first.
+                </div>
+              )}
 
-            <div className={cn("bg-card rounded-2xl p-6 shadow-sm space-y-5", currentBusiness.rct_status && currentBusiness.rct_status !== "" && currentBusiness.rct_status !== "not_applicable" && "opacity-50 pointer-events-none")}>
+            <div
+              className={cn(
+                "bg-card rounded-2xl p-6 shadow-sm space-y-5",
+                currentBusiness.rct_status &&
+                  currentBusiness.rct_status !== "" &&
+                  currentBusiness.rct_status !== "not_applicable" &&
+                  "opacity-50 pointer-events-none",
+              )}
+            >
               <div>
                 <Label className="text-base font-medium">Are you currently VAT registered?</Label>
                 <div className="grid grid-cols-2 gap-3 mt-2">
@@ -1270,14 +1336,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.vat_registered === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.vat_registered === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.vat_registered === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.vat_registered === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.vat_registered === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1323,14 +1395,20 @@ export default function OnboardingWizard() {
                             "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                             currentBusiness.vat_basis === option.value
                               ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
+                              : "border-border hover:border-primary/50",
                           )}
                         >
-                          <div className={cn(
-                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                            currentBusiness.vat_basis === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                          )}>
-                            {currentBusiness.vat_basis === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                          <div
+                            className={cn(
+                              "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                              currentBusiness.vat_basis === option.value
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground",
+                            )}
+                          >
+                            {currentBusiness.vat_basis === option.value && (
+                              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                            )}
                           </div>
                           <span className="font-medium">{option.label}</span>
                         </button>
@@ -1352,14 +1430,20 @@ export default function OnboardingWizard() {
                             "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                             currentBusiness.vat_status_change_expected === option.value
                               ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
+                              : "border-border hover:border-primary/50",
                           )}
                         >
-                          <div className={cn(
-                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                            currentBusiness.vat_status_change_expected === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                          )}>
-                            {currentBusiness.vat_status_change_expected === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                          <div
+                            className={cn(
+                              "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                              currentBusiness.vat_status_change_expected === option.value
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground",
+                            )}
+                          >
+                            {currentBusiness.vat_status_change_expected === option.value && (
+                              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                            )}
                           </div>
                           <span className="font-medium">{option.label}</span>
                         </button>
@@ -1399,7 +1483,10 @@ export default function OnboardingWizard() {
             {currentBusiness.vat_number && (
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-blue-800 text-sm space-y-1">
                 <p className="font-medium">Your EU VAT number: IE{currentBusiness.vat_number.replace(/^IE/i, "")}</p>
-                <p>Give this number to EU suppliers so they can zero-rate their invoices to you. You then self-account for Irish VAT via reverse charge on your VAT3.</p>
+                <p>
+                  Give this number to EU suppliers so they can zero-rate their invoices to you. You then self-account
+                  for Irish VAT via reverse charge on your VAT3.
+                </p>
               </div>
             )}
 
@@ -1419,14 +1506,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.eu_trade_enabled === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.eu_trade_enabled === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.eu_trade_enabled === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.eu_trade_enabled === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.eu_trade_enabled === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1441,13 +1534,41 @@ export default function OnboardingWizard() {
                     <p className="text-sm text-muted-foreground">Select all that apply</p>
 
                     {[
-                      { field: "sells_goods_to_eu" as const, label: "Sell goods to EU countries", desc: "Intra-Community Supplies (ICS) — zero-rated with VIES reporting" },
-                      { field: "buys_goods_from_eu" as const, label: "Buy goods from EU countries", desc: "Intra-Community Acquisitions (ICA) — self-account for VAT" },
-                      { field: "sells_services_to_eu" as const, label: "Sell services to EU businesses", desc: "Reverse charge — invoice without VAT" },
-                      { field: "buys_services_from_eu" as const, label: "Buy services from EU businesses", desc: "Reverse charge — self-account for Irish VAT" },
-                      { field: "sells_digital_services_b2c" as const, label: "Sell digital services to EU consumers (B2C)", desc: "One Stop Shop (OSS) may apply above €10,000" },
-                      { field: "sells_to_non_eu" as const, label: "Export goods/services to non-EU countries", desc: "Zero-rated exports — retain proof of export" },
-                      { field: "buys_from_non_eu" as const, label: "Import goods/services from non-EU countries", desc: "Import VAT applies — postponed accounting available" },
+                      {
+                        field: "sells_goods_to_eu" as const,
+                        label: "Sell goods to EU countries",
+                        desc: "Intra-Community Supplies (ICS) — zero-rated with VIES reporting",
+                      },
+                      {
+                        field: "buys_goods_from_eu" as const,
+                        label: "Buy goods from EU countries",
+                        desc: "Intra-Community Acquisitions (ICA) — self-account for VAT",
+                      },
+                      {
+                        field: "sells_services_to_eu" as const,
+                        label: "Sell services to EU businesses",
+                        desc: "Reverse charge — invoice without VAT",
+                      },
+                      {
+                        field: "buys_services_from_eu" as const,
+                        label: "Buy services from EU businesses",
+                        desc: "Reverse charge — self-account for Irish VAT",
+                      },
+                      {
+                        field: "sells_digital_services_b2c" as const,
+                        label: "Sell digital services to EU consumers (B2C)",
+                        desc: "One Stop Shop (OSS) may apply above €10,000",
+                      },
+                      {
+                        field: "sells_to_non_eu" as const,
+                        label: "Export goods/services to non-EU countries",
+                        desc: "Zero-rated exports — retain proof of export",
+                      },
+                      {
+                        field: "buys_from_non_eu" as const,
+                        label: "Import goods/services from non-EU countries",
+                        desc: "Import VAT applies — postponed accounting available",
+                      },
                     ].map((item) => (
                       <label
                         key={item.field}
@@ -1455,7 +1576,7 @@ export default function OnboardingWizard() {
                           "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
                           currentBusiness[item.field]
                             ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            : "border-border hover:border-primary/50",
                         )}
                       >
                         <Checkbox
@@ -1477,10 +1598,14 @@ export default function OnboardingWizard() {
                       <Label className="text-base font-medium">Additional import/acquisition options</Label>
 
                       {currentBusiness.buys_from_non_eu && (
-                        <label className={cn(
-                          "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
-                          currentBusiness.uses_postponed_accounting ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                        )}>
+                        <label
+                          className={cn(
+                            "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
+                            currentBusiness.uses_postponed_accounting
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50",
+                          )}
+                        >
                           <Checkbox
                             checked={currentBusiness.uses_postponed_accounting}
                             onCheckedChange={(checked) => updateBusiness("uses_postponed_accounting", !!checked)}
@@ -1488,16 +1613,23 @@ export default function OnboardingWizard() {
                           />
                           <div>
                             <span className="font-medium">Postponed Accounting (PA1)</span>
-                            <p className="text-sm text-muted-foreground mt-0.5">Account for import VAT on your VAT3 instead of paying at the point of import — no cash-flow impact.</p>
+                            <p className="text-sm text-muted-foreground mt-0.5">
+                              Account for import VAT on your VAT3 instead of paying at the point of import — no
+                              cash-flow impact.
+                            </p>
                           </div>
                         </label>
                       )}
 
                       {(currentBusiness.sells_goods_to_eu || currentBusiness.sells_to_non_eu) && (
-                        <label className={cn(
-                          "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
-                          currentBusiness.has_section_56_authorisation ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
-                        )}>
+                        <label
+                          className={cn(
+                            "flex items-start gap-3 p-4 rounded-xl border cursor-pointer transition-all",
+                            currentBusiness.has_section_56_authorisation
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50",
+                          )}
+                        >
                           <Checkbox
                             checked={currentBusiness.has_section_56_authorisation}
                             onCheckedChange={(checked) => updateBusiness("has_section_56_authorisation", !!checked)}
@@ -1505,7 +1637,10 @@ export default function OnboardingWizard() {
                           />
                           <div>
                             <span className="font-medium">Section 56 Authorisation</span>
-                            <p className="text-sm text-muted-foreground mt-0.5">Receive goods/services without VAT being charged — for businesses where 75%+ of sales are zero-rated (exports/ICS).</p>
+                            <p className="text-sm text-muted-foreground mt-0.5">
+                              Receive goods/services without VAT being charged — for businesses where 75%+ of sales are
+                              zero-rated (exports/ICS).
+                            </p>
                           </div>
                         </label>
                       )}
@@ -1522,7 +1657,9 @@ export default function OnboardingWizard() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-2">RCT & Subcontracting</h2>
-              <p className="text-muted-foreground">Relevant Contracts Tax applies to construction-related activities.</p>
+              <p className="text-muted-foreground">
+                Relevant Contracts Tax applies to construction-related activities.
+              </p>
             </div>
 
             <BusinessTabs />
@@ -1533,16 +1670,23 @@ export default function OnboardingWizard() {
               </div>
             )}
 
-            <div className={cn("bg-card rounded-2xl p-6 shadow-sm space-y-5", currentBusiness.vat_registered && "opacity-50 pointer-events-none")}>
+            <div
+              className={cn(
+                "bg-card rounded-2xl p-6 shadow-sm space-y-5",
+                currentBusiness.vat_registered && "opacity-50 pointer-events-none",
+              )}
+            >
               <div>
                 <Label className="text-base font-medium">What is your RCT role?</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                  {([
-                    { value: "not_applicable", label: "Not applicable" },
-                    { value: "principal", label: "Principal contractor" },
-                    { value: "subcontractor", label: "Subcontractor" },
-                    { value: "both", label: "Both" },
-                  ] as const).map((option) => (
+                  {(
+                    [
+                      { value: "not_applicable", label: "Not applicable" },
+                      { value: "principal", label: "Principal contractor" },
+                      { value: "subcontractor", label: "Subcontractor" },
+                      { value: "both", label: "Both" },
+                    ] as const
+                  ).map((option) => (
                     <button
                       key={option.value}
                       onClick={() => updateBusiness("rct_status", option.value)}
@@ -1550,14 +1694,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.rct_status === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.rct_status === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.rct_status === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.rct_status === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.rct_status === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1569,11 +1719,13 @@ export default function OnboardingWizard() {
                 <div>
                   <Label className="text-base font-medium">Current RCT deduction rate</Label>
                   <div className="grid grid-cols-3 gap-3 mt-2">
-                    {([
-                      { value: "0", label: "0%" },
-                      { value: "20", label: "20%" },
-                      { value: "35", label: "35%" },
-                    ] as const).map((option) => (
+                    {(
+                      [
+                        { value: "0", label: "0%" },
+                        { value: "20", label: "20%" },
+                        { value: "35", label: "35%" },
+                      ] as const
+                    ).map((option) => (
                       <button
                         key={option.value}
                         onClick={() => updateBusiness("rct_rate", option.value)}
@@ -1581,14 +1733,20 @@ export default function OnboardingWizard() {
                           "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                           currentBusiness.rct_rate === option.value
                             ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            : "border-border hover:border-primary/50",
                         )}
                       >
-                        <div className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                          currentBusiness.rct_rate === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                        )}>
-                          {currentBusiness.rct_rate === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                        <div
+                          className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                            currentBusiness.rct_rate === option.value
+                              ? "border-primary bg-primary"
+                              : "border-muted-foreground",
+                          )}
+                        >
+                          {currentBusiness.rct_rate === option.value && (
+                            <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                          )}
                         </div>
                         <span className="font-medium">{option.label}</span>
                       </button>
@@ -1612,14 +1770,20 @@ export default function OnboardingWizard() {
                           "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                           currentBusiness.has_subcontractors === option.value
                             ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/50"
+                            : "border-border hover:border-primary/50",
                         )}
                       >
-                        <div className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                          currentBusiness.has_subcontractors === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                        )}>
-                          {currentBusiness.has_subcontractors === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                        <div
+                          className={cn(
+                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                            currentBusiness.has_subcontractors === option.value
+                              ? "border-primary bg-primary"
+                              : "border-muted-foreground",
+                          )}
+                        >
+                          {currentBusiness.has_subcontractors === option.value && (
+                            <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                          )}
                         </div>
                         <span className="font-medium">{option.label}</span>
                       </button>
@@ -1636,14 +1800,18 @@ export default function OnboardingWizard() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-2">Expense Behaviour</h2>
-              <p className="text-muted-foreground">Expense categories and allowability are applied automatically based on business activity.</p>
+              <p className="text-muted-foreground">
+                Expense categories and allowability are applied automatically based on business activity.
+              </p>
             </div>
 
             <BusinessTabs />
 
             <div className="bg-card rounded-2xl p-6 shadow-sm">
               <div>
-                <Label className="text-base font-medium">Will this bank account contain personal or mixed-use spending?</Label>
+                <Label className="text-base font-medium">
+                  Will this bank account contain personal or mixed-use spending?
+                </Label>
                 <div className="grid grid-cols-1 gap-3 mt-3">
                   {[
                     { value: false, label: "No - business only" },
@@ -1656,14 +1824,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.mixed_use_spending === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.mixed_use_spending === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.mixed_use_spending === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.mixed_use_spending === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.mixed_use_spending === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1685,14 +1859,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.has_home_office === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.has_home_office === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.has_home_office === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.has_home_office === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.has_home_office === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1701,7 +1881,9 @@ export default function OnboardingWizard() {
               </div>
 
               <div className="pt-4 border-t">
-                <Label htmlFor="business_use_percentage">Estimated business use % of mixed items (phone, broadband, vehicle)</Label>
+                <Label htmlFor="business_use_percentage">
+                  Estimated business use % of mixed items (phone, broadband, vehicle)
+                </Label>
                 <div className="relative mt-1.5">
                   <Input
                     id="business_use_percentage"
@@ -1715,7 +1897,9 @@ export default function OnboardingWizard() {
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">%</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1.5">Used for apportioning mixed-use expenses between business and personal.</p>
+                <p className="text-sm text-muted-foreground mt-1.5">
+                  Used for apportioning mixed-use expenses between business and personal.
+                </p>
               </div>
             </div>
           </div>
@@ -1736,7 +1920,9 @@ export default function OnboardingWizard() {
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg">Step 1 - Asset test (conceptual rule)</h3>
                 <p className="text-muted-foreground">
-                  A purchase is considered a <span className="font-medium text-foreground">fixed asset</span> if it is expected to be used in the business for <span className="font-medium text-foreground">more than one year</span>.
+                  A purchase is considered a <span className="font-medium text-foreground">fixed asset</span> if it is
+                  expected to be used in the business for{" "}
+                  <span className="font-medium text-foreground">more than one year</span>.
                 </p>
                 <div className="bg-muted/50 rounded-lg p-4">
                   <p className="text-sm font-medium mb-2">Examples:</p>
@@ -1753,7 +1939,8 @@ export default function OnboardingWizard() {
               <div className="space-y-3 pt-4 border-t">
                 <h3 className="font-semibold text-lg">Step 2 - Practical policy (your choice)</h3>
                 <p className="text-muted-foreground">
-                  To keep bookkeeping simple, businesses usually set a value threshold. Purchases above this amount are treated as fixed assets, even if similar smaller items are expensed.
+                  To keep bookkeeping simple, businesses usually set a value threshold. Purchases above this amount are
+                  treated as fixed assets, even if similar smaller items are expensed.
                 </p>
                 <div>
                   <Label htmlFor="capitalisation_threshold">Capitalisation threshold (ex VAT) *</Label>
@@ -1768,14 +1955,17 @@ export default function OnboardingWizard() {
                       min={0}
                     />
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1.5">Platform suggestion: EUR 1,000 (You can change this at any time.)</p>
+                  <p className="text-sm text-muted-foreground mt-1.5">
+                    Platform suggestion: EUR 1,000 (You can change this at any time.)
+                  </p>
                 </div>
               </div>
 
-
               {/* Existing Assets */}
               <div className="space-y-3 pt-4 border-t">
-                <Label className="text-base font-medium">Did the business have existing fixed assets before this accounting period?</Label>
+                <Label className="text-base font-medium">
+                  Did the business have existing fixed assets before this accounting period?
+                </Label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
                     { value: true, label: "Yes" },
@@ -1788,14 +1978,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.has_opening_assets === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.has_opening_assets === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.has_opening_assets === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.has_opening_assets === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.has_opening_assets === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1829,7 +2025,10 @@ export default function OnboardingWizard() {
                     onCheckedChange={(checked) => updateBusiness("regular_capital_purchases", checked === true)}
                     className="mt-0.5"
                   />
-                  <Label htmlFor="capitalisation_confirmed" className="text-sm font-normal leading-relaxed cursor-pointer">
+                  <Label
+                    htmlFor="capitalisation_confirmed"
+                    className="text-sm font-normal leading-relaxed cursor-pointer"
+                  >
                     I understand and confirm this policy
                   </Label>
                 </div>
@@ -1858,7 +2057,7 @@ export default function OnboardingWizard() {
                       "w-full p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                       currentBusiness.payment_types.includes(type.value)
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
                     <Checkbox checked={currentBusiness.payment_types.includes(type.value)} />
@@ -1871,7 +2070,7 @@ export default function OnboardingWizard() {
               <div className="pt-4 border-t space-y-3">
                 <Label>Other payment types</Label>
                 <p className="text-sm text-muted-foreground">Add any additional payment types not listed above</p>
-                
+
                 <div className="space-y-2">
                   {(currentBusiness.custom_payment_types || []).map((customType, index) => (
                     <div key={index} className="flex items-center gap-2">
@@ -1899,7 +2098,7 @@ export default function OnboardingWizard() {
                       </Button>
                     </div>
                   ))}
-                  
+
                   <Button
                     type="button"
                     variant="outline"
@@ -1928,7 +2127,9 @@ export default function OnboardingWizard() {
 
             <div className="bg-card rounded-2xl p-6 shadow-sm space-y-5">
               <div>
-                <Label className="text-base font-medium">Does the business have employees (other than directors)?</Label>
+                <Label className="text-base font-medium">
+                  Does the business have employees (other than directors)?
+                </Label>
                 <div className="grid grid-cols-2 gap-3 mt-2">
                   {[
                     { value: true, label: "Yes" },
@@ -1941,14 +2142,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.has_employees === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.has_employees === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.has_employees === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.has_employees === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.has_employees === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -1984,14 +2191,20 @@ export default function OnboardingWizard() {
                             "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                             currentBusiness.paye_registered === option.value
                               ? "border-primary bg-primary/5"
-                              : "border-border hover:border-primary/50"
+                              : "border-border hover:border-primary/50",
                           )}
                         >
-                          <div className={cn(
-                            "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                            currentBusiness.paye_registered === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                          )}>
-                            {currentBusiness.paye_registered === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                          <div
+                            className={cn(
+                              "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                              currentBusiness.paye_registered === option.value
+                                ? "border-primary bg-primary"
+                                : "border-muted-foreground",
+                            )}
+                          >
+                            {currentBusiness.paye_registered === option.value && (
+                              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                            )}
                           </div>
                           <span className="font-medium">{option.label}</span>
                         </button>
@@ -2041,14 +2254,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.has_loans === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.has_loans === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.has_loans === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.has_loans === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.has_loans === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -2060,10 +2279,7 @@ export default function OnboardingWizard() {
                 <>
                   <div>
                     <Label>Type</Label>
-                    <Select
-                      value={currentBusiness.loan_type}
-                      onValueChange={(v) => updateBusiness("loan_type", v)}
-                    >
+                    <Select value={currentBusiness.loan_type} onValueChange={(v) => updateBusiness("loan_type", v)}>
                       <SelectTrigger className="mt-1.5">
                         <SelectValue placeholder="Select loan type" />
                       </SelectTrigger>
@@ -2098,7 +2314,9 @@ export default function OnboardingWizard() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-2">Director's Loan Account</h2>
-              <p className="text-muted-foreground">If Company: Will money move between you and the business outside payroll or dividends?</p>
+              <p className="text-muted-foreground">
+                If Company: Will money move between you and the business outside payroll or dividends?
+              </p>
             </div>
 
             <BusinessTabs />
@@ -2116,14 +2334,20 @@ export default function OnboardingWizard() {
                       "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                       currentBusiness.directors_loan_movements === option.value
                         ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        : "border-border hover:border-primary/50",
                     )}
                   >
-                    <div className={cn(
-                      "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                      currentBusiness.directors_loan_movements === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                    )}>
-                      {currentBusiness.directors_loan_movements === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                    <div
+                      className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                        currentBusiness.directors_loan_movements === option.value
+                          ? "border-primary bg-primary"
+                          : "border-muted-foreground",
+                      )}
+                    >
+                      {currentBusiness.directors_loan_movements === option.value && (
+                        <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                      )}
                     </div>
                     <span className="font-medium">{option.label}</span>
                   </button>
@@ -2138,7 +2362,9 @@ export default function OnboardingWizard() {
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-2">Opening Balances</h2>
-              <p className="text-muted-foreground">If this is your first year using Balnce, provide opening balances so accounts carry forward correctly.</p>
+              <p className="text-muted-foreground">
+                If this is your first year using Balnce, provide opening balances so accounts carry forward correctly.
+              </p>
             </div>
 
             <BusinessTabs />
@@ -2158,14 +2384,20 @@ export default function OnboardingWizard() {
                         "p-4 rounded-xl border text-left transition-all flex items-center gap-3",
                         currentBusiness.has_opening_balances === option.value
                           ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/50"
+                          : "border-border hover:border-primary/50",
                       )}
                     >
-                      <div className={cn(
-                        "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                        currentBusiness.has_opening_balances === option.value ? "border-primary bg-primary" : "border-muted-foreground"
-                      )}>
-                        {currentBusiness.has_opening_balances === option.value && <div className="w-2 h-2 rounded-full bg-primary-foreground" />}
+                      <div
+                        className={cn(
+                          "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                          currentBusiness.has_opening_balances === option.value
+                            ? "border-primary bg-primary"
+                            : "border-muted-foreground",
+                        )}
+                      >
+                        {currentBusiness.has_opening_balances === option.value && (
+                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                        )}
                       </div>
                       <span className="font-medium">{option.label}</span>
                     </button>
@@ -2258,11 +2490,16 @@ export default function OnboardingWizard() {
                   </div>
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">Business structure</span>
-                    <span className="font-medium">{business.structure === "sole_trader" ? "Sole trader" : "Limited company"}</span>
+                    <span className="font-medium">
+                      {business.structure === "sole_trader" ? "Sole trader" : "Limited company"}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">Primary activity</span>
-                    <span className="font-medium">{getAllActivities().find(a => a.value === business.primary_activity)?.label || business.primary_activity}</span>
+                    <span className="font-medium">
+                      {getAllActivities().find((a) => a.value === business.primary_activity)?.label ||
+                        business.primary_activity}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">VAT registered</span>
@@ -2292,7 +2529,9 @@ export default function OnboardingWizard() {
                   )}
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">Employees</span>
-                    <span className="font-medium">{business.has_employees ? `Yes (${business.employee_count})` : "No"}</span>
+                    <span className="font-medium">
+                      {business.has_employees ? `Yes (${business.employee_count})` : "No"}
+                    </span>
                   </div>
                   {business.has_home_office && (
                     <div className="flex justify-between py-2 border-b">
@@ -2314,14 +2553,14 @@ export default function OnboardingWizard() {
                 onClick={() => setState({ ...state, declaration_confirmed: !state.declaration_confirmed })}
                 className={cn(
                   "w-full p-4 rounded-xl border text-left transition-all flex items-start gap-3",
-                  state.declaration_confirmed
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
+                  state.declaration_confirmed ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
                 )}
               >
                 <Checkbox checked={state.declaration_confirmed} className="mt-0.5" />
                 <span className="text-sm">
-                  I confirm this information is accurate and will be used by the platform to automate bookkeeping, VAT, and balance sheet reporting for {state.businesses.length > 1 ? "these business accounts" : "this business account"}.
+                  I confirm this information is accurate and will be used by the platform to automate bookkeeping, VAT,
+                  and balance sheet reporting for{" "}
+                  {state.businesses.length > 1 ? "these business accounts" : "this business account"}.
                 </span>
               </button>
             </div>
@@ -2330,26 +2569,16 @@ export default function OnboardingWizard() {
 
         {/* Navigation buttons */}
         <div className="flex justify-between mt-8">
-          <Button
-            variant="outline"
-            onClick={goBack}
-            disabled={stepIndex === 0}
-          >
+          <Button variant="outline" onClick={goBack} disabled={stepIndex === 0}>
             Back
           </Button>
 
           {step === "declaration" ? (
-            <Button
-              onClick={handleFinish}
-              disabled={!canProceed || saving}
-            >
+            <Button onClick={handleFinish} disabled={!canProceed || saving}>
               {saving ? "Saving..." : "Complete Setup"}
             </Button>
           ) : (
-            <Button
-              onClick={goNext}
-              disabled={!canProceed}
-            >
+            <Button onClick={goNext} disabled={!canProceed}>
               Continue
             </Button>
           )}

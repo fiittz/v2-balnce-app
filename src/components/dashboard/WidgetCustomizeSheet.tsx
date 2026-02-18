@@ -1,10 +1,4 @@
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Settings2, RotateCcw } from "lucide-react";
@@ -23,12 +17,7 @@ interface WidgetCustomizeSheetProps {
   onReset: () => void;
 }
 
-export function WidgetCustomizeSheet({
-  availableWidgets,
-  preferences,
-  onToggle,
-  onReset,
-}: WidgetCustomizeSheetProps) {
+export function WidgetCustomizeSheet({ availableWidgets, preferences, onToggle, onReset }: WidgetCustomizeSheetProps) {
   // Group widgets by category
   const grouped = availableWidgets.reduce<Record<WidgetCategory, WidgetDefinition[]>>(
     (acc, w) => {
@@ -36,26 +25,15 @@ export function WidgetCustomizeSheet({
       acc[w.category].push(w);
       return acc;
     },
-    {} as Record<WidgetCategory, WidgetDefinition[]>
+    {} as Record<WidgetCategory, WidgetDefinition[]>,
   );
 
-  const categoryOrder: WidgetCategory[] = [
-    "overview",
-    "financial",
-    "bookkeeping",
-    "tasks",
-    "charts",
-    "construction",
-  ];
+  const categoryOrder: WidgetCategory[] = ["overview", "financial", "bookkeeping", "tasks", "charts", "construction"];
 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 rounded-full"
-        >
+        <Button variant="outline" size="sm" className="gap-2 rounded-full">
           <Settings2 className="w-4 h-4" />
           Customize
         </Button>
@@ -76,22 +54,12 @@ export function WidgetCustomizeSheet({
                 </h3>
                 <div className="space-y-3">
                   {widgets.map((w) => (
-                    <div
-                      key={w.id}
-                      className="flex items-center justify-between gap-3 py-2"
-                    >
+                    <div key={w.id} className="flex items-center justify-between gap-3 py-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-medium leading-tight">
-                          {w.label}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {w.description}
-                        </p>
+                        <p className="text-sm font-medium leading-tight">{w.label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{w.description}</p>
                       </div>
-                      <Switch
-                        checked={preferences[w.id] ?? false}
-                        onCheckedChange={() => onToggle(w.id)}
-                      />
+                      <Switch checked={preferences[w.id] ?? false} onCheckedChange={() => onToggle(w.id)} />
                     </div>
                   ))}
                 </div>
@@ -101,12 +69,7 @@ export function WidgetCustomizeSheet({
         </div>
 
         <div className="mt-8 pt-4 border-t">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 w-full"
-            onClick={onReset}
-          >
+          <Button variant="ghost" size="sm" className="gap-2 w-full" onClick={onReset}>
             <RotateCcw className="w-4 h-4" />
             Reset to Defaults
           </Button>

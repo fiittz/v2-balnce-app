@@ -37,7 +37,7 @@ interface CT1QuestionnaireData {
 export function assembleCT1ReportData(
   ct1: CT1Data,
   questionnaire: CT1QuestionnaireData | null,
-  meta: ReportMeta
+  meta: ReportMeta,
 ): CT1ReportData {
   const sections: ReportSection[] = [];
   const tables: ReportTable[] = [];
@@ -60,10 +60,7 @@ export function assembleCT1ReportData(
   tables.push({
     title: "Trading Income",
     headers: ["Category", "Amount"],
-    rows: [
-      ...ct1.detectedIncome.map((i) => [i.category, fmtEuro(i.amount)]),
-      ["Total Income", fmtEuro(totalIncome)],
-    ],
+    rows: [...ct1.detectedIncome.map((i) => [i.category, fmtEuro(i.amount)]), ["Total Income", fmtEuro(totalIncome)]],
   });
 
   // ── Expense Breakdown by Category ──────────────────────
@@ -92,8 +89,7 @@ export function assembleCT1ReportData(
   const motorVehicleAllowance = ct1.vehicleAsset
     ? ct1.vehicleAsset.depreciation.annualAllowance
     : (questionnaire?.capitalAllowancesMotorVehicles ?? 0);
-  const capitalAllowancesTotal =
-    (questionnaire?.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
+  const capitalAllowancesTotal = (questionnaire?.capitalAllowancesPlant ?? 0) + motorVehicleAllowance;
 
   if (capitalAllowancesTotal > 0 || questionnaire?.capitalAllowancesTotal) {
     const capAllowanceRows = [
@@ -159,9 +155,7 @@ export function assembleCT1ReportData(
   const ctRows = [
     { label: "Taxable Profit", value: fmtEuro(taxableProfit) },
     { label: "CT @ 12.5% (trading)", value: fmtEuro(ctAt125) },
-    ...(surcharge > 0
-      ? [{ label: "Close Company Surcharge", value: fmtEuro(surcharge) }]
-      : []),
+    ...(surcharge > 0 ? [{ label: "Close Company Surcharge", value: fmtEuro(surcharge) }] : []),
     { label: "Total CT Liability", value: fmtEuro(totalCT) },
   ];
   if (prelimPaid > 0) {
@@ -197,11 +191,7 @@ export function assembleCT1ReportData(
     tables.push({
       title: "Flagged Capital Items",
       headers: ["Description", "Date", "Amount"],
-      rows: ct1.flaggedCapitalItems.map((item) => [
-        item.description,
-        item.date,
-        fmtEuro(item.amount),
-      ]),
+      rows: ct1.flaggedCapitalItems.map((item) => [item.description, item.date, fmtEuro(item.amount)]),
     });
   }
 

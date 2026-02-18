@@ -61,7 +61,7 @@ export function useTripRecategorize() {
 
   const recategorizeTrips = async (
     confirmedTrips: DetectedTrip[],
-    invoiceMatches: InvoiceTrip[] = []
+    invoiceMatches: InvoiceTrip[] = [],
   ): Promise<TripRecategorizeResult> => {
     setIsRunning(true);
     setProgress(0);
@@ -114,11 +114,7 @@ export function useTripRecategorize() {
               const autocatCategory = tripExpenseToAutocatCategory(txn.expenseType);
               const vatType = tripExpenseToVatType(txn.expenseType);
 
-              const matchedCategory = findMatchingCategory(
-                autocatCategory,
-                categories,
-                "expense"
-              );
+              const matchedCategory = findMatchingCategory(autocatCategory, categories, "expense");
 
               // Fall back to Motor/travel or Subsistence if no Travel & Subsistence category
               const fallbackCategory =
@@ -127,12 +123,8 @@ export function useTripRecategorize() {
                 findMatchingCategory("Subsistence", categories, "expense");
 
               const matchedAccount =
-                findMatchingAccount(
-                  autocatCategory,
-                  "expense",
-                  vatType,
-                  accounts || []
-                ) || getDefaultAccount("expense", accounts || []);
+                findMatchingAccount(autocatCategory, "expense", vatType, accounts || []) ||
+                getDefaultAccount("expense", accounts || []);
 
               const vatRate = mapVatTypeToRate(vatType);
 
@@ -142,9 +134,7 @@ export function useTripRecategorize() {
                   : `Business trip to ${txn.tripLocation} (${txn.tripStart} to ${txn.tripEnd}).`;
 
               const vatNote =
-                txn.expenseType === "accommodation"
-                  ? " Hotel VAT not deductible (Section 60(2)(a)(i))."
-                  : "";
+                txn.expenseType === "accommodation" ? " Hotel VAT not deductible (Section 60(2)(a)(i))." : "";
 
               // Revenue subsistence rate annotation
               let revenueRateNote = "";
@@ -176,7 +166,7 @@ export function useTripRecategorize() {
             } catch {
               return false;
             }
-          })
+          }),
         );
 
         batchResults.forEach((r) => {
@@ -197,9 +187,7 @@ export function useTripRecategorize() {
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
 
       if (result.updated > 0) {
-        toast.success(
-          `Updated ${result.updated} transaction${result.updated > 1 ? "s" : ""} as business travel`
-        );
+        toast.success(`Updated ${result.updated} transaction${result.updated > 1 ? "s" : ""} as business travel`);
       }
 
       return result;
