@@ -46,55 +46,237 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <Sentry.ErrorBoundary fallback={<p>An unexpected error occurred. Please refresh the page.</p>}>
-  <ThemeProvider>
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ErrorBoundary>
-        <AuthProvider>
-          <BackgroundTasksProvider>
-          <Suspense fallback={<div>Loading...</div>}>
-          <Routes>
-            <Route path="/" element={<Welcome />} />
-            <Route path="/onboarding" element={<RequireAuth><OnboardingWizard /></RequireAuth>} />
-            <Route path="/onboarding/director" element={<RequireAuth><DirectorOnboardingWizard /></RequireAuth>} />
-            <Route path="/dashboard" element={<RequireAuth><BookkeepingDashboard /></RequireAuth>} />
-            <Route path="/invoices" element={<RequireAuth><Invoices /></RequireAuth>} />
-            <Route path="/invoice" element={<RequireAuth><AddInvoice /></RequireAuth>} />
-            <Route path="/invoice/:id" element={<RequireAuth><AddInvoice /></RequireAuth>} />
-            <Route path="/expense" element={<RequireAuth><AddExpense /></RequireAuth>} />
-            <Route path="/scanner" element={<RequireAuth><ReceiptScanner /></RequireAuth>} />
-            <Route path="/receipts/bulk" element={<RequireAuth><BulkReceiptUpload /></RequireAuth>} />
-            <Route path="/bank" element={<RequireAuth><BankFeed /></RequireAuth>} />
-            <Route path="/accounts" element={<RequireAuth><Accounts /></RequireAuth>} />
-            <Route path="/accounts/:accountId" element={<RequireAuth><AccountDetail /></RequireAuth>} />
-            <Route path="/vat" element={<RequireAuth><VATCentre /></RequireAuth>} />
-            <Route path="/rct" element={<RequireAuth><RCTCentre /></RequireAuth>} />
-            <Route path="/tax" element={<RequireAuth><TaxCentre /></RequireAuth>} />
-            <Route path="/tax/form11/:directorNumber" element={<RequireAuth><Form11Return /></RequireAuth>} />
-            <Route path="/tax/ct1" element={<RequireAuth><CT1Return /></RequireAuth>} />
-            <Route path="/tax/balance-sheet" element={<RequireAuth><BalanceSheet /></RequireAuth>} />
-            <Route path="/tax/reliefs" element={<RequireAuth><ReliefScanner /></RequireAuth>} />
-            <Route path="/tax/trips" element={<RequireAuth><TripClaimsManager /></RequireAuth>} />
-            <Route path="/reports/pnl" element={<RequireAuth><ProfitAndLoss /></RequireAuth>} />
-            <Route path="/reports/aged-debtors" element={<RequireAuth><AgedDebtors /></RequireAuth>} />
-            <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
-            <Route path="/bulk" element={<RequireAuth><BulkProcessor /></RequireAuth>} />
-            <Route path="/reports" element={<RequireAuth><Reports /></RequireAuth>} />
-            <Route path="/chart-of-accounts" element={<RequireAuth><ChartOfAccounts /></RequireAuth>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          </Suspense>
-          <BackgroundTasksStatus />
-          </BackgroundTasksProvider>
-        </AuthProvider>
-        </ErrorBoundary>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-  </ThemeProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ErrorBoundary>
+              <AuthProvider>
+                <BackgroundTasksProvider>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Routes>
+                      <Route path="/" element={<Welcome />} />
+                      <Route
+                        path="/onboarding"
+                        element={
+                          <RequireAuth>
+                            <OnboardingWizard />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/onboarding/director"
+                        element={
+                          <RequireAuth>
+                            <DirectorOnboardingWizard />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <RequireAuth>
+                            <BookkeepingDashboard />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/invoices"
+                        element={
+                          <RequireAuth>
+                            <Invoices />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/invoice"
+                        element={
+                          <RequireAuth>
+                            <AddInvoice />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/invoice/:id"
+                        element={
+                          <RequireAuth>
+                            <AddInvoice />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/expense"
+                        element={
+                          <RequireAuth>
+                            <AddExpense />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/scanner"
+                        element={
+                          <RequireAuth>
+                            <ReceiptScanner />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/receipts/bulk"
+                        element={
+                          <RequireAuth>
+                            <BulkReceiptUpload />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/bank"
+                        element={
+                          <RequireAuth>
+                            <BankFeed />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/accounts"
+                        element={
+                          <RequireAuth>
+                            <Accounts />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/accounts/:accountId"
+                        element={
+                          <RequireAuth>
+                            <AccountDetail />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/vat"
+                        element={
+                          <RequireAuth>
+                            <VATCentre />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/rct"
+                        element={
+                          <RequireAuth>
+                            <RCTCentre />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/tax"
+                        element={
+                          <RequireAuth>
+                            <TaxCentre />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/tax/form11/:directorNumber"
+                        element={
+                          <RequireAuth>
+                            <Form11Return />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/tax/ct1"
+                        element={
+                          <RequireAuth>
+                            <CT1Return />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/tax/balance-sheet"
+                        element={
+                          <RequireAuth>
+                            <BalanceSheet />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/tax/reliefs"
+                        element={
+                          <RequireAuth>
+                            <ReliefScanner />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/tax/trips"
+                        element={
+                          <RequireAuth>
+                            <TripClaimsManager />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/reports/pnl"
+                        element={
+                          <RequireAuth>
+                            <ProfitAndLoss />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/reports/aged-debtors"
+                        element={
+                          <RequireAuth>
+                            <AgedDebtors />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/settings"
+                        element={
+                          <RequireAuth>
+                            <Settings />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/bulk"
+                        element={
+                          <RequireAuth>
+                            <BulkProcessor />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/reports"
+                        element={
+                          <RequireAuth>
+                            <Reports />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route
+                        path="/chart-of-accounts"
+                        element={
+                          <RequireAuth>
+                            <ChartOfAccounts />
+                          </RequireAuth>
+                        }
+                      />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
+                  <BackgroundTasksStatus />
+                </BackgroundTasksProvider>
+              </AuthProvider>
+            </ErrorBoundary>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   </Sentry.ErrorBoundary>
 );
 
