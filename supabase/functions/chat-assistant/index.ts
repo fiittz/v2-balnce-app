@@ -416,9 +416,14 @@ ${financialContext}${pageContext}`;
         const lower = (msg.content || "").toLowerCase();
         return !REFUSAL_PATTERNS.some(p => lower.includes(p.toLowerCase()));
       })
-      .map((msg: { role: string; content: string; tool_call_id?: string; name?: string }) => {
+      .map((msg: { role: string; content: string; tool_call_id?: string; name?: string; tool_calls?: any[] }) => {
         if (msg.role === "tool") {
           return { role: "tool", content: msg.content, tool_call_id: msg.tool_call_id, name: msg.name };
+        }
+        // Preserve tool_calls on assistant messages so tool results
+        // can reference the correct tool_call_id in the next turn
+        if (msg.role === "assistant" && msg.tool_calls) {
+          return { role: msg.role, content: msg.content || "", tool_calls: msg.tool_calls };
         }
         return { role: msg.role, content: msg.content };
       });
@@ -477,6 +482,10 @@ ${financialContext}${pageContext}`;
     const stream = new ReadableStream({
       async start(controller) {
         let buffer = "";
+        // Buffer content chunks — only flush to client if no tool call arrives
+        let contentBuffer: string[] = [];
+        let hasToolCall = false;
+
         try {
           while (true) {
             const { done, value } = await reader.read();
@@ -493,9 +502,16 @@ ${financialContext}${pageContext}`;
                 // Check if we buffered any tool calls
                 const toolCalls = Object.values(toolCallBuffers);
                 if (toolCalls.length > 0) {
+                  // Tool call present — discard any preamble content
                   controller.enqueue(encoder.encode(`event: tool_calls\ndata: ${JSON.stringify(toolCalls)}\n\n`));
                   toolCallBuffers = {};
+                } else {
+                  // No tool call — flush any remaining buffered content
+                  for (const chunk of contentBuffer) {
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: chunk })}\n\n`));
+                  }
                 }
+                contentBuffer = [];
                 controller.enqueue(encoder.encode(`data: [DONE]\n\n`));
                 continue;
               }
@@ -505,13 +521,9 @@ ${financialContext}${pageContext}`;
                 const delta = parsed.choices?.[0]?.delta;
                 if (!delta) continue;
 
-                // Handle content deltas (text streaming)
-                if (delta.content) {
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: delta.content })}\n\n`));
-                }
-
-                // Handle tool call deltas
+                // Handle tool call deltas — must check before content
                 if (delta.tool_calls) {
+                  hasToolCall = true;
                   for (const tc of delta.tool_calls) {
                     const idx = tc.index ?? 0;
                     if (!toolCallBuffers[idx]) {
@@ -521,6 +533,12 @@ ${financialContext}${pageContext}`;
                     if (tc.function?.name) toolCallBuffers[idx].name += tc.function.name;
                     if (tc.function?.arguments) toolCallBuffers[idx].arguments += tc.function.arguments;
                   }
+                }
+
+                // Handle content deltas — stream immediately only if
+                // no tool call has been seen yet; otherwise discard
+                if (delta.content && !hasToolCall) {
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ content: delta.content })}\n\n`));
                 }
               } catch {
                 // Skip unparseable lines
