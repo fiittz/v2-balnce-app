@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isVATDeductible, calculateVATFromGross } from "../vatDeductibility";
+import { isVATDeductible, calculateVATFromGross, isCTDeductible } from "../vatDeductibility";
 
 // ══════════════════════════════════════════════════════════════
 // isVATDeductible
@@ -153,6 +153,37 @@ describe("calculateVATFromGross", () => {
     expect(result.vatAmount).toBe(0);
     expect(result.netAmount).toBe(0);
   });
+
+  // Numeric rate inputs (line 171-173)
+  it("accepts numeric rate 23 instead of string key", () => {
+    const result = calculateVATFromGross(123, 23);
+    expect(result.vatAmount).toBe(23);
+    expect(result.netAmount).toBe(100);
+  });
+
+  it("accepts numeric rate 13.5", () => {
+    const result = calculateVATFromGross(113.5, 13.5);
+    expect(result.vatAmount).toBeCloseTo(13.5, 1);
+    expect(result.netAmount).toBeCloseTo(100, 0);
+  });
+
+  it("accepts numeric rate 9", () => {
+    const result = calculateVATFromGross(109, 9);
+    expect(result.vatAmount).toBe(9);
+    expect(result.netAmount).toBe(100);
+  });
+
+  it("accepts numeric rate 4.8 (livestock)", () => {
+    const result = calculateVATFromGross(104.8, 4.8);
+    expect(result.vatAmount).toBeCloseTo(4.8, 1);
+    expect(result.netAmount).toBeCloseTo(100, 0);
+  });
+
+  it("accepts numeric rate 0 (zero-rated)", () => {
+    const result = calculateVATFromGross(100, 0);
+    expect(result.vatAmount).toBe(0);
+    expect(result.netAmount).toBe(100);
+  });
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -192,5 +223,191 @@ describe("isVATDeductible — additional branch coverage", () => {
     const result = isVATDeductible("Transfer", "Director's Drawings");
     expect(result.isDeductible).toBe(false);
     expect(result.reason).toContain("Drawing");
+  });
+
+  it("blocks 'private' expense", () => {
+    const result = isVATDeductible("Private use broadband");
+    expect(result.isDeductible).toBe(false);
+    expect(result.section).toBe("Section 59");
+  });
+
+  it("blocks 'non-business' expense", () => {
+    const result = isVATDeductible("Non-business purchase");
+    expect(result.isDeductible).toBe(false);
+    expect(result.section).toBe("Section 59");
+  });
+
+  it("blocks bank charge (without 'fee' keyword)", () => {
+    const result = isVATDeductible("Bank maintenance charge");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("exempt");
+  });
+
+  it("does not block motor tax as insurance", () => {
+    const result = isVATDeductible("Motor tax renewal");
+    expect(result.isDeductible).toBe(true);
+  });
+
+  it("blocks 'fines' (plural) in description via regex", () => {
+    const result = isVATDeductible("Parking fines x2");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks 'fine' (singular) in description via regex", () => {
+    const result = isVATDeductible("Speeding fine payment");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("handles empty description with null category and account", () => {
+    const result = isVATDeductible("", null, null);
+    expect(result.isDeductible).toBe(true);
+    expect(result.reason).toContain("Business expense");
+  });
+
+  it("blocks penalties in description via regex", () => {
+    const result = isVATDeductible("Late filing penalties applied");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// isCTDeductible
+// ══════════════════════════════════════════════════════════════
+describe("isCTDeductible", () => {
+  // ── Non-deductible categories ──
+  it("blocks entertainment category", () => {
+    const result = isCTDeductible("Client drinks", "Entertainment");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Entertainment");
+  });
+
+  it("blocks meals category", () => {
+    const result = isCTDeductible("Team lunch", "Meals & Entertainment");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Meals");
+  });
+
+  it("blocks fines category", () => {
+    const result = isCTDeductible("Parking ticket", "Fines & Penalties");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks penalties category", () => {
+    const result = isCTDeductible("Late return", "Tax Penalties");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks fines in description via regex", () => {
+    const result = isCTDeductible("Parking fine paid", "Motor Expenses");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks 'fines' (plural) in description via regex", () => {
+    const result = isCTDeductible("Multiple fines issued", "Motor Expenses");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks penalty in description via regex", () => {
+    const result = isCTDeductible("Late filing penalty", "Admin");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks penalties in description via regex", () => {
+    const result = isCTDeductible("Revenue penalties applied", "Admin");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Fines");
+  });
+
+  it("blocks personal expenses", () => {
+    const result = isCTDeductible("Groceries", "Personal");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Non-business");
+  });
+
+  it("blocks private expenses", () => {
+    const result = isCTDeductible("Sky TV", "Private");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Non-business");
+  });
+
+  it("blocks non-business expenses", () => {
+    const result = isCTDeductible("Holiday flights", "Non-Business");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("Non-business");
+  });
+
+  it("blocks depreciation (replaced by capital allowances)", () => {
+    const result = isCTDeductible("Van depreciation", "Depreciation");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("capital allowances");
+  });
+
+  it("blocks uncategorised expenses (flags for review)", () => {
+    const result = isCTDeductible("Mystery payment", "Uncategorised");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("needs review");
+  });
+
+  it("blocks uncategorized (US spelling)", () => {
+    const result = isCTDeductible("Unknown debit", "Uncategorized");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("needs review");
+  });
+
+  it("blocks null category (conservative)", () => {
+    const result = isCTDeductible("Random payment", null);
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("needs review");
+  });
+
+  it("blocks undefined category", () => {
+    const result = isCTDeductible("Some debit");
+    expect(result.isDeductible).toBe(false);
+    expect(result.reason).toContain("needs review");
+  });
+
+  // ── Deductible categories ──
+  it("allows travel expenses", () => {
+    const result = isCTDeductible("Train to client site", "Travel");
+    expect(result.isDeductible).toBe(true);
+    expect(result.reason).toContain("Allowable");
+  });
+
+  it("allows bank charges", () => {
+    const result = isCTDeductible("Monthly bank fee", "Bank Charges");
+    expect(result.isDeductible).toBe(true);
+  });
+
+  it("allows insurance", () => {
+    const result = isCTDeductible("Public liability insurance", "Insurance");
+    expect(result.isDeductible).toBe(true);
+  });
+
+  it("allows materials", () => {
+    const result = isCTDeductible("Timber from Chadwicks", "Materials");
+    expect(result.isDeductible).toBe(true);
+  });
+
+  it("allows tools", () => {
+    const result = isCTDeductible("Drill purchase", "Tools & Equipment");
+    expect(result.isDeductible).toBe(true);
+  });
+
+  it("allows subscriptions", () => {
+    const result = isCTDeductible("Xero subscription", "Software & Subscriptions");
+    expect(result.isDeductible).toBe(true);
+  });
+
+  it("allows vehicle expenses (not vehicle purchase)", () => {
+    const result = isCTDeductible("Diesel for van", "Vehicle Expenses");
+    expect(result.isDeductible).toBe(true);
   });
 });
