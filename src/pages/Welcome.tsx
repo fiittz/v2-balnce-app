@@ -28,6 +28,7 @@ const ALLOWED_EMAILS = [
   "thomasvonteichman@nomadai.ie",
   "fitzgerald7071jamie@gmail.com",
   "kevin@workstuff.ai",
+  "markafmoore+balnce@gmail.com",
 ];
 
 const isEmailAllowed = (email: string) =>
