@@ -531,6 +531,16 @@ export default function ChatWidget() {
             setLastToolUsed(toolName);
             toolWasUsed = true;
 
+            // Clear the preliminary text so the user sees the loading
+            // indicator instead of watching text get rewritten
+            fullContent = "";
+            displayContent = "";
+            setMessages((prev) => {
+              const updated = [...prev];
+              updated[updated.length - 1] = { role: "assistant", content: "" };
+              return updated;
+            });
+
             let args: Record<string, unknown> = {};
             try { args = JSON.parse(tc.arguments || "{}"); } catch { /* empty */ }
 
