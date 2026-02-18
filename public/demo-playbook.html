@@ -78,22 +78,22 @@
   .concern-item {
     display: flex;
     gap: 20px;
-    margin-bottom: 28px;
+    margin-bottom: 20px;
   }
   .concern-num {
     font-family: "Space Mono", monospace;
-    font-size: 24px; font-weight: 700;
+    font-size: 20px; font-weight: 700;
     color: #e8553a;
     min-width: 36px;
     padding-top: 2px;
   }
   .concern-body h3 {
-    font-size: 22px; font-weight: 700;
-    color: #1a1a2e; margin-bottom: 6px;
+    font-size: 19px; font-weight: 700;
+    color: #1a1a2e; margin-bottom: 4px;
   }
   .concern-body p {
-    font-size: 18px; color: #555;
-    line-height: 1.6;
+    font-size: 16px; color: #555;
+    line-height: 1.5;
   }
 
   /* Statement slide */
@@ -151,6 +151,23 @@
     font-size: 18px; color: #555;
     line-height: 1.7; margin-top: 20px;
     max-width: 800px;
+  }
+
+  /* QR code */
+  .qr-section {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .qr-code {
+    width: 120px; height: 120px;
+    border-radius: 8px;
+  }
+  .qr-label {
+    font-family: "Space Mono", monospace;
+    font-size: 20px; font-weight: 700;
+    color: #1a1a2e;
   }
 
   /* Nav */
@@ -221,13 +238,6 @@
       <p>An AI agent would need access to the digital certificate (.p12). That's the keys to someone's entire tax life.</p>
     </div>
   </div>
-</div>
-
-<!-- SLIDE 3: CONCERNS CONTINUED -->
-<div class="slide" data-slide="3">
-  <div class="slide-header">01</div>
-  <h2>The Real Concerns</h2>
-  <div class="slide-line"></div>
 
   <div class="concern-item">
     <div class="concern-num">3.</div>
@@ -246,8 +256,8 @@
   </div>
 </div>
 
-<!-- SLIDE 4: WHERE WE STAND -->
-<div class="slide" data-slide="4">
+<!-- SLIDE 3: WHERE WE STAND -->
+<div class="slide" data-slide="3">
   <div class="slide-header">02</div>
   <h2>Where We Stand</h2>
   <div class="slide-line"></div>
@@ -259,8 +269,8 @@
   </div>
 </div>
 
-<!-- SLIDE 5: THE DIRECTION -->
-<div class="slide" data-slide="5">
+<!-- SLIDE 4: THE DIRECTION -->
+<div class="slide" data-slide="4">
   <div class="slide-header">02</div>
   <h2>Where We Stand</h2>
   <div class="slide-line"></div>
@@ -275,8 +285,8 @@
   </div>
 </div>
 
-<!-- SLIDE 6: LIVE DEMO -->
-<div class="slide" data-slide="6">
+<!-- SLIDE 5: LIVE DEMO -->
+<div class="slide" data-slide="5">
   <div class="slide-header">03</div>
   <h2>Live Demo</h2>
   <div class="slide-line"></div>
@@ -289,6 +299,11 @@
     <div class="label">OpenClaw AI Agent Demo</div>
     <div class="url"><a href="https://v2-balnce-app.vercel.app/demo-ros.html" target="_blank">v2-balnce-app.vercel.app/demo-ros.html</a></div>
   </div>
+
+  <div class="qr-section">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://balnce.ie&color=1a1a2e" alt="balnce.ie QR code" class="qr-code">
+    <div class="qr-label">balnce.ie</div>
+  </div>
 </div>
 
 <!-- NAV -->
@@ -296,11 +311,11 @@
   <button id="prevBtn" onclick="changeSlide(-1)" disabled>&#8592;</button>
   <button id="nextBtn" onclick="changeSlide(1)">&#8594;</button>
 </div>
-<div class="counter" id="counter">1 / 6</div>
+<div class="counter" id="counter">1 / 5</div>
 
 <script>
   let current = 1;
-  const total = 6;
+  const total = 5;
 
   function changeSlide(dir) {
     const next = current + dir;
