@@ -48,6 +48,7 @@ interface BusinessData {
   // Activity
   industry: string;
   primary_activity: string;
+  primary_activity_other: string;
   secondary_activities: string[];
   business_description: string;
 
@@ -142,6 +143,7 @@ const createEmptyBusiness = (): BusinessData => ({
   registered_address: "",
   industry: "",
   primary_activity: "",
+  primary_activity_other: "",
   secondary_activities: [],
   business_description: "",
   payment_methods: [],
@@ -442,7 +444,7 @@ export default function OnboardingWizard() {
         return state.businesses.every(b => b.industry.trim() !== "");
       case "business_activity":
         // All businesses must have a primary activity (and description if "other")
-        return state.businesses.every(b => b.primary_activity && (b.primary_activity !== "other" || (b as any).primary_activity_other));
+        return state.businesses.every(b => b.primary_activity && (b.primary_activity !== "other" || b.primary_activity_other));
       case "vat_setup":
         // All businesses must have valid VAT setup
         return state.businesses.every(b => !b.vat_registered || (b.vat_number && b.vat_basis));
@@ -611,7 +613,7 @@ export default function OnboardingWizard() {
           .from("onboarding_settings")
           .update({
             business_name: primaryBusiness.name,
-            business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+            business_type: (primaryBusiness.primary_activity === "other" ? primaryBusiness.primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
             business_description: primaryBusiness.business_description || null,
             vat_registered: primaryBusiness.vat_registered,
             vat_number: vatNumber,
@@ -627,7 +629,7 @@ export default function OnboardingWizard() {
           .insert({
             user_id: user.id,
             business_name: primaryBusiness.name,
-            business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+            business_type: (primaryBusiness.primary_activity === "other" ? primaryBusiness.primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
             business_description: primaryBusiness.business_description || null,
             vat_registered: primaryBusiness.vat_registered,
             vat_number: vatNumber,
@@ -643,7 +645,7 @@ export default function OnboardingWizard() {
         .from("profiles")
         .update({
           business_name: primaryBusiness.name,
-          business_type: (primaryBusiness.primary_activity === "other" ? (primaryBusiness as any).primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
+          business_type: (primaryBusiness.primary_activity === "other" ? primaryBusiness.primary_activity_other || "other" : primaryBusiness.primary_activity) || null,
           business_description: primaryBusiness.business_description || null,
         })
         .eq("id", user.id);
@@ -1138,14 +1140,14 @@ export default function OnboardingWizard() {
                   <Input
                     className="mt-2 h-14 text-base"
                     placeholder="e.g. Consulting, IT services, coaching..."
-                    value={(currentBusiness as any).primary_activity_other || ""}
+                    value={currentBusiness.primary_activity_other || ""}
                     onChange={(e) => {
                       const newBusinesses = [...state.businesses];
                       newBusinesses[selectedBusinessIndex] = {
                         ...newBusinesses[selectedBusinessIndex],
                         primary_activity: "other",
                         primary_activity_other: e.target.value,
-                      } as any;
+                      };
                       setState({ ...state, businesses: newBusinesses });
                     }}
                   />

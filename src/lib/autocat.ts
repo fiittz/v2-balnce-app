@@ -504,7 +504,7 @@ export function autoCategorise(
     "expense"
   );
 
-  const foodWordBoundary = (DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION as any).wordBoundaryKeywords || [];
+  const foodWordBoundary = DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.wordBoundaryKeywords || [];
   const foodWordMatch = foodWordBoundary.some((k: string) => new RegExp(`\\b${k}\\b`).test(desc));
   const allFoodAccomKeywords = DISALLOWED_VAT_CREDITS.FOOD_DRINK_ACCOMMODATION.keywords;
 
