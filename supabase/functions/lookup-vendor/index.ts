@@ -439,7 +439,7 @@ Based on the web research and business profile, is this a legitimate business ex
         category_suggestion: "General Expenses",
         vat_rate_suggestion: "standard_23",
         is_vat_recoverable: false,
-        explanation: error instanceof Error ? error.message : "Unknown error",
+        explanation: "Vendor lookup temporarily unavailable",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

@@ -231,7 +231,7 @@ serve(async (req) => {
       const resendError = await resendResponse.text();
       console.error("Resend API error:", resendResponse.status, resendError);
       return new Response(
-        JSON.stringify({ error: "Failed to send email", details: resendError }),
+        JSON.stringify({ error: "Failed to send email" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -252,7 +252,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error in send-invoice-email:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
+      JSON.stringify({ error: "An internal error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

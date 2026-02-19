@@ -547,7 +547,7 @@ ${financialContext}${pageContext}`;
           }
         } catch (err) {
           console.error("Stream error:", err);
-          controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ error: String(err) })}\n\n`));
+          controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ error: "An internal error occurred" })}\n\n`));
         } finally {
           controller.close();
         }
@@ -563,10 +563,9 @@ ${financialContext}${pageContext}`;
       },
     });
   } catch (error) {
-    const errMsg = error instanceof Error ? error.message : String(error);
-    console.error("Chat assistant error:", errMsg);
+    console.error("Chat assistant error:", error instanceof Error ? error.message : String(error));
     return new Response(
-      JSON.stringify({ error: errMsg }),
+      JSON.stringify({ error: "An internal error occurred" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
