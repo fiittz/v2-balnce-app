@@ -665,6 +665,47 @@ describe("executeToolCall — run_director_health_check", () => {
     expect(result).toContain("Company Health Check");
   });
 
+  it("flags commute mileage opportunity when no travel claims exist", () => {
+    const ctx = makeCtx({
+      directorData: { name: "John", salary: 50000, commute_distance_km: 30 },
+      ct1: {
+        detectedIncome: [{ category: "Sales", amount: 100000 }],
+        expenseByCategory: [{ category: "Materials", amount: 30000 }],
+        expenseSummary: { allowable: 30000, disallowed: 0, total: 30000 },
+        vehicleAsset: null,
+        directorsLoanTravel: 0,
+        travelAllowance: 0,
+        rctPrepayment: 0,
+        isConstructionTrade: false,
+        vatPosition: null,
+        flaggedCapitalItems: [],
+      } as unknown as ToolContext["ct1"],
+    });
+    const { result } = executeToolCall("run_director_health_check", {}, ctx);
+    expect(result).toContain("commute");
+    expect(result).toContain("30km");
+    expect(result).toContain("mileage");
+  });
+
+  it("recognises rental income as a win", () => {
+    const ctx = makeCtx({
+      directorData: { name: "Jane", salary: 50000 },
+      allForm11Data: [{ directorNumber: 1, data: { rentalIncome: 18000 } }],
+    });
+    const { result } = executeToolCall("run_director_health_check", {}, ctx);
+    expect(result).toContain("Rental income declared");
+  });
+
+  it("recognises medical expenses as a win", () => {
+    const ctx = makeCtx({
+      directorData: { name: "Jane", salary: 50000 },
+      allForm11Data: [{ directorNumber: 1, data: { medicalExpenses: 3500 } }],
+    });
+    const { result } = executeToolCall("run_director_health_check", {}, ctx);
+    expect(result).toContain("Medical expenses claimed");
+    expect(result).toContain("20% relief");
+  });
+
   it("shows upcoming deadlines and penalises score when deadline is within 30 days", () => {
     // We need a taxYear such that one of the deadlines (Form 11 filing: Oct 31 of taxYear+1,
     // or Form 11 preliminary tax: Oct 31 of taxYear) is within 30 days of "today".

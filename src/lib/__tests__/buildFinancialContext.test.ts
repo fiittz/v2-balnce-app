@@ -1218,6 +1218,32 @@ describe("Form 11 questionnaire data section", () => {
     expect(result).toContain(`Medical Expenses: ${eur(2000)}`);
     expect(result).toContain(`Capital Gains: ${eur(8000)}`);
   });
+
+  it("shows foreign income, tuition fees, health insurance, mortgage interest, rent paid, and preliminary tax", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        allForm11Data: [
+          {
+            directorNumber: 1,
+            data: {
+              foreignIncome: 6000,
+              tuitionFees: 4500,
+              healthInsurancePremium: 1800,
+              mortgageInterest: 3200,
+              rentPaid: 14000,
+              preliminaryTaxPaid: 7500,
+            },
+          },
+        ],
+      }),
+    );
+    expect(result).toContain(`Foreign Income: ${eur(6000)}`);
+    expect(result).toContain(`Tuition Fees: ${eur(4500)}`);
+    expect(result).toContain(`Health Insurance Premium: ${eur(1800)}`);
+    expect(result).toContain(`Mortgage Interest: ${eur(3200)}`);
+    expect(result).toContain(`Rent Paid: ${eur(14000)}`);
+    expect(result).toContain(`Preliminary Tax Paid: ${eur(7500)}`);
+  });
 });
 
 describe("balance sheet from CT1 questionnaire", () => {
@@ -1251,6 +1277,69 @@ describe("balance sheet from CT1 questionnaire", () => {
     expect(result).toContain(`Creditors: ${eur(8000)}`);
     expect(result).toContain(`Share Capital Issued: ${eur(100)}`);
     expect(result).toContain(`Retained Profits B/F: ${eur(42000)}`);
+  });
+
+  it("shows fixed assets motor vehicles", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { fixedAssetsMotorVehicles: 35000 } }),
+    );
+    expect(result).toContain(`Fixed Assets - Motor Vehicles: ${eur(35000)}`);
+  });
+
+  it("shows fixed assets fixtures and fittings", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { fixedAssetsFixturesFittings: 12000 } }),
+    );
+    expect(result).toContain(`Fixed Assets - Fixtures & Fittings: ${eur(12000)}`);
+  });
+
+  it("shows debtors from currentAssetsDebtors", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { currentAssetsDebtors: 15000 } }),
+    );
+    expect(result).toContain(`Debtors: ${eur(15000)}`);
+  });
+
+  it("shows debtors from tradeDebtorsTotal as fallback", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { tradeDebtorsTotal: 9000 } }),
+    );
+    expect(result).toContain(`Debtors: ${eur(9000)}`);
+  });
+
+  it("shows creditors from tradeCreditorsTotal as fallback", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { tradeCreditorsTotal: 7000 } }),
+    );
+    expect(result).toContain(`Creditors: ${eur(7000)}`);
+  });
+
+  it("shows director's current account balance", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { directorsCurrentAccountBalance: 22000 } }),
+    );
+    expect(result).toContain(`Director's Current Account: ${eur(22000)}`);
+  });
+
+  it("shows work in progress value", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { wipValue: 18000 } }),
+    );
+    expect(result).toContain(`Work in Progress: ${eur(18000)}`);
+  });
+
+  it("shows prepayments amount", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { prepaymentsAmount: 4000 } }),
+    );
+    expect(result).toContain(`Prepayments: ${eur(4000)}`);
+  });
+
+  it("shows fixed assets land and buildings", () => {
+    const result = buildFinancialContext(
+      makeInput({ savedCT1: { fixedAssetsLandBuildings: 200000 } }),
+    );
+    expect(result).toContain(`Fixed Assets - Land & Buildings: ${eur(200000)}`);
   });
 });
 

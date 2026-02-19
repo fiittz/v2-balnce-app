@@ -353,3 +353,68 @@ describe("vendorDatabase — Irish VAT compliance", () => {
     }
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// validateVendorDatabase — error paths
+// ══════════════════════════════════════════════════════════════
+describe("validateVendorDatabase — error paths", () => {
+  it("reports missing name", () => {
+    const bad = { name: "", patterns: ["test"], category: "Test", vat_type: "Zero", purpose: "test" } as VendorEntry;
+    vendorDatabase.push(bad);
+    const result = validateVendorDatabase();
+    vendorDatabase.pop();
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("Missing name"))).toBe(true);
+  });
+
+  it("reports no patterns", () => {
+    const bad = { name: "Bad", patterns: [], category: "Test", vat_type: "Zero", purpose: "test" } as VendorEntry;
+    vendorDatabase.push(bad);
+    const result = validateVendorDatabase();
+    vendorDatabase.pop();
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("no patterns"))).toBe(true);
+  });
+
+  it("reports missing category", () => {
+    const bad = { name: "Bad", patterns: ["test"], category: "", vat_type: "Zero", purpose: "test" } as VendorEntry;
+    vendorDatabase.push(bad);
+    const result = validateVendorDatabase();
+    vendorDatabase.pop();
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("no category"))).toBe(true);
+  });
+
+  it("reports missing vat_type", () => {
+    const bad = { name: "Bad", patterns: ["test"], category: "Test", vat_type: "", purpose: "test" } as VendorEntry;
+    vendorDatabase.push(bad);
+    const result = validateVendorDatabase();
+    vendorDatabase.pop();
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("no vat_type"))).toBe(true);
+  });
+
+  it("reports missing purpose", () => {
+    const bad = { name: "Bad", patterns: ["test"], category: "Test", vat_type: "Zero", purpose: "" } as VendorEntry;
+    vendorDatabase.push(bad);
+    const result = validateVendorDatabase();
+    vendorDatabase.pop();
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("no purpose"))).toBe(true);
+  });
+
+  it("reports non-lowercase pattern", () => {
+    const bad = {
+      name: "Bad",
+      patterns: ["TestUPPER"],
+      category: "Test",
+      vat_type: "Zero",
+      purpose: "test",
+    } as VendorEntry;
+    vendorDatabase.push(bad);
+    const result = validateVendorDatabase();
+    vendorDatabase.pop();
+    expect(result.valid).toBe(false);
+    expect(result.errors.some((e) => e.includes("not lowercase"))).toBe(true);
+  });
+});

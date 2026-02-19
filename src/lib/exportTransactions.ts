@@ -160,90 +160,6 @@ const formatPnlCt1Section = (s: PnlCt1Summary): string => {
   return lines.join("\n");
 };
 
-const formatPnlCt1Html = (s: PnlCt1Summary): string => {
-  const row = (label: string, amount: string, bold = false) =>
-    `<tr${bold ? ' style="font-weight:bold;border-top:2px solid #333"' : ""}><td>${label}</td><td class="amount">${amount}</td></tr>`;
-
-  let html =
-    '<h2>Profit & Loss</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
-  html += '<tr style="background:#f5f5f5;font-weight:bold"><td colspan="2">Income</td></tr>';
-  for (const [cat, amt] of Object.entries(s.incomeByCategory).sort((a, b) => b[1] - a[1])) {
-    html += row(`&nbsp;&nbsp;${cat}`, fmtEur(amt));
-  }
-  html += row("Total Income", fmtEur(s.totalIncome), true);
-
-  if (s.totalDirectCosts > 0) {
-    html += '<tr style="background:#f5f5f5;font-weight:bold"><td colspan="2">Direct Costs</td></tr>';
-    for (const [cat, amt] of Object.entries(s.directCostsByCategory).sort((a, b) => b[1] - a[1])) {
-      html += row(`&nbsp;&nbsp;${cat}`, fmtEur(amt));
-    }
-    html += row("Total Direct Costs", fmtEur(s.totalDirectCosts), true);
-  }
-
-  html += row("Gross Profit", fmtEur(s.grossProfit), true);
-  html += '<tr style="background:#f5f5f5;font-weight:bold"><td colspan="2">Expenses</td></tr>';
-  for (const [cat, amt] of Object.entries(s.expensesByCategory).sort((a, b) => b[1] - a[1])) {
-    html += row(`&nbsp;&nbsp;${cat}`, fmtEur(amt));
-  }
-  if (s.revenueRefunds > 0) {
-    html += row("&nbsp;&nbsp;Less: Revenue Refund", `(${fmtEur(s.revenueRefunds)})`);
-  }
-  html += row("Net Expenses", fmtEur(s.netExpenses), true);
-  html += row("Net Profit", fmtEur(s.netProfit), true);
-  html += "</table>";
-
-  if (s.taxableProfit !== undefined) {
-    html +=
-      '<h2>Corporation Tax (CT1)</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
-    html += row("Net Profit (per accounts)", fmtEur(s.netProfit));
-    if (s.disallowedByCategory && s.disallowedByCategory.length > 0) {
-      html +=
-        '<tr style="font-size:11px;color:#b45309"><td colspan="2"><em>Add back: Non-deductible expenses</em></td></tr>';
-      for (const { category, amount } of s.disallowedByCategory) {
-        html += `<tr style="font-size:11px;color:#b45309"><td>&nbsp;&nbsp;&nbsp;&nbsp;${category}</td><td class="amount">${fmtEur(amount)}</td></tr>`;
-      }
-    }
-    if (s.capitalAllowances && s.capitalAllowances > 0)
-      html += row("Less: Capital Allowances", `(${fmtEur(s.capitalAllowances)})`);
-    if (s.travelDeduction && s.travelDeduction > 0)
-      html += row("Less: Travel Deduction", `(${fmtEur(s.travelDeduction)})`);
-    html += row("Trading Profit", fmtEur(s.tradingProfit ?? 0), true);
-    if (s.lossesForward && s.lossesForward > 0) html += row("Less: Losses B/F", fmtEur(s.lossesForward));
-    html += row("Taxable Profit", fmtEur(s.taxableProfit), true);
-    html += row("CT @ 12.5%", fmtEur(s.ctAt125 ?? 0));
-    if (s.surcharge && s.surcharge > 0) html += row("Close Company Surcharge", fmtEur(s.surcharge));
-    html += row("Total CT Liability", fmtEur(s.totalCT ?? 0), true);
-    if (s.rctCredit && s.rctCredit > 0) html += row("Less: RCT Credit", fmtEur(s.rctCredit));
-    if (s.prelimPaid && s.prelimPaid > 0) html += row("Less: Preliminary CT Paid", fmtEur(s.prelimPaid));
-    const due = s.balanceDue ?? 0;
-    html += `<tr style="font-weight:bold;font-size:14px;border-top:3px solid #333;color:${due <= 0 ? "#16a34a" : "#dc2626"}"><td>${due <= 0 ? "CT Refund Due" : "CT Balance Due"}</td><td class="amount">${fmtEur(Math.abs(due))}</td></tr>`;
-    html += "</table>";
-  }
-
-  // Directors Current Account
-  {
-    const dr = s.directorsLoanDebits ?? 0;
-    const sub = s.totalSubsistenceAllowance ?? 0;
-    const mile = s.totalMileageAllowance ?? 0;
-    const net = s.netDirectorsLoan ?? 0;
-    if (dr > 0 || sub > 0 || mile > 0) {
-      html +=
-        '<h2>Directors Current Account</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
-      if (dr > 0) html += row("DLA debits (taken by director)", fmtEur(dr));
-      if (sub > 0) html += row("Less: Subsistence owed to director", `(${fmtEur(sub)})`);
-      if (mile > 0) html += row("Less: Mileage owed to director", `(${fmtEur(mile)})`);
-      html += row(
-        net >= 0 ? "Directors Current A/C (Cr)" : "Directors Current A/C (Dr)",
-        net >= 0 ? fmtEur(net) : `(${fmtEur(Math.abs(net))})`,
-        true,
-      );
-      html += "</table>";
-    }
-  }
-
-  return html + '<hr style="margin:20px 0;border:none;border-top:2px solid #ddd" />';
-};
-
 const formatBusinessQuestionnaireSection = (data: QuestionnaireData): string => {
   const lines: string[] = [];
 
@@ -1476,12 +1392,6 @@ export const sanitizeCsvCell = (value: unknown): string => {
     return "'" + str;
   }
   return str;
-};
-
-const escapeHtml = (text: string) => {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
 };
 
 const downloadBlob = (blob: Blob, filename: string) => {
