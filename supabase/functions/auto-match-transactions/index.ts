@@ -73,6 +73,21 @@ serve(async (req) => {
 
     const { action, transactionIds, transactionId } = await req.json();
 
+    // UUID format validation
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (transactionId && !uuidRegex.test(transactionId)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid transactionId format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (transactionIds && Array.isArray(transactionIds) && !transactionIds.every((id: unknown) => typeof id === "string" && uuidRegex.test(id))) {
+      return new Response(
+        JSON.stringify({ error: "All transactionIds must be valid UUIDs" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Input validation: max batch size of 10
     if (transactionIds && Array.isArray(transactionIds) && transactionIds.length > 10) {
       return new Response(

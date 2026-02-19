@@ -49,6 +49,14 @@ serve(async (req) => {
     if (action === "calculate_deduction") {
       const { grossAmount, subcontractorId } = params;
 
+      // Validate gross amount
+      if (typeof grossAmount !== "number" || !isFinite(grossAmount) || grossAmount <= 0) {
+        return new Response(
+          JSON.stringify({ error: "grossAmount must be a positive number." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // Get subcontractor's RCT rate
       const { data: subcontractor, error: subError } = await supabase
         .from("subcontractors")
@@ -158,6 +166,20 @@ serve(async (req) => {
 
     if (action === "get_monthly_summary") {
       const { month, year } = params;
+
+      // Validate month and year
+      if (!Number.isInteger(month) || month < 1 || month > 12) {
+        return new Response(
+          JSON.stringify({ error: "month must be an integer between 1 and 12." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (!Number.isInteger(year) || year < 2020 || year > 2100) {
+        return new Response(
+          JSON.stringify({ error: "year must be an integer between 2020 and 2100." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       // Get all deductions for the period
       const { data: deductions, error: dedError } = await supabase

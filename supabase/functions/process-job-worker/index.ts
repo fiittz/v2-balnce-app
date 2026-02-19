@@ -53,12 +53,17 @@ serve(async (req) => {
       );
     }
 
-    // Fetch the job
-    const { data: job, error: jobError } = await supabase
+    // Fetch the job — enforce ownership for non-service-role callers
+    const jobQuery = supabase
       .from("processing_jobs")
       .select("*")
-      .eq("id", job_id)
-      .single();
+      .eq("id", job_id);
+
+    if (!isServiceRole && user) {
+      jobQuery.eq("user_id", user.id);
+    }
+
+    const { data: job, error: jobError } = await jobQuery.single();
 
     if (jobError || !job) {
       return new Response(

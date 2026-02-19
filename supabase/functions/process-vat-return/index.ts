@@ -46,6 +46,27 @@ serve(async (req) => {
 
     const { action, periodStart, periodEnd } = await req.json();
 
+    // Validate date parameters
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (periodStart && !dateRegex.test(periodStart)) {
+      return new Response(
+        JSON.stringify({ error: "periodStart must be a valid date (YYYY-MM-DD)." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (periodEnd && !dateRegex.test(periodEnd)) {
+      return new Response(
+        JSON.stringify({ error: "periodEnd must be a valid date (YYYY-MM-DD)." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    if (periodStart && periodEnd && periodStart >= periodEnd) {
+      return new Response(
+        JSON.stringify({ error: "periodStart must be before periodEnd." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     if (action === "calculate") {
       // Calculate VAT for the period
       

@@ -214,14 +214,11 @@ export default function ChatWidget() {
   }, [user?.id, taxYear]);
 
   const allDirectorData = useMemo(() => {
-    if (!user?.id) return [];
-    const directors: Record<string, unknown>[] = [];
-    for (let i = 1; i <= (directorCount || 1); i++) {
-      const raw = localStorage.getItem(`director_onboarding_${user.id}_${i}`);
-      if (raw) directors.push(JSON.parse(raw));
-    }
-    return directors;
-  }, [user?.id, directorCount]);
+    if (!directorRows || directorRows.length === 0) return [];
+    return directorRows
+      .filter((r: any) => r.onboarding_data)
+      .map((r: any) => r.onboarding_data as Record<string, unknown>);
+  }, [directorRows]);
 
   const allForm11Data = useMemo(() => {
     if (!user?.id) return [];

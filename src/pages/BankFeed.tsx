@@ -110,6 +110,7 @@ import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
 import { useInvoiceTripMatcher, type InvoiceTrip } from "@/hooks/useInvoiceTripMatcher";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useCT1Data } from "@/hooks/useCT1Data";
+import { useDirectorOnboarding } from "@/hooks/useDirectorOnboarding";
 import { useAuth } from "@/hooks/useAuth";
 import { ChartOfAccountsButton } from "@/components/dashboard/ChartOfAccountsWidget";
 
@@ -345,6 +346,7 @@ const BankFeed = () => {
   const ct1 = useCT1Data();
   const { data: invoicesData } = useInvoices();
   const { user } = useAuth();
+  const { data: directorRows } = useDirectorOnboarding();
 
   // VAT summary from hook — single source of truth for VAT figures
   const vatTaxYear = useMemo(() => {
@@ -365,19 +367,16 @@ const BankFeed = () => {
 
   // Director names from onboarding for PDF signatures
   const directorNames = useMemo(() => {
+    if (!directorRows || directorRows.length === 0) return ["Director"];
     const names: string[] = [];
-    const dirCount = parseInt(localStorage.getItem("director_count") || "1", 10);
-    for (let i = 1; i <= dirCount; i++) {
-      const dRaw = localStorage.getItem(`director_onboarding_${user?.id}_${i}`);
-      if (dRaw) {
-        const d = JSON.parse(dRaw);
-        if (d.first_name || d.last_name) {
-          names.push(`${d.first_name || ""} ${d.last_name || ""}`.trim());
-        }
+    for (const row of directorRows) {
+      const d = row.onboarding_data as Record<string, unknown> | null;
+      if (d && (d.first_name || d.last_name)) {
+        names.push(`${d.first_name || ""} ${d.last_name || ""}`.trim());
       }
     }
     return names.length > 0 ? names : ["Director"];
-  }, [user?.id]);
+  }, [directorRows]);
 
   // Company info for PDF headers
   const companyInfo: CompanyInfo = useMemo(() => {
@@ -1008,26 +1007,24 @@ const BankFeed = () => {
     const vehicleNBV = ct1.vehicleAsset ? ct1.vehicleAsset.depreciation.netBookValue : 0;
     const directorsLoanNet = ct1.netDirectorsLoan;
 
-    // Director names from onboarding
-    const directorNames: string[] = [];
-    const dirCount = parseInt(localStorage.getItem("director_count") || "1", 10);
-    for (let i = 1; i <= dirCount; i++) {
-      const dRaw = localStorage.getItem(`director_onboarding_${user?.id}_${i}`);
-      if (dRaw) {
-        const d = JSON.parse(dRaw);
-        if (d.first_name || d.last_name) {
-          directorNames.push(`${d.first_name || ""} ${d.last_name || ""}`.trim());
+    // Director names from Supabase onboarding data
+    const directorNamesLocal: string[] = [];
+    if (directorRows) {
+      for (const row of directorRows) {
+        const d = row.onboarding_data as Record<string, unknown> | null;
+        if (d && (d.first_name || d.last_name)) {
+          directorNamesLocal.push(`${d.first_name || ""} ${d.last_name || ""}`.trim());
         }
       }
     }
-    if (directorNames.length === 0) directorNames.push("Director");
+    if (directorNamesLocal.length === 0) directorNamesLocal.push("Director");
 
     const abInput: AbridgedAccountsInput = {
       companyName: companyInfo.companyName || "Company",
       croNumber: companyInfo.croNumber || "",
       registeredAddress: companyInfo.registeredAddress || "",
       accountingYearEnd: `31 December ${ty}`,
-      directorNames,
+      directorNames: directorNamesLocal,
       fixedAssetsTangible: vehicleNBV,
       stock: q?.currentAssetsStock ?? 0,
       wip: 0,
