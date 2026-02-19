@@ -57,7 +57,9 @@ const CONSTRUCTION_EXPENSES: CategoryDef[] = [
   { name: "Repairs & Maintenance", account_code: "6400", vat_rate: 23, account_type: "business" },
   { name: "Protective Clothing & PPE", account_code: "6500", vat_rate: 23, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -88,7 +90,9 @@ const TECHNOLOGY_EXPENSES: CategoryDef[] = [
   { name: "Subsistence", account_code: "6250", vat_rate: 0, account_type: "business" },
   { name: "Meals & Entertainment", account_code: "6300", vat_rate: 0, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -118,7 +122,9 @@ const HOSPITALITY_EXPENSES: CategoryDef[] = [
   { name: "Delivery Platform Fees", account_code: "6150", vat_rate: 23, account_type: "business" },
   { name: "Repairs & Maintenance", account_code: "6400", vat_rate: 23, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -147,7 +153,9 @@ const RETAIL_EXPENSES: CategoryDef[] = [
   { name: "Travel & Accommodation", account_code: "6200", vat_rate: 0, account_type: "business" },
   { name: "Repairs & Maintenance", account_code: "6400", vat_rate: 23, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -175,7 +183,9 @@ const TRANSPORT_EXPENSES: CategoryDef[] = [
   { name: "Utilities", account_code: "5910", vat_rate: 13.5, account_type: "business" },
   { name: "Advertising & Marketing", account_code: "6100", vat_rate: 23, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -202,7 +212,9 @@ const HEALTH_EXPENSES: CategoryDef[] = [
   { name: "Advertising & Marketing", account_code: "6100", vat_rate: 23, account_type: "business" },
   { name: "Training & CPD", account_code: "6200", vat_rate: 0, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -229,7 +241,9 @@ const PROPERTY_EXPENSES: CategoryDef[] = [
   { name: "Advertising & Marketing", account_code: "6100", vat_rate: 23, account_type: "business" },
   { name: "Travel & Accommodation", account_code: "6200", vat_rate: 0, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -257,7 +271,9 @@ const MANUFACTURING_EXPENSES: CategoryDef[] = [
   { name: "Advertising & Marketing", account_code: "6100", vat_rate: 23, account_type: "business" },
   { name: "Protective Clothing & PPE", account_code: "6500", vat_rate: 23, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -290,7 +306,9 @@ const SOFTWARE_DEV_EXPENSES: CategoryDef[] = [
   { name: "Subsistence", account_code: "6250", vat_rate: 0, account_type: "business" },
   { name: "Meals & Entertainment", account_code: "6300", vat_rate: 0, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -324,7 +342,9 @@ const EVENTS_EXPENSES: CategoryDef[] = [
   { name: "Travel & Accommodation", account_code: "6200", vat_rate: 0, account_type: "business" },
   { name: "Transport & Logistics", account_code: "6250", vat_rate: 23, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -351,7 +371,9 @@ const PROFESSIONAL_EXPENSES: CategoryDef[] = [
   { name: "Subsistence", account_code: "6250", vat_rate: 0, account_type: "business" },
   { name: "Meals & Entertainment", account_code: "6300", vat_rate: 0, account_type: "business" },
   { name: "Subscriptions & Software", account_code: "6600", vat_rate: 23, account_type: "business" },
-  { name: "Director's Drawings", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Director's Salary", account_code: "6710", vat_rate: 0, account_type: "business" },
+  { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, account_type: "business" },
+  { name: "Dividends", account_code: "6720", vat_rate: 0, account_type: "business" },
   { name: "Medical Expenses", account_code: "6800", vat_rate: 0, account_type: "both" },
   { name: "Miscellaneous Expenses", account_code: "6900", vat_rate: 23, account_type: "business" },
 ];
@@ -560,7 +582,9 @@ export async function seedDefaultCategories(userId: string, businessType?: strin
  */
 export async function ensureNewCategories(userId: string): Promise<void> {
   const needed = [
-    { name: "Director's Drawings", account_code: "6700", vat_rate: 0, type: "expense", account_type: "business" },
+    { name: "Director's Salary", account_code: "6710", vat_rate: 0, type: "expense", account_type: "business" },
+    { name: "Director's Loan Account", account_code: "6700", vat_rate: 0, type: "expense", account_type: "business" },
+    { name: "Dividends", account_code: "6720", vat_rate: 0, type: "expense", account_type: "business" },
     { name: "Medical Expenses", account_code: "6800", vat_rate: 0, type: "expense", account_type: "both" },
     { name: "Subsistence", account_code: "6250", vat_rate: 0, type: "expense", account_type: "business" },
     // Personal categories for existing users

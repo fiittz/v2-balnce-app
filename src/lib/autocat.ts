@@ -27,6 +27,7 @@ export interface TransactionInput {
   account_type?: string; // "limited_company" | "directors_personal_tax" — filters category matching
   user_business_description?: string; // free-text description of what the business does (max 40 words)
   mcc_code?: number; // optional MCC code from bank feed
+  director_names?: string[]; // director names from onboarding — used to detect salary payments vs subcontractor
 }
 
 export interface AutoCatResult {
@@ -78,6 +79,7 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   "Bank Fees": ["Bank Charges"],
   Medical: ["Medical Expenses"],
   Drawings: ["Director's Drawings"],
+  "Director's Salary": ["Director's Salary", "Staff Wages"],
   "Meals & Entertainment": ["Meals & Entertainment"],
   "Consulting & Accounting": ["Professional Fees"],
   Wages: ["Subcontractor Payments", "Staff Wages", "Contractor Payments", "Driver Wages"],
@@ -369,6 +371,41 @@ function refineWithReceipt(base: AutoCatResult, tx: TransactionInput): AutoCatRe
   return result;
 }
 
+// Check if transaction looks like Director's Drawings on a business account
+// Drawings = money taken out of the company by the director for personal use
+function isDirectorsDrawings(desc: string, tx: TransactionInput): boolean {
+  const normalised = normalise(desc);
+  const isBusinessAccount = tx.account_type === "limited_company";
+
+  // Explicit drawings/DLA keywords — apply regardless of account type
+  if (
+    normalised.includes("drawings") ||
+    normalised.includes("director") ||
+    normalised.includes("dla ") ||
+    normalised.includes("directors loan") ||
+    normalised.includes("personal transfer") ||
+    normalised.includes("transfer to self") ||
+    normalised.includes("own account")
+  ) {
+    return true;
+  }
+
+  // On business accounts only: ATM withdrawals = drawings
+  if (isBusinessAccount) {
+    if (
+      normalised.includes("atm") ||
+      normalised.includes("cash withdrawal") ||
+      normalised.includes("cash machine") ||
+      normalised.includes("counter withdrawal") ||
+      normalised.includes("self service withdrawal")
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 // Check if transaction is a transfer to an individual (not a business)
 function isPaymentToIndividual(desc: string): boolean {
   const normalised = normalise(desc);
@@ -501,8 +538,56 @@ export function autoCategorise(
     );
   }
 
-  // 2) Check for payment to individual (no VAT invoice possible)
+  // 2) Check for Director's Drawings (must come before isPaymentToIndividual)
+  if (isDirectorsDrawings(desc, tx)) {
+    return finalizeResult(
+      {
+        category: "Drawings",
+        vat_type: "N/A",
+        vat_deductible: false,
+        business_purpose: "Director's Drawings — capital withdrawal from the company. Not a business expense. Debits the Director's Loan Account.",
+        confidence_score: 90,
+        notes: "Director's Drawings — not deductible for Corporation Tax. Increases Director's Loan Account balance.",
+        needs_review: false,
+        needs_receipt: false,
+        is_business_expense: false,
+      },
+      tx,
+    );
+  }
+
+  // 2.1) Check for payment to individual
   if (isPaymentToIndividual(desc)) {
+    // If director names are provided, check if this transfer is to a director → Salary
+    if (tx.director_names && tx.director_names.length > 0) {
+      const transferTarget = normalise(desc).replace(/^to\s+/, "");
+      const isDirector = tx.director_names.some((name) => {
+        const normalName = normalise(name);
+        if (!normalName) return false;
+        // Match full name or surname
+        const parts = normalName.split(/\s+/);
+        const surname = parts[parts.length - 1];
+        return transferTarget.includes(normalName) || (surname.length > 2 && transferTarget.includes(surname));
+      });
+
+      if (isDirector) {
+        return finalizeResult(
+          {
+            category: "Director's Salary",
+            vat_type: "N/A",
+            vat_deductible: false,
+            business_purpose: "Director's salary payment. Subject to PAYE, PRSI, and USC through payroll.",
+            confidence_score: 90,
+            notes: "Payment to director — classified as salary. Deductible for Corporation Tax.",
+            needs_review: false,
+            needs_receipt: false,
+            is_business_expense: true,
+          },
+          tx,
+        );
+      }
+    }
+
     return finalizeResult(
       {
         category: "Labour costs",
@@ -945,6 +1030,7 @@ function determineBusinessExpense(
     "Labour costs",
     "Sub Con",
     "Wages",
+    "Director's Salary",
     "Motor Vehicle Expenses",
   ];
 
@@ -962,7 +1048,8 @@ function determineBusinessExpense(
   }
 
   // DEFINITELY PERSONAL (FALSE) - Form 11 relief categories are personal expenses (not business)
-  const personalReliefCategories = ["Medical", "Pension", "Health Insurance", "Charitable", "Tuition"];
+  // Director's Drawings are capital withdrawals, not business expenses
+  const personalReliefCategories = ["Medical", "Pension", "Health Insurance", "Charitable", "Tuition", "Drawings"];
   if (personalReliefCategories.some((pc) => category.toLowerCase().includes(pc.toLowerCase()))) {
     return false; // Personal — Form 11 relief
   }

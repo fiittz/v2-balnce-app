@@ -11,6 +11,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { useAccounts } from "@/hooks/useAccounts";
 import { useAuth } from "@/hooks/useAuth";
 import { useOnboardingSettings } from "@/hooks/useOnboardingSettings";
+import { useDirectorOnboarding } from "@/hooks/useDirectorOnboarding";
 import { autoCategorise, findMatchingCategory } from "@/lib/autocat";
 import { calculateVATFromGross } from "@/lib/vatDeductibility";
 import { supabase } from "@/integrations/supabase/client";
@@ -71,6 +72,11 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
   const { data: accounts = [] } = useAccounts(); // Get all accounts for Chart of Accounts linking
   const { profile, user } = useAuth();
   const { data: onboarding } = useOnboardingSettings();
+  const { data: directorRows = [] } = useDirectorOnboarding();
+  const directorNames = useMemo(
+    () => directorRows.map((d) => d.director_name).filter((n): n is string => !!n),
+    [directorRows],
+  );
   const { vendorCache } = useVendorCache();
   const { userCorrections } = useUserCorrections();
 
@@ -713,6 +719,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                     user_business_type: onboarding?.business_type || profile?.business_type || "",
                     user_business_description: onboarding?.business_description || "",
                     receipt_text: undefined,
+                    director_names: directorNames.length > 0 ? directorNames : undefined,
                   },
                   vendorCache,
                   userCorrections,

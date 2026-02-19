@@ -1130,6 +1130,136 @@ describe("autoCategorise — merchant match default branch", () => {
 });
 
 // ══════════════════════════════════════════════════════════════
+// autoCategorise — Director's Drawings detection
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — Director's Drawings", () => {
+  it("ATM withdrawal on business account = Director's Drawings", () => {
+    const result = autoCategorise(
+      expense("ATM WITHDRAWAL 15/02", {
+        account_type: "limited_company",
+      }),
+    );
+    expect(result.category).toBe("Drawings");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.is_business_expense).toBe(false);
+    expect(result.confidence_score).toBeGreaterThanOrEqual(85);
+  });
+
+  it("cash withdrawal on business account = Director's Drawings", () => {
+    const result = autoCategorise(
+      expense("CASH WITHDRAWAL MAIN ST", {
+        account_type: "limited_company",
+      }),
+    );
+    expect(result.category).toBe("Drawings");
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("ATM on personal account is NOT Director's Drawings", () => {
+    const result = autoCategorise(
+      expense("ATM WITHDRAWAL 15/02", {
+        account_type: "directors_personal_tax",
+      }),
+    );
+    expect(result.category).not.toBe("Drawings");
+  });
+
+  it("explicit 'drawings' keyword = Director's Drawings", () => {
+    const result = autoCategorise(expense("DRAWINGS - MARCH"));
+    expect(result.category).toBe("Drawings");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("'directors loan' keyword = Director's Drawings", () => {
+    const result = autoCategorise(expense("DIRECTORS LOAN REPAYMENT"));
+    expect(result.category).toBe("Drawings");
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("'transfer to self' = Director's Drawings", () => {
+    const result = autoCategorise(expense("TRANSFER TO SELF - PERSONAL"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("'own account' transfer = Director's Drawings", () => {
+    const result = autoCategorise(expense("TRANSFER OWN ACCOUNT"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("'personal transfer' = Director's Drawings", () => {
+    const result = autoCategorise(expense("PERSONAL TRANSFER OUT"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("counter withdrawal on business account = Director's Drawings", () => {
+    const result = autoCategorise(
+      expense("COUNTER WITHDRAWAL", {
+        account_type: "limited_company",
+      }),
+    );
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("payment to director's name = Director's Salary", () => {
+    const result = autoCategorise(
+      expense("To Jamie Fitzgerald", {
+        director_names: ["Jamie Fitzgerald"],
+      }),
+    );
+    expect(result.category).toBe("Director's Salary");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.is_business_expense).toBe(true);
+    expect(result.confidence_score).toBeGreaterThanOrEqual(85);
+  });
+
+  it("payment to director matched by surname", () => {
+    const result = autoCategorise(
+      expense("To Fitzgerald weekly", {
+        director_names: ["Jamie Fitzgerald"],
+      }),
+    );
+    expect(result.category).toBe("Director's Salary");
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("payment to non-director individual = Labour costs (not salary)", () => {
+    const result = autoCategorise(
+      expense("To John Smith", {
+        director_names: ["Jamie Fitzgerald"],
+      }),
+    );
+    expect(result.category).toBe("Labour costs");
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("payment to individual without director_names = Labour costs", () => {
+    const result = autoCategorise(expense("To John Smith"));
+    expect(result.category).toBe("Labour costs");
+  });
+
+  it("Director's Salary maps in findMatchingCategory", () => {
+    const dbCategories = [
+      { name: "Director's Salary", type: "expense", account_type: "business" },
+      { name: "Staff Wages", type: "expense", account_type: "business" },
+    ];
+    const result = findMatchingCategory("Director's Salary", dbCategories, "expense");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Director's Salary");
+  });
+
+  it("Drawings maps to Director's Drawings in findMatchingCategory", () => {
+    const dbCategories = [
+      { name: "Director's Drawings", type: "expense", account_type: "business" },
+      { name: "Miscellaneous Expenses", type: "expense", account_type: "business" },
+    ];
+    const result = findMatchingCategory("Drawings", dbCategories, "expense");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Director's Drawings");
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
 // autoCategorise — determineBusinessExpense paths
 // ══════════════════════════════════════════════════════════════
 describe("autoCategorise — determineBusinessExpense coverage", () => {
@@ -1157,8 +1287,8 @@ describe("autoCategorise — determineBusinessExpense coverage", () => {
     expect(result.is_business_expense).toBe(false);
   });
 
-  it("returns null for needsReceipt category (uncertain)", () => {
-    // Tesco is Drawings with needs_receipt=true
+  it("returns false for Drawings category (personal)", () => {
+    // Lidl is Drawings — personal expense, not business
     const result = autoCategorise(
       expense("LIDL GROCERIES", {
         user_industry: "professional_services",
@@ -1166,7 +1296,7 @@ describe("autoCategorise — determineBusinessExpense coverage", () => {
       }),
     );
     expect(result.needs_receipt).toBe(true);
-    expect(result.is_business_expense).toBeNull();
+    expect(result.is_business_expense).toBe(false);
   });
 
   it("returns true when VAT deductible in default path", () => {
