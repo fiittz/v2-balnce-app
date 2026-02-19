@@ -386,7 +386,7 @@ const PAYMENT_METHODS = [
 ];
 
 const PAYMENT_TYPES = [
-  { value: "drawings", label: "Drawings" },
+  { value: "drawings", label: "Director's Loan Account" },
   { value: "payroll", label: "Payroll" },
   { value: "dividends", label: "Dividends" },
   { value: "contractor_payments", label: "Contractor payments" },

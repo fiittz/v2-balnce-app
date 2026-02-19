@@ -39,7 +39,7 @@ const accounts: Account[] = [
   mockAccount("Subcontractors", "Cost of Sales"),
   mockAccount("Travel & Subsistence", "Expense"),
   mockAccount("General Expenses", "Expense"),
-  mockAccount("Owner's Drawings", "Equity"),
+  mockAccount("Director's Loan Account", "Equity"),
   mockAccount("Sales Ireland 23%", "Income"),
   mockAccount("Sales Ireland 13.5%", "Income"),
   mockAccount("Zero Rated Sales", "Income"),
@@ -107,10 +107,10 @@ describe("findMatchingAccount — exact match", () => {
     expect(result!.name).toBe("Travel & Subsistence");
   });
 
-  it("matches Drawings → Owner's Drawings", () => {
+  it("matches Drawings → Director's Loan Account", () => {
     const result = findMatchingAccount("Drawings", "expense", undefined, accounts);
     expect(result).not.toBeNull();
-    expect(result!.name).toBe("Owner's Drawings");
+    expect(result!.name).toBe("Director's Loan Account");
     expect(result!.account_type).toBe("Equity");
   });
 
@@ -301,9 +301,9 @@ describe("getAccountSuggestion", () => {
     expect(result!.account_name).toBe("General Expenses");
   });
 
-  it("suggests Owner's Drawings for Drawings expense", () => {
+  it("suggests Director's Loan Account for Drawings expense", () => {
     const result = getAccountSuggestion("Drawings", "expense", undefined);
-    expect(result!.account_name).toBe("Owner's Drawings");
+    expect(result!.account_name).toBe("Director's Loan Account");
     expect(result!.account_type).toBe("Equity");
   });
 

@@ -33,7 +33,7 @@ function makeCT1(overrides: Partial<CT1Data> = {}): CT1Data {
     rctPrepayment: 0,
     travelAllowance: 0,
     directorsLoanTravel: 0,
-    directorsDrawings: 0,
+    directorsLoanDebits: 0,
     netDirectorsLoan: 0,
     isLoading: false,
     reEvaluationApplied: false,

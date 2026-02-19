@@ -31,8 +31,8 @@ export interface CT1Data {
   rctPrepayment: number; // Total RCT deducted from invoices — current asset / CT credit
   travelAllowance: number; // Total Revenue mileage + subsistence across all trips
   directorsLoanTravel: number; // Net owed to director (Revenue allowance - CSV expenses)
-  directorsDrawings: number; // Total drawings taken by director from bank
-  netDirectorsLoan: number; // directorsLoanTravel - directorsDrawings (positive = company owes director)
+  directorsLoanDebits: number; // Total DLA debits (money taken by director from company)
+  netDirectorsLoan: number; // directorsLoanTravel - directorsLoanDebits (positive = company owes director)
   isConstructionTrade: boolean;
   isCloseCompany: boolean;
   isLoading: boolean;
@@ -138,19 +138,23 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
     const detectedIncome = Array.from(incomeByCategory.entries()).map(([category, amount]) => ({ category, amount }));
 
     // 2. Expense summary — allowable vs disallowed using VAT deductibility rules
-    // Director's Drawings are capital withdrawals, not business expenses — tracked separately
-    const isDrawings = (catName: string | null) => (catName ? catName.toLowerCase().includes("drawing") : false);
+    // Director's Loan Account debits are balance sheet items, not P&L expenses — tracked separately
+    const isDLA = (catName: string | null) => {
+      if (!catName) return false;
+      const lower = catName.toLowerCase();
+      return lower.includes("drawing") || lower.includes("director's loan") || lower.includes("directors loan");
+    };
 
     let origAllowable = 0;
     let origDisallowed = 0;
-    let totalDrawings = 0;
+    let totalDLADebits = 0;
     const disallowedByCategoryMap = new Map<string, number>();
     for (const t of expenseTransactions ?? []) {
       const amt = Math.abs(Number(t.amount) || 0);
       const catName = (t.category as { id: string; name: string } | null)?.name ?? null;
-      // Director's Drawings excluded from P&L — they're balance sheet items
-      if (isDrawings(catName)) {
-        totalDrawings += amt;
+      // Director's Loan Account debits excluded from P&L — they're balance sheet items
+      if (isDLA(catName)) {
+        totalDLADebits += amt;
         continue;
       }
       // Use CT deductibility (not VAT) for add-backs — hotel/bank charges are CT-deductible
@@ -195,7 +199,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
         const amt = Math.abs(Number(t.amount) || 0);
         const catName = (t.category as { id: string; name: string } | null)?.name ?? null;
         // Skip drawings — not P&L items
-        if (isDrawings(catName)) continue;
+        if (isDLA(catName)) continue;
         const txDate = t.transaction_date ?? "";
         const result = isVATDeductible(t.description ?? "", catName);
         if (result.isDeductible) {
@@ -316,11 +320,11 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
         ) * 100,
       ) / 100;
 
-    // Director's Drawings offset the director's loan balance
+    // DLA debits offset the director's loan balance
     // Positive netDirectorsLoan = company still owes director (liability)
     // Negative = director owes company (becomes a debtor/asset)
-    const directorsDrawings = Math.round(totalDrawings * 100) / 100;
-    const netDirectorsLoan = Math.round((directorsLoanTravel - directorsDrawings) * 100) / 100;
+    const directorsLoanDebits = Math.round(totalDLADebits * 100) / 100;
+    const netDirectorsLoan = Math.round((directorsLoanTravel - directorsLoanDebits) * 100) / 100;
 
     return {
       detectedIncome,
@@ -335,7 +339,7 @@ export function useCT1Data(options?: CT1ReEvalOptions): CT1Data {
       rctPrepayment,
       travelAllowance,
       directorsLoanTravel,
-      directorsDrawings,
+      directorsLoanDebits,
       netDirectorsLoan,
       isConstructionTrade,
       isCloseCompany,

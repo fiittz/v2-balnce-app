@@ -78,8 +78,10 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   "Bank fees": ["Bank Charges"],
   "Bank Fees": ["Bank Charges"],
   Medical: ["Medical Expenses"],
-  Drawings: ["Director's Drawings"],
+  Drawings: ["Director's Loan Account"],
+  "Director's Loan Account": ["Director's Loan Account"],
   "Director's Salary": ["Director's Salary", "Staff Wages"],
+  Dividends: ["Dividends"],
   "Meals & Entertainment": ["Meals & Entertainment"],
   "Consulting & Accounting": ["Professional Fees"],
   Wages: ["Subcontractor Payments", "Staff Wages", "Contractor Payments", "Driver Wages"],
@@ -371,26 +373,26 @@ function refineWithReceipt(base: AutoCatResult, tx: TransactionInput): AutoCatRe
   return result;
 }
 
-// Check if transaction looks like Director's Drawings on a business account
-// Drawings = money taken out of the company by the director for personal use
-function isDirectorsDrawings(desc: string, tx: TransactionInput): boolean {
+// Check if transaction looks like a Director's Loan Account debit on a business account
+// In a Ltd, personal money taken = DLA debit (not "drawings" — that's sole trader)
+function isDirectorsLoanDebit(desc: string, tx: TransactionInput): boolean {
   const normalised = normalise(desc);
   const isBusinessAccount = tx.account_type === "limited_company";
 
-  // Explicit drawings/DLA keywords — apply regardless of account type
+  // Explicit DLA/loan keywords — apply regardless of account type
   if (
-    normalised.includes("drawings") ||
-    normalised.includes("director") ||
     normalised.includes("dla ") ||
     normalised.includes("directors loan") ||
+    normalised.includes("director loan") ||
     normalised.includes("personal transfer") ||
     normalised.includes("transfer to self") ||
-    normalised.includes("own account")
+    normalised.includes("own account") ||
+    normalised.includes("drawings")
   ) {
     return true;
   }
 
-  // On business accounts only: ATM withdrawals = drawings
+  // On business accounts only: ATM withdrawals = DLA debit
   if (isBusinessAccount) {
     if (
       normalised.includes("atm") ||
@@ -538,16 +540,16 @@ export function autoCategorise(
     );
   }
 
-  // 2) Check for Director's Drawings (must come before isPaymentToIndividual)
-  if (isDirectorsDrawings(desc, tx)) {
+  // 2) Check for Director's Loan Account debit (must come before isPaymentToIndividual)
+  if (isDirectorsLoanDebit(desc, tx)) {
     return finalizeResult(
       {
-        category: "Drawings",
+        category: "Director's Loan Account",
         vat_type: "N/A",
         vat_deductible: false,
-        business_purpose: "Director's Drawings — capital withdrawal from the company. Not a business expense. Debits the Director's Loan Account.",
+        business_purpose: "Director's Loan Account — personal withdrawal. Not a P&L expense. Debits the DLA on the balance sheet.",
         confidence_score: 90,
-        notes: "Director's Drawings — not deductible for Corporation Tax. Increases Director's Loan Account balance.",
+        notes: "Director's Loan Account debit. Not deductible for Corporation Tax. If DLA is overdrawn, S.239 TCA benefit-in-kind may apply.",
         needs_review: false,
         needs_receipt: false,
         is_business_expense: false,
@@ -1048,8 +1050,8 @@ function determineBusinessExpense(
   }
 
   // DEFINITELY PERSONAL (FALSE) - Form 11 relief categories are personal expenses (not business)
-  // Director's Drawings are capital withdrawals, not business expenses
-  const personalReliefCategories = ["Medical", "Pension", "Health Insurance", "Charitable", "Tuition", "Drawings"];
+  // Director's Loan Account debits are balance sheet items, not business expenses
+  const personalReliefCategories = ["Medical", "Pension", "Health Insurance", "Charitable", "Tuition", "Director's Loan Account", "Drawings", "Dividends"];
   if (personalReliefCategories.some((pc) => category.toLowerCase().includes(pc.toLowerCase()))) {
     return false; // Personal — Form 11 relief
   }

@@ -138,7 +138,7 @@ describe("vendorDatabase — categories", () => {
       "Protective Clothing & PPE",
       "Subscriptions & Software",
       "Miscellaneous Expenses",
-      "Director's Drawings",
+      "Director's Loan Account",
       "Medical Expenses",
       "Contract Work",
       "Labour Income",

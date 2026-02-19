@@ -424,7 +424,7 @@ export function useBulkRecategorize() {
 
       setCurrentPhase(`Re-categorizing ${allTxns.length} transactions...`);
 
-      // Ensure newer categories exist (Director's Drawings, Medical Expenses)
+      // Ensure newer categories exist (Director's Loan Account, Medical Expenses)
       await ensureNewCategories(user.id);
 
       const [{ data: categories }, { data: accounts }] = await Promise.all([
@@ -582,7 +582,7 @@ export function useBulkRecategorize() {
       }
 
       // --- Phase 3: Invoice-based trip override ---
-      // Transactions categorized as Drawings/personal that fall within an invoice
+      // Transactions categorized as DLA/personal that fall within an invoice
       // job period should be overridden to Travel & Accommodation (trip expense).
       setCurrentPhase("Matching expenses to invoice trips...");
 
@@ -625,14 +625,19 @@ export function useBulkRecategorize() {
             }
           }
 
-          // Find expense transactions currently in Drawings that fall within a trip period
-          const drawingsCatIds = categories.filter((c) => c.name.toLowerCase().includes("drawing")).map((c) => c.id);
+          // Find expense transactions currently in DLA that fall within a trip period
+          const dlaCatIds = categories
+            .filter((c) => {
+              const lower = c.name.toLowerCase();
+              return lower.includes("drawing") || lower.includes("director's loan") || lower.includes("directors loan");
+            })
+            .map((c) => c.id);
 
-          if (drawingsCatIds.length > 0) {
+          if (dlaCatIds.length > 0) {
             let invoiceTripOverrides = 0;
             for (const txn of allTxns) {
               if (txn.type !== "expense") continue;
-              if (!drawingsCatIds.includes(txn.category_id)) continue;
+              if (!dlaCatIds.includes(txn.category_id)) continue;
               const txDate = txn.transaction_date;
               if (!txDate) continue;
 
@@ -644,7 +649,7 @@ export function useBulkRecategorize() {
                 .from("transactions")
                 .update({
                   category_id: travelCatForInvoice.id,
-                  notes: `[Trip] Expense during invoice job period — reclassified from drawings.`,
+                  notes: `[Trip] Expense during invoice job period — reclassified from DLA.`,
                 })
                 .eq("id", txn.id);
 
@@ -652,7 +657,7 @@ export function useBulkRecategorize() {
             }
 
             if (invoiceTripOverrides > 0) {
-              toast.success(`Reclassified ${invoiceTripOverrides} drawings as trip expenses`);
+              toast.success(`Reclassified ${invoiceTripOverrides} DLA transactions as trip expenses`);
             }
           }
         }

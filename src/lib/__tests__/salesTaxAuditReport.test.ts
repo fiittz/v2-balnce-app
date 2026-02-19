@@ -11,9 +11,9 @@ vi.mock("../vatDeductibility", () => ({
       return { isDeductible: false, reason: "Uncategorised expense" };
     }
 
-    // Director's drawings
-    if (catLower.includes("drawing") || catLower.includes("director's draw")) {
-      return { isDeductible: false, reason: "Director's Drawings — capital withdrawal" };
+    // Director's Loan Account
+    if (catLower.includes("drawing") || catLower.includes("director's draw") || catLower.includes("director's loan")) {
+      return { isDeductible: false, reason: "Director's Loan Account — balance sheet movement" };
     }
 
     // Revenue / Collector General refunds — not real expenses
@@ -369,16 +369,16 @@ describe("generateSalesTaxAuditReport", () => {
   });
 
   // ──────────────────────────────────────────────────────────
-  // 5. Director's drawings filtered out
+  // 5. Director's Loan Account filtered out
   // ──────────────────────────────────────────────────────────
-  describe("director's drawings filtering", () => {
-    it("excludes expense transactions categorised as Director's Drawings", () => {
+  describe("Director's Loan Account filtering", () => {
+    it("excludes expense transactions categorised as Director's Loan Account", () => {
       const txn = makeTransaction({
         description: "Transfer to personal account",
         amount: 2000,
         type: "expense",
         vat_rate: "zero_rated",
-        category: { name: "Director's Drawings", id: "cat-draw" },
+        category: { name: "Director's Loan Account", id: "cat-draw" },
       });
 
       const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);

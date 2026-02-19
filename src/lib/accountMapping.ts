@@ -212,7 +212,7 @@ const CATEGORY_TO_ACCOUNT_MAP: Record<
     income: [{ name: "Other Income", type: "Income" }],
   },
   Drawings: {
-    expense: [{ name: "Owner's Drawings", type: "Equity" }],
+    expense: [{ name: "Director's Loan Account", type: "Equity" }],
     income: [],
   },
   Medical: {

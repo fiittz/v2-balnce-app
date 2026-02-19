@@ -737,7 +737,10 @@ const BankFeed = () => {
       );
     };
 
-    const isDrawingsCat = (name: string) => name.toLowerCase().includes("drawing");
+    const isDLACat = (name: string) => {
+      const lower = name.toLowerCase();
+      return lower.includes("drawing") || lower.includes("director's loan") || lower.includes("directors loan");
+    };
 
     txs.forEach((t) => {
       const catName =
@@ -752,8 +755,8 @@ const BankFeed = () => {
           totalIncome += amount;
         }
       } else {
-        // Director's Drawings are capital withdrawals — excluded from P&L
-        if (isDrawingsCat(catName)) return;
+        // Director's Loan Account debits — balance sheet items, excluded from P&L
+        if (isDLACat(catName)) return;
         if (isDirect(catName)) {
           directCostsByCategory[catName] = (directCostsByCategory[catName] || 0) + amount;
           totalDirectCosts += amount;
@@ -827,7 +830,7 @@ const BankFeed = () => {
       summary.prelimPaid = prelimPaid;
       summary.rctCredit = rctCredit;
       summary.balanceDue = totalCT - prelimPaid - rctCredit;
-      summary.directorsDrawings = ct1.directorsDrawings;
+      summary.directorsLoanDebits = ct1.directorsLoanDebits;
       summary.netDirectorsLoan = ct1.netDirectorsLoan;
       // Break down travel allowance into subsistence vs mileage
       summary.totalSubsistenceAllowance =
@@ -1821,7 +1824,10 @@ const BankFeed = () => {
 
                     let revenueRefunds = 0;
 
-                    const isDrawingsCat = (name: string) => name.toLowerCase().includes("drawing");
+                    const isDLACat = (name: string) => {
+                      const lower = name.toLowerCase();
+                      return lower.includes("drawing") || lower.includes("director's loan") || lower.includes("directors loan");
+                    };
 
                     txs.forEach((t) => {
                       const tRec = t as unknown as {
@@ -1842,8 +1848,8 @@ const BankFeed = () => {
                           totalIncome += amount;
                         }
                       } else {
-                        // Director's Drawings — capital withdrawal, not P&L
-                        if (isDrawingsCat(catName)) return;
+                        // Director's Loan Account — balance sheet item, not P&L
+                        if (isDLACat(catName)) return;
                         if (isDirect(catName)) {
                           directCostsByCategory[catName] = (directCostsByCategory[catName] || 0) + amount;
                           totalDirectCosts += amount;
@@ -2175,11 +2181,16 @@ const BankFeed = () => {
                     let totalIncome = 0;
                     let totalExpensesBS = 0;
 
-                    // Group income by category, expenses by category, drawings separately
+                    // Group income by category, expenses by category, DLA separately
                     const incomeByCategory: Record<string, { amount: number; txns: typeof txs }> = {};
                     const expenseByCategory: Record<string, { amount: number; txns: typeof txs }> = {};
-                    const drawingTxns: typeof txs = [];
-                    let totalDrawings = 0;
+                    const dlaTxns: typeof txs = [];
+                    let totalDLADebits = 0;
+
+                    const isDLACatBS = (name: string) => {
+                      const lower = name.toLowerCase();
+                      return lower.includes("drawing") || lower.includes("director's loan") || lower.includes("directors loan");
+                    };
 
                     txs.forEach((t) => {
                       const catName =
@@ -2191,9 +2202,9 @@ const BankFeed = () => {
                         incomeByCategory[catName].txns.push(t);
                       } else {
                         totalExpensesBS += Math.abs(t.amount);
-                        if (catName.toLowerCase().includes("drawing")) {
-                          drawingTxns.push(t);
-                          totalDrawings += Math.abs(t.amount);
+                        if (isDLACatBS(catName)) {
+                          dlaTxns.push(t);
+                          totalDLADebits += Math.abs(t.amount);
                         }
                         if (!expenseByCategory[catName]) expenseByCategory[catName] = { amount: 0, txns: [] };
                         expenseByCategory[catName].amount += Math.abs(t.amount);
@@ -2426,15 +2437,15 @@ const BankFeed = () => {
 
                           {directorDebtor > 0 && (
                             <ExpandableRow label="Director's Current A/C (debtor)" amount={directorDebtor}>
-                              <DetailRow label="Drawings taken by director" amount={ct1.directorsDrawings} indent />
-                              {drawingTxns.length > 0 && (
+                              <DetailRow label="DLA debits (taken by director)" amount={ct1.directorsLoanDebits} indent />
+                              {dlaTxns.length > 0 && (
                                 <details className="group/sub ml-3">
                                   <summary className="flex items-center gap-1 py-0.5 text-[11px] text-muted-foreground cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                                     <ChevronRight className="w-3 h-3 transition-transform group-open/sub:rotate-90" />
-                                    {drawingTxns.length} transaction{drawingTxns.length !== 1 ? "s" : ""}
+                                    {dlaTxns.length} transaction{dlaTxns.length !== 1 ? "s" : ""}
                                   </summary>
                                   <div className="ml-4 border-l border-border/30 pl-2">
-                                    {drawingTxns.map((t) => (
+                                    {dlaTxns.map((t) => (
                                       <TxnRow
                                         key={t.id}
                                         desc={
@@ -2532,11 +2543,11 @@ const BankFeed = () => {
                                 </details>
                               )}
                               <DetailRow
-                                label="Less: Drawings taken by director"
-                                amount={-ct1.directorsDrawings}
+                                label="Less: DLA debits (taken by director)"
+                                amount={-ct1.directorsLoanDebits}
                                 indent
                               />
-                              {drawingTxns.length > 0 && (
+                              {dlaTxns.length > 0 && (
                                 <details className="group/sub ml-3">
                                   <summary className="flex items-center gap-1 py-0.5 text-[11px] text-muted-foreground cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                                     <ChevronRight className="w-3 h-3 transition-transform group-open/sub:rotate-90" />
@@ -2589,8 +2600,8 @@ const BankFeed = () => {
                               <DetailRow label="Less: Total expenses" amount={-totalExpensesAll} indent />
                             </div>
                             <div className="text-[10px] text-muted-foreground mt-1 pl-3">
-                              Profit retained in the company after all expenses. Drawings are excluded (capital, not
-                              P&L).
+                              Profit retained in the company after all expenses. Director's Loan Account debits are
+                              excluded (balance sheet, not P&L).
                             </div>
                           </ExpandableRow>
                         </div>

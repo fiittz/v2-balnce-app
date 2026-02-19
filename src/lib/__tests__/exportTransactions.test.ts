@@ -415,7 +415,7 @@ describe("exportToPDF", () => {
   });
 
   it("renders Directors Current Account when pnlCt1 has drawings", () => {
-    exportToPDF([makeTx()], undefined, undefined, makePnlCt1({ directorsDrawings: 5000, netDirectorsLoan: -3000 }));
+    exportToPDF([makeTx()], undefined, undefined, makePnlCt1({ directorsLoanDebits: 5000, netDirectorsLoan: -3000 }));
     expect(mockDoc.text).toHaveBeenCalledWith("Directors Current Account", 14, expect.any(Number), expect.anything());
   });
 
@@ -432,12 +432,12 @@ describe("exportToPDF", () => {
     expect(mockDoc.save).toHaveBeenCalled();
   });
 
-  it("excludes Director's Drawings from purchase audit groups", () => {
+  it("excludes Director's Loan Account from purchase audit groups", () => {
     const drawingsTx = makeTx({
       id: "tx-draw",
       type: "expense",
       amount: -2000,
-      category: { name: "Director's Drawings" },
+      category: { name: "Director's Loan Account" },
     });
     exportToPDF([drawingsTx, makeTx()]);
     expect(mockDoc.save).toHaveBeenCalled();
@@ -562,7 +562,7 @@ describe("exportToExcel — P&L/CT1 text section coverage", () => {
       tradingProfit: 72000,
       lossesForward: 0,
       rctCredit: 500,
-      directorsDrawings: 25000,
+      directorsLoanDebits: 25000,
       netDirectorsLoan: -5000,
       totalSubsistenceAllowance: 2000,
       totalMileageAllowance: 3000,
@@ -660,7 +660,7 @@ describe("exportToExcel — P&L/CT1 text section coverage", () => {
     exportToExcel([makeTx()], undefined, undefined, makeFullPnlCt1());
     const content = (blobInstances[0].parts as string[])[0];
     expect(content).toContain("DIRECTORS CURRENT ACCOUNT");
-    expect(content).toContain("Drawings taken by director");
+    expect(content).toContain("DLA debits (taken by director)");
     expect(content).toContain("Less: Subsistence owed to director");
     expect(content).toContain("Less: Mileage owed to director");
   });
@@ -988,7 +988,7 @@ describe("exportToPDF — expanded branch coverage", () => {
       tradingProfit: 72000,
       lossesForward: 5000,
       rctCredit: 500,
-      directorsDrawings: 25000,
+      directorsLoanDebits: 25000,
       netDirectorsLoan: -5000,
       totalSubsistenceAllowance: 2000,
       totalMileageAllowance: 3000,
@@ -1494,7 +1494,7 @@ describe("exportToPDF — didParseCell callbacks coverage", () => {
       tradingProfit: 72000,
       lossesForward: 5000,
       rctCredit: 500,
-      directorsDrawings: 25000,
+      directorsLoanDebits: 25000,
       netDirectorsLoan: -5000,
       totalSubsistenceAllowance: 2000,
       totalMileageAllowance: 3000,
@@ -2275,7 +2275,7 @@ describe("exportToExcel — null field branches in CSV rows", () => {
       netExpenses: 5000,
       grossProfit: 50000,
       netProfit: 45000,
-      directorsDrawings: 0,
+      directorsLoanDebits: 0,
       totalSubsistenceAllowance: 0,
       totalMileageAllowance: 0,
     };
@@ -2347,7 +2347,7 @@ describe("exportToPDF — CT1 fields undefined branches", () => {
       netExpenses: 10000,
       grossProfit: 90000,
       netProfit: 80000,
-      directorsDrawings: 20000,
+      directorsLoanDebits: 20000,
       netDirectorsLoan: 5000,
       totalSubsistenceAllowance: 3000,
       totalMileageAllowance: 2000,

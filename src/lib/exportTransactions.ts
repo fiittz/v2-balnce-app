@@ -44,7 +44,7 @@ export interface PnlCt1Summary {
   prelimPaid?: number;
   balanceDue?: number;
   // Directors Current Account
-  directorsDrawings?: number;
+  directorsLoanDebits?: number;
   netDirectorsLoan?: number; // positive = company owes director, negative = director owes company
   totalSubsistenceAllowance?: number;
   totalMileageAllowance?: number;
@@ -136,7 +136,7 @@ const formatPnlCt1Section = (s: PnlCt1Summary): string => {
   }
 
   // Directors Current Account
-  const drawings = s.directorsDrawings ?? 0;
+  const drawings = s.directorsLoanDebits ?? 0;
   const subsAllowance = s.totalSubsistenceAllowance ?? 0;
   const mileAllowance = s.totalMileageAllowance ?? 0;
   const netLoan = s.netDirectorsLoan ?? 0;
@@ -145,7 +145,7 @@ const formatPnlCt1Section = (s: PnlCt1Summary): string => {
     lines.push("DIRECTORS CURRENT ACCOUNT");
     lines.push("=".repeat(60));
     lines.push("");
-    if (drawings > 0) lines.push(`Drawings taken by director: ${fmtEur(drawings)}`);
+    if (drawings > 0) lines.push(`DLA debits (taken by director): ${fmtEur(drawings)}`);
     if (subsAllowance > 0) lines.push(`Less: Subsistence owed to director: (${fmtEur(subsAllowance)})`);
     if (mileAllowance > 0) lines.push(`Less: Mileage owed to director: (${fmtEur(mileAllowance)})`);
     lines.push(
@@ -222,14 +222,14 @@ const formatPnlCt1Html = (s: PnlCt1Summary): string => {
 
   // Directors Current Account
   {
-    const dr = s.directorsDrawings ?? 0;
+    const dr = s.directorsLoanDebits ?? 0;
     const sub = s.totalSubsistenceAllowance ?? 0;
     const mile = s.totalMileageAllowance ?? 0;
     const net = s.netDirectorsLoan ?? 0;
     if (dr > 0 || sub > 0 || mile > 0) {
       html +=
         '<h2>Directors Current Account</h2><table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:20px">';
-      if (dr > 0) html += row("Drawings taken by director", fmtEur(dr));
+      if (dr > 0) html += row("DLA debits (taken by director)", fmtEur(dr));
       if (sub > 0) html += row("Less: Subsistence owed to director", `(${fmtEur(sub)})`);
       if (mile > 0) html += row("Less: Mileage owed to director", `(${fmtEur(mile)})`);
       html += row(
@@ -693,8 +693,8 @@ export const exportToPDF = (
   }
 
   // Directors Current Account
-  if (pnlCt1 && (pnlCt1.directorsDrawings || pnlCt1.netDirectorsLoan != null)) {
-    const drawings = pnlCt1.directorsDrawings ?? 0;
+  if (pnlCt1 && (pnlCt1.directorsLoanDebits || pnlCt1.netDirectorsLoan != null)) {
+    const drawings = pnlCt1.directorsLoanDebits ?? 0;
     const subsAllowance = pnlCt1.totalSubsistenceAllowance ?? 0;
     const mileAllowance = pnlCt1.totalMileageAllowance ?? 0;
     const netLoan = pnlCt1.netDirectorsLoan ?? 0;
@@ -703,7 +703,7 @@ export const exportToPDF = (
       addText("Directors Current Account", 14, { bold: true });
       y += 2;
       const dcaRows: [string, string][] = [];
-      if (drawings > 0) dcaRows.push(["Drawings taken by director", fmtEur(drawings)]);
+      if (drawings > 0) dcaRows.push(["DLA debits (taken by director)", fmtEur(drawings)]);
       if (subsAllowance > 0) dcaRows.push(["Less: Subsistence owed to director", `(${fmtEur(subsAllowance)})`]);
       if (mileAllowance > 0) dcaRows.push(["Less: Mileage owed to director", `(${fmtEur(mileAllowance)})`]);
       dcaRows.push([
@@ -804,8 +804,12 @@ export const exportToPDF = (
     salesNet = 0;
 
   // Group expenses by VAT rate
-  // Exclude: Director's Drawings (balance sheet), Revenue refunds (not a supply — no VAT)
-  const isDrawings = (catName: string | null) => (catName ? catName.toLowerCase().includes("drawing") : false);
+  // Exclude: Director's Loan Account (balance sheet), Revenue refunds (not a supply — no VAT)
+  const isDLA = (catName: string | null) => {
+    if (!catName) return false;
+    const lower = catName.toLowerCase();
+    return lower.includes("drawing") || lower.includes("director's loan") || lower.includes("directors loan");
+  };
   const isRevenueRefund = (tx: Transaction) => {
     const cat = tx.category?.name ?? "";
     const d = (tx.description || "").toLowerCase();
@@ -814,7 +818,7 @@ export const exportToPDF = (
   const expenseGroupMap = new Map<number, Transaction[]>();
   for (const tx of transactions) {
     if (tx.type !== "expense") continue;
-    if (isDrawings(tx.category?.name ?? null)) continue;
+    if (isDLA(tx.category?.name ?? null)) continue;
     if (isRevenueRefund(tx)) continue;
     const vatPct = tx.vat_rate ? parseFloat(tx.vat_rate) : 0;
     if (!expenseGroupMap.has(vatPct)) expenseGroupMap.set(vatPct, []);

@@ -525,7 +525,7 @@ export const vendorDatabase: VendorEntry[] = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // CONVENIENCE STORES (Drawings/personal unless proven otherwise)
+  // CONVENIENCE STORES (DLA/personal unless proven otherwise)
   // ────────────────────────────────────────────────────────────
   {
     name: "Spar",
@@ -667,7 +667,7 @@ export const vendorDatabase: VendorEntry[] = [
   },
 
   // ────────────────────────────────────────────────────────────
-  // PERSONAL/ENTERTAINMENT (Drawings)
+  // PERSONAL/ENTERTAINMENT (Director's Loan Account)
   // ────────────────────────────────────────────────────────────
   {
     name: "Smyths Toys",
@@ -2732,7 +2732,7 @@ export const vendorDatabase: VendorEntry[] = [
     category: "Drawings",
     vat_type: "Standard 23%",
     vat_deductible: false,
-    purpose: "Online fashion retailer. Typically personal — classified as Drawings unless receipt proves business use.",
+    purpose: "Online fashion retailer. Typically personal — classified as Director's Loan Account unless receipt proves business use.",
     sector: "retail",
   },
   {

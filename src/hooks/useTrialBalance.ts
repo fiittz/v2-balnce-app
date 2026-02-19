@@ -120,7 +120,11 @@ export function useTrialBalance(): TrialBalanceResult {
 
       const catName = (t.category as { id: string; name: string } | null)?.name ?? null;
       const txType = (t.type as "income" | "expense") || "expense";
-      const isDrawings = catName ? catName.toLowerCase().includes("drawing") : false;
+      const isDLA = catName
+        ? catName.toLowerCase().includes("drawing") ||
+          catName.toLowerCase().includes("director's loan") ||
+          catName.toLowerCase().includes("directors loan")
+        : false;
       const isInternalTransfer = catName === "Internal Transfer";
 
       // Skip internal transfers — net effect on bank is zero
@@ -146,9 +150,9 @@ export function useTrialBalance(): TrialBalanceResult {
         continue;
       }
 
-      // Director's Drawings: Debit Drawings (Equity), Credit Bank
-      if (isDrawings) {
-        const drawings = getOrCreate("Owner's Drawings", "Equity");
+      // Director's Loan Account: Debit DLA (Equity), Credit Bank
+      if (isDLA) {
+        const drawings = getOrCreate("Director's Loan Account", "Equity");
         const bank = getOrCreate("Bank – Current Account", "Current Assets");
         drawings.debit += amt;
         bank.credit += amt;
@@ -253,9 +257,9 @@ export function useTrialBalance(): TrialBalanceResult {
         });
       }
 
-      // Drawings without salary
+      // DLA debits without salary
       if (
-        ct1.directorsDrawings > 0 &&
+        ct1.directorsLoanDebits > 0 &&
         !allTransactions.some((t) => {
           const desc = ((t.description as string) || "").toLowerCase();
           return desc.includes("salary") || desc.includes("wages");
@@ -264,9 +268,9 @@ export function useTrialBalance(): TrialBalanceResult {
         issues.push({
           severity: "warning",
           code: "DRAWINGS_NO_SALARY",
-          title: "Drawings taken without salary on payroll",
-          description: `Director has taken \u20AC${ct1.directorsDrawings.toFixed(2)} in drawings but no salary transactions detected. For Irish LLCs, directors should be on payroll to utilise personal tax credits (\u20AC4,000+).`,
-          affectedAmount: ct1.directorsDrawings,
+          title: "Director's Loan Account debits without salary on payroll",
+          description: `Director has taken \u20AC${ct1.directorsLoanDebits.toFixed(2)} from the Director's Loan Account but no salary transactions detected. For Irish LLCs, directors should be on payroll to utilise personal tax credits (\u20AC4,000+).`,
+          affectedAmount: ct1.directorsLoanDebits,
         });
       }
     }

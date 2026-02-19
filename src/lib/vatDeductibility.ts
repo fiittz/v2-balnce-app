@@ -139,11 +139,19 @@ export function isVATDeductible(
     };
   }
 
-  // Director's Drawings — capital withdrawals, not a business expense
-  if (catLower.includes("drawing") || catLower.includes("director's draw")) {
+  // Director's Loan Account — balance sheet item, not a P&L expense
+  if (catLower.includes("director's loan") || catLower.includes("directors loan") || catLower.includes("drawing")) {
     return {
       isDeductible: false,
-      reason: "Director's Drawings — capital withdrawal, not a business expense",
+      reason: "Director's Loan Account — balance sheet movement, not a deductible expense",
+    };
+  }
+
+  // Dividends — distribution of profits, not a deductible expense
+  if (catLower.includes("dividend")) {
+    return {
+      isDeductible: false,
+      reason: "Dividends — profit distribution, not deductible for Corporation Tax",
     };
   }
 

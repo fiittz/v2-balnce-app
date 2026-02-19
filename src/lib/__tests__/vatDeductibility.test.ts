@@ -219,10 +219,10 @@ describe("isVATDeductible — additional branch coverage", () => {
     expect(result.reason).toContain("Fines");
   });
 
-  it("blocks director's drawings category", () => {
-    const result = isVATDeductible("Transfer", "Director's Drawings");
+  it("blocks Director's Loan Account category", () => {
+    const result = isVATDeductible("Transfer", "Director's Loan Account");
     expect(result.isDeductible).toBe(false);
-    expect(result.reason).toContain("Drawing");
+    expect(result.reason).toContain("Director's Loan Account");
   });
 
   it("blocks 'private' expense", () => {

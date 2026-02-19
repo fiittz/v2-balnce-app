@@ -1130,75 +1130,75 @@ describe("autoCategorise — merchant match default branch", () => {
 });
 
 // ══════════════════════════════════════════════════════════════
-// autoCategorise — Director's Drawings detection
+// autoCategorise — Director's Loan Account & Salary detection
 // ══════════════════════════════════════════════════════════════
-describe("autoCategorise — Director's Drawings", () => {
-  it("ATM withdrawal on business account = Director's Drawings", () => {
+describe("autoCategorise — Director's Loan Account & Salary", () => {
+  it("ATM withdrawal on business account = Director's Loan Account", () => {
     const result = autoCategorise(
       expense("ATM WITHDRAWAL 15/02", {
         account_type: "limited_company",
       }),
     );
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
     expect(result.vat_deductible).toBe(false);
     expect(result.is_business_expense).toBe(false);
     expect(result.confidence_score).toBeGreaterThanOrEqual(85);
   });
 
-  it("cash withdrawal on business account = Director's Drawings", () => {
+  it("cash withdrawal on business account = Director's Loan Account", () => {
     const result = autoCategorise(
       expense("CASH WITHDRAWAL MAIN ST", {
         account_type: "limited_company",
       }),
     );
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
     expect(result.is_business_expense).toBe(false);
   });
 
-  it("ATM on personal account is NOT Director's Drawings", () => {
+  it("ATM on personal account is NOT Director's Loan Account", () => {
     const result = autoCategorise(
       expense("ATM WITHDRAWAL 15/02", {
         account_type: "directors_personal_tax",
       }),
     );
-    expect(result.category).not.toBe("Drawings");
+    expect(result.category).not.toBe("Director's Loan Account");
   });
 
-  it("explicit 'drawings' keyword = Director's Drawings", () => {
+  it("'drawings' keyword = Director's Loan Account (legacy term)", () => {
     const result = autoCategorise(expense("DRAWINGS - MARCH"));
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
     expect(result.vat_deductible).toBe(false);
     expect(result.is_business_expense).toBe(false);
   });
 
-  it("'directors loan' keyword = Director's Drawings", () => {
+  it("'directors loan' keyword = Director's Loan Account", () => {
     const result = autoCategorise(expense("DIRECTORS LOAN REPAYMENT"));
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
     expect(result.is_business_expense).toBe(false);
   });
 
-  it("'transfer to self' = Director's Drawings", () => {
+  it("'transfer to self' = Director's Loan Account", () => {
     const result = autoCategorise(expense("TRANSFER TO SELF - PERSONAL"));
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
   });
 
-  it("'own account' transfer = Director's Drawings", () => {
+  it("'own account' transfer = Director's Loan Account", () => {
     const result = autoCategorise(expense("TRANSFER OWN ACCOUNT"));
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
   });
 
-  it("'personal transfer' = Director's Drawings", () => {
+  it("'personal transfer' = Director's Loan Account", () => {
     const result = autoCategorise(expense("PERSONAL TRANSFER OUT"));
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
   });
 
-  it("counter withdrawal on business account = Director's Drawings", () => {
+  it("counter withdrawal on business account = Director's Loan Account", () => {
     const result = autoCategorise(
       expense("COUNTER WITHDRAWAL", {
         account_type: "limited_company",
       }),
     );
-    expect(result.category).toBe("Drawings");
+    expect(result.category).toBe("Director's Loan Account");
   });
 
   it("payment to director's name = Director's Salary", () => {
@@ -1248,14 +1248,14 @@ describe("autoCategorise — Director's Drawings", () => {
     expect(result!.name).toBe("Director's Salary");
   });
 
-  it("Drawings maps to Director's Drawings in findMatchingCategory", () => {
+  it("Director's Loan Account maps in findMatchingCategory", () => {
     const dbCategories = [
-      { name: "Director's Drawings", type: "expense", account_type: "business" },
+      { name: "Director's Loan Account", type: "expense", account_type: "business" },
       { name: "Miscellaneous Expenses", type: "expense", account_type: "business" },
     ];
-    const result = findMatchingCategory("Drawings", dbCategories, "expense");
+    const result = findMatchingCategory("Director's Loan Account", dbCategories, "expense");
     expect(result).not.toBeNull();
-    expect(result!.name).toBe("Director's Drawings");
+    expect(result!.name).toBe("Director's Loan Account");
   });
 });
 
