@@ -36,7 +36,16 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     // Allow service_role key (getUser returns error for service keys, but the key itself is trusted)
-    const isServiceRole = token === SUPABASE_SERVICE_ROLE_KEY;
+    // Use constant-time comparison to prevent timing attacks
+    const isServiceRole = (() => {
+      if (token.length !== SUPABASE_SERVICE_ROLE_KEY.length) return false;
+      const encoder = new TextEncoder();
+      const a = encoder.encode(token);
+      const b = encoder.encode(SUPABASE_SERVICE_ROLE_KEY);
+      let diff = 0;
+      for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+      return diff === 0;
+    })();
     if (!isServiceRole && (authError || !user)) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
@@ -445,10 +454,6 @@ async function processMatching(supabase: any, job: any) {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function getPublicUrl(filePath: string): string {
-  return `${SUPABASE_URL}/storage/v1/object/public/receipts/${filePath}`;
-}
-
 function getDateOffset(dateStr: string | null, days: number): string {
   const d = dateStr ? new Date(dateStr) : new Date();
   d.setDate(d.getDate() + days);
