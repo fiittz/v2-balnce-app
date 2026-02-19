@@ -884,6 +884,51 @@ describe("generateSalesTaxAuditReport", () => {
 });
 
 // ══════════════════════════════════════════════════════════════
+// OR-fallback branches (lines 219, 240, 260, 285)
+// ══════════════════════════════════════════════════════════════
+describe("generateSalesTaxAuditReport — OR fallback branches", () => {
+  it("uses 'Invoice' when invoice has no customer and no items", () => {
+    const invoice = makeInvoice({ customer: null, items: undefined });
+    const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], [invoice]);
+    const salesSection = report.sections.find((s) => s.type === "sales");
+    expect(salesSection).toBeDefined();
+    expect(salesSection!.items.some((i) => i.details === "Invoice")).toBe(true);
+  });
+
+  it("uses 'Sales' when income transaction has no category", () => {
+    const txn = makeTransaction({ type: "income", category: null });
+    const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
+    const salesSection = report.sections.find((s) => s.type === "sales");
+    expect(salesSection).toBeDefined();
+    expect(salesSection!.items.some((i) => i.account === "Sales")).toBe(true);
+  });
+
+  it("handles unknown VAT rate key gracefully in purchases", () => {
+    const expense = makeExpense({ vat_rate: "unknown_rate_99" });
+    const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [expense], []);
+    // Falls through rateOrder without matching — no section created for unknown key
+    // The purchase is still processed with fallback VAT_RATE_CONFIG[vatRateKey] || standard_23
+    expect(report).toBeDefined();
+  });
+
+  it("handles unknown VAT rate key gracefully in income transactions", () => {
+    const txn = makeTransaction({ type: "income", vat_rate: "unknown_rate_99" });
+    const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [txn], [], []);
+    expect(report).toBeDefined();
+  });
+
+  it("falls back to reduced_13_5 when invoice item has empty vat_rate", () => {
+    const invoice = makeInvoice({
+      items: [{ description: "Kitchen fitting", vat_rate: "", vat_amount: 135, net_amount: 1000, total_amount: 1135 }],
+      vat_amount: 135,
+    });
+    const report = generateSalesTaxAuditReport(BUSINESS_NAME, PERIOD_START, PERIOD_END, [], [], [invoice]);
+    const salesSection = report.sections.find((s) => s.type === "sales" && s.vatRate === "reduced_13_5");
+    expect(salesSection).toBeDefined();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
 // exportToCSV
 // ══════════════════════════════════════════════════════════════
 describe("exportToCSV", () => {

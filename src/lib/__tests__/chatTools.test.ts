@@ -304,6 +304,19 @@ describe("executeToolCall — show_tax_deadlines", () => {
     expect(result).toContain("Recurring");
     expect(result).toContain("Ongoing");
   });
+
+  it("shows '31-90d left' status when deadline is 31-90 days away", () => {
+    vi.useFakeTimers();
+    // taxYear=2025 → CT1 filing deadline = Sept 23, 2026
+    // July 1, 2026 → 84 days away → 31-90 range
+    vi.setSystemTime(new Date(2026, 6, 1));
+    const ctx = makeCtx({ taxYear: 2025 });
+    const { result } = executeToolCall("show_tax_deadlines", {}, ctx);
+    expect(result).toMatch(/\d+d left/);
+    // Verify at least one deadline shows days but NOT bold (31-90 range, not <= 30)
+    expect(result).toContain("84d left");
+    vi.useRealTimers();
+  });
 });
 
 // ================================================================
@@ -596,6 +609,39 @@ describe("executeToolCall — run_company_health_check", () => {
     const ctx = makeCtx({ incorporationDate: "2024-01-01" });
     const { result } = executeToolCall("run_company_health_check", {}, ctx);
     expect(result).toContain("Start-up Relief");
+  });
+
+  it("detects possible duplicate payments", () => {
+    const ctx = makeCtx({
+      transactions: [
+        { type: "expense", amount: -250, description: "Office Rent", date: "2025-01-15" },
+        { type: "expense", amount: -250, description: "Office Rent", date: "2025-01-20" },
+      ],
+      ct1: {
+        detectedIncome: [{ category: "Sales", amount: 100000 }],
+        expenseByCategory: [{ category: "Rent", amount: 6000 }],
+        expenseSummary: { allowable: 6000, disallowed: 0, total: 6000 },
+        vehicleAsset: null,
+        directorsLoanTravel: 0,
+        travelAllowance: 0,
+        rctPrepayment: 0,
+        isConstructionTrade: false,
+        vatPosition: null,
+        flaggedCapitalItems: [],
+      } as unknown as ToolContext["ct1"],
+    });
+    const { result } = executeToolCall("run_company_health_check", {}, ctx);
+    expect(result).toContain("duplicate");
+  });
+
+  it("flags large expenses over 5k for capitalisation review", () => {
+    const ctx = makeCtx({
+      transactions: [
+        { type: "expense", amount: -7500, description: "Equipment Purchase", date: "2025-03-01" },
+      ],
+    });
+    const { result } = executeToolCall("run_company_health_check", {}, ctx);
+    expect(result).toContain("Large Expenses");
   });
 
   it("flags high disallowed expense ratio when > 10%", () => {
@@ -1053,5 +1099,71 @@ describe("executeToolCall — explain_eu_vat", () => {
     expect(result).toContain("Your EU trade profile");
     expect(result).toContain("sells goods to EU");
     expect(result).toContain("Postponed accounting");
+  });
+});
+
+// ================================================================
+// Company health check — capital allowances, pension, RCT wins
+// ================================================================
+describe("run_company_health_check — capital, pension, RCT wins", () => {
+  it("reports capital allowances win when capitalAllowancesPlant > 0", () => {
+    const ctx = makeCtx({
+      savedCT1: { capitalAllowancesPlant: 5000 } as ToolContext["savedCT1"],
+      ct1: {
+        detectedIncome: [{ category: "Sales", amount: 100000 }],
+        expenseByCategory: [{ category: "Materials", amount: 30000 }],
+        expenseSummary: { allowable: 30000, disallowed: 2000, total: 32000 },
+        vehicleAsset: null,
+        directorsLoanTravel: 0,
+        travelAllowance: 0,
+        rctPrepayment: 0,
+        isConstructionTrade: false,
+        vatPosition: null,
+        flaggedCapitalItems: [],
+      } as unknown as ToolContext["ct1"],
+    });
+    const { result } = executeToolCall("run_company_health_check", {}, ctx);
+    expect(result).toContain("Capital allowances claimed");
+  });
+
+  it("reports pension contributions win when allForm11Data has pension", () => {
+    const ctx = makeCtx({
+      allForm11Data: [
+        { directorNumber: 1, data: { pensionContributions: 10000 } },
+      ],
+      ct1: {
+        detectedIncome: [{ category: "Sales", amount: 100000 }],
+        expenseByCategory: [{ category: "Materials", amount: 30000 }],
+        expenseSummary: { allowable: 30000, disallowed: 2000, total: 32000 },
+        vehicleAsset: null,
+        directorsLoanTravel: 0,
+        travelAllowance: 0,
+        rctPrepayment: 0,
+        isConstructionTrade: false,
+        vatPosition: null,
+        flaggedCapitalItems: [],
+      } as unknown as ToolContext["ct1"],
+    });
+    const { result } = executeToolCall("run_company_health_check", {}, ctx);
+    expect(result).toContain("Employer pension contributions reducing trading profit");
+  });
+
+  it("reports RCT credit win when rctPrepayment > 0", () => {
+    const ctx = makeCtx({
+      ct1: {
+        detectedIncome: [{ category: "Sales", amount: 100000 }],
+        expenseByCategory: [{ category: "Materials", amount: 30000 }],
+        expenseSummary: { allowable: 30000, disallowed: 2000, total: 32000 },
+        vehicleAsset: null,
+        directorsLoanTravel: 0,
+        travelAllowance: 0,
+        rctPrepayment: 3000,
+        isConstructionTrade: false,
+        vatPosition: null,
+        flaggedCapitalItems: [],
+      } as unknown as ToolContext["ct1"],
+    });
+    const { result } = executeToolCall("run_company_health_check", {}, ctx);
+    expect(result).toContain("RCT credit offsetting CT");
   });
 });

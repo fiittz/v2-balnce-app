@@ -1732,3 +1732,26 @@ describe("user corrections", () => {
     expect(result.category).not.toBe("Cloud Hosting");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// Income — generic income with no specific pattern match
+// ══════════════════════════════════════════════════════════════
+describe("income — generic income with no specific client pattern", () => {
+  it("categorises generic income as Sales with lower confidence boost", () => {
+    // inferIncomeCategory always returns a match, but with confidenceBoost=10 for non-pattern income
+    const result = autoCategorise(income("MISC ABC 123"));
+    expect(result.category).toBe("Sales");
+    expect(result.confidence_score).toBe(80); // 70 + 10
+    expect(result.business_purpose).toContain("Income received");
+  });
+
+  it("categorises income with recognisable pattern at higher confidence", () => {
+    // Use "lodgement" pattern and non-construction industry to avoid RCT path
+    const result = autoCategorise(income("LODGEMENT 12345", {
+      user_industry: "professional_services",
+      user_business_type: "Consultant",
+    }));
+    expect(result.category).toBe("Sales");
+    expect(result.confidence_score).toBe(90); // 70 + 20
+  });
+});

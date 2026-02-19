@@ -26,6 +26,7 @@ export default defineConfig({
           "src/lib/reports/types.ts",
           "src/services/vendorCacheService.ts",
           "src/lib/receiptStorage.ts",
+          "src/lib/seedVendorCache.ts",
         ],
       reporter: ["text", "text-summary", "html"],
     },

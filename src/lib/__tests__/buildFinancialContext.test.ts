@@ -1670,4 +1670,66 @@ describe("EU & international trade section", () => {
     const result = buildFinancialContext(makeInput());
     expect(result).not.toContain("=== EU & INTERNATIONAL TRADE ===");
   });
+
+  it("shows only enabled EU trade flags", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        onboardingSettings: {
+          eu_trade_enabled: true,
+          sells_goods_to_eu: true,
+          buys_goods_from_eu: false,
+          sells_services_to_eu: false,
+          buys_services_from_eu: false,
+          sells_digital_services_b2c: false,
+          sells_to_non_eu: false,
+          buys_from_non_eu: false,
+          uses_postponed_accounting: false,
+          has_section_56_authorisation: false,
+        },
+      }),
+    );
+    expect(result).toContain("Sells goods to EU");
+    expect(result).not.toContain("Buys goods from EU");
+    expect(result).not.toContain("Postponed Accounting");
+    expect(result).not.toContain("Section 56");
+  });
+});
+
+describe("director fallback fields", () => {
+  it("shows salary from dbRow annual_salary as fallback", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        allDirectorData: [{}],
+        directorRows: [{ director_name: "John", annual_salary: 35000 }],
+      }),
+    );
+    expect(result).toContain(`Salary: ${eur(35000)}`);
+  });
+
+  it("shows home office with 0% when no business_use_percentage", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        businessExtra: { businesses: [{ has_home_office: true }] },
+      }),
+    );
+    expect(result).toContain("Home Office: Yes (business use 0%)");
+  });
+
+  it("shows company secretary name when present", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        businessExtra: { businesses: [{ has_company_secretary: true, company_secretary_name: "Jane Doe" }] },
+      }),
+    );
+    expect(result).toContain("Company Secretary: Jane Doe");
+  });
+
+  it("shows secondary activities when present", () => {
+    const result = buildFinancialContext(
+      makeInput({
+        businessExtra: { businesses: [{ secondary_activities: ["plumbing", "tiling"] }] },
+      }),
+    );
+    expect(result).toContain("Secondary Activities: plumbing, tiling");
+  });
 });

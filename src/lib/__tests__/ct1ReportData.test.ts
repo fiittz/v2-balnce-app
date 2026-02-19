@@ -313,3 +313,45 @@ describe("assembleCT1ReportData — return values", () => {
     expect(result.totalDeductions).toBe(32000);
   });
 });
+
+// ── Travel Deduction & RCT Credit ─────────────────────────────
+
+describe("assembleCT1ReportData — travel deduction and RCT credit", () => {
+  it("includes directors' travel allowance row when directorsLoanTravel > 0", () => {
+    const ct1 = makeCT1({ directorsLoanTravel: 3000 });
+    const result = assembleCT1ReportData(ct1, null, META);
+    const section = result.sections.find((s) => s.title === "Trading Profit Adjustment")!;
+    expect(section.rows.some((r) => r.label.includes("Directors' Travel Allowance"))).toBe(true);
+    expect(section.rows.find((r) => r.label.includes("Directors' Travel Allowance"))?.value).toBe(fmtEuro(3000));
+  });
+
+  it("excludes directors' travel allowance row when directorsLoanTravel is 0", () => {
+    const ct1 = makeCT1({ directorsLoanTravel: 0 });
+    const result = assembleCT1ReportData(ct1, null, META);
+    const section = result.sections.find((s) => s.title === "Trading Profit Adjustment")!;
+    expect(section.rows.some((r) => r.label.includes("Directors' Travel Allowance"))).toBe(false);
+  });
+
+  it("includes RCT credit row when rctPrepayment > 0", () => {
+    const ct1 = makeCT1({ rctPrepayment: 2500 });
+    const result = assembleCT1ReportData(ct1, null, META);
+    const section = result.sections.find((s) => s.title === "Corporation Tax Computation")!;
+    expect(section.rows.some((r) => r.label.includes("RCT Credit"))).toBe(true);
+    expect(section.rows.find((r) => r.label.includes("RCT Credit"))?.value).toBe(fmtEuro(2500));
+  });
+
+  it("excludes RCT credit row when rctPrepayment is 0", () => {
+    const ct1 = makeCT1({ rctPrepayment: 0 });
+    const result = assembleCT1ReportData(ct1, null, META);
+    const section = result.sections.find((s) => s.title === "Corporation Tax Computation")!;
+    expect(section.rows.some((r) => r.label.includes("RCT Credit"))).toBe(false);
+  });
+
+  it("includes travel deduction in totalDeductions", () => {
+    const ct1 = makeCT1({ directorsLoanTravel: 5000 });
+    const result = assembleCT1ReportData(ct1, null, META);
+    // totalDeductions = allowable + capitalAllowancesTotal + travelDeduction
+    // = 22000 + 0 + 5000 = 27000
+    expect(result.totalDeductions).toBe(27000);
+  });
+});

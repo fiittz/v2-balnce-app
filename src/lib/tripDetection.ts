@@ -208,7 +208,9 @@ export function detectTransactionLocation(description: string): string | null {
   const portMatch = norm.match(/port of (\w+)/);
   if (portMatch) {
     const loc = portMatch[1];
+    /* v8 ignore start -- unreachable: any single-word location key matched here would already be matched by the main loop above */
     if (IRISH_LOCATIONS[loc]) return IRISH_LOCATIONS[loc];
+    /* v8 ignore stop */
   }
 
   return null;
@@ -319,9 +321,11 @@ export function detectTrips(transactions: DetectTripsInput[], baseLocation: stri
     }
   }
 
+  /* v8 ignore start -- current is always non-null here because qualifiedDays is non-empty (early return above) */
   if (current) {
     trips.push(buildTrip(current));
   }
+  /* v8 ignore stop */
 
   return trips;
 }

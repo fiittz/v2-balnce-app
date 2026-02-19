@@ -334,3 +334,41 @@ describe("classifyTripExpense — excluded keywords", () => {
     expect(classifyTripExpense("BUS EIREANN TICKET")).toBe("transport");
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// extractCountyFromAddress — regex match with invalid county
+// ══════════════════════════════════════════════════════════════
+describe("extractCountyFromAddress — county regex falsy branch", () => {
+  it("returns null when regex matches but county is not valid", () => {
+    // "Co. Wonderland" — regex matches, candidate = "Wonderland", but not a real Irish county
+    expect(extractCountyFromAddress("123 Main St, Co. Wonderland")).toBeNull();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// detectTrips — no-location transactions skipped
+// ══════════════════════════════════════════════════════════════
+describe("detectTrips — no-location skip", () => {
+  const makeExpense = (id: string, desc: string, date: string, amount: number): DetectTripsInput => ({
+    id,
+    description: desc,
+    amount,
+    date,
+    type: "expense",
+  });
+
+  it("skips transactions with no detectable location", () => {
+    const txns = [
+      // No location — should be skipped
+      makeExpense("1", "DIRECT DEBIT NETFLIX", "2024-03-15", 15),
+      makeExpense("2", "STRIPE PAYMENT XYZ", "2024-03-15", 30),
+      // With location — qualifies (2 at same location)
+      makeExpense("3", "POS CENTRA CORK", "2024-03-15", 10),
+      makeExpense("4", "POS SPAR CORK", "2024-03-15", 15),
+    ];
+    const trips = detectTrips(txns, "Dublin");
+    expect(trips).toHaveLength(1);
+    expect(trips[0].location).toBe("Cork");
+    expect(trips[0].transactions).toHaveLength(2);
+  });
+});
