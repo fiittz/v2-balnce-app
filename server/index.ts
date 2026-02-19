@@ -8,6 +8,7 @@ const app = express();
 const port = process.env.PORT || 4000;
 
 const allowedOrigins = [
+  "https://app.balnce.ie",
   "https://balnce.ie",
   "https://www.balnce.ie",
   "https://v2-balnce-app.vercel.app",
@@ -28,7 +29,7 @@ app.use(cors({
   },
   credentials: true,
 }));
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", service: "balnce-backend" });

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "*";
 
@@ -30,6 +31,12 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await authClient.auth.getUser(token);
     if (authError || !user) {
       throw new Error("Unauthorized");
+    }
+
+    // Rate limit: 20 requests per minute per user
+    const rl = checkRateLimit(user.id, "vat-return", 20);
+    if (!rl.allowed) {
+      return rateLimitResponse(rl.retryAfterMs!, corsHeaders);
     }
 
     // User client - uses the caller's JWT so RLS is enforced

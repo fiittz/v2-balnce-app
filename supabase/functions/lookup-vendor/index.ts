@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.93.3";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rateLimit.ts";
 
 const ALLOWED_ORIGIN = Deno.env.get("ALLOWED_ORIGIN") || "*";
 
@@ -73,6 +74,12 @@ serve(async (req) => {
       JSON.stringify({ error: "Unauthorized" }),
       { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+  }
+
+  // Rate limit: 30 requests per minute per user
+  const rl = checkRateLimit(user.id, "vendor-lookup", 30);
+  if (!rl.allowed) {
+    return rateLimitResponse(rl.retryAfterMs!, corsHeaders);
   }
 
   // Always keep a vendor name around for safe fallbacks in error paths.
