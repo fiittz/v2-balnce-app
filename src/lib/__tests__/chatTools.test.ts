@@ -598,6 +598,38 @@ describe("executeToolCall — run_company_health_check", () => {
     expect(result).toContain("Start-up Relief");
   });
 
+  it("flags high disallowed expense ratio when > 10%", () => {
+    const ctx = makeCtx({
+      ct1: {
+        detectedIncome: [{ category: "Sales", amount: 100000 }],
+        expenseByCategory: [{ category: "Materials", amount: 30000 }],
+        expenseSummary: { allowable: 30000, disallowed: 4000, total: 34000 },
+        vehicleAsset: null,
+        directorsLoanTravel: 0,
+        travelAllowance: 0,
+        rctPrepayment: 0,
+        isConstructionTrade: false,
+        vatPosition: null,
+        flaggedCapitalItems: [],
+      } as unknown as ToolContext["ct1"],
+    });
+    const { result } = executeToolCall("run_company_health_check", {}, ctx);
+    expect(result).toContain("disallowed");
+  });
+
+  it("shows upcoming company deadlines and penalises when within 30 days", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 8, 1)); // Sept 1, 2026
+
+    const ctx = makeCtx({ taxYear: 2025 });
+    const { result } = executeToolCall("run_company_health_check", {}, ctx);
+
+    expect(result).toContain("CT1 filing deadline");
+    expect(result).toContain("days");
+
+    vi.useRealTimers();
+  });
+
   it("includes a tip about Director Health Check", () => {
     const ctx = makeCtx();
     const { result } = executeToolCall("run_company_health_check", {}, ctx);
@@ -624,6 +656,27 @@ describe("executeToolCall — run_director_health_check", () => {
     expect(result).toContain("PAYE");
     expect(result).toContain("USC");
     expect(result).toContain("Net Pay");
+  });
+
+  it("recognises mileage & subsistence claims as a win when travel exists", () => {
+    const ctx = makeCtx({
+      directorData: { name: "Jane Doe", salary: 60000 },
+      ct1: {
+        detectedIncome: [{ category: "Sales", amount: 100000 }],
+        expenseByCategory: [{ category: "Materials", amount: 30000 }],
+        expenseSummary: { allowable: 30000, disallowed: 0, total: 30000 },
+        vehicleAsset: null,
+        directorsLoanTravel: 5000,
+        travelAllowance: 5000,
+        rctPrepayment: 0,
+        isConstructionTrade: false,
+        vatPosition: null,
+        flaggedCapitalItems: [],
+      } as unknown as ToolContext["ct1"],
+    });
+    const { result } = executeToolCall("run_director_health_check", {}, ctx);
+    expect(result).toContain("Mileage & subsistence claims");
+    expect(result).toContain("tax-free");
   });
 
   it("flags missing salary as an action item", () => {

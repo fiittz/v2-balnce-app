@@ -32,6 +32,9 @@ React, TypeScript, Vite, Supabase, Shadcn/ui, Tailwind CSS, Lucide icons
 - `/check_bookkeeping_accuracy` — Audit latest CSV import
 - `/create_agent_command` — Create new commands
 
+### Communication
+- `/jamie` — Write as Jamie (founder voice for emails, pitches, investor comms, LinkedIn, etc.)
+
 ## Principles
 
 1. **Accuracy** — Cite legislation; flag uncertainty

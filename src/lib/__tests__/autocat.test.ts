@@ -7,6 +7,7 @@ import {
   type AutoCatResult,
 } from "../autocat";
 import type { VendorCacheEntry } from "@/services/vendorCacheService";
+import type { UserCorrection } from "../correctionUtils";
 
 // ── Helper: build a minimal expense transaction ─────────────
 function expense(description: string, overrides: Partial<TransactionInput> = {}): TransactionInput {
@@ -1638,5 +1639,96 @@ describe("autoCategorise — vendor cache lookup", () => {
     // Empty cache — should fall through to normal vendor matching
     const result = autoCategorise(expense("SCREWFIX PURCHASE"), cache);
     expect(result.category).toBeDefined();
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
+// User Corrections
+// ══════════════════════════════════════════════════════════════
+describe("user corrections", () => {
+  function makeCorrection(pattern: string, overrides: Partial<UserCorrection> = {}): UserCorrection {
+    return {
+      id: "1",
+      user_id: "u1",
+      vendor_pattern: pattern,
+      original_category: null,
+      corrected_category: "Cloud Hosting",
+      corrected_category_id: "cat-1",
+      corrected_vat_rate: 23,
+      transaction_count: 3,
+      promoted_to_cache: false,
+      ...overrides,
+    };
+  }
+
+  it("applies user correction with 23% VAT rate", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("acme software inc", makeCorrection("acme software inc"));
+
+    const result = autoCategorise(expense("ACME SOFTWARE INC"), undefined, corrections);
+    expect(result.category).toBe("Cloud Hosting");
+    expect(result.vat_type).toBe("Standard 23%");
+    expect(result.vat_deductible).toBe(true);
+    expect(result.confidence_score).toBe(90);
+  });
+
+  it("applies user correction with 13.5% VAT rate", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("acme software inc", makeCorrection("acme software inc", { corrected_vat_rate: 13.5 }));
+
+    const result = autoCategorise(expense("ACME SOFTWARE INC"), undefined, corrections);
+    expect(result.vat_type).toBe("Reduced 13.5%");
+    expect(result.vat_deductible).toBe(true);
+  });
+
+  it("applies user correction with 9% VAT rate", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("hotel booking ltd", makeCorrection("hotel booking ltd", { corrected_vat_rate: 9 }));
+
+    const result = autoCategorise(expense("HOTEL BOOKING LTD"), undefined, corrections);
+    expect(result.vat_type).toBe("Second Reduced 9%");
+  });
+
+  it("applies user correction with 0% VAT rate", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("export service co", makeCorrection("export service co", { corrected_vat_rate: 0 }));
+
+    const result = autoCategorise(expense("EXPORT SERVICE CO"), undefined, corrections);
+    expect(result.vat_type).toBe("Zero");
+    expect(result.vat_deductible).toBe(false);
+  });
+
+  it("applies user correction with null VAT rate (N/A)", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("charity donation ie", makeCorrection("charity donation ie", { corrected_vat_rate: null }));
+
+    const result = autoCategorise(expense("CHARITY DONATION IE"), undefined, corrections);
+    expect(result.vat_type).toBe("N/A");
+    expect(result.vat_deductible).toBe(false);
+  });
+
+  it("falls back to Standard 23% for unknown VAT rate", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("weird vendor co", makeCorrection("weird vendor co", { corrected_vat_rate: 5.5 }));
+
+    const result = autoCategorise(expense("WEIRD VENDOR CO"), undefined, corrections);
+    expect(result.vat_type).toBe("Standard 23%");
+  });
+
+  it("returns confidence 80 for 2 corrections", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("two time vendor", makeCorrection("two time vendor", { transaction_count: 2 }));
+
+    const result = autoCategorise(expense("TWO TIME VENDOR"), undefined, corrections);
+    expect(result.confidence_score).toBe(80);
+  });
+
+  it("skips correction with only 1 transaction (no confidence)", () => {
+    const corrections = new Map<string, UserCorrection>();
+    corrections.set("one time thing", makeCorrection("one time thing", { transaction_count: 1 }));
+
+    const result = autoCategorise(expense("ONE TIME THING"), undefined, corrections);
+    // Should NOT use the correction — fall through to normal rules
+    expect(result.category).not.toBe("Cloud Hosting");
   });
 });

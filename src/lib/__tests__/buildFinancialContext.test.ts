@@ -81,6 +81,27 @@ describe("basic company overview", () => {
     const result = buildFinancialContext(makeInput({ profile: { email: "info@testco.ie" } }));
     expect(result).toContain("Contact Email: info@testco.ie");
   });
+
+  it("shows business description from onboardingSettings", () => {
+    const result = buildFinancialContext(
+      makeInput({ onboardingSettings: { business_description: "Residential carpentry and renovation" } }),
+    );
+    expect(result).toContain("Business Description: Residential carpentry and renovation");
+  });
+
+  it("shows date of birth from directorData or dbRow", () => {
+    const result = buildFinancialContext(
+      makeInput({ directorData: { director_name: "John", date_of_birth: "1985-06-15" } }),
+    );
+    expect(result).toContain("Date of Birth: 1985-06-15");
+  });
+
+  it("shows assessment basis from directorData", () => {
+    const result = buildFinancialContext(
+      makeInput({ directorData: { director_name: "John", assessment_basis: "Joint" } }),
+    );
+    expect(result).toContain("Assessment Basis: Joint");
+  });
 });
 
 // ══════════════════════════════════════════════════════════════
