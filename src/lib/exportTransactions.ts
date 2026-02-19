@@ -498,7 +498,7 @@ export const exportToExcel = (
 
   csvContent += [
     headers.join(","),
-    ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+    ...rows.map((row) => row.map((cell) => `"${sanitizeCsvCell(cell).replace(/"/g, '""')}"`).join(",")),
   ].join("\n");
 
   // Add BOM for Excel UTF-8 compatibility
@@ -1205,7 +1205,7 @@ export const exportDirectorToExcel = (
 
   csvContent += [
     headers.join(","),
-    ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+    ...rows.map((row) => row.map((cell) => `"${sanitizeCsvCell(cell).replace(/"/g, '""')}"`).join(",")),
   ].join("\n");
 
   const bom = "\uFEFF";
@@ -1460,6 +1460,18 @@ export const exportDirectorToPDF = (
   }
 
   doc.save(filename || `director_report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+};
+
+/**
+ * Sanitize a cell value for CSV export to prevent formula injection.
+ * Prefixes cells starting with =, +, -, @, tab, or CR with a single quote.
+ */
+export const sanitizeCsvCell = (value: unknown): string => {
+  const str = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(str)) {
+    return "'" + str;
+  }
+  return str;
 };
 
 const escapeHtml = (text: string) => {

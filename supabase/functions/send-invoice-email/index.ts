@@ -76,6 +76,23 @@ serve(async (req) => {
       );
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (typeof recipientEmail !== "string" || !emailRegex.test(recipientEmail) || recipientEmail.length > 254) {
+      return new Response(
+        JSON.stringify({ error: "Invalid email address" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Limit PDF size to 10MB base64 (~7.5MB file)
+    if (typeof pdfBase64 !== "string" || pdfBase64.length > 10_000_000) {
+      return new Response(
+        JSON.stringify({ error: "PDF attachment too large. Maximum size is 10MB." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Fetch invoice, profile, and onboarding in parallel
     const [invoiceResult, profileResult, onboardingResult] = await Promise.all([
       supabase

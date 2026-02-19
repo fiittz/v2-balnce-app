@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { isVATDeductible, calculateVATFromGross } from "./vatDeductibility";
+import { sanitizeCsvCell } from "./exportTransactions";
 
 // VAT rate display names and values
 const VAT_RATE_CONFIG: Record<string, { display: string; rate: number }> = {
@@ -353,12 +354,12 @@ export function exportToCSV(report: SalesTaxAuditReport): string {
     lines.push(section.title);
 
     for (const item of section.items) {
-      const escapedDetails = `"${item.details.replace(/"/g, '""')}"`;
+      const escapedDetails = `"${sanitizeCsvCell(item.details).replace(/"/g, '""')}"`;
       lines.push(
         [
-          item.date,
-          item.account,
-          item.reference,
+          sanitizeCsvCell(item.date),
+          sanitizeCsvCell(item.account),
+          sanitizeCsvCell(item.reference),
           escapedDetails,
           formatCurrency(item.gross),
           formatCurrency(item.tax),
