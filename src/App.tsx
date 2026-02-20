@@ -10,6 +10,8 @@ import { BackgroundTasksProvider } from "@/contexts/BackgroundTasksContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import BackgroundTasksStatus from "@/components/layout/BackgroundTasksStatus";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import PostHogTracker from "@/components/PostHogTracker";
+import { initPostHog } from "@/lib/posthog";
 
 // Eagerly loaded — landing/login page (first thing users see)
 import Welcome from "./pages/Welcome";
@@ -45,6 +47,9 @@ const AgedDebtors = lazy(() => import("./pages/AgedDebtors"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const queryClient = new QueryClient();
 
+// Init PostHog once at module load
+initPostHog();
+
 const App = () => (
   <Sentry.ErrorBoundary fallback={<p>An unexpected error occurred. Please refresh the page.</p>}>
     <ThemeProvider>
@@ -55,6 +60,7 @@ const App = () => (
           <BrowserRouter>
             <ErrorBoundary>
               <AuthProvider>
+                <PostHogTracker />
                 <BackgroundTasksProvider>
                   <Suspense fallback={<div>Loading...</div>}>
                     <Routes>
