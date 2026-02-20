@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Building2,
@@ -400,11 +400,45 @@ const LOAN_TYPES = [
 
 export default function OnboardingWizard() {
   const navigate = useNavigate();
-  const { user, refreshOnboardingStatus } = useAuth();
+  const { user, profile, refreshOnboardingStatus } = useAuth();
   const [state, setState] = useState<OnboardingState>(initialState);
   const [stepIndex, setStepIndex] = useState(0);
   const [saving, setSaving] = useState(false);
   const [selectedBusinessIndex, setSelectedBusinessIndex] = useState(0);
+
+  // Prefill from signup data (profile table or auth user_metadata) so the user
+  // doesn't have to re-enter business name and industry they already provided.
+  useEffect(() => {
+    const profileName = (profile?.business_name as string) || "";
+    const profileType = (profile?.business_type as string) || "";
+    const metaName = (user?.user_metadata?.business_name as string) || "";
+    const metaType = (user?.user_metadata?.business_type as string) || "";
+
+    const name = profileName || metaName;
+    const industry = profileType || metaType;
+
+    if (!name && !industry) return;
+
+    setState((prev) => {
+      const first = prev.businesses[0];
+      // Don't overwrite if user has already typed something in the wizard
+      if (first.name || first.industry) return prev;
+
+      // Match the industry string to a BUSINESS_ACTIVITIES key
+      const matchedIndustry = Object.keys(BUSINESS_ACTIVITIES).find(
+        (key) => key.toLowerCase() === industry.toLowerCase(),
+      ) || "";
+
+      const updatedFirst: BusinessData = {
+        ...first,
+        name: name || first.name,
+        industry: matchedIndustry,
+      };
+      const newBusinesses = [...prev.businesses];
+      newBusinesses[0] = updatedFirst;
+      return { ...prev, businesses: newBusinesses };
+    });
+  }, [user, profile]);
 
   // Compute visible steps based on whether any business has a construction activity
   const isConstructionTrade = state.businesses.some(

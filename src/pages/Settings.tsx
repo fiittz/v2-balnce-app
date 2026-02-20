@@ -35,22 +35,83 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
+// Matches the BUSINESS_ACTIVITIES from OnboardingWizard so stored values always resolve
 const businessTypes = [
-  { value: "construction", label: "Construction" },
+  // Trades & Construction
   { value: "carpentry_joinery", label: "Carpentry & Joinery" },
-  { value: "electrical", label: "Electrical" },
+  { value: "general_construction", label: "General Construction" },
+  { value: "electrical_contracting", label: "Electrical Contracting" },
   { value: "plumbing_heating", label: "Plumbing & Heating" },
-  { value: "landscaping_groundworks", label: "Landscaping & Groundworks" },
+  { value: "bricklaying_masonry", label: "Bricklaying & Masonry" },
+  { value: "plastering_drylining", label: "Plastering / Drylining" },
   { value: "painting_decorating", label: "Painting & Decorating" },
+  { value: "roofing", label: "Roofing" },
+  { value: "groundworks_civil", label: "Groundworks / Civil Works" },
+  { value: "landscaping", label: "Landscaping" },
+  { value: "tiling_stonework", label: "Tiling & Stonework" },
+  { value: "steel_fabrication_welding", label: "Steel Fabrication / Welding" },
+  // Construction Support & Property
+  { value: "quantity_surveying", label: "Quantity Surveying" },
+  { value: "project_management", label: "Project Management" },
+  { value: "site_supervision", label: "Site Supervision" },
+  { value: "property_maintenance", label: "Property Maintenance" },
+  { value: "property_development", label: "Property Development" },
+  { value: "letting_property_management", label: "Letting / Property Management" },
+  // Transport & Logistics
+  { value: "haulage_hgv", label: "Haulage / HGV Transport" },
+  { value: "courier_services", label: "Courier Services" },
+  { value: "taxi_private_hire", label: "Taxi / Private Hire" },
+  { value: "delivery_services", label: "Delivery Services" },
+  { value: "plant_hire", label: "Plant Hire" },
+  // Retail & Wholesale
+  { value: "physical_retail", label: "Physical Retail" },
+  { value: "online_retail", label: "Online Retail (E-Commerce)" },
+  { value: "market_stall", label: "Market / Stall Trading" },
+  { value: "wholesale_distribution", label: "Wholesale / Distribution" },
+  // Professional Services
+  { value: "accounting_bookkeeping", label: "Accounting / Bookkeeping" },
+  { value: "legal_services", label: "Legal Services" },
+  { value: "consultancy", label: "Consultancy / Consulting" },
+  { value: "hr_recruitment", label: "HR / Recruitment" },
+  { value: "financial_services", label: "Financial Services" },
+  { value: "insurance_broker", label: "Insurance / Broker" },
+  { value: "architecture", label: "Architecture" },
+  { value: "engineering_consultancy", label: "Engineering Consultancy" },
+  // Digital & Creative
+  { value: "software_development", label: "Software Development" },
+  { value: "it_services", label: "IT Services / Managed Services" },
+  { value: "web_design", label: "Web Design" },
+  { value: "graphic_design", label: "Graphic Design" },
+  { value: "digital_marketing", label: "Digital Marketing" },
+  { value: "photography_videography", label: "Photography / Videography" },
+  { value: "content_creation", label: "Content Creation / Media" },
+  // Food & Hospitality
+  { value: "cafe_restaurant", label: "Cafe / Restaurant" },
+  { value: "takeaway", label: "Takeaway" },
+  { value: "catering", label: "Catering" },
+  { value: "mobile_food", label: "Mobile Food / Food Truck" },
+  // Agriculture & Environmental
+  { value: "farming", label: "Farming" },
+  { value: "forestry", label: "Forestry" },
+  { value: "agricultural_contracting", label: "Agricultural Contracting" },
+  // Domestic & Local Services
+  { value: "cleaning", label: "Cleaning" },
+  { value: "waste_removal", label: "Waste Removal" },
+  { value: "pest_control", label: "Pest Control" },
+  { value: "care_services", label: "Care Services" },
+  { value: "beauty_wellness", label: "Beauty / Wellness / Salon" },
+  { value: "fitness_sports", label: "Fitness / Sports / Gym" },
+  // Education & Training
+  { value: "training_provider", label: "Training Provider" },
+  { value: "coaching_mentoring", label: "Coaching / Mentoring" },
+  { value: "tutoring", label: "Tutoring" },
+  // Manufacturing & Production
   { value: "manufacturing", label: "Manufacturing" },
-  { value: "retail_ecommerce", label: "Retail & E-Commerce" },
-  { value: "hospitality", label: "Hospitality" },
-  { value: "professional_services", label: "Professional Services" },
-  { value: "transport_logistics", label: "Transport & Logistics" },
-  { value: "health_wellness", label: "Health & Wellness" },
-  { value: "technology_it", label: "Technology & IT" },
-  { value: "real_estate_property", label: "Real Estate & Property" },
-  { value: "maintenance_facilities", label: "Maintenance & Facilities" },
+  { value: "bespoke_fabrication", label: "Bespoke Fabrication" },
+  { value: "food_production", label: "Food Production" },
+  // Mixed / Other
+  { value: "mixed_activities", label: "Mixed Activities" },
+  { value: "other", label: "Other" },
 ];
 
 const Settings = () => {
@@ -124,13 +185,26 @@ const Settings = () => {
   };
 
   const openBusinessDialog = () => {
-    // Pre-fill with existing data
+    // Pre-fill with existing data from onboarding / profile / localStorage
     setBusinessName(onboarding?.business_name || profile?.business_name || "");
     setBusinessType(onboarding?.business_type || profile?.business_type || "");
     setVatNumber(onboarding?.vat_number || profile?.vat_number || "");
     setPhone(profile?.phone || "");
-    setAddress(profile?.address || "");
     setBusinessDescription(onboarding?.business_description || profile?.business_description || "");
+
+    // Pull address from profile, falling back to onboarding registered_address in localStorage
+    let addr = (profile?.address as string) || "";
+    if (!addr) {
+      try {
+        const extra = localStorage.getItem("business_onboarding_extra");
+        if (extra) {
+          const parsed = JSON.parse(extra);
+          addr = parsed?.businesses?.[0]?.registered_address || "";
+        }
+      } catch { /* ignore */ }
+    }
+    setAddress(addr);
+
     setShowBusinessDialog(true);
   };
 
