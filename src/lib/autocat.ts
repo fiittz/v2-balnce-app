@@ -615,19 +615,19 @@ export function autoCategorise(
       }
     }
 
-    // Ltd company + no director names on file: can't check, default to Director's Salary with review
+    // Ltd company + no director names on file: no basis to classify, send to Uncategorised
     if (tx.account_type === "limited_company" && (!tx.director_names || tx.director_names.length === 0)) {
       return finalizeResult(
         {
-          category: "Director's Salary",
+          category: "Uncategorised",
           vat_type: "N/A",
           vat_deductible: false,
-          business_purpose: "Payment to individual from company account. No director names on file to verify — defaulting to Director's Salary.",
-          confidence_score: 60,
-          notes: "No director names on file. Review if this is a subcontractor payment instead.",
+          business_purpose: "Payment to individual from company account. No director names on file — cannot determine if this is director salary or subcontractor payment.",
+          confidence_score: 50,
+          notes: "No director names on file. Add director names in onboarding to enable auto-detection.",
           needs_review: true,
           needs_receipt: false,
-          is_business_expense: true,
+          is_business_expense: null,
         },
         tx,
       );

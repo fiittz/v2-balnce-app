@@ -1248,9 +1248,9 @@ describe("autoCategorise — Director's Loan Account & Salary", () => {
     expect(result.needs_review).toBe(true);
   });
 
-  it("payment to individual on Ltd account WITHOUT director names = Director's Salary (can't verify)", () => {
+  it("payment to individual on Ltd account WITHOUT director names = Uncategorised", () => {
     const result = autoCategorise(expense("To John Smith", { account_type: "limited_company" }));
-    expect(result.category).toBe("Director's Salary");
+    expect(result.category).toBe("Uncategorised");
     expect(result.needs_review).toBe(true);
   });
 
