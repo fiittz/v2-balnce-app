@@ -33,6 +33,7 @@ export const IRISH_TOWNS: IrishTown[] = [
   { name: "Stillorgan", county: "Dublin", distanceFromDublin: 10 },
   { name: "Santry", county: "Dublin", distanceFromDublin: 7 },
   { name: "Lusk", county: "Dublin", distanceFromDublin: 25 },
+  { name: "Tyrrelstown", county: "Dublin", distanceFromDublin: 14 },
 
   // Cork (260 km)
   { name: "Cork", county: "Cork", distanceFromDublin: 260 },

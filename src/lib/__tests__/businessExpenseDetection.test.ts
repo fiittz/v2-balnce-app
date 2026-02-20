@@ -126,6 +126,124 @@ describe("Business Expense Detection", () => {
     });
   });
 
+  describe("personal category gating by director_reliefs", () => {
+    it("pharmacy NOT categorised as Medical when director_reliefs excludes medical_expenses", () => {
+      const result = autoCategorise(
+        expense("BOOTS PHARMACY", {
+          account_type: "directors_personal_tax",
+          director_reliefs: ["pension_contributions"], // no medical_expenses
+        }),
+        [],
+        [],
+      );
+      // Should fall through to "other" or General Expenses, NOT Medical
+      expect(result.category).not.toBe("Medical");
+      expect(result.relief_type).not.toBe("medical");
+    });
+
+    it("pharmacy IS categorised as Medical when director_reliefs includes medical_expenses", () => {
+      const result = autoCategorise(
+        expense("BOOTS PHARMACY", {
+          account_type: "directors_personal_tax",
+          director_reliefs: ["medical_expenses", "pension_contributions"],
+        }),
+        [],
+        [],
+      );
+      expect(result.category).toBe("Medical");
+      expect(result.relief_type).toBe("medical");
+    });
+
+    it("pension transaction categorised normally when director_reliefs is undefined (backwards compat)", () => {
+      const result = autoCategorise(
+        expense("IRISH LIFE PENSION CONTRIBUTION", {
+          account_type: "directors_personal_tax",
+          // director_reliefs not set — backwards compatible
+        }),
+        [],
+        [],
+      );
+      expect(result.category).toBe("Insurance");
+      expect(result.relief_type).toBe("pension");
+    });
+
+    it("pension NOT categorised when director_reliefs excludes pension_contributions", () => {
+      const result = autoCategorise(
+        expense("IRISH LIFE PENSION CONTRIBUTION", {
+          account_type: "directors_personal_tax",
+          director_reliefs: ["medical_expenses"], // no pension_contributions
+        }),
+        [],
+        [],
+      );
+      expect(result.category).not.toBe("Insurance");
+      expect(result.relief_type).not.toBe("pension");
+    });
+
+    it("tuition NOT categorised when director_reliefs excludes tuition_fees", () => {
+      const result = autoCategorise(
+        expense("UCD TUITION FEE", {
+          account_type: "directors_personal_tax",
+          director_reliefs: ["medical_expenses"],
+        }),
+        [],
+        [],
+      );
+      expect(result.relief_type).not.toBe("tuition");
+    });
+
+    it("tuition IS categorised when director_reliefs includes tuition_fees", () => {
+      const result = autoCategorise(
+        expense("UCD TUITION FEE", {
+          account_type: "directors_personal_tax",
+          director_reliefs: ["tuition_fees"],
+        }),
+        [],
+        [],
+      );
+      expect(result.relief_type).toBe("tuition");
+    });
+
+    it("rent NOT categorised as relief when director_reliefs excludes rent_mortgage_interest", () => {
+      const result = autoCategorise(
+        expense("MONTHLY RENT PAYMENT", {
+          account_type: "directors_personal_tax",
+          director_reliefs: ["medical_expenses"],
+        }),
+        [],
+        [],
+      );
+      expect(result.relief_type).not.toBe("rent");
+    });
+
+    it("charity NOT categorised when director_reliefs excludes charitable_donations", () => {
+      const result = autoCategorise(
+        expense("CHARITY DONATION TROCAIRE", {
+          account_type: "directors_personal_tax",
+          director_reliefs: ["medical_expenses"],
+        }),
+        [],
+        [],
+      );
+      expect(result.relief_type).not.toBe("charitable");
+    });
+
+    it("CT1 company account still categorises medical regardless of director_reliefs", () => {
+      // For limited_company, director_reliefs should not be passed
+      const result = autoCategorise(
+        expense("BOOTS PHARMACY", {
+          account_type: "limited_company",
+          // no director_reliefs — CT1 uses user profile
+        }),
+        [],
+        [],
+      );
+      // On company account, pharmacy hits the keyword but is_business_expense = false
+      // The category assignment should still work (no gating for company accounts)
+      expect(result.category).toBe("Medical");
+    });
+  });
+
   describe("[PENDING_BUSINESS_REVIEW] marker logic", () => {
     it("marker should be appendable to notes string", () => {
       const notes = "Trade supplies for business";

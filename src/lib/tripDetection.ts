@@ -149,8 +149,8 @@ function normalise(text: string): string {
     .trim();
 }
 
-/** Extract the user's base city from their profile address string. */
-export function extractBaseLocation(address: string | null | undefined): string | null {
+/** Try to extract a location from a single address string. */
+function tryExtractLocation(address: string | null | undefined): string | null {
   if (!address) return null;
   const norm = normalise(address);
 
@@ -160,7 +160,25 @@ export function extractBaseLocation(address: string | null | undefined): string 
     const re = new RegExp(`\\b${key}\\b`);
     if (re.test(norm)) return canonical;
   }
+
+  // Check for Dublin Eircode patterns (D01-D24, D6W)
+  const dublinEircodeRe = /\bd(?:0[1-9]|1[0-9]|2[0-4]|6w)\b/i;
+  if (dublinEircodeRe.test(norm)) return "Dublin";
+
   return null;
+}
+
+/**
+ * Extract the user's base city from their profile address string.
+ * Falls back to a secondary address (e.g. director's home_address from onboarding).
+ */
+export function extractBaseLocation(
+  address: string | null | undefined,
+  fallbackAddress?: string | null,
+): string | null {
+  const primary = tryExtractLocation(address);
+  if (primary) return primary;
+  return tryExtractLocation(fallbackAddress);
 }
 
 /**
@@ -264,8 +282,13 @@ export function detectTrips(transactions: DetectTripsInput[], baseLocation: stri
     const location = detectTransactionLocation(txn.description);
     if (!location) continue;
 
-    // Skip if same as base location
-    if (baseLocation && location.toLowerCase() === baseLocation.toLowerCase()) continue;
+    // Skip if same as base location (exact match or same county)
+    if (baseLocation) {
+      if (location.toLowerCase() === baseLocation.toLowerCase()) continue;
+      const baseCounty = COUNTY_MAP[baseLocation];
+      const txnCounty = COUNTY_MAP[location];
+      if (baseCounty && txnCounty && baseCounty === txnCounty) continue;
+    }
 
     const key = `${txn.date}|${location}`;
     if (!groups.has(key)) {

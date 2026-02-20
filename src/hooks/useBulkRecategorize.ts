@@ -12,6 +12,7 @@ import { useCreateJob } from "@/hooks/useProcessingJobs";
 import { detectTrips, classifyTripExpense, extractBaseLocation } from "@/lib/tripDetection";
 import type { DetectTripsInput } from "@/lib/tripDetection";
 import { ensureNewCategories } from "@/lib/seedCategories";
+import { useDirectorOnboarding } from "@/hooks/useDirectorOnboarding";
 
 interface RecategorizeResult {
   total: number;
@@ -23,6 +24,7 @@ interface RecategorizeResult {
 export function useBulkRecategorize() {
   const { user, profile } = useAuth();
   const { data: onboarding } = useOnboardingSettings();
+  const { data: directorRows = [] } = useDirectorOnboarding();
   const { vendorCache } = useVendorCache();
   const { userCorrections } = useUserCorrections();
   const queryClient = useQueryClient();
@@ -58,7 +60,7 @@ export function useBulkRecategorize() {
       // Fetch uncategorized transactions
       const { data: uncategorized, error: fetchError } = await supabase
         .from("transactions")
-        .select("id, description, amount, type, transaction_date, category_id")
+        .select("id, description, amount, type, transaction_date, category_id, account_id")
         .eq("user_id", user.id)
         .is("category_id", null)
         .order("transaction_date", { ascending: false });
@@ -96,10 +98,14 @@ export function useBulkRecategorize() {
       for (let i = 0; i < uncategorized.length; i += BATCH_SIZE) {
         const batch = uncategorized.slice(i, i + BATCH_SIZE);
 
+        const director1Data = directorRows?.[0]?.onboarding_data as Record<string, unknown> | undefined;
+
         const batchResults = await Promise.allSettled(
           batch.map(async (txn) => {
             try {
               const txnDirection = txn.type === "income" ? "income" : "expense";
+              const txnAccount = accounts?.find((a) => a.id === txn.account_id);
+              const isPersonalAccount = txnAccount?.account_type === "directors_personal_tax";
 
               const engineResult = autoCategorise(
                 {
@@ -114,6 +120,9 @@ export function useBulkRecategorize() {
                   user_business_type:
                     (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                   receipt_text: undefined,
+                  account_type: txnAccount?.account_type,
+                  director_reliefs: isPersonalAccount ? (director1Data?.reliefs as string[] | undefined) : undefined,
+                  director_income_sources: isPersonalAccount ? (director1Data?.income_sources as string[] | undefined) : undefined,
                 },
                 vendorCache,
                 userCorrections,
@@ -266,7 +275,7 @@ export function useBulkRecategorize() {
       // Fetch all transactions with Miscellaneous category
       const { data: miscTransactions, error: fetchError } = await supabase
         .from("transactions")
-        .select("id, description, amount, type, transaction_date, category_id")
+        .select("id, description, amount, type, transaction_date, category_id, account_id")
         .eq("user_id", user.id)
         .eq("category_id", miscCatId)
         .order("transaction_date", { ascending: false });
@@ -304,10 +313,14 @@ export function useBulkRecategorize() {
       for (let i = 0; i < miscTransactions.length; i += BATCH_SIZE) {
         const batch = miscTransactions.slice(i, i + BATCH_SIZE);
 
+        const director1DataMisc = directorRows?.[0]?.onboarding_data as Record<string, unknown> | undefined;
+
         const batchResults = await Promise.allSettled(
           batch.map(async (txn) => {
             try {
               const txnDirection = txn.type === "income" ? "income" : "expense";
+              const txnAccount = accounts?.find((a) => a.id === txn.account_id);
+              const isPersonalAccount = txnAccount?.account_type === "directors_personal_tax";
 
               const engineResult = autoCategorise(
                 {
@@ -322,6 +335,9 @@ export function useBulkRecategorize() {
                   user_business_type:
                     (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                   receipt_text: undefined,
+                  account_type: txnAccount?.account_type,
+                  director_reliefs: isPersonalAccount ? (director1DataMisc?.reliefs as string[] | undefined) : undefined,
+                  director_income_sources: isPersonalAccount ? (director1DataMisc?.income_sources as string[] | undefined) : undefined,
                 },
                 vendorCache,
                 userCorrections,
@@ -410,7 +426,7 @@ export function useBulkRecategorize() {
     try {
       const { data: allTxns, error: fetchError } = await supabase
         .from("transactions")
-        .select("id, description, amount, type, transaction_date, category_id")
+        .select("id, description, amount, type, transaction_date, category_id, account_id")
         .eq("user_id", user.id)
         .order("transaction_date", { ascending: false });
 
@@ -450,10 +466,14 @@ export function useBulkRecategorize() {
       for (let i = 0; i < allTxns.length; i += BATCH_SIZE) {
         const batch = allTxns.slice(i, i + BATCH_SIZE);
 
+        const director1DataAll = directorRows?.[0]?.onboarding_data as Record<string, unknown> | undefined;
+
         const batchResults = await Promise.allSettled(
           batch.map(async (txn) => {
             try {
               const txnDirection = txn.type === "income" ? "income" : "expense";
+              const txnAccount = accounts?.find((a) => a.id === txn.account_id);
+              const isPersonalAccount = txnAccount?.account_type === "directors_personal_tax";
 
               const engineResult = autoCategorise(
                 {
@@ -468,6 +488,9 @@ export function useBulkRecategorize() {
                   user_business_type:
                     (onboarding as Record<string, unknown>)?.business_type || profile?.business_type || "",
                   receipt_text: undefined,
+                  account_type: txnAccount?.account_type,
+                  director_reliefs: isPersonalAccount ? (director1DataAll?.reliefs as string[] | undefined) : undefined,
+                  director_income_sources: isPersonalAccount ? (director1DataAll?.income_sources as string[] | undefined) : undefined,
                 },
                 vendorCache,
                 userCorrections,
@@ -528,7 +551,8 @@ export function useBulkRecategorize() {
       // --- Phase 2: Trip detection on all expenses ---
       setCurrentPhase("Detecting business trips...");
 
-      const baseLocation = extractBaseLocation(profile?.address ?? null);
+      const directorHomeAddressAll = (directorRows?.[0]?.onboarding_data as Record<string, unknown> | undefined)?.home_address as string | undefined;
+      const baseLocation = extractBaseLocation(profile?.address ?? null, directorHomeAddressAll);
       const tripInput: DetectTripsInput[] = allTxns
         .filter((t) => t.type === "expense" && t.transaction_date)
         .map((t) => ({

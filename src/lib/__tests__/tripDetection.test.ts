@@ -34,6 +34,48 @@ describe("extractBaseLocation", () => {
     expect(extractBaseLocation("")).toBeNull();
   });
 
+  it("returns Dublin for Dublin Eircode D15", () => {
+    expect(extractBaseLocation("12 Road, D15 XYZ")).toBe("Dublin");
+  });
+
+  it("returns Dublin for Dublin Eircode D01", () => {
+    expect(extractBaseLocation("Apt 4, D01 AB12")).toBe("Dublin");
+  });
+
+  it("returns Dublin for Dublin Eircode D24", () => {
+    expect(extractBaseLocation("Unit 3, D24 FG78")).toBe("Dublin");
+  });
+
+  it("returns Dublin for Dublin Eircode D6W", () => {
+    expect(extractBaseLocation("10 Street, D6W HJ90")).toBe("Dublin");
+  });
+
+  it("does not match non-Dublin Eircodes (e.g. T12)", () => {
+    expect(extractBaseLocation("45 Lane, T12 AB34")).toBeNull();
+  });
+
+  it("returns Tyrrelstown for an address with only Tyrrelstown (no Dublin)", () => {
+    expect(extractBaseLocation("5 Avenue, Tyrrelstown")).toBe("Tyrrelstown");
+  });
+
+  describe("fallback address", () => {
+    it("uses fallback when primary is null", () => {
+      expect(extractBaseLocation(null, "Tyrrelstown")).toBe("Tyrrelstown");
+    });
+
+    it("uses fallback when primary has no match", () => {
+      expect(extractBaseLocation("123 Unknown Place", "Blanchardstown")).toBe("Blanchardstown");
+    });
+
+    it("prefers primary over fallback", () => {
+      expect(extractBaseLocation("10 Cork Road, Cork", "Blanchardstown")).toBe("Cork");
+    });
+
+    it("returns null when both are null", () => {
+      expect(extractBaseLocation(null, null)).toBeNull();
+    });
+  });
+
   it("is case-insensitive", () => {
     expect(extractBaseLocation("GALWAY CITY")).toBe("Galway");
   });
@@ -300,6 +342,35 @@ describe("detectTrips — multi-location sorting and final trip push", () => {
     // Base location passed with different case
     const trips = detectTrips(txns, "DUBLIN");
     expect(trips).toHaveLength(0);
+  });
+
+  it("skips Dublin transactions when base is Blanchardstown (same county)", () => {
+    const txns = [
+      makeExpense("1", "LIDL DUBLIN", "2024-03-15", 10),
+      makeExpense("2", "CENTRA DUBLIN", "2024-03-15", 15),
+      makeExpense("3", "COSTA DUBLIN", "2024-03-15", 8),
+    ];
+    const trips = detectTrips(txns, "Blanchardstown");
+    expect(trips).toHaveLength(0);
+  });
+
+  it("skips Swords transactions when base is Dublin (same county)", () => {
+    const txns = [
+      makeExpense("1", "LIDL SWORDS", "2024-03-15", 10),
+      makeExpense("2", "CENTRA SWORDS", "2024-03-15", 15),
+    ];
+    const trips = detectTrips(txns, "Dublin");
+    expect(trips).toHaveLength(0);
+  });
+
+  it("detects Cork trip when base is Blanchardstown (different county)", () => {
+    const txns = [
+      makeExpense("1", "LIDL CORK", "2024-03-15", 10),
+      makeExpense("2", "CENTRA CORK", "2024-03-15", 15),
+    ];
+    const trips = detectTrips(txns, "Blanchardstown");
+    expect(trips).toHaveLength(1);
+    expect(trips[0].location).toBe("Cork");
   });
 });
 

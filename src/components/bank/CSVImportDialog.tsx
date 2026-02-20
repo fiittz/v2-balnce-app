@@ -707,6 +707,8 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
               try {
                 const txnDirection = txn.type === "income" ? "income" : "expense";
                 const selectedAcct = accounts.find(a => a.id === selectedFinancialAccountId);
+                const isPersonalAccount = selectedAcct?.account_type === "directors_personal_tax";
+                const director1Data = directorRows?.[0]?.onboarding_data as Record<string, unknown> | undefined;
                 const engineResult = autoCategorise(
                   {
                     amount: txn.amount,
@@ -722,6 +724,8 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                     receipt_text: undefined,
                     director_names: directorNames.length > 0 ? directorNames : undefined,
                     account_type: selectedAcct?.account_type,
+                    director_reliefs: isPersonalAccount ? (director1Data?.reliefs as string[] | undefined) : undefined,
+                    director_income_sources: isPersonalAccount ? (director1Data?.income_sources as string[] | undefined) : undefined,
                   },
                   vendorCache,
                   userCorrections,
@@ -841,7 +845,8 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
       type: t.type as "income" | "expense",
     }));
 
-    const baseLocation = extractBaseLocation(profile?.address);
+    const directorHomeAddress = (directorRows?.[0]?.onboarding_data as Record<string, unknown> | undefined)?.home_address as string | undefined;
+    const baseLocation = extractBaseLocation(profile?.address, directorHomeAddress);
     const trips = detectTrips(tripInput, baseLocation);
 
     if (trips.length > 0) {

@@ -28,6 +28,8 @@ export interface TransactionInput {
   user_business_description?: string; // free-text description of what the business does (max 40 words)
   mcc_code?: number; // optional MCC code from bank feed
   director_names?: string[]; // director names from onboarding — used to detect salary payments vs subcontractor
+  director_reliefs?: string[]; // from onboarding: ["pension_contributions", "medical_expenses", ...] — gates personal categories
+  director_income_sources?: string[]; // from onboarding: ["rental_income", "dividends", ...]
 }
 
 export interface AutoCatResult {
@@ -985,11 +987,12 @@ export function autoCategorise(
       notes = "Description suggests subscription.";
       is_business_expense = true; // Software is business
     } else if (
-      desc.includes("physio") ||
-      desc.includes("dental") ||
-      desc.includes("medical") ||
-      desc.includes("pharmacy") ||
-      desc.includes("chemist")
+      (desc.includes("physio") ||
+        desc.includes("dental") ||
+        desc.includes("medical") ||
+        desc.includes("pharmacy") ||
+        desc.includes("chemist")) &&
+      (!tx.director_reliefs || tx.director_reliefs.includes("medical_expenses"))
     ) {
       category = "Medical";
       vat_type = "Exempt";
@@ -999,7 +1002,10 @@ export function autoCategorise(
       notes = "Description suggests medical expense.";
       is_business_expense = false;
       relief_type = "medical";
-    } else if (desc.includes("pension")) {
+    } else if (
+      desc.includes("pension") &&
+      (!tx.director_reliefs || tx.director_reliefs.includes("pension_contributions"))
+    ) {
       category = "Insurance";
       vat_type = "Exempt";
       vat_deductible = false;
@@ -1008,7 +1014,10 @@ export function autoCategorise(
       notes = "Description suggests pension contribution.";
       is_business_expense = false;
       relief_type = "pension";
-    } else if (desc.includes("charity") || desc.includes("donation")) {
+    } else if (
+      (desc.includes("charity") || desc.includes("donation")) &&
+      (!tx.director_reliefs || tx.director_reliefs.includes("charitable_donations"))
+    ) {
       category = "other";
       vat_type = "Exempt";
       vat_deductible = false;
@@ -1017,7 +1026,10 @@ export function autoCategorise(
       notes = "Description suggests charitable donation.";
       is_business_expense = false;
       relief_type = "charitable";
-    } else if (desc.includes("tuition") || desc.includes("college fee") || desc.includes("university fee")) {
+    } else if (
+      (desc.includes("tuition") || desc.includes("college fee") || desc.includes("university fee")) &&
+      (!tx.director_reliefs || tx.director_reliefs.includes("tuition_fees"))
+    ) {
       category = "other";
       vat_type = "Exempt";
       vat_deductible = false;
@@ -1030,7 +1042,8 @@ export function autoCategorise(
       desc.includes("rent") &&
       !desc.includes("car rent") &&
       !desc.includes("tool rent") &&
-      !desc.includes("equipment rent")
+      !desc.includes("equipment rent") &&
+      (!tx.director_reliefs || tx.director_reliefs.includes("rent_mortgage_interest"))
     ) {
       category = "Rent";
       vat_type = "Exempt";
@@ -1068,6 +1081,32 @@ export function autoCategorise(
       needs_review = true;
       needs_receipt = vatTreatment.needsReceipt;
       is_business_expense = null; // Unknown
+    }
+  }
+
+  // Gate personal relief categories by director onboarding selections.
+  // When director_reliefs is provided and the matching relief is NOT in the list,
+  // downgrade to "other" / General Expenses. This applies to both vendor-matched
+  // and keyword-matched results. When director_reliefs is undefined, behaviour
+  // is unchanged (backwards compatible).
+  if (tx.director_reliefs && relief_type) {
+    const reliefToOnboarding: Record<string, string> = {
+      medical: "medical_expenses",
+      pension: "pension_contributions",
+      health_insurance: "health_insurance",
+      tuition: "tuition_fees",
+      rent: "rent_mortgage_interest",
+      charitable: "charitable_donations",
+    };
+    const requiredRelief = reliefToOnboarding[relief_type];
+    if (requiredRelief && !tx.director_reliefs.includes(requiredRelief)) {
+      category = "other";
+      relief_type = null;
+      is_business_expense = null;
+      confidence = 40;
+      needs_review = true;
+      notes = "Director did not select this relief in onboarding. Review required.";
+      business_purpose = "Possible personal expense — relief not selected during onboarding.";
     }
   }
 

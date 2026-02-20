@@ -179,8 +179,7 @@ export default function BusinessExpenseReviewDialog({
             </Button>
           )}
           <p className="text-xs text-muted-foreground text-center">
-            Confirmed business expenses will be moved to your company account and reflected on the Director's Loan
-            Account.
+            Confirmed business expenses will be moved to your company account as deductible expenses.
           </p>
         </DialogFooter>
       </DialogContent>
