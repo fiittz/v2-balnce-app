@@ -3,7 +3,7 @@ project_id = "ystgzxtxplhxuwsthmbj"
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = ["https://127.0.0.1:3000", "http://127.0.0.1:3000/reset-password", "https://app.balnce.ie/reset-password"]
 enable_signup = true
 
 [auth.email]
@@ -33,3 +33,6 @@ verify_jwt = true
 
 [functions.chat-assistant]
 verify_jwt = true
+
+[functions.send-password-reset]
+verify_jwt = false

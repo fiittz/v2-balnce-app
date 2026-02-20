@@ -34,7 +34,7 @@ const ALLOWED_EMAILS = [
 
 const isEmailAllowed = (email: string) => ALLOWED_EMAILS.some((e) => e.toLowerCase() === email.trim().toLowerCase());
 
-type Screen = "welcome" | "login" | "signup" | "business-type";
+type Screen = "welcome" | "login" | "signup" | "business-type" | "forgot-password";
 
 const Welcome = () => {
   const [screen, setScreen] = useState<Screen>("welcome");
@@ -315,6 +315,16 @@ const Welcome = () => {
                 {isLoading ? "Signing in..." : "Log In"}
               </Button>
 
+              <p className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setScreen("forgot-password")}
+                  className="text-muted-foreground hover:text-foreground font-['IBM_Plex_Sans'] text-sm underline transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </p>
+
               <p className="text-center text-muted-foreground font-['IBM_Plex_Sans'] text-sm">
                 Don't have an account?{" "}
                 <button
@@ -399,6 +409,77 @@ const Welcome = () => {
                 </button>
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {screen === "forgot-password" && (
+        <div className="flex-1 flex flex-col px-6 py-8 animate-fade-in relative z-10">
+          <button
+            onClick={() => setScreen("login")}
+            className="text-muted-foreground hover:text-foreground mb-8 self-start font-['IBM_Plex_Mono'] text-xs uppercase tracking-widest transition-colors"
+          >
+            ← Back
+          </button>
+
+          <div className="flex-1 flex flex-col justify-center max-w-sm mx-auto w-full">
+            <div className="flex items-center gap-3 mb-8">
+              <img src="/enhance-penguin-transparent.png" alt="Balnce" className="w-10 h-10 object-contain" />
+              <h1 className="text-3xl font-semibold text-foreground font-['IBM_Plex_Mono'] tracking-wide">
+                Reset password
+              </h1>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!email) {
+                  toast.error("Please enter your email");
+                  return;
+                }
+                setIsLoading(true);
+                try {
+                  await supabase.functions.invoke("send-password-reset", {
+                    body: { email },
+                  });
+                } catch {
+                  // Silently catch — always show success
+                }
+                setIsLoading(false);
+                toast.success("If that email is registered, you'll receive a reset link shortly.");
+              }}
+              className="space-y-5"
+            >
+              <div className="space-y-2">
+                <Label htmlFor="reset-email" className={labelClass}>
+                  Email
+                </Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inputClass}
+                  autoComplete="email"
+                />
+              </div>
+
+              <Button type="submit" disabled={isLoading} className={primaryBtnClass}>
+                {isLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+
+              <p className="text-center text-muted-foreground font-['IBM_Plex_Sans'] text-sm">
+                Remember your password?{" "}
+                <button
+                  type="button"
+                  onClick={() => setScreen("login")}
+                  className="font-semibold text-foreground underline"
+                >
+                  Log in
+                </button>
+              </p>
+            </form>
           </div>
         </div>
       )}

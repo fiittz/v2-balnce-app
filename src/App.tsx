@@ -42,6 +42,7 @@ const ReliefScanner = lazy(() => import("./pages/ReliefScanner"));
 const TripClaimsManager = lazy(() => import("./pages/TripClaimsManager"));
 const ProfitAndLoss = lazy(() => import("./pages/ProfitAndLoss"));
 const AgedDebtors = lazy(() => import("./pages/AgedDebtors"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -58,6 +59,7 @@ const App = () => (
                   <Suspense fallback={<div>Loading...</div>}>
                     <Routes>
                       <Route path="/" element={<Welcome />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
                       <Route
                         path="/onboarding"
                         element={
