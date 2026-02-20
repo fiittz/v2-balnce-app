@@ -373,17 +373,23 @@ function refineWithReceipt(base: AutoCatResult, tx: TransactionInput): AutoCatRe
   return result;
 }
 
-// Check if transaction looks like a Director's Loan Account debit on a business account
-// In a Ltd, personal money taken = DLA debit (not "drawings" — that's sole trader)
-function isDirectorsLoanDebit(desc: string, tx: TransactionInput): boolean {
+// Check if description explicitly says "Director's Loan" or "DLA" — unambiguous
+function isExplicitDLA(desc: string): boolean {
+  const normalised = normalise(desc);
+  return (
+    normalised.includes("dla ") ||
+    normalised.includes("directors loan") ||
+    normalised.includes("director loan")
+  );
+}
+
+// Check if transaction looks like it MIGHT be a DLA debit but is ambiguous —
+// ATM withdrawals, personal transfers, etc. could be petty cash or business.
+function isAmbiguousDLA(desc: string, tx: TransactionInput): boolean {
   const normalised = normalise(desc);
   const isBusinessAccount = tx.account_type === "limited_company";
 
-  // Explicit DLA/loan keywords — apply regardless of account type
   if (
-    normalised.includes("dla ") ||
-    normalised.includes("directors loan") ||
-    normalised.includes("director loan") ||
     normalised.includes("personal transfer") ||
     normalised.includes("transfer to self") ||
     normalised.includes("own account") ||
@@ -392,7 +398,6 @@ function isDirectorsLoanDebit(desc: string, tx: TransactionInput): boolean {
     return true;
   }
 
-  // On business accounts only: ATM withdrawals = DLA debit
   if (isBusinessAccount) {
     if (
       normalised.includes("atm") ||
@@ -542,8 +547,8 @@ export function autoCategorise(
     );
   }
 
-  // 2) Check for Director's Loan Account debit (must come before isPaymentToIndividual)
-  if (isDirectorsLoanDebit(desc, tx)) {
+  // 2) Check for explicit DLA keywords ("directors loan", "dla") — unambiguous
+  if (isExplicitDLA(desc)) {
     return finalizeResult(
       {
         category: "Director's Loan Account",
@@ -555,6 +560,24 @@ export function autoCategorise(
         needs_review: false,
         needs_receipt: false,
         is_business_expense: false,
+      },
+      tx,
+    );
+  }
+
+  // 2a) Ambiguous DLA-like transactions (ATM, personal transfer, etc.) → Uncategorised for review
+  if (isAmbiguousDLA(desc, tx)) {
+    return finalizeResult(
+      {
+        category: "Uncategorised",
+        vat_type: "N/A",
+        vat_deductible: false,
+        business_purpose: "Could be personal (DLA debit) or business (petty cash). Review required.",
+        confidence_score: 50,
+        notes: "Ambiguous transaction — could be Director's Loan Account or business use. Please review and categorise.",
+        needs_review: true,
+        needs_receipt: false,
+        is_business_expense: null,
       },
       tx,
     );

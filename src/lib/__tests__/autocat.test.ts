@@ -1134,29 +1134,29 @@ describe("autoCategorise — merchant match default branch", () => {
 // autoCategorise — Director's Loan Account & Salary detection
 // ══════════════════════════════════════════════════════════════
 describe("autoCategorise — Director's Loan Account & Salary", () => {
-  it("ATM withdrawal on business account = Director's Loan Account", () => {
+  it("ATM withdrawal on business account = Uncategorised (ambiguous — could be petty cash)", () => {
     const result = autoCategorise(
       expense("ATM WITHDRAWAL 15/02", {
         account_type: "limited_company",
       }),
     );
-    expect(result.category).toBe("Director's Loan Account");
-    expect(result.vat_deductible).toBe(false);
-    expect(result.is_business_expense).toBe(false);
-    expect(result.confidence_score).toBeGreaterThanOrEqual(85);
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
+    expect(result.is_business_expense).toBeNull();
   });
 
-  it("cash withdrawal on business account = Director's Loan Account", () => {
+  it("cash withdrawal on business account = Uncategorised (ambiguous)", () => {
     const result = autoCategorise(
       expense("CASH WITHDRAWAL MAIN ST", {
         account_type: "limited_company",
       }),
     );
-    expect(result.category).toBe("Director's Loan Account");
-    expect(result.is_business_expense).toBe(false);
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
+    expect(result.is_business_expense).toBeNull();
   });
 
-  it("ATM on personal account is NOT Director's Loan Account", () => {
+  it("ATM on personal account = Uncategorised (ambiguous)", () => {
     const result = autoCategorise(
       expense("ATM WITHDRAWAL 15/02", {
         account_type: "directors_personal_tax",
@@ -1165,41 +1165,44 @@ describe("autoCategorise — Director's Loan Account & Salary", () => {
     expect(result.category).not.toBe("Director's Loan Account");
   });
 
-  it("'drawings' keyword = Director's Loan Account (legacy term)", () => {
+  it("'drawings' keyword = Uncategorised (ambiguous)", () => {
     const result = autoCategorise(expense("DRAWINGS - MARCH"));
-    expect(result.category).toBe("Director's Loan Account");
-    expect(result.vat_deductible).toBe(false);
-    expect(result.is_business_expense).toBe(false);
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
   });
 
-  it("'directors loan' keyword = Director's Loan Account", () => {
+  it("'directors loan' keyword = Director's Loan Account (explicit)", () => {
     const result = autoCategorise(expense("DIRECTORS LOAN REPAYMENT"));
     expect(result.category).toBe("Director's Loan Account");
     expect(result.is_business_expense).toBe(false);
   });
 
-  it("'transfer to self' = Director's Loan Account", () => {
+  it("'transfer to self' = Uncategorised (ambiguous)", () => {
     const result = autoCategorise(expense("TRANSFER TO SELF - PERSONAL"));
-    expect(result.category).toBe("Director's Loan Account");
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
   });
 
-  it("'own account' transfer = Director's Loan Account", () => {
+  it("'own account' transfer = Uncategorised (ambiguous)", () => {
     const result = autoCategorise(expense("TRANSFER OWN ACCOUNT"));
-    expect(result.category).toBe("Director's Loan Account");
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
   });
 
-  it("'personal transfer' = Director's Loan Account", () => {
+  it("'personal transfer' = Uncategorised (ambiguous)", () => {
     const result = autoCategorise(expense("PERSONAL TRANSFER OUT"));
-    expect(result.category).toBe("Director's Loan Account");
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
   });
 
-  it("counter withdrawal on business account = Director's Loan Account", () => {
+  it("counter withdrawal on business account = Uncategorised (ambiguous)", () => {
     const result = autoCategorise(
       expense("COUNTER WITHDRAWAL", {
         account_type: "limited_company",
       }),
     );
-    expect(result.category).toBe("Director's Loan Account");
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
   });
 
   it("payment to director's name = Director's Salary", () => {
