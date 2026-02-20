@@ -585,14 +585,14 @@ const BankFeed = () => {
       // Director's salary owed but not yet paid
       if (ct1.detectedPayments.length > 0) {
         const salaryPaid = ct1.detectedPayments
-          .filter((p) => p.category.toLowerCase().includes("salary"))
+          .filter((p) => (p.type ?? "").toLowerCase().includes("salary"))
           .reduce((s, p) => s + p.amount, 0);
         if (salaryPaid > 0) assets.push({ label: "Salary Received", amount: salaryPaid });
       }
 
       // Dividends received
       const dividendsPaid = ct1.expenseByCategory
-        .filter((e) => e.category.toLowerCase().includes("dividend"))
+        .filter((e) => (e.category ?? "").toLowerCase().includes("dividend"))
         .reduce((s, e) => s + e.amount, 0);
       if (dividendsPaid > 0) assets.push({ label: "Dividends Received", amount: dividendsPaid });
     } else {
