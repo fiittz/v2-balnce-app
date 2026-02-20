@@ -1593,6 +1593,45 @@ describe("autoCategorise — additional merchant rules", () => {
 });
 
 // ══════════════════════════════════════════════════════════════
+// autoCategorise — Staff entertainment keyword detection
+// ══════════════════════════════════════════════════════════════
+describe("autoCategorise — staff entertainment", () => {
+  it("categorises 'staff night out' as Meals & Entertainment", () => {
+    const result = autoCategorise(expense("STAFF NIGHT OUT DEC"));
+    expect(result.category).toBe("Meals & Entertainment");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.is_business_expense).toBe(true);
+    expect(result.needs_review).toBe(true);
+    expect(result.needs_receipt).toBe(true);
+  });
+
+  it("categorises 'christmas party' as Meals & Entertainment", () => {
+    const result = autoCategorise(expense("CHRISTMAS PARTY 2025"));
+    expect(result.category).toBe("Meals & Entertainment");
+    expect(result.vat_deductible).toBe(false);
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("categorises 'team building' as Meals & Entertainment", () => {
+    const result = autoCategorise(expense("TEAM BUILDING EVENT"));
+    expect(result.category).toBe("Meals & Entertainment");
+    expect(result.is_business_expense).toBe(true);
+  });
+
+  it("categorises 'team event' as Meals & Entertainment", () => {
+    const result = autoCategorise(expense("TEAM EVENT BOWLING"));
+    expect(result.category).toBe("Meals & Entertainment");
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("categorises 'staff party' as Meals & Entertainment", () => {
+    const result = autoCategorise(expense("STAFF PARTY RESTAURANT"));
+    expect(result.category).toBe("Meals & Entertainment");
+    expect(result.vat_deductible).toBe(false);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════
 // autoCategorise — isPaymentToIndividual edge cases
 // ══════════════════════════════════════════════════════════════
 describe("autoCategorise — isPaymentToIndividual edge cases", () => {

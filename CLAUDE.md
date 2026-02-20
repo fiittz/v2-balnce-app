@@ -24,6 +24,7 @@ React, TypeScript, Vite, Supabase, Shadcn/ui, Tailwind CSS, Lucide icons
 - `/carpenter_trade_profile` — Carpenter VAT, two-thirds rule, capitalisation, chart of accounts
 - `/tech_saas_profile` — SaaS VAT (ESS/OSS/reverse charge), R&D tax credit, KDB, capitalisation
 - `/categorization_rules` — Vendor matching, receipt validation, capitalisation policy
+- `/staff_entertainment` — Staff night out, Christmas party, team event tax treatment
 - `/receipt_matching` — OCR processing, receipt-to-transaction matching, CSV import, bulk upload
 
 ### Workflows

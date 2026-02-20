@@ -690,6 +690,39 @@ export function autoCategorise(
     );
   }
 
+  // 2.7) Staff entertainment keywords — must fire before Section 60 food/drink check
+  //       Staff entertainment is CT deductible (s.840 TCA exception) but VAT blocked (s.60 VATCA)
+  const staffEntertainmentKeywords = [
+    "staff night",
+    "staff party",
+    "staff event",
+    "staff outing",
+    "team night",
+    "team event",
+    "team building",
+    "christmas party",
+    "xmas party",
+    "employee event",
+  ];
+  if (staffEntertainmentKeywords.some((k) => desc.includes(k))) {
+    return finalizeResult(
+      {
+        category: "Meals & Entertainment",
+        vat_type: "Standard 23%",
+        vat_deductible: false,
+        business_purpose:
+          "Staff entertainment. CT deductible under s.840 TCA exception (bona fide staff entertainment). VAT NOT recoverable (s.60 VATCA — food/drink/entertainment). Must be open to all staff, reasonable cost, not incidental to client entertainment.",
+        confidence_score: 75,
+        notes:
+          "Staff entertainment — review conditions: open to all staff, reasonable cost, max 3–4 events/year, no clients attending.",
+        needs_review: true,
+        needs_receipt: true,
+        is_business_expense: true,
+      },
+      tx,
+    );
+  }
+
   // 3) Vendor cache lookup — check cached entries before hardcoded rules
   let cacheHit: VendorCacheEntry | undefined;
   if (vendorCache && vendorCache.size > 0) {

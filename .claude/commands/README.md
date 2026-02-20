@@ -12,6 +12,7 @@ This directory contains custom Claude Code commands for automating workflows.
 - [vat_compliance.md](./vat_compliance.md) - VAT rates, registration, returns, disallowed credits, cash receipts, special rules, RCT, invoices, penalties
 - [carpenter_trade_profile.md](./carpenter_trade_profile.md) - Carpenter-specific VAT, two-thirds rule, RCT, input credits, capitalisation, capital allowances, chart of accounts
 - [categorization_rules.md](./categorization_rules.md) - Vendor matching, receipt validation, OCR processing, capitalisation policy
+- [staff_entertainment.md](./staff_entertainment.md) - Staff night out, Christmas party, team event tax treatment (CT deductible, VAT blocked, BIK conditions)
 - [receipt_matching.md](./receipt_matching.md) - OCR processing, receipt-to-transaction matching, CSV import, bulk upload
 
 ### Workflows
