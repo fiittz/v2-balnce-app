@@ -39,7 +39,7 @@ serve(async (req) => {
       );
     }
 
-    const { email } = body || {};
+    const { email, origin } = body || {};
 
     if (!email || typeof email !== "string") {
       return new Response(
@@ -69,11 +69,12 @@ serve(async (req) => {
     // Use service role to generate recovery link
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+    const redirectBase = origin && typeof origin === "string" ? origin : SITE_URL;
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "recovery",
       email,
       options: {
-        redirectTo: `${SITE_URL}/reset-password`,
+        redirectTo: `${redirectBase}/reset-password`,
       },
     });
 
@@ -88,6 +89,7 @@ serve(async (req) => {
     }
 
     const resetLink = data.properties.action_link;
+    console.log("Generated reset link:", resetLink);
 
     // Build branded HTML email
     const emailHtml = `

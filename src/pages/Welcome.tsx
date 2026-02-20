@@ -440,7 +440,7 @@ const Welcome = () => {
                 setIsLoading(true);
                 try {
                   await supabase.functions.invoke("send-password-reset", {
-                    body: { email },
+                    body: { email, origin: window.location.origin },
                   });
                 } catch {
                   // Silently catch — always show success
