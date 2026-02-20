@@ -615,16 +615,16 @@ export function autoCategorise(
       }
     }
 
-    // Ltd company: payment to individual defaults to Director's Salary (not subcontractor)
-    if (tx.account_type === "limited_company") {
+    // Ltd company + no director names on file: can't check, default to Director's Salary with review
+    if (tx.account_type === "limited_company" && (!tx.director_names || tx.director_names.length === 0)) {
       return finalizeResult(
         {
           category: "Director's Salary",
           vat_type: "N/A",
           vat_deductible: false,
-          business_purpose: "Payment to individual from company account. Likely director's salary — subject to PAYE, PRSI, and USC through payroll.",
-          confidence_score: 70,
-          notes: "Payment to individual on Ltd account — defaulting to Director's Salary. Review if this is a subcontractor payment instead.",
+          business_purpose: "Payment to individual from company account. No director names on file to verify — defaulting to Director's Salary.",
+          confidence_score: 60,
+          notes: "No director names on file. Review if this is a subcontractor payment instead.",
           needs_review: true,
           needs_receipt: false,
           is_business_expense: true,

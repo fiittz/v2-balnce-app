@@ -1227,14 +1227,14 @@ describe("autoCategorise — Director's Loan Account & Salary", () => {
     expect(result.is_business_expense).toBe(true);
   });
 
-  it("payment to non-director individual on Ltd account = Director's Salary (not subcontractor)", () => {
+  it("payment to non-director individual on Ltd account = Labour costs (subcontractor)", () => {
     const result = autoCategorise(
       expense("To John Smith", {
         director_names: ["Jamie Fitzgerald"],
         account_type: "limited_company",
       }),
     );
-    expect(result.category).toBe("Director's Salary");
+    expect(result.category).toBe("Labour costs");
     expect(result.needs_review).toBe(true);
   });
 
@@ -1248,7 +1248,7 @@ describe("autoCategorise — Director's Loan Account & Salary", () => {
     expect(result.needs_review).toBe(true);
   });
 
-  it("payment to individual without director_names on Ltd account = Director's Salary", () => {
+  it("payment to individual on Ltd account WITHOUT director names = Director's Salary (can't verify)", () => {
     const result = autoCategorise(expense("To John Smith", { account_type: "limited_company" }));
     expect(result.category).toBe("Director's Salary");
     expect(result.needs_review).toBe(true);
