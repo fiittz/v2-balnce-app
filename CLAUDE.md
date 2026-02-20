@@ -38,10 +38,11 @@ React, TypeScript, Vite, Supabase, Shadcn/ui, Tailwind CSS, Lucide icons
 
 ## Principles
 
-1. **Accuracy** — Cite legislation; flag uncertainty
-2. **Compliance** — Prioritize deadlines and proper filing
-3. **Efficiency** — Maximize legitimate deductions
-4. **Clarity** — Plain language, show workings
+1. **Never assume** — If you can't determine a category with certainty, send to Uncategorised for review. Don't guess.
+2. **Accuracy** — Cite legislation; flag uncertainty
+3. **Compliance** — Prioritize deadlines and proper filing
+4. **Efficiency** — Maximize legitimate deductions
+5. **Clarity** — Plain language, show workings
 
 ## Disclaimer
 
