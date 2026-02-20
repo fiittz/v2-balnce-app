@@ -706,6 +706,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
             batch.map(async (txn) => {
               try {
                 const txnDirection = txn.type === "income" ? "income" : "expense";
+                const selectedAcct = accounts.find(a => a.id === selectedFinancialAccountId);
                 const engineResult = autoCategorise(
                   {
                     amount: txn.amount,
@@ -720,6 +721,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                     user_business_description: onboarding?.business_description || "",
                     receipt_text: undefined,
                     director_names: directorNames.length > 0 ? directorNames : undefined,
+                    account_type: selectedAcct?.account_type,
                   },
                   vendorCache,
                   userCorrections,
@@ -758,6 +760,9 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                   }
                   if (engineResult.notes) {
                     explanation += ` ${engineResult.notes}`;
+                  }
+                  if (engineResult.looks_like_business_expense) {
+                    explanation += " [PENDING_BUSINESS_REVIEW]";
                   }
 
                   // Only update category, VAT, and notes — do NOT overwrite account_id

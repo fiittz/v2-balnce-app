@@ -116,6 +116,7 @@ import { ChartOfAccountsButton } from "@/components/dashboard/ChartOfAccountsWid
 import { getIndustryGroup } from "@/lib/industryGroups";
 import { getReliefSuggestions, type SuggestionContext } from "@/lib/reliefSuggestions";
 import ReliefSuggestionsPanel from "@/components/bank/ReliefSuggestionsPanel";
+import BusinessExpenseReviewDialog from "@/components/bank/BusinessExpenseReviewDialog";
 
 type FilterType = "all" | "income" | "expense" | "uncategorized";
 type AccountType = "limited_company" | "sole_trader" | "directors_personal_tax";
@@ -266,6 +267,7 @@ const BankFeed = () => {
   const [showVATQuestionnaire, setShowVATQuestionnaire] = useState(false);
   const [pendingExportType, setPendingExportType] = useState<"excel" | "pdf" | null>(null);
   const [pendingVATExportType, setPendingVATExportType] = useState<"excel" | "pdf" | null>(null);
+  const [showBusinessReview, setShowBusinessReview] = useState(false);
 
   const { data: accounts } = useAccounts();
   const createAccountMutation = useCreateAccount();
@@ -450,6 +452,18 @@ const BankFeed = () => {
   const incomeCount = accountFilteredTransactions?.filter((t) => t.type === "income").length || 0;
   const expenseCount = accountFilteredTransactions?.filter((t) => t.type === "expense").length || 0;
   const unassignedCount = accountFilteredTransactions?.filter((t) => !t.account_id).length || 0;
+
+  // Detect flagged business expenses on personal accounts
+  const flaggedBusinessExpenses = useMemo(() => {
+    if (selectedAccount?.account_type !== "directors_personal_tax") return [];
+    return (accountFilteredTransactions || []).filter(
+      (t) => t.notes?.includes("[PENDING_BUSINESS_REVIEW]"),
+    );
+  }, [accountFilteredTransactions, selectedAccount]);
+
+  const companyAccountId = useMemo(() => {
+    return accounts?.find((a) => a.account_type === "limited_company")?.id;
+  }, [accounts]);
 
   // Group transactions by account
   const groupedByAccount = useMemo(() => {
@@ -1492,6 +1506,21 @@ const BankFeed = () => {
                 <Progress value={recatProgress} className="h-2" />
                 <p className="text-xs text-muted-foreground mt-2 text-center">{recatProgress}%</p>
               </div>
+            )}
+
+            {/* Business Expense Review Banner */}
+            {flaggedBusinessExpenses.length > 0 && companyAccountId && (
+              <button
+                onClick={() => setShowBusinessReview(true)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-colors text-sm"
+              >
+                <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                <span className="font-medium">
+                  {flaggedBusinessExpenses.length} transaction{flaggedBusinessExpenses.length !== 1 ? "s" : ""} may be
+                  business expenses
+                </span>
+                <span className="ml-auto text-xs font-semibold underline">Review</span>
+              </button>
             )}
 
             {/* Filters */}
@@ -3069,6 +3098,16 @@ const BankFeed = () => {
         periodStart={`1 Jan ${vatTaxYear}`}
         periodEnd={`31 Dec ${vatTaxYear}`}
       />
+
+      {companyAccountId && (
+        <BusinessExpenseReviewDialog
+          open={showBusinessReview}
+          onOpenChange={setShowBusinessReview}
+          flaggedTransactions={flaggedBusinessExpenses}
+          companyAccountId={companyAccountId}
+          onComplete={() => refetch()}
+        />
+      )}
 
       <FloatingActionBar selectedIds={selectedIds} onClearSelection={clearSelection} />
     </AppLayout>
