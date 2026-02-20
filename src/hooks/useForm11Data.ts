@@ -199,7 +199,7 @@ export function useForm11Data(directorNumber: number) {
       preChangeAssessmentBasis,
     };
 
-    const form11Result = calculateForm11(form11Input);
+    const form11Result = calculateForm11(form11Input, taxYear);
 
     return { input: form11Input, result: form11Result };
   }, [user?.id, directorNumber, incomeTransactions, expenseTransactions, reliefs, getDirector]);

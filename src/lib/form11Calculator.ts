@@ -3,47 +3,44 @@
 // Pure TypeScript, zero React / Supabase dependencies
 // ──────────────────────────────────────────────────────────────
 
-// ── Tax Constants (2026 tax year) ────────────────────────────
+// ── Tax Constants by Year ────────────────────────────────────
+// Source: Revenue.ie, Finance Acts 2023-2025
 
-export const TAX_CONSTANTS = {
-  // Income Tax Bands (2026 — unchanged from 2025)
+export interface TaxConstants {
   standardRateCutoff: {
-    single: 44_000,
-    married_one_income: 53_000,
-    married_two_incomes: 88_000, // max increase of €44,000 for 2nd earner
-    second_earner_max: 44_000,
-  },
+    single: number;
+    married_one_income: number;
+    married_two_incomes: number;
+    second_earner_max: number;
+  };
+  standardRate: number;
+  higherRate: number;
+  usc: readonly { from: number; to: number; rate: number }[];
+  uscExemptionThreshold: number;
+  prsi: { rate: number; minimum: number; threshold: number };
+  credits: {
+    single: number;
+    married: number;
+    earnedIncome: number;
+    paye: number;
+    homeCarer: number;
+    singleParent: number;
+  };
+  pensionAgeLimits: readonly { maxAge: number; rate: number }[];
+  pensionEarningsCap: number;
+  medicalReliefRate: number;
+  rentCredit: { single: number; couple: number };
+  remoteWorkingRate: number;
+  charitableMinimum: number;
+  tuitionDisregard: { fullTime: number; partTime: number; maxPerCourse: number; reliefRate: number };
+  cgt: { rate: number; annualExemption: number };
+  vehicleBIKBands: readonly { maxKm: number; rate: number }[];
+}
+
+const SHARED_CONSTANTS = {
   standardRate: 0.2,
   higherRate: 0.4,
-
-  // USC Bands (2026 — self-assessed, includes 11% surcharge band)
-  usc: [
-    { from: 0, to: 12_012, rate: 0.005 },
-    { from: 12_012, to: 28_700, rate: 0.02 },
-    { from: 28_700, to: 70_044, rate: 0.03 },
-    { from: 70_044, to: 100_000, rate: 0.08 },
-    { from: 100_000, to: Infinity, rate: 0.11 },
-  ],
   uscExemptionThreshold: 13_000,
-
-  // PRSI Class S (self-employed / directors) — 2026
-  prsi: {
-    rate: 0.042, // 4.2% Jan–Sep 2026 (rises to 4.35% from Oct 2026)
-    minimum: 500,
-    threshold: 5_000,
-  },
-
-  // Tax Credits (2026 — unchanged from 2025)
-  credits: {
-    single: 2_000,
-    married: 4_000,
-    earnedIncome: 2_000,
-    paye: 2_000,
-    homeCarer: 1_800,
-    singleParent: 1_750,
-  },
-
-  // Pension Relief — age-based % of net relevant earnings
   pensionAgeLimits: [
     { maxAge: 29, rate: 0.15 },
     { maxAge: 39, rate: 0.2 },
@@ -53,20 +50,11 @@ export const TAX_CONSTANTS = {
     { maxAge: Infinity, rate: 0.4 },
   ] as const,
   pensionEarningsCap: 115_000,
-
-  // Other Reliefs
   medicalReliefRate: 0.2,
-  rentCredit: { single: 1_000, couple: 2_000 },
-  remoteWorkingRate: 0.3, // 30% of vouched costs
+  remoteWorkingRate: 0.3,
   charitableMinimum: 250,
-
-  // CGT
-  cgt: {
-    rate: 0.33,
-    annualExemption: 1_270,
-  },
-
-  // BIK Vehicle — mileage-based % of OMV
+  tuitionDisregard: { fullTime: 3_000, partTime: 1_500, maxPerCourse: 7_000, reliefRate: 0.2 },
+  cgt: { rate: 0.33, annualExemption: 1_270 },
   vehicleBIKBands: [
     { maxKm: 24_000, rate: 0.2267 },
     { maxKm: 32_000, rate: 0.18 },
@@ -74,7 +62,100 @@ export const TAX_CONSTANTS = {
     { maxKm: 48_000, rate: 0.09 },
     { maxKm: Infinity, rate: 0.045 },
   ] as const,
-} as const;
+};
+
+const TAX_CONSTANTS_BY_YEAR: Record<number, TaxConstants> = {
+  2024: {
+    ...SHARED_CONSTANTS,
+    standardRateCutoff: {
+      single: 42_000,
+      married_one_income: 51_000,
+      married_two_incomes: 84_000,
+      second_earner_max: 33_000,
+    },
+    usc: [
+      { from: 0, to: 12_012, rate: 0.005 },
+      { from: 12_012, to: 25_760, rate: 0.02 },
+      { from: 25_760, to: 70_044, rate: 0.04 },
+      { from: 70_044, to: 100_000, rate: 0.08 },
+      { from: 100_000, to: Infinity, rate: 0.11 },
+    ],
+    prsi: { rate: 0.041, minimum: 500, threshold: 5_000 },
+    credits: {
+      single: 1_875,
+      married: 3_750,
+      earnedIncome: 1_875,
+      paye: 1_875,
+      homeCarer: 1_800,
+      singleParent: 1_750,
+    },
+    rentCredit: { single: 1_000, couple: 2_000 },
+  },
+  2025: {
+    ...SHARED_CONSTANTS,
+    standardRateCutoff: {
+      single: 44_000,
+      married_one_income: 53_000,
+      married_two_incomes: 88_000,
+      second_earner_max: 35_000,
+    },
+    usc: [
+      { from: 0, to: 12_012, rate: 0.005 },
+      { from: 12_012, to: 27_382, rate: 0.02 },
+      { from: 27_382, to: 70_044, rate: 0.03 },
+      { from: 70_044, to: 100_000, rate: 0.08 },
+      { from: 100_000, to: Infinity, rate: 0.11 },
+    ],
+    prsi: { rate: 0.04125, minimum: 650, threshold: 5_000 },
+    credits: {
+      single: 2_000,
+      married: 4_000,
+      earnedIncome: 2_000,
+      paye: 2_000,
+      homeCarer: 1_950,
+      singleParent: 1_900,
+    },
+    rentCredit: { single: 1_000, couple: 2_000 },
+  },
+  2026: {
+    ...SHARED_CONSTANTS,
+    standardRateCutoff: {
+      single: 44_000,
+      married_one_income: 53_000,
+      married_two_incomes: 88_000,
+      second_earner_max: 44_000,
+    },
+    usc: [
+      { from: 0, to: 12_012, rate: 0.005 },
+      { from: 12_012, to: 28_700, rate: 0.02 },
+      { from: 28_700, to: 70_044, rate: 0.03 },
+      { from: 70_044, to: 100_000, rate: 0.08 },
+      { from: 100_000, to: Infinity, rate: 0.11 },
+    ],
+    prsi: { rate: 0.042, minimum: 650, threshold: 5_000 },
+    credits: {
+      single: 2_000,
+      married: 4_000,
+      earnedIncome: 2_000,
+      paye: 2_000,
+      homeCarer: 1_950,
+      singleParent: 1_900,
+    },
+    rentCredit: { single: 1_000, couple: 2_000 },
+  },
+};
+
+/** Get tax constants for a given tax year. Falls back to nearest known year. */
+export function getTaxConstants(year: number): TaxConstants {
+  if (TAX_CONSTANTS_BY_YEAR[year]) return TAX_CONSTANTS_BY_YEAR[year];
+  // Fall back to closest year we have
+  const years = Object.keys(TAX_CONSTANTS_BY_YEAR).map(Number).sort();
+  const closest = years.reduce((prev, curr) => (Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev));
+  return TAX_CONSTANTS_BY_YEAR[closest];
+}
+
+/** Default export for backwards compatibility — uses current tax year */
+export const TAX_CONSTANTS = getTaxConstants(new Date().getMonth() >= 10 ? new Date().getFullYear() : new Date().getFullYear() - 1);
 
 // ── Interfaces ───────────────────────────────────────────────
 
@@ -227,12 +308,12 @@ function getAge(dob: string): number {
   return age;
 }
 
-function calculateDeductions(input: Form11Input) {
+function calculateDeductions(input: Form11Input, constants: TaxConstants) {
   const age = getAge(input.dateOfBirth);
 
   // Pension relief — age-based limit on net relevant earnings
-  const band = TAX_CONSTANTS.pensionAgeLimits.find((b) => age <= b.maxAge)!;
-  const relevantEarnings = Math.min(input.salary + input.businessIncome, TAX_CONSTANTS.pensionEarningsCap);
+  const band = constants.pensionAgeLimits.find((b) => age <= b.maxAge)!;
+  const relevantEarnings = Math.min(input.salary + input.businessIncome, constants.pensionEarningsCap);
   const maxPension = relevantEarnings * band.rate;
   const pensionRelief = Math.min(input.pensionContributions, maxPension);
 
@@ -243,18 +324,19 @@ function getCutoff(
   basis: Form11Input["assessmentBasis"],
   maritalStatus: Form11Input["maritalStatus"],
   spouseIncome: number,
+  constants: TaxConstants,
 ): number {
   if (basis === "joint" && maritalStatus === "married") {
-    const spouseExtra = Math.min(spouseIncome, TAX_CONSTANTS.standardRateCutoff.second_earner_max);
-    return TAX_CONSTANTS.standardRateCutoff.single + spouseExtra;
+    const spouseExtra = Math.min(spouseIncome, constants.standardRateCutoff.second_earner_max);
+    return constants.standardRateCutoff.single + spouseExtra;
   }
-  return TAX_CONSTANTS.standardRateCutoff.single;
+  return constants.standardRateCutoff.single;
 }
 
-function calculateIncomeTax(assessableIncome: number, input: Form11Input, overrideCutoff?: number): TaxBandLine[] {
+function calculateIncomeTax(assessableIncome: number, input: Form11Input, constants: TaxConstants, overrideCutoff?: number): TaxBandLine[] {
   if (assessableIncome <= 0) return [];
 
-  const cutoff = overrideCutoff ?? getCutoff(input.assessmentBasis, input.maritalStatus, input.spouseIncome);
+  const cutoff = overrideCutoff ?? getCutoff(input.assessmentBasis, input.maritalStatus, input.spouseIncome, constants);
 
   const atStandard = Math.min(assessableIncome, cutoff);
   const atHigher = Math.max(0, assessableIncome - cutoff);
@@ -265,8 +347,8 @@ function calculateIncomeTax(assessableIncome: number, input: Form11Input, overri
     bands.push({
       label: "Standard rate (20%)",
       amount: atStandard,
-      rate: TAX_CONSTANTS.standardRate,
-      tax: atStandard * TAX_CONSTANTS.standardRate,
+      rate: constants.standardRate,
+      tax: atStandard * constants.standardRate,
     });
   }
 
@@ -274,47 +356,47 @@ function calculateIncomeTax(assessableIncome: number, input: Form11Input, overri
     bands.push({
       label: "Higher rate (40%)",
       amount: atHigher,
-      rate: TAX_CONSTANTS.higherRate,
-      tax: atHigher * TAX_CONSTANTS.higherRate,
+      rate: constants.higherRate,
+      tax: atHigher * constants.higherRate,
     });
   }
 
   return bands;
 }
 
-function calculateCredits(input: Form11Input): CreditLine[] {
+function calculateCredits(input: Form11Input, constants: TaxConstants): CreditLine[] {
   const lines: CreditLine[] = [];
 
   // Personal credit
   if (input.maritalStatus === "married" || input.maritalStatus === "civil_partner") {
-    lines.push({ label: "Married / Civil Partner Credit", amount: TAX_CONSTANTS.credits.married });
+    lines.push({ label: "Married / Civil Partner Credit", amount: constants.credits.married });
   } else {
-    lines.push({ label: "Single Person Credit", amount: TAX_CONSTANTS.credits.single });
+    lines.push({ label: "Single Person Credit", amount: constants.credits.single });
   }
 
   // Earned income credit (self-assessed directors)
-  lines.push({ label: "Earned Income Credit", amount: TAX_CONSTANTS.credits.earnedIncome });
+  lines.push({ label: "Earned Income Credit", amount: constants.credits.earnedIncome });
 
   // PAYE credit (only if also in PAYE employment)
   if (input.hasPAYEIncome) {
-    lines.push({ label: "PAYE Credit", amount: TAX_CONSTANTS.credits.paye });
+    lines.push({ label: "PAYE Credit", amount: constants.credits.paye });
   }
 
   // Home carer
   if (input.claimHomeCarer) {
-    lines.push({ label: "Home Carer Credit", amount: TAX_CONSTANTS.credits.homeCarer });
+    lines.push({ label: "Home Carer Credit", amount: constants.credits.homeCarer });
   }
 
   // Single parent
   if (input.claimSingleParent) {
-    lines.push({ label: "Single Parent Credit", amount: TAX_CONSTANTS.credits.singleParent });
+    lines.push({ label: "Single Parent Credit", amount: constants.credits.singleParent });
   }
 
   // Medical expenses — 20% tax relief
   if (input.medicalExpenses > 0) {
     lines.push({
       label: "Medical Expenses (20%)",
-      amount: Math.round(input.medicalExpenses * TAX_CONSTANTS.medicalReliefRate * 100) / 100,
+      amount: Math.round(input.medicalExpenses * constants.medicalReliefRate * 100) / 100,
     });
   }
 
@@ -322,29 +404,29 @@ function calculateCredits(input: Form11Input): CreditLine[] {
   if (input.rentPaid > 0) {
     const maxRent =
       input.maritalStatus === "married" || input.maritalStatus === "civil_partner"
-        ? TAX_CONSTANTS.rentCredit.couple
-        : TAX_CONSTANTS.rentCredit.single;
+        ? constants.rentCredit.couple
+        : constants.rentCredit.single;
     lines.push({ label: "Rent Tax Credit", amount: Math.min(input.rentPaid, maxRent) });
   }
 
   // Remote working — 30% of costs at marginal rate (treated as credit here)
   if (input.remoteWorkingCosts > 0) {
-    const relief = input.remoteWorkingCosts * TAX_CONSTANTS.remoteWorkingRate;
+    const relief = input.remoteWorkingCosts * constants.remoteWorkingRate;
     lines.push({ label: "Remote Working Relief (30%)", amount: Math.round(relief * 100) / 100 });
   }
 
   return lines;
 }
 
-function calculateUSC(totalIncome: number): { bands: TaxBandLine[]; exempt: boolean } {
-  if (totalIncome <= TAX_CONSTANTS.uscExemptionThreshold) {
+function calculateUSC(totalIncome: number, constants: TaxConstants): { bands: TaxBandLine[]; exempt: boolean } {
+  if (totalIncome <= constants.uscExemptionThreshold) {
     return { bands: [], exempt: true };
   }
 
   const bands: TaxBandLine[] = [];
   let remaining = totalIncome;
 
-  for (const band of TAX_CONSTANTS.usc) {
+  for (const band of constants.usc) {
     const width = band.to === Infinity ? remaining : band.to - band.from;
     const taxable = Math.min(remaining, width);
     if (taxable <= 0) break;
@@ -361,13 +443,13 @@ function calculateUSC(totalIncome: number): { bands: TaxBandLine[]; exempt: bool
   return { bands, exempt: false };
 }
 
-function calculatePRSI(assessableIncome: number) {
-  if (assessableIncome < TAX_CONSTANTS.prsi.threshold) {
+function calculatePRSI(assessableIncome: number, constants: TaxConstants) {
+  if (assessableIncome < constants.prsi.threshold) {
     return { assessable: assessableIncome, calculated: 0, payable: 0 };
   }
 
-  const calculated = assessableIncome * TAX_CONSTANTS.prsi.rate;
-  const payable = Math.max(calculated, TAX_CONSTANTS.prsi.minimum);
+  const calculated = assessableIncome * constants.prsi.rate;
+  const payable = Math.max(calculated, constants.prsi.minimum);
 
   return {
     assessable: assessableIncome,
@@ -376,31 +458,33 @@ function calculatePRSI(assessableIncome: number) {
   };
 }
 
-function calculateCGT(input: Form11Input) {
+function calculateCGT(input: Form11Input, constants: TaxConstants) {
   const netGains = input.capitalGains - input.capitalLosses;
   if (netGains <= 0) {
     return { applicable: false, gains: input.capitalGains, losses: input.capitalLosses, exemption: 0, payable: 0 };
   }
 
-  const taxable = Math.max(0, netGains - TAX_CONSTANTS.cgt.annualExemption);
+  const taxable = Math.max(0, netGains - constants.cgt.annualExemption);
   return {
     applicable: taxable > 0,
     gains: input.capitalGains,
     losses: input.capitalLosses,
-    exemption: TAX_CONSTANTS.cgt.annualExemption,
-    payable: Math.round(taxable * TAX_CONSTANTS.cgt.rate * 100) / 100,
+    exemption: constants.cgt.annualExemption,
+    payable: Math.round(taxable * constants.cgt.rate * 100) / 100,
   };
 }
 
 /** Calculate BIK for a company vehicle based on OMV and annual business km */
-export function calculateVehicleBIK(omv: number, businessKm: number): number {
-  const band = TAX_CONSTANTS.vehicleBIKBands.find((b) => businessKm <= b.maxKm)!;
+export function calculateVehicleBIK(omv: number, businessKm: number, taxYear?: number): number {
+  const constants = taxYear ? getTaxConstants(taxYear) : TAX_CONSTANTS;
+  const band = constants.vehicleBIKBands.find((b) => businessKm <= b.maxKm)!;
   return Math.round(omv * band.rate * 100) / 100;
 }
 
 // ── Main Calculator ──────────────────────────────────────────
 
-export function calculateForm11(input: Form11Input): Form11Result {
+export function calculateForm11(input: Form11Input, taxYear?: number): Form11Result {
+  const constants = taxYear ? getTaxConstants(taxYear) : TAX_CONSTANTS;
   const warnings: string[] = [];
   const notes: string[] = [];
 
@@ -417,8 +501,8 @@ export function calculateForm11(input: Form11Input): Form11Result {
     const daysBefore = Math.round((changeDate.getTime() - yearStart.getTime()) / (1000 * 60 * 60 * 24));
     const daysAfter = totalDays - daysBefore;
 
-    const preCutoff = getCutoff(input.preChangeAssessmentBasis, input.maritalStatus, input.spouseIncome);
-    const postCutoff = getCutoff(input.assessmentBasis, input.maritalStatus, input.spouseIncome);
+    const preCutoff = getCutoff(input.preChangeAssessmentBasis, input.maritalStatus, input.spouseIncome, constants);
+    const postCutoff = getCutoff(input.assessmentBasis, input.maritalStatus, input.spouseIncome, constants);
 
     proportionalCutoff = Math.round(preCutoff * (daysBefore / totalDays) + postCutoff * (daysAfter / totalDays));
 
@@ -440,7 +524,7 @@ export function calculateForm11(input: Form11Input): Form11Result {
   const income = calculateIncome(input);
 
   // 2. Deductions
-  const deductions = calculateDeductions(input);
+  const deductions = calculateDeductions(input, constants);
   const totalDeductions = deductions.pensionRelief;
   const assessableIncome = Math.max(0, income.totalGrossIncome - totalDeductions);
 
@@ -452,16 +536,16 @@ export function calculateForm11(input: Form11Input): Form11Result {
   }
 
   // 3. Income Tax (use proportional cutoff if split-year)
-  const incomeTaxBands = calculateIncomeTax(assessableIncome, input, proportionalCutoff);
+  const incomeTaxBands = calculateIncomeTax(assessableIncome, input, constants, proportionalCutoff);
   const grossIncomeTax = incomeTaxBands.reduce((sum, b) => sum + b.tax, 0);
 
   // 4. Credits
-  const creditLines = calculateCredits(input);
+  const creditLines = calculateCredits(input, constants);
   const totalCredits = creditLines.reduce((sum, c) => sum + c.amount, 0);
   const netIncomeTax = Math.max(0, grossIncomeTax - totalCredits);
 
   // 5. USC
-  const usc = calculateUSC(income.totalGrossIncome);
+  const usc = calculateUSC(income.totalGrossIncome, constants);
   const totalUSC = usc.bands.reduce((sum, b) => sum + b.tax, 0);
 
   if (usc.exempt) {
@@ -469,14 +553,14 @@ export function calculateForm11(input: Form11Input): Form11Result {
   }
 
   // 6. PRSI
-  const prsi = calculatePRSI(assessableIncome);
+  const prsi = calculatePRSI(assessableIncome, constants);
 
-  if (prsi.payable > 0 && prsi.payable === TAX_CONSTANTS.prsi.minimum) {
-    notes.push("Minimum PRSI Class S contribution of €500 applies.");
+  if (prsi.payable > 0 && prsi.payable === constants.prsi.minimum) {
+    notes.push(`Minimum PRSI Class S contribution of €${constants.prsi.minimum} applies.`);
   }
 
   // 7. CGT
-  const cgt = calculateCGT(input);
+  const cgt = calculateCGT(input, constants);
 
   // 8. Summary
   const totalLiability = Math.round((netIncomeTax + totalUSC + prsi.payable + cgt.payable) * 100) / 100;
@@ -486,8 +570,8 @@ export function calculateForm11(input: Form11Input): Form11Result {
     notes.push("Overpayment detected — you may be due a refund.");
   }
 
-  if (input.charitableDonations > 0 && input.charitableDonations < TAX_CONSTANTS.charitableMinimum) {
-    warnings.push(`Charitable donations must be at least €${TAX_CONSTANTS.charitableMinimum} to qualify for relief.`);
+  if (input.charitableDonations > 0 && input.charitableDonations < constants.charitableMinimum) {
+    warnings.push(`Charitable donations must be at least €${constants.charitableMinimum} to qualify for relief.`);
   }
 
   return {
