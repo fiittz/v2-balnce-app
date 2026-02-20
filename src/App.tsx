@@ -10,9 +10,7 @@ import { BackgroundTasksProvider } from "@/contexts/BackgroundTasksContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import BackgroundTasksStatus from "@/components/layout/BackgroundTasksStatus";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import { PostHogProvider } from "@posthog/react";
 import PostHogTracker from "@/components/PostHogTracker";
-import { POSTHOG_KEY, posthogOptions } from "@/lib/posthog";
 
 // Eagerly loaded — landing/login page (first thing users see)
 import Welcome from "./pages/Welcome";
@@ -50,8 +48,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <Sentry.ErrorBoundary fallback={<p>An unexpected error occurred. Please refresh the page.</p>}>
-    <PostHogProvider apiKey={POSTHOG_KEY} options={posthogOptions}>
-      <ThemeProvider>
+    <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <Toaster />
@@ -284,7 +281,6 @@ const App = () => (
           </TooltipProvider>
         </QueryClientProvider>
       </ThemeProvider>
-    </PostHogProvider>
   </Sentry.ErrorBoundary>
 );
 
