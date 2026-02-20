@@ -80,7 +80,7 @@ const TAX_CONSTANTS_BY_YEAR: Record<number, TaxConstants> = {
       { from: 70_044, to: 100_000, rate: 0.08 },
       { from: 100_000, to: Infinity, rate: 0.11 },
     ],
-    prsi: { rate: 0.041, minimum: 500, threshold: 5_000 },
+    prsi: { rate: 0.04025, minimum: 538, threshold: 5_000 }, // blended: 4% Jan-Sep, 4.1% Oct-Dec; min blended €537.50 → €538
     credits: {
       single: 1_875,
       married: 3_750,
@@ -123,7 +123,7 @@ const TAX_CONSTANTS_BY_YEAR: Record<number, TaxConstants> = {
       single: 44_000,
       married_one_income: 53_000,
       married_two_incomes: 88_000,
-      second_earner_max: 44_000,
+      second_earner_max: 35_000, // €53k + €35k = €88k max
     },
     usc: [
       { from: 0, to: 12_012, rate: 0.005 },
@@ -132,7 +132,7 @@ const TAX_CONSTANTS_BY_YEAR: Record<number, TaxConstants> = {
       { from: 70_044, to: 100_000, rate: 0.08 },
       { from: 100_000, to: Infinity, rate: 0.11 },
     ],
-    prsi: { rate: 0.042, minimum: 650, threshold: 5_000 },
+    prsi: { rate: 0.042375, minimum: 650, threshold: 5_000 }, // blended: 4.2% Jan-Sep, 4.35% Oct-Dec
     credits: {
       single: 2_000,
       married: 4_000,
