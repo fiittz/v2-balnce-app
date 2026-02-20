@@ -1888,6 +1888,11 @@ const BankFeed = () => {
                     const fmt = (v: number) =>
                       v.toLocaleString("en-IE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+                    const PERSONAL_RELIEF_CATEGORIES = new Set([
+                      "Medical Expenses", "Pension Contributions", "Health Insurance",
+                      "Charitable Donations", "Tuition Fees", "Rent / Mortgage",
+                    ]);
+
                     // Income by category
                     const incomeByCategory: Record<string, number> = {};
                     let totalIncome = 0;
@@ -1897,6 +1902,11 @@ const BankFeed = () => {
                     // Expenses by category
                     const expensesByCategory: Record<string, number> = {};
                     let totalExpenses = 0;
+                    // Personal account: reliefs vs personal expenditure
+                    const reliefsByCategory: Record<string, number> = {};
+                    const personalSpendByCategory: Record<string, number> = {};
+                    let totalReliefs = 0;
+                    let totalPersonalSpend = 0;
 
                     // Revenue refunds offset expenses, not income
                     const isRevenueRefund = (catName: string, desc: string) => {
@@ -1940,7 +1950,17 @@ const BankFeed = () => {
                       } else {
                         // Director's Loan Account — balance sheet item, not P&L
                         if (isDLACat(catName)) return;
-                        if (isDirect(catName)) {
+
+                        if (isPersonal) {
+                          // Personal: split into reliefs vs personal expenditure
+                          if (PERSONAL_RELIEF_CATEGORIES.has(catName)) {
+                            reliefsByCategory[catName] = (reliefsByCategory[catName] || 0) + amount;
+                            totalReliefs += amount;
+                          } else {
+                            personalSpendByCategory[catName] = (personalSpendByCategory[catName] || 0) + amount;
+                            totalPersonalSpend += amount;
+                          }
+                        } else if (isDirect(catName)) {
                           directCostsByCategory[catName] = (directCostsByCategory[catName] || 0) + amount;
                           totalDirectCosts += amount;
                         } else {
@@ -1958,7 +1978,7 @@ const BankFeed = () => {
                           invoiceTrips.reduce((s, t) => s + t.directorsLoanBalance, 0),
                         ) * 100,
                       ) / 100;
-                    if (travelNetOwed > 0) {
+                    if (travelNetOwed > 0 && !isPersonal) {
                       expensesByCategory["Travel & Accommodation (owed to director)"] =
                         (expensesByCategory["Travel & Accommodation (owed to director)"] || 0) + travelNetOwed;
                       totalExpenses += travelNetOwed;
@@ -1968,6 +1988,7 @@ const BankFeed = () => {
                     const grossProfit = totalIncome - totalDirectCosts;
                     const netProfit = grossProfit - netExpenses;
                     const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0;
+                    const netPosition = totalIncome - totalReliefs - totalPersonalSpend;
 
                     const sortedEntries = (obj: Record<string, number>) =>
                       Object.entries(obj).sort((a, b) => b[1] - a[1]);
@@ -2009,7 +2030,7 @@ const BankFeed = () => {
                         <div className="space-y-1 text-sm">
                           {/* Income */}
                           <div className="py-2 border-b-2 border-foreground/20">
-                            <p className="font-semibold text-base mb-1">Income</p>
+                            <p className="font-semibold text-base mb-1">{isPersonal ? "Personal Income" : "Income"}</p>
                             {sortedEntries(incomeByCategory).map(([cat, amt]) => (
                               <div key={cat} className="flex justify-between py-0.5 pl-4">
                                 <span className="text-muted-foreground">{cat}</span>
@@ -2024,6 +2045,75 @@ const BankFeed = () => {
                             </div>
                           </div>
 
+                          {isPersonal ? (
+                            <>
+                              {/* Tax-Deductible Reliefs */}
+                              <div className="py-2 border-b border-border">
+                                <p className="font-semibold text-base mb-1">
+                                  Tax-Deductible Reliefs
+                                  <span className="ml-2 text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                                    Form 11
+                                  </span>
+                                </p>
+                                {sortedEntries(reliefsByCategory).map(([cat, amt]) => (
+                                  <div key={cat} className="flex justify-between py-0.5 pl-4">
+                                    <span className="text-muted-foreground">{cat}</span>
+                                    <span className="tabular-nums">{fmt(amt)}</span>
+                                  </div>
+                                ))}
+                                <div className="flex justify-between pt-1 font-semibold">
+                                  <span>Total Reliefs</span>
+                                  <span className="tabular-nums">{fmt(totalReliefs)}</span>
+                                </div>
+                              </div>
+
+                              {/* Personal Expenditure */}
+                              <div className="py-2 border-b border-border">
+                                <p className="font-semibold text-base mb-1">Personal Expenditure</p>
+                                {sortedEntries(personalSpendByCategory).map(([cat, amt]) => (
+                                  <div key={cat} className="flex justify-between py-0.5 pl-4">
+                                    <span className="text-muted-foreground">{cat}</span>
+                                    <span className="tabular-nums">{fmt(amt)}</span>
+                                  </div>
+                                ))}
+                                <div className="flex justify-between pt-1 font-semibold">
+                                  <span>Total Personal Spend</span>
+                                  <span className="tabular-nums">{fmt(totalPersonalSpend)}</span>
+                                </div>
+                              </div>
+
+                              {/* Net Position */}
+                              <div
+                                className={`rounded-xl p-4 mt-2 ${netPosition >= 0 ? "bg-emerald-50 dark:bg-emerald-950/30" : "bg-red-50 dark:bg-red-950/30"}`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <span className="text-lg font-semibold">Net Position</span>
+                                  </div>
+                                  <span
+                                    className={`text-3xl font-bold tabular-nums ${netPosition >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}
+                                  >
+                                    €{fmt(netPosition)}
+                                  </span>
+                                </div>
+                                <div className="mt-2 space-y-0.5 text-xs text-muted-foreground">
+                                  <div className="flex justify-between">
+                                    <span>Total Income</span>
+                                    <span className="tabular-nums">{fmt(totalIncome)}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Less: Tax Reliefs</span>
+                                    <span className="tabular-nums">({fmt(totalReliefs)})</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Personal Spend</span>
+                                    <span className="tabular-nums">({fmt(totalPersonalSpend)})</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <>
                           {/* Direct Costs */}
                           {totalDirectCosts > 0 && (
                             <div className="py-2 border-b border-border">
@@ -2092,6 +2182,8 @@ const BankFeed = () => {
                               </span>
                             </div>
                           </div>
+                            </>
+                          )}
 
                           {/* CT1 Corporation Tax Computation (company accounts only) */}
                           {!isPersonal && (

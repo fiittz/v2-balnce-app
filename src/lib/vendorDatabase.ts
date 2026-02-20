@@ -1646,6 +1646,15 @@ export const vendorDatabase: VendorEntry[] = [
     purpose: "Professional services. VAT deductible under Section 59.",
     sector: "professional",
   },
+  {
+    name: "Open Forest",
+    patterns: ["open forest"],
+    category: "Consulting & Accounting",
+    vat_type: "Standard 23%",
+    vat_deductible: true,
+    purpose: "Professional/consulting services. VAT deductible under Section 59.",
+    sector: "professional",
+  },
 
   // ────────────────────────────────────────────────────────────
   // WORKWEAR (VAT Deductible @ 23%)

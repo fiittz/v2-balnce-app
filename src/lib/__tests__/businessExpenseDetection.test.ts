@@ -267,3 +267,40 @@ describe("Business Expense Detection", () => {
     });
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// Personal income categorisation on directors_personal_tax
+// ══════════════════════════════════════════════════════════════
+describe("Personal income categorisation", () => {
+  function personalIncome(description: string): TransactionInput {
+    return {
+      amount: 2000,
+      date: "2024-06-15",
+      currency: "EUR",
+      description,
+      direction: "income",
+      user_industry: "carpentry_joinery",
+      user_business_type: "Contractor",
+      account_type: "directors_personal_tax",
+    };
+  }
+
+  it("salary description → Salary category", () => {
+    const result = autoCategorise(personalIncome("SALARY TRANSFER FROM COMPANY"), [], []);
+    expect(result.category).toBe("Salary");
+    expect(result.is_business_expense).toBe(false);
+    expect(result.vat_type).toBe("Exempt");
+  });
+
+  it("dividend description → Dividends Received category", () => {
+    const result = autoCategorise(personalIncome("DIVIDEND PAYMENT Q4"), [], []);
+    expect(result.category).toBe("Dividends Received");
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("generic income on personal account → Other Personal Income", () => {
+    const result = autoCategorise(personalIncome("RANDOM LODGEMENT 456"), [], []);
+    expect(result.category).toBe("Other Personal Income");
+    expect(result.is_business_expense).toBe(false);
+  });
+});

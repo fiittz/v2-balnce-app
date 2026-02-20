@@ -128,7 +128,7 @@ export function useBulkRecategorize() {
                 userCorrections,
               );
 
-              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection);
+              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection, txnAccount?.account_type);
 
               if (!matchedCategory || engineResult.confidence_score < 50) {
                 // Still set vat_rate/vat_amount even without category match
@@ -343,7 +343,7 @@ export function useBulkRecategorize() {
                 userCorrections,
               );
 
-              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection);
+              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection, txnAccount?.account_type);
 
               // Only update if the new category is different from Miscellaneous
               if (!matchedCategory || matchedCategory.id === miscCatId || engineResult.confidence_score < 40) {
@@ -496,7 +496,7 @@ export function useBulkRecategorize() {
                 userCorrections,
               );
 
-              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection);
+              const matchedCategory = findMatchingCategory(engineResult.category, categories, txnDirection, txnAccount?.account_type);
 
               if (!matchedCategory || engineResult.confidence_score < 40) {
                 // Clear category but still set vat_rate/vat_amount

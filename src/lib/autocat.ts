@@ -117,6 +117,10 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   "Internal Transfer": ["Internal Transfers"],
   // Travel & Subsistence
   "Travel & Subsistence": ["Travel & Accommodation", "Vehicle Expenses"],
+  // ── Personal income categories ──
+  "Salary": ["Salary from Company"],
+  "Dividends Received": ["Dividend Income"],
+  "Other Personal Income": ["Other Personal Income"],
   // ── Income categories ──
   Sales: [
     "Contract Work",
@@ -325,6 +329,34 @@ function inferIncomeCategory(tx: TransactionInput): {
   };
 }
 
+function inferPersonalIncomeCategory(tx: TransactionInput): {
+  category: string;
+  business_purpose: string;
+  confidenceBoost: number;
+} | null {
+  if (tx.direction !== "income") return null;
+  if (tx.account_type !== "directors_personal_tax") return null;
+
+  const desc = normalise(tx.description);
+
+  // Salary from company (payroll, salary transfers)
+  if (
+    desc.includes("salary") || desc.includes("payroll") ||
+    desc.includes("wages") || desc.includes("net pay") ||
+    desc.includes("pay run")
+  ) {
+    return { category: "Salary", business_purpose: "Salary received from employer.", confidenceBoost: 25 };
+  }
+
+  // Dividends
+  if (desc.includes("dividend") || desc.includes("div payment")) {
+    return { category: "Dividends Received", business_purpose: "Dividend income received.", confidenceBoost: 25 };
+  }
+
+  // Default: other personal income
+  return { category: "Other Personal Income", business_purpose: "Personal income received.", confidenceBoost: 10 };
+}
+
 function refineWithReceipt(base: AutoCatResult, tx: TransactionInput): AutoCatResult {
   const receipt = normalise(tx.receipt_text);
   if (!receipt) return base;
@@ -506,6 +538,24 @@ export function autoCategorise(
         },
         tx,
       );
+    }
+
+    // Personal income categorisation (before business income)
+    if (tx.account_type === "directors_personal_tax") {
+      const personalIncome = inferPersonalIncomeCategory(tx);
+      if (personalIncome) {
+        return finalizeResult({
+          category: personalIncome.category,
+          vat_type: "Exempt",
+          vat_deductible: false,
+          business_purpose: personalIncome.business_purpose,
+          confidence_score: 70 + personalIncome.confidenceBoost,
+          notes: "Personal income transaction.",
+          needs_review: false,
+          needs_receipt: false,
+          is_business_expense: false,
+        }, tx);
+      }
     }
 
     const incomeGuess = inferIncomeCategory(tx);

@@ -1849,3 +1849,101 @@ describe("income — generic income with no specific client pattern", () => {
     expect(result.confidence_score).toBe(90); // 70 + 20
   });
 });
+
+// ══════════════════════════════════════════════════════════════
+// Personal income categorisation (directors_personal_tax)
+// ══════════════════════════════════════════════════════════════
+describe("Personal income categorisation", () => {
+  it("categorises salary transfer on personal account as Salary", () => {
+    const result = autoCategorise(income("SALARY TRANSFER", {
+      account_type: "directors_personal_tax",
+    }));
+    expect(result.category).toBe("Salary");
+    expect(result.confidence_score).toBe(95); // 70 + 25
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("categorises payroll on personal account as Salary", () => {
+    const result = autoCategorise(income("PAYROLL NET PAY", {
+      account_type: "directors_personal_tax",
+    }));
+    expect(result.category).toBe("Salary");
+    expect(result.confidence_score).toBe(95);
+  });
+
+  it("categorises dividend payment on personal account as Dividends Received", () => {
+    const result = autoCategorise(income("DIVIDEND PAYMENT", {
+      account_type: "directors_personal_tax",
+    }));
+    expect(result.category).toBe("Dividends Received");
+    expect(result.confidence_score).toBe(95); // 70 + 25
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("categorises generic income on personal account as Other Personal Income", () => {
+    const result = autoCategorise(income("MISC TRANSFER 123", {
+      account_type: "directors_personal_tax",
+    }));
+    expect(result.category).toBe("Other Personal Income");
+    expect(result.confidence_score).toBe(80); // 70 + 10
+    expect(result.is_business_expense).toBe(false);
+  });
+
+  it("does NOT return personal income category for company account", () => {
+    const result = autoCategorise(income("SALARY TRANSFER", {
+      account_type: "limited_company",
+    }));
+    expect(result.category).not.toBe("Salary");
+    expect(result.category).toBe("Sales");
+  });
+
+  it("income on personal account does NOT return Sales", () => {
+    const result = autoCategorise(income("LODGEMENT 12345", {
+      account_type: "directors_personal_tax",
+    }));
+    expect(result.category).not.toBe("Sales");
+  });
+
+  it("Revenue refund still takes priority on personal account", () => {
+    const result = autoCategorise(income("REVENUE TAX REFUND", {
+      account_type: "directors_personal_tax",
+    }));
+    expect(result.category).toBe("Tax Refund");
+  });
+});
+
+describe("findMatchingCategory with personal account type", () => {
+  const dbCategories = [
+    { name: "Salary from Company", type: "income", account_type: "personal" },
+    { name: "Dividend Income", type: "income", account_type: "personal" },
+    { name: "Other Personal Income", type: "income", account_type: "personal" },
+    { name: "Contract Work", type: "income", account_type: "business" },
+    { name: "Sales", type: "income" },
+  ];
+
+  it("maps Salary → Salary from Company for personal account", () => {
+    const result = findMatchingCategory("Salary", dbCategories, "income", "directors_personal_tax");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Salary from Company");
+  });
+
+  it("maps Dividends Received → Dividend Income for personal account", () => {
+    const result = findMatchingCategory("Dividends Received", dbCategories, "income", "directors_personal_tax");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Dividend Income");
+  });
+
+  it("maps Other Personal Income directly for personal account", () => {
+    const result = findMatchingCategory("Other Personal Income", dbCategories, "income", "directors_personal_tax");
+    expect(result).not.toBeNull();
+    expect(result!.name).toBe("Other Personal Income");
+  });
+
+  it("filters out business categories for personal account type", () => {
+    const result = findMatchingCategory("Sales", dbCategories, "income", "directors_personal_tax");
+    // Should NOT match Contract Work (business-only)
+    if (result) {
+      expect(result.account_type).not.toBe("business");
+    }
+  });
+});

@@ -161,11 +161,19 @@ const AccountDetail = () => {
     return map;
   }, [categories]);
 
+  const isPersonal = account?.account_type === "directors_personal_tax";
+
   // Check if a category is a direct cost
   const isDirectCost = (categoryName: string) => {
     const lowerName = categoryName.toLowerCase();
     return DIRECT_COST_KEYWORDS.some((keyword) => lowerName.includes(keyword));
   };
+
+  // Personal account: tax-deductible relief categories (Form 11)
+  const PERSONAL_RELIEF_CATEGORIES = new Set([
+    "Medical Expenses", "Pension Contributions", "Health Insurance",
+    "Charitable Donations", "Tuition Fees", "Rent / Mortgage",
+  ]);
 
   // Check if a transaction is a Revenue refund (by category or description)
   const isRevenueRefund = (categoryName: string, description: string) => {
@@ -200,8 +208,14 @@ const AccountDetail = () => {
     let totalDirectCosts = 0;
     let totalExpenses = 0;
 
+    // Personal account: reliefs vs personal expenditure
+    const reliefsByCategory: Record<string, number> = {};
+    const personalSpendByCategory: Record<string, number> = {};
+    let totalReliefs = 0;
+    let totalPersonalSpend = 0;
+
     accountTransactions.forEach((t) => {
-      const isIncome = t.type === "income" || t.amount > 0;
+      const txIsIncome = t.type === "income" || t.amount > 0;
       const amount = Math.abs(t.amount);
       const categoryInfo = t.category_id ? categoryMap.get(t.category_id) : null;
       const categoryName = categoryInfo?.name || "Uncategorised";
@@ -214,11 +228,20 @@ const AccountDetail = () => {
         return;
       }
 
-      if (isIncome) {
+      if (txIsIncome) {
         incomeByCategory[categoryName] = (incomeByCategory[categoryName] || 0) + amount;
         totalIncome += amount;
+      } else if (isPersonal) {
+        // Personal: split into reliefs vs personal expenditure
+        if (PERSONAL_RELIEF_CATEGORIES.has(categoryName)) {
+          reliefsByCategory[categoryName] = (reliefsByCategory[categoryName] || 0) + amount;
+          totalReliefs += amount;
+        } else {
+          personalSpendByCategory[categoryName] = (personalSpendByCategory[categoryName] || 0) + amount;
+          totalPersonalSpend += amount;
+        }
       } else {
-        // Check if this is a direct cost
+        // Business: existing direct cost / expense logic
         if (isDirectCost(categoryName)) {
           directCostsByCategory[categoryName] = (directCostsByCategory[categoryName] || 0) + amount;
           totalDirectCosts += amount;
@@ -247,6 +270,9 @@ const AccountDetail = () => {
     const netProfit = grossProfit - totalExpenses;
     const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : null;
 
+    // Personal account net position
+    const netPosition = totalIncome - totalReliefs - totalPersonalSpend;
+
     return {
       incomeByCategory,
       totalIncome,
@@ -264,8 +290,14 @@ const AccountDetail = () => {
       travelTotalAllowance,
       travelAlreadyReimbursed,
       travelNetOwed,
+      // Personal account fields
+      reliefsByCategory,
+      personalSpendByCategory,
+      totalReliefs,
+      totalPersonalSpend,
+      netPosition,
     };
-  }, [accountTransactions, categoryMap, invoiceTrips]);
+  }, [accountTransactions, categoryMap, invoiceTrips, isPersonal, PERSONAL_RELIEF_CATEGORIES]);
 
   // Calculate balance sheet data
   const balanceData = useMemo(() => {
@@ -430,7 +462,7 @@ const AccountDetail = () => {
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-lg font-semibold tracking-tight">Profit & Loss Statement</CardTitle>
+                    <CardTitle className="text-lg font-semibold tracking-tight">{isPersonal ? "Income & Expenditure Statement" : "Profit & Loss Statement"}</CardTitle>
                     <p className="text-sm text-muted-foreground mt-1">{periodLabel}</p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -474,6 +506,161 @@ const AccountDetail = () => {
                 </div>
               </CardHeader>
               <CardContent className="pt-0 font-mono text-sm">
+                {isPersonal ? (
+                  <>
+                    {/* ── Personal Income Section ── */}
+                    <div className="mb-4">
+                      <div className="flex items-baseline">
+                        <span className="font-semibold text-foreground w-28">Personal Income</span>
+                        <div className="flex-1">
+                          {Object.entries(pnlData.incomeByCategory).map(([category, amount]) => (
+                            <div key={category} className="flex justify-between py-0.5">
+                              <span className="text-muted-foreground pl-4">{category}</span>
+                              <span className="tabular-nums w-28 text-right">{formatCurrency(amount)}</span>
+                            </div>
+                          ))}
+                          {Object.keys(pnlData.incomeByCategory).length === 0 && (
+                            <div className="flex justify-between py-0.5">
+                              <span className="text-muted-foreground pl-4">—</span>
+                              <span className="tabular-nums w-28 text-right">0.00</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex justify-end border-t border-border/50 mt-2 pt-1">
+                        <span className="tabular-nums font-medium w-28 text-right">
+                          {formatCurrency(pnlData.totalIncome)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Revenue Refund Section (personal) */}
+                    {pnlData.totalRevenueRefunds > 0 && (
+                      <div className="mb-4 bg-amber-50/50 dark:bg-amber-950/20 -mx-6 px-6 py-3 border-y border-amber-200/40 dark:border-amber-800/30">
+                        <div className="flex items-baseline">
+                          <span className="font-semibold text-foreground w-28 italic">
+                            Revenue Refund
+                            <span className="ml-2 text-[10px] font-normal not-italic px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300">
+                              Non-taxable
+                            </span>
+                          </span>
+                          <div className="flex-1">
+                            {Object.entries(pnlData.revenueRefundsByCategory).map(([category, amount]) => (
+                              <div key={category} className="flex justify-between py-0.5">
+                                <span className="text-muted-foreground pl-4">{category}</span>
+                                <span className="tabular-nums w-28 text-right">{formatCurrency(amount)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex justify-end border-t border-amber-200/40 dark:border-amber-800/30 mt-2 pt-1">
+                          <span className="tabular-nums font-medium w-28 text-right">
+                            {formatCurrency(pnlData.totalRevenueRefunds)}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-1 italic">
+                          Return of previously overpaid tax — excluded from taxable income
+                        </p>
+                      </div>
+                    )}
+
+                    {/* ── Tax-Deductible Reliefs Section ── */}
+                    <div className="mb-4">
+                      <div className="flex items-baseline">
+                        <span className="font-semibold text-foreground w-28">
+                          Tax-Deductible Reliefs
+                          <span className="ml-2 text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300">
+                            Form 11
+                          </span>
+                        </span>
+                        <div className="flex-1" />
+                      </div>
+                      <div className="mt-2 space-y-0.5">
+                        {Object.entries(pnlData.reliefsByCategory)
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([category, amount]) => (
+                            <div key={category} className="flex justify-between py-0.5">
+                              <span className="text-muted-foreground pl-8">{category}</span>
+                              <span className="tabular-nums w-28 text-right">{formatCurrency(amount)}</span>
+                            </div>
+                          ))}
+                        {Object.keys(pnlData.reliefsByCategory).length === 0 && (
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-muted-foreground pl-8">—</span>
+                            <span className="tabular-nums w-28 text-right">0.00</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex justify-end border-t border-border/50 mt-3 pt-2">
+                        <span className="text-muted-foreground mr-4">Total Reliefs</span>
+                        <span className="tabular-nums font-medium w-28 text-right">
+                          {formatCurrency(pnlData.totalReliefs)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* ── Personal Expenditure Section ── */}
+                    <div className="mb-4">
+                      <div className="flex items-baseline">
+                        <span className="font-semibold text-foreground w-28">Personal Expenditure</span>
+                        <div className="flex-1" />
+                      </div>
+                      <div className="mt-2 space-y-0.5">
+                        {Object.entries(pnlData.personalSpendByCategory)
+                          .sort(([, a], [, b]) => b - a)
+                          .map(([category, amount]) => (
+                            <div key={category} className="flex justify-between py-0.5">
+                              <span className="text-muted-foreground pl-8">{category}</span>
+                              <span className="tabular-nums w-28 text-right">{formatCurrency(amount)}</span>
+                            </div>
+                          ))}
+                        {Object.keys(pnlData.personalSpendByCategory).length === 0 && (
+                          <div className="flex justify-between py-0.5">
+                            <span className="text-muted-foreground pl-8">—</span>
+                            <span className="tabular-nums w-28 text-right">0.00</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex justify-end border-t border-border/50 mt-3 pt-2">
+                        <span className="text-muted-foreground mr-4">Total Personal Spend</span>
+                        <span className="tabular-nums font-medium w-28 text-right">
+                          {formatCurrency(pnlData.totalPersonalSpend)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* ── Summary ── */}
+                    <div className="border-t-2 border-foreground/30 pt-4 mt-6">
+                      <div className="flex justify-between py-1">
+                        <span className="font-medium pl-4">Total Income</span>
+                        <span className="tabular-nums font-medium w-28 text-right">{formatCurrency(pnlData.totalIncome)}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="font-medium pl-4">Less: Tax Reliefs</span>
+                        <span className="tabular-nums font-medium w-28 text-right">({formatCurrency(pnlData.totalReliefs)})</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="font-medium pl-4">Personal Spend</span>
+                        <span className="tabular-nums font-medium w-28 text-right">({formatCurrency(pnlData.totalPersonalSpend)})</span>
+                      </div>
+                      <div className="flex justify-between border-t border-border/50 mt-2 pt-2">
+                        <span className="font-bold">Net Position</span>
+                        <span
+                          className={`tabular-nums font-bold w-28 text-right ${
+                            pnlData.netPosition >= 0
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-red-600 dark:text-red-400"
+                          }`}
+                        >
+                          {pnlData.netPosition < 0 && "("}
+                          {formatCurrency(Math.abs(pnlData.netPosition))}
+                          {pnlData.netPosition < 0 && ")"}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
                 {/* Income Section */}
                 <div className="mb-4">
                   <div className="flex items-baseline">
@@ -636,6 +823,8 @@ const AccountDetail = () => {
                     </div>
                   )}
                 </div>
+                  </>
+                )}
 
                 {/* Assets / Liabilities / Capital sections */}
                 {(bsSections.assets.length > 0 ||

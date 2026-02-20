@@ -732,7 +732,7 @@ const CSVImportDialog = ({ onImportComplete, selectedFinancialAccountId }: CSVIm
                 );
 
                 // Use flexible category matching with mapping
-                const matchedCategory = findMatchingCategory(engineResult.category, categoriesToUse, txnDirection);
+                const matchedCategory = findMatchingCategory(engineResult.category, categoriesToUse, txnDirection, selectedAcct?.account_type);
 
                 const vatDeductible = (engineResult as Record<string, unknown>).vat_deductible ?? true;
                 const needsReceipt = (engineResult as Record<string, unknown>).needs_receipt ?? false;

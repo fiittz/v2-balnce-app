@@ -12,7 +12,13 @@ interface CategoryDef {
   account_type: string;
 }
 
-// ─── Personal categories (Form 11 reliefs — same for ALL industries) ───
+// ─── Personal categories (Form 11 — same for ALL industries) ───
+const PERSONAL_INCOME_CATEGORIES: CategoryDef[] = [
+  { name: "Salary from Company", account_code: "3100", vat_rate: 0, account_type: "personal" },
+  { name: "Dividend Income", account_code: "3200", vat_rate: 0, account_type: "personal" },
+  { name: "Other Personal Income", account_code: "3900", vat_rate: 0, account_type: "personal" },
+];
+
 const PERSONAL_CATEGORIES: CategoryDef[] = [
   { name: "Groceries & Household", account_code: "7100", vat_rate: 0, account_type: "personal" },
   { name: "Rent / Mortgage", account_code: "7200", vat_rate: 0, account_type: "personal" },
@@ -450,8 +456,8 @@ export async function seedDefaultCategories(userId: string, businessType?: strin
       type: "expense",
     }));
 
-    // Create income categories
-    const incomeInserts = industryCats.income.map((cat) => ({
+    // Create income categories (industry-specific + personal income)
+    const incomeInserts = [...industryCats.income, ...PERSONAL_INCOME_CATEGORIES].map((cat) => ({
       ...cat,
       user_id: userId,
       type: "income",
@@ -493,6 +499,10 @@ export async function ensureNewCategories(userId: string): Promise<void> {
     { name: "Childcare", account_code: "7700", vat_rate: 0, type: "expense", account_type: "personal" },
     { name: "Personal Transport", account_code: "7800", vat_rate: 0, type: "expense", account_type: "personal" },
     { name: "Clothing & Personal", account_code: "7900", vat_rate: 0, type: "expense", account_type: "personal" },
+    // Personal income categories for existing users
+    { name: "Salary from Company", account_code: "3100", vat_rate: 0, type: "income", account_type: "personal" },
+    { name: "Dividend Income", account_code: "3200", vat_rate: 0, type: "income", account_type: "personal" },
+    { name: "Other Personal Income", account_code: "3900", vat_rate: 0, type: "income", account_type: "personal" },
   ];
 
   for (const cat of needed) {
