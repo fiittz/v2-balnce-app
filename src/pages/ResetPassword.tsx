@@ -72,7 +72,8 @@ const ResetPassword = () => {
       if (error) throw error;
 
       toast.success("Password updated successfully!");
-      navigate("/dashboard");
+      window.location.href = "/dashboard";
+      return;
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
       toast.error(errMsg || "Failed to update password");
