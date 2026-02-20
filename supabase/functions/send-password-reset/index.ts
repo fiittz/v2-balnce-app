@@ -80,7 +80,7 @@ serve(async (req) => {
 
     // If the email doesn't exist, Supabase returns an error.
     // Always return 200 to prevent email enumeration.
-    if (error || !data?.properties?.action_link) {
+    if (error || !data?.properties?.hashed_token) {
       console.log("Recovery link not generated (email may not exist):", error?.message);
       return new Response(
         JSON.stringify({ success: true }),
@@ -88,8 +88,9 @@ serve(async (req) => {
       );
     }
 
-    const resetLink = data.properties.action_link;
-    console.log("Generated reset link:", resetLink);
+    // Build a direct link to our app with the token_hash — verified client-side via verifyOtp
+    const tokenHash = data.properties.hashed_token;
+    const resetLink = `${redirectBase}/reset-password?token_hash=${tokenHash}&type=recovery`;
 
     // Build branded HTML email
     const emailHtml = `

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,25 +13,42 @@ const ResetPassword = () => {
   const [hasSession, setHasSession] = useState(false);
   const [checking, setChecking] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setHasSession(true);
+    const tokenHash = searchParams.get("token_hash");
+    const type = searchParams.get("type");
+
+    if (tokenHash && type === "recovery") {
+      // Verify the token_hash directly with Supabase
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" }).then(({ error }) => {
+        if (error) {
+          console.error("OTP verification failed:", error.message);
+          setHasSession(false);
+        } else {
+          setHasSession(true);
+        }
         setChecking(false);
-      }
-    });
+      });
+    } else {
+      // Fallback: check for PASSWORD_RECOVERY event or existing session
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY") {
+          setHasSession(true);
+          setChecking(false);
+        }
+      });
 
-    // Also check if there's already a session (user may have landed with token already processed)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setHasSession(true);
-      }
-      setChecking(false);
-    });
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setHasSession(true);
+        }
+        setChecking(false);
+      });
 
-    return () => subscription.unsubscribe();
-  }, []);
+      return () => subscription.unsubscribe();
+    }
+  }, [searchParams]);
 
   const handleReset = async () => {
     if (!password || !confirmPassword) {
