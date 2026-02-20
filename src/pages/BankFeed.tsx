@@ -113,6 +113,9 @@ import { useCT1Data } from "@/hooks/useCT1Data";
 import { useDirectorOnboarding } from "@/hooks/useDirectorOnboarding";
 import { useAuth } from "@/hooks/useAuth";
 import { ChartOfAccountsButton } from "@/components/dashboard/ChartOfAccountsWidget";
+import { getIndustryGroup } from "@/lib/industryGroups";
+import { getReliefSuggestions, type SuggestionContext } from "@/lib/reliefSuggestions";
+import ReliefSuggestionsPanel from "@/components/bank/ReliefSuggestionsPanel";
 
 type FilterType = "all" | "income" | "expense" | "uncategorized";
 type AccountType = "limited_company" | "sole_trader" | "directors_personal_tax";
@@ -342,7 +345,7 @@ const BankFeed = () => {
   };
 
   const { data: onboarding } = useOnboardingSettings();
-  const { invoiceTrips } = useInvoiceTripMatcher();
+  const { invoiceTrips: allInvoiceTrips } = useInvoiceTripMatcher();
   const ct1 = useCT1Data();
   const { data: invoicesData } = useInvoices();
   const { user } = useAuth();
@@ -391,6 +394,31 @@ const BankFeed = () => {
       directorNames,
     };
   }, [onboarding, directorNames]);
+
+  // Relief suggestions based on industry and user context
+  const reliefSuggestions = useMemo(() => {
+    const industryGroup = getIndustryGroup(onboarding?.business_type);
+    const director1 = directorRows?.[0]?.onboarding_data as Record<string, unknown> | null;
+
+    const ctx: SuggestionContext = {
+      industryGroup,
+      maritalStatus: (director1?.marital_status as SuggestionContext["maritalStatus"]) || "single",
+      hasBIK: !!director1?.has_bik || !!director1?.company_vehicle,
+      hasPension: !!director1?.has_pension || !!director1?.pension_contributions,
+      salary: Number(director1?.salary) || 0,
+      isVATRegistered: !!onboarding?.vat_registered,
+      isRCTRegistered: !!onboarding?.rct_registered,
+      companyAgeYears: (() => {
+        const incDate = companyInfo.incorporationDate;
+        if (!incDate) return 99;
+        const years = (Date.now() - new Date(incDate).getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        return Math.floor(years);
+      })(),
+      detectedReliefs: [],
+    };
+
+    return { suggestions: getReliefSuggestions(ctx), industryGroup };
+  }, [onboarding, directorRows, companyInfo.incorporationDate]);
 
   const { data: transactions, isLoading, refetch } = useTransactions();
   const { data: unmatchedTransactions, refetch: refetchUnmatched } = useUnmatchedTransactions();
@@ -522,6 +550,10 @@ const BankFeed = () => {
     };
   }, [accountFilteredTransactions, accounts, filter]);
 
+  // Only show trips on business accounts (not director's personal)
+  const isBusinessAccount = selectedAccount?.account_type !== "directors_personal_tax";
+  const invoiceTrips = isBusinessAccount ? allInvoiceTrips : [];
+
   // Travel expense from trip matcher
   const travelTotal = useMemo(() => {
     return Math.round(invoiceTrips.reduce((s, t) => s + t.totalRevenueAllowance, 0) * 100) / 100;
@@ -529,59 +561,86 @@ const BankFeed = () => {
 
   // Balance sheet sections for the ledger — always available from transaction data
   const bsSections = useMemo(() => {
+    const isPersonalAccount = selectedAccount?.account_type === "directors_personal_tax";
     const now = new Date();
     const taxYear = now.getMonth() >= 10 ? now.getFullYear() : now.getFullYear() - 1;
     const raw = localStorage.getItem(`ct1_questionnaire_${user?.id}_${taxYear}`);
     const q = raw ? JSON.parse(raw) : null;
 
-    // Assets — from questionnaire + computed data
     const assets: { label: string; amount: number }[] = [];
-    if (q?.fixedAssetsLandBuildings) assets.push({ label: "Land & Buildings", amount: q.fixedAssetsLandBuildings });
-    if (q?.fixedAssetsPlantMachinery) assets.push({ label: "Plant & Machinery", amount: q.fixedAssetsPlantMachinery });
-    const motorNBV = ct1.vehicleAsset ? ct1.vehicleAsset.depreciation.netBookValue : (q?.fixedAssetsMotorVehicles ?? 0);
-    if (motorNBV > 0) assets.push({ label: "Motor Vehicles", amount: motorNBV });
-    if (q?.fixedAssetsFixturesFittings)
-      assets.push({ label: "Fixtures & Fittings", amount: q.fixedAssetsFixturesFittings });
-    if (q?.currentAssetsStock) assets.push({ label: "Stock", amount: q.currentAssetsStock });
-    const debtors = q?.currentAssetsDebtors ?? q?.tradeDebtorsTotal ?? 0;
-    if (debtors > 0) assets.push({ label: "Debtors", amount: debtors });
-    if (q?.currentAssetsCash) assets.push({ label: "Cash in Hand", amount: q.currentAssetsCash });
-    // Bank balance always available from transaction data
-    const bankBal = q?.currentAssetsBankBalance ?? ct1.closingBalance ?? 0;
-    if (bankBal > 0) assets.push({ label: "Bank Balance", amount: bankBal });
-    if (ct1.rctPrepayment > 0) assets.push({ label: "RCT Prepayment", amount: ct1.rctPrepayment });
-    const totalAssets = assets.reduce((s, a) => s + a.amount, 0);
-
-    // Liabilities — from questionnaire + computed data
     const liabilities: { label: string; amount: number }[] = [];
-    const creditors = q?.liabilitiesCreditors ?? q?.tradeCreditorsTotal ?? 0;
-    if (creditors > 0) liabilities.push({ label: "Creditors", amount: creditors });
-    if (ct1.vatPosition && ct1.vatPosition.type === "payable" && ct1.vatPosition.amount > 0) {
-      liabilities.push({ label: "VAT Payable", amount: ct1.vatPosition.amount });
-    }
-    // Director's Loan: net of travel owed minus drawings taken
-    if (ct1.netDirectorsLoan > 0) liabilities.push({ label: "Director's Loan Account", amount: ct1.netDirectorsLoan });
-    // If director owes company (drawings > travel), show as asset (handled above via debtors)
-    if (ct1.netDirectorsLoan < 0)
-      assets.push({ label: "Director's Current A/C (debtor)", amount: Math.abs(ct1.netDirectorsLoan) });
-    const bankLoans = q?.liabilitiesBankLoans ?? 0;
-    if (bankLoans > 0) liabilities.push({ label: "Bank Loans", amount: bankLoans });
-    const directorsLoans = q?.liabilitiesDirectorsLoans ?? q?.directorsLoanBalance ?? 0;
-    if (directorsLoans > 0) liabilities.push({ label: "Directors' Loans (other)", amount: directorsLoans });
-    const totalLiabilities = liabilities.reduce((s, l) => s + l.amount, 0);
-
-    // Capital — share capital + retained profits (all expenses, not just allowable)
     const capital: { label: string; amount: number }[] = [];
-    const shareCapital = q?.shareCapital ?? 100;
-    capital.push({ label: "Share Capital", amount: shareCapital });
-    const totalIncome = ct1.detectedIncome.reduce((s, i) => s + i.amount, 0);
-    const totalExpensesAll = ct1.expenseSummary.allowable + ct1.expenseSummary.disallowed;
-    const retainedProfits = totalIncome - totalExpensesAll;
-    if (retainedProfits !== 0) capital.push({ label: "Retained Profits", amount: retainedProfits });
+
+    if (isPersonalAccount) {
+      // Director's Personal Balance Sheet
+      // DLA mirroring: if company owes director (positive), it's an asset for the director
+      // If director owes company (negative), it's a liability for the director
+      if (ct1.netDirectorsLoan > 0) {
+        assets.push({ label: "Due from Company (DLA)", amount: ct1.netDirectorsLoan });
+      }
+      if (ct1.netDirectorsLoan < 0) {
+        liabilities.push({ label: "Due to Company (DLA)", amount: Math.abs(ct1.netDirectorsLoan) });
+      }
+
+      // Director's salary owed but not yet paid
+      if (ct1.detectedPayments.length > 0) {
+        const salaryPaid = ct1.detectedPayments
+          .filter((p) => p.category.toLowerCase().includes("salary"))
+          .reduce((s, p) => s + p.amount, 0);
+        if (salaryPaid > 0) assets.push({ label: "Salary Received", amount: salaryPaid });
+      }
+
+      // Dividends received
+      const dividendsPaid = ct1.expenseByCategory
+        .filter((e) => e.category.toLowerCase().includes("dividend"))
+        .reduce((s, e) => s + e.amount, 0);
+      if (dividendsPaid > 0) assets.push({ label: "Dividends Received", amount: dividendsPaid });
+    } else {
+      // Company Balance Sheet
+      if (q?.fixedAssetsLandBuildings) assets.push({ label: "Land & Buildings", amount: q.fixedAssetsLandBuildings });
+      if (q?.fixedAssetsPlantMachinery) assets.push({ label: "Plant & Machinery", amount: q.fixedAssetsPlantMachinery });
+      const motorNBV = ct1.vehicleAsset ? ct1.vehicleAsset.depreciation.netBookValue : (q?.fixedAssetsMotorVehicles ?? 0);
+      if (motorNBV > 0) assets.push({ label: "Motor Vehicles", amount: motorNBV });
+      if (q?.fixedAssetsFixturesFittings)
+        assets.push({ label: "Fixtures & Fittings", amount: q.fixedAssetsFixturesFittings });
+      if (q?.currentAssetsStock) assets.push({ label: "Stock", amount: q.currentAssetsStock });
+      const debtors = q?.currentAssetsDebtors ?? q?.tradeDebtorsTotal ?? 0;
+      if (debtors > 0) assets.push({ label: "Debtors", amount: debtors });
+      if (q?.currentAssetsCash) assets.push({ label: "Cash in Hand", amount: q.currentAssetsCash });
+      const bankBal = q?.currentAssetsBankBalance ?? ct1.closingBalance ?? 0;
+      if (bankBal > 0) assets.push({ label: "Bank Balance", amount: bankBal });
+      if (ct1.rctPrepayment > 0) assets.push({ label: "RCT Prepayment", amount: ct1.rctPrepayment });
+
+      // DLA on company side: positive = company owes director (liability), negative = director owes company (asset)
+      if (ct1.netDirectorsLoan > 0) liabilities.push({ label: "Director's Loan Account", amount: ct1.netDirectorsLoan });
+      if (ct1.netDirectorsLoan < 0)
+        assets.push({ label: "Director's Current A/C (debtor)", amount: Math.abs(ct1.netDirectorsLoan) });
+
+      const creditors = q?.liabilitiesCreditors ?? q?.tradeCreditorsTotal ?? 0;
+      if (creditors > 0) liabilities.push({ label: "Creditors", amount: creditors });
+      if (ct1.vatPosition && ct1.vatPosition.type === "payable" && ct1.vatPosition.amount > 0) {
+        liabilities.push({ label: "VAT Payable", amount: ct1.vatPosition.amount });
+      }
+      const bankLoans = q?.liabilitiesBankLoans ?? 0;
+      if (bankLoans > 0) liabilities.push({ label: "Bank Loans", amount: bankLoans });
+      const directorsLoans = q?.liabilitiesDirectorsLoans ?? q?.directorsLoanBalance ?? 0;
+      if (directorsLoans > 0) liabilities.push({ label: "Directors' Loans (other)", amount: directorsLoans });
+
+      // Capital
+      const shareCapital = q?.shareCapital ?? 100;
+      capital.push({ label: "Share Capital", amount: shareCapital });
+      const totalIncome = ct1.detectedIncome.reduce((s, i) => s + i.amount, 0);
+      const totalExpensesAll = ct1.expenseSummary.allowable + ct1.expenseSummary.disallowed;
+      const retainedProfits = totalIncome - totalExpensesAll;
+      if (retainedProfits !== 0) capital.push({ label: "Retained Profits", amount: retainedProfits });
+    }
+
+    const totalAssets = assets.reduce((s, a) => s + a.amount, 0);
+    const totalLiabilities = liabilities.reduce((s, l) => s + l.amount, 0);
     const totalCapital = capital.reduce((s, c) => s + c.amount, 0);
 
     return { assets, totalAssets, liabilities, totalLiabilities, capital, totalCapital };
-  }, [user?.id, ct1]);
+  }, [user?.id, ct1, selectedAccount?.account_type]);
 
   const filteredTransactions =
     accountFilteredTransactions?.filter((t) => {
@@ -1502,6 +1561,7 @@ const BankFeed = () => {
                           matchingTxId={matchingTxId}
                           defaultExpanded={group.categoryName === "Uncategorized"}
                           onDeleteTransaction={handleDeleteSingleTransaction}
+                          bankAccountType={selectedAccount?.account_type}
                         />
                       ))}
                     </div>
@@ -1531,6 +1591,7 @@ const BankFeed = () => {
                           matchingTxId={matchingTxId}
                           defaultExpanded={group.categoryName === "Uncategorized"}
                           onDeleteTransaction={handleDeleteSingleTransaction}
+                          bankAccountType={selectedAccount?.account_type}
                         />
                       ))}
                       {/* Travel & Accommodation from trip detection */}
@@ -2128,6 +2189,13 @@ const BankFeed = () => {
                               })()}
                             </>
                           )}
+
+                          {/* Relief Suggestions */}
+                          <ReliefSuggestionsPanel
+                            suggestions={reliefSuggestions.suggestions}
+                            industryGroup={reliefSuggestions.industryGroup}
+                            isPersonal={isPersonal}
+                          />
                         </div>
                       </>
                     );
