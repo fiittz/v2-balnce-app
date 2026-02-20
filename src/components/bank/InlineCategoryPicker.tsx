@@ -15,6 +15,7 @@ interface InlineCategoryPickerProps {
   currentVatRate?: number | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  bankAccountType?: string;
 }
 
 export default function InlineCategoryPicker({
@@ -25,8 +26,9 @@ export default function InlineCategoryPicker({
   currentVatRate,
   isOpen,
   onOpenChange,
+  bankAccountType,
 }: InlineCategoryPickerProps) {
-  const { data: categories } = useCategories();
+  const { data: categories } = useCategories(undefined, bankAccountType);
   const updateTransaction = useUpdateTransaction();
   const { user } = useAuth();
 

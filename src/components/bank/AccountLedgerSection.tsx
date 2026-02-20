@@ -51,6 +51,7 @@ interface AccountLedgerSectionProps {
   matchingTxId?: string | null;
   defaultExpanded?: boolean;
   onDeleteTransaction?: (id: string) => void;
+  bankAccountType?: string;
 }
 
 export default function AccountLedgerSection({
@@ -65,6 +66,7 @@ export default function AccountLedgerSection({
   matchingTxId,
   defaultExpanded = false,
   onDeleteTransaction,
+  bankAccountType,
 }: AccountLedgerSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -220,6 +222,7 @@ export default function AccountLedgerSection({
                     currentVatRate={transaction.vat_amount}
                     isOpen={categorizingTxId === transaction.id}
                     onOpenChange={(open) => setCategorizingTxId(open ? transaction.id : null)}
+                    bankAccountType={bankAccountType}
                   />
 
                   {!selectionMode && (
