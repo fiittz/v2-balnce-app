@@ -10,8 +10,9 @@ import { BackgroundTasksProvider } from "@/contexts/BackgroundTasksContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import BackgroundTasksStatus from "@/components/layout/BackgroundTasksStatus";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { PostHogProvider } from "@posthog/react";
 import PostHogTracker from "@/components/PostHogTracker";
-import { initPostHog } from "@/lib/posthog";
+import { POSTHOG_KEY, posthogOptions } from "@/lib/posthog";
 
 // Eagerly loaded — landing/login page (first thing users see)
 import Welcome from "./pages/Welcome";
@@ -47,21 +48,19 @@ const AgedDebtors = lazy(() => import("./pages/AgedDebtors"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const queryClient = new QueryClient();
 
-// Init PostHog once at module load
-initPostHog();
-
 const App = () => (
   <Sentry.ErrorBoundary fallback={<p>An unexpected error occurred. Please refresh the page.</p>}>
-    <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ErrorBoundary>
-              <AuthProvider>
-                <PostHogTracker />
-                <BackgroundTasksProvider>
+    <PostHogProvider apiKey={POSTHOG_KEY} options={posthogOptions}>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ErrorBoundary>
+                <AuthProvider>
+                  <PostHogTracker />
+                  <BackgroundTasksProvider>
                   <Suspense fallback={<div>Loading...</div>}>
                     <Routes>
                       <Route path="/" element={<Welcome />} />
@@ -278,13 +277,14 @@ const App = () => (
                     </Routes>
                   </Suspense>
                   <BackgroundTasksStatus />
-                </BackgroundTasksProvider>
-              </AuthProvider>
-            </ErrorBoundary>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
+                  </BackgroundTasksProvider>
+                </AuthProvider>
+              </ErrorBoundary>
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </PostHogProvider>
   </Sentry.ErrorBoundary>
 );
 
