@@ -90,6 +90,7 @@ export const CATEGORY_NAME_MAP: Record<string, string[]> = {
   "Repairs and Maintenance": ["Repairs & Maintenance", "Vehicle Maintenance & Repairs"],
   Cleaning: ["Cleaning & Hygiene"],
   "General Expenses": [],
+  Uncategorised: [],
   Advertising: ["Advertising & Marketing"],
   Marketing: ["Advertising & Marketing"],
   Subsistence: ["Subsistence", "Travel & Accommodation", "Meals & Entertainment"],
