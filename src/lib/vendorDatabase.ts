@@ -1228,7 +1228,7 @@ export const vendorDatabase: VendorEntry[] = [
   },
   {
     name: "Stanley / Black & Decker",
-    patterns: ["stanley", "black & decker", "black and decker"],
+    patterns: ["stanley tools", "stanley fatmax", "stanley knife", "black & decker", "black and decker", "black+decker"],
     category: "Tools",
     vat_type: "Standard 23%",
     vat_deductible: true,
@@ -2213,7 +2213,7 @@ export const vendorDatabase: VendorEntry[] = [
   },
   {
     name: "Square",
-    patterns: ["square", "sq *"],
+    patterns: ["square", "squareup", "sq fee", "sq pos"],
     category: "Bank fees",
     vat_type: "Exempt",
     vat_deductible: false,

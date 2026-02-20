@@ -1224,7 +1224,18 @@ describe("autoCategorise — Director's Loan Account & Salary", () => {
     expect(result.is_business_expense).toBe(true);
   });
 
-  it("payment to non-director individual = Labour costs (not salary)", () => {
+  it("payment to non-director individual on Ltd account = Director's Salary (not subcontractor)", () => {
+    const result = autoCategorise(
+      expense("To John Smith", {
+        director_names: ["Jamie Fitzgerald"],
+        account_type: "limited_company",
+      }),
+    );
+    expect(result.category).toBe("Director's Salary");
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("payment to non-director individual without account_type = Labour costs", () => {
     const result = autoCategorise(
       expense("To John Smith", {
         director_names: ["Jamie Fitzgerald"],
@@ -1234,7 +1245,13 @@ describe("autoCategorise — Director's Loan Account & Salary", () => {
     expect(result.needs_review).toBe(true);
   });
 
-  it("payment to individual without director_names = Labour costs", () => {
+  it("payment to individual without director_names on Ltd account = Director's Salary", () => {
+    const result = autoCategorise(expense("To John Smith", { account_type: "limited_company" }));
+    expect(result.category).toBe("Director's Salary");
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("payment to individual without director_names (no account type) = Labour costs", () => {
     const result = autoCategorise(expense("To John Smith"));
     expect(result.category).toBe("Labour costs");
   });
@@ -1522,6 +1539,41 @@ describe("autoCategorise — additional merchant rules", () => {
 
   it("categorises Waterford shop as Drawings", () => {
     const result = autoCategorise(expense("WATERFRD CRYSTAL SHOP"));
+    expect(result.category).toBe("Drawings");
+  });
+
+  // ── Limited company: "Drawings" vendors → General Expenses (needs receipt) ──
+
+  it("does NOT categorise Centra as Drawings on limited_company account", () => {
+    const result = autoCategorise(expense("CENTRA STORE", { account_type: "limited_company" }));
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
+    expect(result.needs_receipt).toBe(true);
+    expect(result.is_business_expense).toBeNull();
+  });
+
+  it("does NOT categorise Lidl as Drawings on limited_company account", () => {
+    const result = autoCategorise(
+      expense("LIDL GROCERIES", { account_type: "limited_company", user_industry: "professional_services" }),
+    );
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
+    expect(result.needs_receipt).toBe(true);
+  });
+
+  it("does NOT categorise Penneys as Drawings on limited_company account", () => {
+    const result = autoCategorise(expense("PENNEYS CLOTHING", { account_type: "limited_company" }));
+    expect(result.category).toBe("Uncategorised");
+    expect(result.needs_review).toBe(true);
+  });
+
+  it("still categorises Centra as Drawings on personal tax account", () => {
+    const result = autoCategorise(expense("CENTRA STORE", { account_type: "directors_personal_tax" }));
+    expect(result.category).toBe("Drawings");
+  });
+
+  it("still categorises Centra as Drawings with no account type", () => {
+    const result = autoCategorise(expense("CENTRA STORE"));
     expect(result.category).toBe("Drawings");
   });
 

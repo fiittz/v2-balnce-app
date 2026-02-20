@@ -592,6 +592,24 @@ export function autoCategorise(
       }
     }
 
+    // Ltd company: payment to individual defaults to Director's Salary (not subcontractor)
+    if (tx.account_type === "limited_company") {
+      return finalizeResult(
+        {
+          category: "Director's Salary",
+          vat_type: "N/A",
+          vat_deductible: false,
+          business_purpose: "Payment to individual from company account. Likely director's salary — subject to PAYE, PRSI, and USC through payroll.",
+          confidence_score: 70,
+          notes: "Payment to individual on Ltd account — defaulting to Director's Salary. Review if this is a subcontractor payment instead.",
+          needs_review: true,
+          needs_receipt: false,
+          is_business_expense: true,
+        },
+        tx,
+      );
+    }
+
     return finalizeResult(
       {
         category: "Labour costs",
@@ -872,6 +890,19 @@ export function autoCategorise(
         userIndustry,
         userBusinessType,
       );
+    }
+
+    // Ltd company + "Drawings" vendor: can't determine business vs personal without receipt.
+    // "Drawings" is a sole trader concept — doesn't exist for limited companies.
+    // Could be office supplies, client catering, or personal spending (DLA).
+    if (category === "Drawings" && tx.account_type === "limited_company") {
+      category = "Uncategorised";
+      is_business_expense = null;
+      needs_review = true;
+      needs_receipt = true;
+      confidence = 50;
+      business_purpose = "Purchase from personal-use retailer on company account. Upload receipt to determine if business expense or Director's Loan Account debit.";
+      notes = "Receipt required — cannot distinguish business vs personal without proof of purchase.";
     }
 
     // Flag non-deductible expenses for review
