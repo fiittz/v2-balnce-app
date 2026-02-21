@@ -2740,10 +2740,10 @@ const BankFeed = () => {
                                 <details className="group/sub ml-3">
                                   <summary className="flex items-center gap-1 py-0.5 text-[11px] text-muted-foreground cursor-pointer list-none [&::-webkit-details-marker]:hidden">
                                     <ChevronRight className="w-3 h-3 transition-transform group-open/sub:rotate-90" />
-                                    {drawingTxns.length} transaction{drawingTxns.length !== 1 ? "s" : ""}
+                                    {dlaTxns.length} transaction{dlaTxns.length !== 1 ? "s" : ""}
                                   </summary>
                                   <div className="ml-4 border-l border-border/30 pl-2">
-                                    {drawingTxns.map((t) => (
+                                    {dlaTxns.map((t) => (
                                       <TxnRow
                                         key={t.id}
                                         desc={
